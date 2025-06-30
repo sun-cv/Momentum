@@ -116,7 +116,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: BodySpriteWithShield_0
+      name: Body
       rect:
         serializedVersion: 2
         x: 1
@@ -138,7 +138,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: BodySpriteWithShield_1
+      name: Shield
       rect:
         serializedVersion: 2
         x: 45
@@ -173,8 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      BodySpriteWithShield_0: -5024772054921824283
-      BodySpriteWithShield_1: 8750407893099047005
+      Body: -5024772054921824283
+      Shield: 8750407893099047005
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
