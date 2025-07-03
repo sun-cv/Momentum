@@ -1,6 +1,8 @@
 # IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0130.severity = none
 [*.{cs,vb}]
-
-# IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0130.severity = silent
+
+# IDE0044: Add readonly modifier
+dotnet_diagnostic.IDE0044.severity = none
+dotnet_diagnostic.IDE0044.severity = silent
