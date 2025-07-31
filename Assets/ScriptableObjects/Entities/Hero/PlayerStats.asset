@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2a2eeb06133e394eaafdf8158c703e2, type: 3}
+  m_Name: PlayerStats
+  m_EditorClassIdentifier: 
+  movement:
+    speed: 3
+    groundFriction: 100
+    groundControlRate: 50
+  dash:
+    force: 27
+    duration: 0.15
+    defaultVelocity: 1
+    dashCount: 3
+    dashCooldown: 0.5
+    dashComboCooldown: 2
+  attack:
+    damage: 1
+    range: 10
+    force: 1
+    defaultVelocity: 1
+    duration: 0.25
+    attackCount: 3
+    attackCooldown: 0
+    attackComboCooldown: 5
