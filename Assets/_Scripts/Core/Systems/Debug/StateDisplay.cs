@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Momentum.Markers;
+using Momentum.State;
 using UnityEngine;
 
 
@@ -10,7 +10,7 @@ namespace Momentum.Debugger
     public static class StateDebugDisplay
     {
         private static readonly Dictionary<string, string> currentStates = new();
-        private static StatusFlag status;
+        private static TransitionMode status;
 
 
         public static void SetState(string id, string stateName)
@@ -18,9 +18,9 @@ namespace Momentum.Debugger
             currentStates[id] = stateName;
         }
 
-        public static void SetLatch(StatusFlag latch)
+        public static void SetLatch(TransitionMode mode)
         {
-            status = latch;
+            status = mode;
         }
 
         public static void RemoveState(string id)
@@ -34,7 +34,7 @@ namespace Momentum.Debugger
             foreach (var kvp in currentStates)
             {
                 GUILayout.Label($"State: {kvp.Value}");
-                GUILayout.Label($"Latch: {status.Value}");
+                GUILayout.Label($"Blocked: {status}");
             }
             GUILayout.EndVertical();
         }

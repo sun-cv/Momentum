@@ -8,6 +8,9 @@ using Momentum.Actor.Hero;
 namespace Momentum.Cameras
 {
 
+
+    // BUG FIX - If following, offset continues to calculate based on intended direction while in a forced stationary position. Causes wobbly camera.
+
 public class CameraRig : MonoBehaviour
 {
     [SerializeField] public new Camera                     camera;

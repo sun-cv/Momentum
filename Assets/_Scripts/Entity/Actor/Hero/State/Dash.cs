@@ -9,7 +9,7 @@ namespace Momentum.Actor.Hero
 {
 
 
-    public class DashState : BaseState, ICommandState
+    public class DashState : BaseState, IStateCommand
     {
         public HeroContext.Action.Dash  action;
 
@@ -18,9 +18,9 @@ namespace Momentum.Actor.Hero
             action = hero.context.action.dash;
         }
 
-        public void SetCallback(Action callback)
+        public override void SetOnComplete(Action callback)
         {
-            commandCallback = callback;
+            OnComplete = callback;
         }
 
         public override void Enter()
@@ -53,13 +53,13 @@ namespace Momentum.Actor.Hero
 
             if (dashProgress >= 1f)
             {
-                OnComplete();
+                SignalComplete();
             }
         }
 
-        public void OnComplete()
+        public override void SignalComplete()
         {
-            commandCallback.Invoke();
+            OnComplete.Invoke();
         }
 
         public override void Exit()

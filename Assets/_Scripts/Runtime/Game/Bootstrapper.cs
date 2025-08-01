@@ -41,7 +41,7 @@ namespace Momentum
         {
             Registry.Register<IInputDriverMono>(inputDriverMono);
             Registry.Register<IEntitySystem>(entitySystem);
-            Registry.Register<IEntityHero>(hero);
+            Registry.Register<IHero>(hero);
         }
 
         void InitializeSystems()

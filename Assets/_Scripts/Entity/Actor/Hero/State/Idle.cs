@@ -7,23 +7,22 @@ using UnityEngine;
 namespace Momentum.Actor.Hero
 {
 
-    public class IdleState : BaseState, ILocomotionState
+    public class IdleState : BaseState, IStateAutomatic, IInterruptible
     {
         public IdleState(Hero hero) : base(hero) {}
         
         public override void Enter()
         {
+            movement.IdleTimer.Reset();
             movement.IdleTimer.Start();
+            
             animator.Play(HeroAnimation.Idle);
-
-            Debug.Log($"Auto behavior test: {context.state.idle.Value}");
         }
 
 
         public override void Exit()
         {
             movement.IdleTimer.Stop();
-            movement.IdleTimer.Reset();
         }
 
     }

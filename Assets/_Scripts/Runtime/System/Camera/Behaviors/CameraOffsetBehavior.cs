@@ -2,6 +2,7 @@ using DG.Tweening;
 using UnityEngine;
 using Momentum.Definition;
 using Momentum.Interface;
+using Momentum.Helpers;
 
 namespace Momentum.Cameras
 {
@@ -19,31 +20,52 @@ namespace Momentum.Cameras
         Tween offsetTweenX;
         Tween offsetTweenY;
 
+        private Vector3 currentTargetOffset = Vector3.zero;
+        private Vector2 frozenDirection     = Vector2.zero;
+
+
+
         public void Initialize(CameraContext ctx)
         {
             context = ctx;
         }
 
-    public void Tick()
-    {
-        if (context == null || context.composer == null || context.hero == null)
-            return;
+        public void Tick()
+        {
+            if (context == null || context.composer == null || context.hero == null)
+                return;
 
-        Vector3 offset = CalculateOffsetFromFacing();
+            Vector3 offset;
 
-        offsetTweenX?.Kill();
-        offsetTweenY?.Kill();
+            if (context.hero.state.sprint)
+            {
+                
+                offset = CalculateOffsetFromFacing();
+                frozenDirection = offset;
+            }
+            else
+            {
+                offset = frozenDirection;
+            }
+            
+            if (offset != currentTargetOffset)
+            {
+                offsetTweenX?.Kill();
+                offsetTweenY?.Kill();
 
-        offsetTweenX = DOTween.To(() => context.composer.TargetOffset.x, x => {
-            var current = context.composer.TargetOffset;
-            context.composer.TargetOffset = new Vector3(x, current.y, current.z);
-        }, offset.x, 1f / followSpeedX).SetEase(easing);
+                offsetTweenX = DOTween.To(() => context.composer.TargetOffset.x, x => {
+                    var current = context.composer.TargetOffset;
+                    context.composer.TargetOffset = new Vector3(x, current.y, current.z);
+                }, offset.x, 1f / followSpeedX).SetEase(easing);
 
-        offsetTweenY = DOTween.To(() => context.composer.TargetOffset.y, y => {
-            var current = context.composer.TargetOffset;
-            context.composer.TargetOffset = new Vector3(current.x, y, current.z);
-        }, offset.y, 1f / followSpeedY).SetEase(easing);
-    }
+                offsetTweenY = DOTween.To(() => context.composer.TargetOffset.y, y => {
+                    var current = context.composer.TargetOffset;
+                    context.composer.TargetOffset = new Vector3(current.x, y, current.z);
+                }, offset.y, 1f / followSpeedY).SetEase(easing);
+
+                currentTargetOffset = offset;
+            }
+        }
 
         public void TickLate()
         {
@@ -52,18 +74,7 @@ namespace Momentum.Cameras
 
         Vector3 CalculateOffsetFromFacing()
         {
-            Vector2 dir = context.hero.movement.principalDirection switch
-            {
-                PrincipalDirection.North     => new Vector2( 0,  1),
-                PrincipalDirection.NorthEast => new Vector2(-1,  1),
-                PrincipalDirection.East      => new Vector2(-1,  0),
-                PrincipalDirection.SouthEast => new Vector2(-1, -1),
-                PrincipalDirection.South     => new Vector2( 0, -1),
-                PrincipalDirection.SouthWest => new Vector2( 1, -1),
-                PrincipalDirection.West      => new Vector2( 1,  0),
-                PrincipalDirection.NorthWest => new Vector2( 1,  1),
-                _                            => Vector2.zero
-            };
+            Vector2 dir = DirectionUtility.GetDirectionVector(context.hero.movement.principalDirection);
 
             Vector2 normalized = dir.normalized;
 

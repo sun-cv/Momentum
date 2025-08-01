@@ -10,7 +10,7 @@ using Momentum.Definition;
 namespace Momentum.Actor.Hero
 {
 
-public class Hero : Entity, IEntityHero, ITickAll, IInitialize
+public class Hero : Entity, IHero
 {
 
     [Header("Systems:")]
@@ -77,7 +77,7 @@ public class Hero : Entity, IEntityHero, ITickAll, IInitialize
         input.OnDisable();
     }
 
-    public void Tick()
+    public override void Tick()
     {
         input       .Tick();
         command     .Tick();

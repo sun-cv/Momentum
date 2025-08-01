@@ -32,7 +32,7 @@ namespace Momentum.Actor.Hero
 
         public override void Execute(IStateMachineController stateMachine, Action onComplete)
         {
-            stateMachine.ChangeStateCommand<DashState>(onComplete);
+            stateMachine.CommandState<DashState>(onComplete);
         }
 
     }
@@ -50,7 +50,7 @@ namespace Momentum.Actor.Hero
 
         public override void Execute(IStateMachineController stateMachine, Action onComplete)
         {
-            stateMachine.ChangeStateCommand<BasicAttackState>(onComplete);
+            stateMachine.CommandState<BasicAttackState>(onComplete);
         }
     }
 

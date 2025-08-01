@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using Momentum.Markers;
 using Momentum.State;
-using UnityEngine;
 
 
 namespace Momentum.Actor.Hero
@@ -22,7 +19,7 @@ public abstract class BaseState : IState
     protected HeroContext.Condition         condition;
     protected HeroContext.Movement          movement;
 
-    protected Action commandCallback;
+    protected Action OnComplete;
 
     protected const float crossFadeDuration = 0.1f;
 
@@ -58,6 +55,27 @@ public abstract class BaseState : IState
     {
         // Noop
     }
+
+    public virtual void SignalComplete()
+    {
+        // noop
+    }
+
+    public virtual void Cancel()
+    {
+        // noop
+    }
+
+    public virtual void Interrupt()
+    {
+        // noop
+    }
+
+    public virtual void SetOnComplete(Action action)
+    {
+        // noop
+    }
+
 
 }
 

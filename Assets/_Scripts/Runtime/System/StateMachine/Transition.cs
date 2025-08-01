@@ -34,6 +34,7 @@ public class Transition<T> : Transition
         {
             return result.Value;
         }
+        
         result = (condition as IPredicate)?.Evaluate();
         
         if (result.HasValue) 

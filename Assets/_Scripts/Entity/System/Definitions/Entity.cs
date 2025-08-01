@@ -1,18 +1,17 @@
-
-
 using Momentum.Actor.Hero;
+using Momentum.Definition;
+using Momentum.Events;
 using Momentum.Interface;
 using UnityEngine;
 
 namespace Momentum.Definition
 {
     
-    public abstract class Entity : MonoBehaviour
+    public abstract class Entity : MonoBehaviour, ITick
     {
-        // REWORK REQUIRED  - Mandate stats? 
+        public abstract void Tick();
     }
 
-    public interface IEntity        : ITick {}
-    public interface IEntityEnemy   : IEntity {}
-    public interface IEntityHero    : IEntity, IInitialize, ITickAll { public HeroContext GetHeroContext();}
+    public interface IEnemy {};
+    public interface IHero  : ITickAll, IInitialize {}
 }

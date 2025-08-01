@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Momentum.Markers;
 using Momentum.State;
 
 
@@ -19,18 +16,14 @@ namespace Momentum.Actor.Hero
         private BasicAttackState    basicAttack;
         private ShieldBlockState    shieldBlock;
 
-        private Dictionary<Type, StatusFlag> states   = new();
-
         public void Initialize(Hero hero)
         {
             this.hero       = hero;
             this.context    = hero.context;
 
             InstantiateStates();
-            RegisterCommandStates();
             CreateDefaultTransitions();
 
-            CanTransition.Set();
             SetState(idle);
         }
 
@@ -42,18 +35,11 @@ namespace Momentum.Actor.Hero
             basicAttack     = new(hero);
             shieldBlock     = new(hero);
 
-            states.Add(idle.GetType(),        context.state.idle);
-            states.Add(sprint.GetType(),      context.state.sprint);
-            states.Add(dash.GetType(),        context.state.dash);
-            states.Add(basicAttack.GetType(), context.state.basicAttack);
-            states.Add(shieldBlock.GetType(), context.state.shieldBlock);
-        }
-
-        void RegisterCommandStates()
-        {
-            Add(dash);
-            Add(basicAttack);
-            Add(shieldBlock);
+            Add(idle,        context.state.idle);
+            Add(sprint,      context.state.sprint);
+            Add(dash,        context.state.dash);
+            Add(basicAttack, context.state.basicAttack);
+            Add(shieldBlock, context.state.shieldBlock);
         }
 
         void CreateDefaultTransitions()
@@ -64,9 +50,6 @@ namespace Momentum.Actor.Hero
 
     }
 }
-
-
-        // private void At<T>(IState from, IState to, Func<bool> condition)    => AddTransition(from, to, condition);
 
 
 

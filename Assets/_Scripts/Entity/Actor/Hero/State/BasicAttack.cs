@@ -1,13 +1,14 @@
 using System;
 using Momentum.State;
 using Momentum.Timers;
+using UnityEditor.Rendering.LookDev;
 using UnityEngine;
 
 namespace Momentum.Actor.Hero
 {
 
 
-    public class BasicAttackState : BaseState, ICommandState
+    public class BasicAttackState : BaseState, IStateCommand, IInterruptible
     {
         public HeroContext.Action.BasicAttack action;
         public float duration;
@@ -17,9 +18,9 @@ namespace Momentum.Actor.Hero
             action = hero.context.action.basicAttack;
         }
 
-        public virtual void SetCallback(Action callback)
+        public override void SetOnComplete(Action callback)
         {
-            commandCallback = callback;
+            OnComplete = callback;
         }
 
 
@@ -57,6 +58,8 @@ namespace Momentum.Actor.Hero
             }
 
             animator.Play(HeroAnimation.BasicAttack, out duration);
+
+            Debug.Log("Calling enter");
         }
 
         public override void TickFixed()
@@ -68,14 +71,14 @@ namespace Momentum.Actor.Hero
 
             if (attackProgress >= 1f)
             {
-                OnComplete();
+                SignalComplete();
             }
 
         }
 
-        public void OnComplete()
+        public override void SignalComplete()
         {
-            commandCallback.Invoke();
+            OnComplete.Invoke();
         }
 
         public override void Exit()

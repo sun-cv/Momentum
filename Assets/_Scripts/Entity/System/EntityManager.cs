@@ -20,8 +20,8 @@ namespace Momentum
     public class EntitySystem : IEntitySystem
     {
 
-        IEntityHero                             hero;
-        SortedDictionary<int, List<IEntity>>    entities = new();
+        IHero                                   hero;
+        SortedDictionary<int, List<Entity>>     entities = new();
 
 
         public void Initialize()
@@ -33,7 +33,7 @@ namespace Momentum
 
         public void AccessRegistry()
         {
-            hero = Registry.Get<IEntityHero>();
+            hero = Registry.Get<IHero>();
         }
 
         public void Tick()
@@ -62,7 +62,7 @@ namespace Momentum
     
 
 
-        public void Register(EntityPriority priority, IEntity entity)
+        public void Register(EntityPriority priority, Entity entity)
         {
             if (!entities.TryGetValue((int)priority, out var list))
             {
@@ -73,7 +73,7 @@ namespace Momentum
             list.Add(entity);
         }
 
-        public void Deregister(IEntity entity)
+        public void Deregister(Entity entity)
         {
             foreach (var key in entities.Keys.ToList())
             {

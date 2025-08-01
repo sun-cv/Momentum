@@ -7,7 +7,7 @@ namespace Momentum.State
 
     public interface IStateMachineController
     {
-        public void ChangeStateCommand<T>(Action callback) where T : IState;
+        public void CommandState<T>(Action callback) where T : IState;
     }
 
 }

@@ -6,7 +6,7 @@ namespace Momentum.Actor.Hero
 {
 
 
-    public class SprintState : BaseState, ILocomotionState
+    public class SprintState : BaseState, IStateAutomatic, IInterruptible
     {
         public SprintState(Hero hero) : base(hero) {}
 
@@ -17,6 +17,7 @@ namespace Momentum.Actor.Hero
 
         public override void Exit()
         {
+            // noop
         }
 
 

@@ -7,7 +7,7 @@ namespace Momentum.Actor.Hero
 {
 
 
-    public class ShieldBlockState : BaseState, ICommandState
+    public class ShieldBlockState : BaseState, IStateCommand
     {
         public HeroContext.Action.ShieldBlock   action;
         public float duration;
@@ -19,7 +19,7 @@ namespace Momentum.Actor.Hero
 
         public virtual void SetCallback(Action callback)
         {
-            commandCallback = callback;
+            OnComplete = callback;
         }
 
 
@@ -32,9 +32,9 @@ namespace Momentum.Actor.Hero
 
         }
 
-        public void OnComplete()
+        public override void SignalComplete()
         {
-            commandCallback.Invoke();
+            OnComplete.Invoke();
         }
 
         public override void Exit()
