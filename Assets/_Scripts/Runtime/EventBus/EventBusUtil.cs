@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace Momentum.Events
+namespace Momentum
 {
 
 public static class EventBusUtil {

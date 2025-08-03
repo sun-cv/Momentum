@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Momentum.State;
 using UnityEngine;
 
 
-namespace Momentum.Debugger
+namespace Momentum
 {
 
 

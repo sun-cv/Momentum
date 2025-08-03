@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Momentum.Math
+namespace Momentum
 {
 
 

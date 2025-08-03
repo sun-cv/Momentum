@@ -1,7 +1,4 @@
 using System.Collections.Generic;
-using Momentum.Events;
-using Momentum.GameLoop;
-using Momentum.Interface;
 using UnityEngine;
 
 namespace Momentum

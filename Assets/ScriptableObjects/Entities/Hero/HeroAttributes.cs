@@ -1,8 +1,7 @@
 using UnityEngine;
 using System;
-using Momentum.Interface;
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 [CreateAssetMenu(fileName = "HeroStats", menuName = "ScriptableObjects/HeroStats")]
@@ -27,7 +26,6 @@ public class DashAttribute
     [Header("Dash movement:")]
     public float force              = 10f;
     public float duration           = 1f;
-    public float defaultVelocity    = 1f;
 
     [Header("Dash configuration:")]
     public float dashCount          = 3f;
@@ -44,13 +42,13 @@ public class AttackAttribute
 
     [Header("Attack movement:")]
     public float force              = 1f;
-    public float defaultVelocity    = 1f;
  
     [Header("Attack configuration:")]
     public float duration           = 1f;
     public float attackCount        = 3f;
-    public float attackCooldown     = 1f;
-    public float attackComboCooldown= 2f;
+    public float attackInterval     = 1f;
+    public float attackComboInterval= 2f;
+    public float attackComboBreak   = 2f;
 
 }
 

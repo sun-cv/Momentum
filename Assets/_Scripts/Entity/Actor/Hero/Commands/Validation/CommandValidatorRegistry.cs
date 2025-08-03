@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
-
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
     public static class CommandValidatorRegistry
@@ -11,13 +11,13 @@ namespace Momentum.Actor.Hero
         private static readonly Dictionary<Type, CommandValidatorSet> map = new()
         {
             { typeof(DashCommand), CommonValidatorSets.MustBeMobile.With(
-                new CooldownValidator((context) => !context.action.dash.dashCooldown)) 
+                new CooldownValidator((handler) => !handler.IsActive<DashCooldown>())) 
             },
 
             { typeof(BasicAttackCommand), new CommandValidatorSet(
                 new NotDisabledValidator(),
-                new CooldownValidator((context) => !context.action.basicAttack.attackCooldown),
-                new CooldownValidator((context) => !context.action.basicAttack.attackComboCooldown))
+                new CooldownValidator((handler) => !handler.IsActive<AttackIntervalCooldown>()),
+                new CooldownValidatorcombo((handler) => !handler.IsActive<AttackComboIntervalCooldown>()))
             } 
         };
 

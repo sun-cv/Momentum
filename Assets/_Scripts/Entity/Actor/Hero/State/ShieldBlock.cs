@@ -1,13 +1,10 @@
 using System;
-using Momentum.State;
-using Momentum.Timers;
-using UnityEngine;
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 
-    public class ShieldBlockState : BaseState, IStateCommand
+    public class ShieldBlockState : HeroState, IManual
     {
         public HeroContext.Action.ShieldBlock   action;
         public float duration;
@@ -17,25 +14,16 @@ namespace Momentum.Actor.Hero
             action = hero.context.action.shieldBlock;
         }
 
-        public virtual void SetCallback(Action callback)
-        {
-            OnComplete = callback;
-        }
-
-
         public override void Enter()
         {
+            
         }
 
-        public override void TickFixed()
+        public override void Tick()
         {
 
         }
 
-        public override void SignalComplete()
-        {
-            OnComplete.Invoke();
-        }
 
         public override void Exit()
         {

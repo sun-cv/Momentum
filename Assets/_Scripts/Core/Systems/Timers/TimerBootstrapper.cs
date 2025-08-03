@@ -5,7 +5,7 @@ using UnityEngine.PlayerLoop;
 
 
 
-namespace Momentum.Timers
+namespace Momentum
 {
 
     internal static class TimerBootstrapper

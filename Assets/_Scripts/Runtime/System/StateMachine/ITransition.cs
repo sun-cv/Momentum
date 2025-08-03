@@ -1,4 +1,4 @@
-namespace Momentum.State
+namespace Momentum
 {
     public interface ITransition
     {

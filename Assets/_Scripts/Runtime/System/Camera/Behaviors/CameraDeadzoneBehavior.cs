@@ -1,10 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
 using Unity.Cinemachine;
-using Momentum.Interface;
-using Momentum.Timers;
 
-namespace Momentum.Cameras
+namespace Momentum
 {
 
     public class DeadzoneCameraBehavior : MonoBehaviour, ICameraBehavior

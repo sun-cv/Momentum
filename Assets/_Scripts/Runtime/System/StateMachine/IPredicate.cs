@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace Momentum.State
+namespace Momentum
 {
     public interface IPredicate
     {

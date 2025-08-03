@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Momentum.Events
+namespace Momentum
 {
 
 

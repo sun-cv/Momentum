@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Momentum.Timers
+namespace Momentum
 {
     public class Stopwatch : Timer
     {

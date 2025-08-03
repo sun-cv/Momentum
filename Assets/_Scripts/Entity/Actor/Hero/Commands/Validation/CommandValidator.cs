@@ -1,73 +1,91 @@
 using System;
 using UnityEngine;
-using Momentum.Interface;
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
+
 
     public class MovementIntentValidator : ICommandValidator
     {
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return context.movement.locomotion;
+            
+            return service.Resolve<HeroContext>().movement.locomotion;
         }
     }
 
     public class IdleIntentValidator : ICommandValidator
     {
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return context.movement.idle;
+            return service.Resolve<HeroContext>().movement.idle;
         }
     }
 
     public class NotDisabledValidator : ICommandValidator
     {
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return !context.condition.disabled;
+            return !service.Resolve<HeroContext>().condition.disabled;
         }
     }
 
     public class NotStunnedValidator : ICommandValidator
     {
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return !context.condition.stunned;
+            return !service.Resolve<HeroContext>().condition.stunned;
         }
     }
 
     public class NotKnockedBackValidator : ICommandValidator
     {
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return !context.condition.knockedBack;
+            return !service.Resolve<HeroContext>().condition.knockedBack;
         }
     }
     
     public class NotSlowedValidator : ICommandValidator
     {
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return !context.condition.slowed;
+            return !service.Resolve<HeroContext>().condition.slowed;
         }
     }
-    
 
     public class CooldownValidator : ICommandValidator
     {
-        private readonly Func<HeroContext, bool> onCooldown;
+        private readonly Func<ICooldownHandler, bool> onCooldown;
 
-        public CooldownValidator(Func<HeroContext, bool> onCooldown)
+        public CooldownValidator(Func<ICooldownHandler, bool> onCooldown)
         {
             this.onCooldown = onCooldown;
         }
 
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return onCooldown(context);
+            return onCooldown(service.Resolve<ICooldownHandler>());
         }
+
     }
+
+    public class CooldownValidatorcombo : ICommandValidator
+    {
+        private readonly Func<ICooldownHandler, bool> onCooldown;
+
+        public CooldownValidatorcombo(Func<ICooldownHandler, bool> onCooldown)
+        {
+            this.onCooldown = onCooldown;
+        }
+
+        public bool CanExecute(IValidatorService service)
+        {
+            return onCooldown(service.Resolve<ICooldownHandler>());
+        }
+
+    }
+
 
     public class ResourceValidator : ICommandValidator
     {
@@ -80,9 +98,9 @@ namespace Momentum.Actor.Hero
             this.required           = required;
         }
 
-        public bool CanExecute(HeroContext context)
+        public bool CanExecute(IValidatorService service)
         {
-            return resourceAvailable(context) >= required;
+            return resourceAvailable(service.Resolve<HeroContext>()) >= required;
         } 
     }
 

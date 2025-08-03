@@ -1,8 +1,7 @@
 
 
-using UnityEngine;
 
-namespace Momentum.Definition
+namespace Momentum
 {
 
     public enum PrincipalDirection

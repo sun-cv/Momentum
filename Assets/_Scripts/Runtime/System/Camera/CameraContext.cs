@@ -1,10 +1,8 @@
 using UnityEngine;
 using Unity.Cinemachine;
-using Momentum.Actor.Hero;
-using Momentum.Interface;
 
 
-namespace Momentum.Cameras
+namespace Momentum
 {
 
 public class CameraContext

@@ -1,10 +1,8 @@
 using DG.Tweening;
 using UnityEngine;
-using Momentum.Definition;
-using Momentum.Interface;
-using Momentum.Helpers;
 
-namespace Momentum.Cameras
+
+namespace Momentum
 {
 
     public class CameraOffsetBehavior : MonoBehaviour, ICameraBehavior
@@ -74,7 +72,7 @@ namespace Momentum.Cameras
 
         Vector3 CalculateOffsetFromFacing()
         {
-            Vector2 dir = DirectionUtility.GetDirectionVector(context.hero.movement.principalDirection);
+            Vector2 dir = DirectionUtility.GetDirectionVector(context.hero.movement.principal);
 
             Vector2 normalized = dir.normalized;
 

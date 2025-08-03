@@ -1,13 +1,6 @@
 using UnityEngine;
-using Momentum.Cameras;
-using Momentum.State;
-using Momentum.Debugger;
-using Momentum.Interface;
-using Momentum.Definition;
 
-
-
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 public class Hero : Entity, IHero

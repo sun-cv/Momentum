@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Momentum.Actor.Sensor
+namespace Momentum
 {
 
 

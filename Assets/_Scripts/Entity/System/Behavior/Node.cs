@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace Momentum.Actor.Behavior
+namespace Momentum
 {
 
 

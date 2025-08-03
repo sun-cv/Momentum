@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Momentum.Interface
+namespace Momentum
 {
     public interface IInputDriverMono
     {

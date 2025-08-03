@@ -14,21 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movement:
     speed: 3
-    groundFriction: 100
-    groundControlRate: 50
+    groundFriction: 50
+    groundControlRate: 10
   dash:
     force: 27
     duration: 0.15
-    defaultVelocity: 1
     dashCount: 3
-    dashCooldown: 0.5
+    dashCooldown: 0.2
     dashComboCooldown: 2
   attack:
     damage: 1
     range: 10
-    force: 1
-    defaultVelocity: 1
-    duration: 0.25
+    force: 10
+    duration: 1
     attackCount: 3
-    attackCooldown: 0
-    attackComboCooldown: 5
+    attackInterval: 1
+    attackComboInterval: 10

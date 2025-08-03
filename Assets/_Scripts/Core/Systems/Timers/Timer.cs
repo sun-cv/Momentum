@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Momentum.Timers
+namespace Momentum
 {
 
 
@@ -10,8 +10,8 @@ public abstract class Timer : IDisposable
     protected float initialTime;
 
     public float CurrentTime    { get; protected set; }
-    public bool  IsRunning      { get; private set; }
-    public float Progress => Mathf.Clamp(CurrentTime / initialTime, 0, 1);
+    public bool  IsRunning      { get; protected set; }
+    public float Percent => initialTime > 0 ? Mathf.Clamp01(CurrentTime / initialTime) : 1f;
 
     public Action OnTimerStart = delegate { };
     public Action OnTimerStop  = delegate { };
@@ -21,7 +21,7 @@ public abstract class Timer : IDisposable
         initialTime = value;
     }
 
-    public void Start()
+    public virtual void Start()
     {
         CurrentTime = initialTime;
 
@@ -31,9 +31,11 @@ public abstract class Timer : IDisposable
             TimerManager.RegisterTimer(this);
             OnTimerStart.Invoke();
         }
+
+
     }
 
-    public void Stop()
+    public virtual void Stop()
     {
         if (IsRunning)
         {
@@ -48,6 +50,8 @@ public abstract class Timer : IDisposable
 
     public void Resume() => IsRunning = true;
     public void Pause()  => IsRunning = false;
+    public void Cancel()  { IsRunning = false; TimerManager.DeregisterTimer(this); }
+
 
     public virtual void Reset() => CurrentTime = initialTime;
     public virtual void Reset(float newTime)

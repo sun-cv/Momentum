@@ -1,11 +1,9 @@
 using UnityEngine;
 using Unity.Cinemachine;
 using System.Collections.Generic;
-using Momentum.Interface;
-using Momentum.Actor.Hero;
 
 
-namespace Momentum.Cameras
+namespace Momentum
 {
 
 

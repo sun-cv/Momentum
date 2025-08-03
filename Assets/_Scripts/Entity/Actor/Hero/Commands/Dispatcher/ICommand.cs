@@ -1,35 +1,39 @@
 using System;
-using System.Threading.Tasks;
-using Momentum.Actor.Hero;
-using Momentum.State;
+using Unity.VisualScripting;
 
 
-namespace Momentum.Interface
+namespace Momentum
 {
+
+    public enum CommandType
+    {
+        Dash,
+        BasicAttack,
+    }
 
     public interface ICommand
     {
-        CommandType Type    { get; }
-        float RequestedTime { get; }
-        
-        void Execute(IStateMachineController stateMachine, Action value);
+        void Execute();
     }
 
     public interface ICommandQueue 
     {
-        public void Enqueue(ICommand command); 
+        public void Enqueue(Command command); 
     }
-    
-    public interface ICommandBufferable {}
 
     public interface ICommandDispatcher
     {
-        void Enqueue (ICommand command);
+        void Enqueue (Command command);
     }
 
     public interface ICommandValidator
     {
-        bool CanExecute(HeroContext context);
+        bool CanExecute(IValidatorService service);
+    }
+
+    public interface ICommandCooldownValidator
+    {
+        bool CanExecute(ICooldownHandler handler);
     }
 
 }

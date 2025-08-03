@@ -1,9 +1,8 @@
 
 using System;
-using Momentum.Events;
-using Momentum.GameLoop;
 
-namespace Momentum.Markers
+
+namespace Momentum
 {
 
 

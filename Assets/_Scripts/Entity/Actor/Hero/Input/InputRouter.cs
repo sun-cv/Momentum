@@ -1,12 +1,8 @@
 using UnityEngine;
-using Momentum.Definition;
-using Momentum.Events;
-using Momentum.Interface;
-using Unity.VisualScripting;
-using Momentum.Helpers;
 
 
-namespace Momentum.Actor.Hero
+
+namespace Momentum
 {
 
     public class InputRouter
@@ -39,10 +35,11 @@ namespace Momentum.Actor.Hero
 
             if (movement.direction != Vector2.zero)
             {
-                movement.principalDirection = DirectionUtility.GetPrincipalDirection(movement.direction);
-                movement.cardinalDirection  = DirectionUtility.GetCardinalDirection(movement.direction);
-                movement.principal          = DirectionUtility.GetDirectionVector(movement.principalDirection);
-                movement.cardinal           = DirectionUtility.GetDirectionVector(movement.cardinalDirection);
+                movement.cardinal           = DirectionUtility.GetCardinalDirection(movement.direction);
+                movement.principal          = DirectionUtility.GetPrincipalDirection(movement.direction);
+                movement.cardinalDirection  = DirectionUtility.GetDirectionVector(movement.cardinal);
+                movement.principalDirection = DirectionUtility.GetDirectionVector(movement.principal);
+                movement.lastDirection      = movement.direction;
             }
         }
 
@@ -67,7 +64,7 @@ namespace Momentum.Actor.Hero
         void HandleMouseClickLeft(MouseClickLeft click)
         {
             input.leftClick.Set();
-            commandDispatcher.Enqueue(HeroCommand.Create<BasicAttackCommand>());
+            commandDispatcher.Enqueue(Command.Create<BasicAttackCommand>());
         }
 
         void HandleMouseClickRight(MouseClickRight click)
@@ -85,7 +82,7 @@ namespace Momentum.Actor.Hero
         } 
         void HandleDashInput(DashInput dashInput)
         {
-            commandDispatcher.Enqueue(HeroCommand.Create<DashCommand>());
+            commandDispatcher.Enqueue(Command.Create<DashCommand>());
         }       
         
     }

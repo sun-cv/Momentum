@@ -1,4 +1,4 @@
-namespace Momentum.Interface
+namespace Momentum
 {
     public interface IEntitySystem : ITickAll {}
 }

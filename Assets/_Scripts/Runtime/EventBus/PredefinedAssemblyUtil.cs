@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 
 
-namespace Momentum.Events
+namespace Momentum
 {
 
     public static class PredefinedAssemblyUtil 

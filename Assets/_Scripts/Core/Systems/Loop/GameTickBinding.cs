@@ -1,7 +1,6 @@
-using Momentum.Events;
 
 
-namespace Momentum.GameLoop
+namespace Momentum
 {
 
 public static class GameTickBinding

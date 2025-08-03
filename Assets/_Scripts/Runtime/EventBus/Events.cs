@@ -1,13 +1,7 @@
-using Momentum.Definition;
 using UnityEngine;
 
 
-namespace Momentum.Events
-{
-}
-
-
-namespace Momentum.Events
+namespace Momentum
 {
 
     public struct Tick      : IEvent {}

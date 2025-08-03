@@ -1,4 +1,4 @@
-namespace Momentum.Events
+namespace Momentum
 {
     public interface IEvent {};
 }

@@ -1,7 +1,6 @@
-using Momentum.Cameras;
 
 
-namespace Momentum.Interface
+namespace Momentum
 {
 
 public interface ICameraBehavior

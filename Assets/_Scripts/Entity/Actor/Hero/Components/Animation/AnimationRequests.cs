@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 public class AnimatorRequest

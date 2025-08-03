@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Momentum.Markers
+namespace Momentum
 {
 
     public class StatusFlag

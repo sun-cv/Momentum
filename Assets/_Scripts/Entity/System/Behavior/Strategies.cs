@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace Momentum.Actor.Behavior
+namespace Momentum
 {
 
 

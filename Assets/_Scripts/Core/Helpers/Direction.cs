@@ -1,10 +1,6 @@
-
-
-
-using Momentum.Definition;
 using UnityEngine;
 
-namespace Momentum.Helpers
+namespace Momentum
 {
 
     public static class DirectionUtility

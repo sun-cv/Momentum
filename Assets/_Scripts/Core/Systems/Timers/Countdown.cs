@@ -1,24 +1,23 @@
 using UnityEngine;
 
-namespace Momentum.Timers
+namespace Momentum
 {
     public class Countdown : Timer
-{
-    public Countdown(float value) : base(value) {}
-
-        public override void Tick()
-        {
-            if (IsRunning && CurrentTime > 0)
+    {
+        public Countdown(float value) : base(value) {}
+    
+            public override void Tick()
             {
-                CurrentTime -= Time.deltaTime;
+                if (IsRunning && CurrentTime > 0)
+                {
+                    CurrentTime -= Time.deltaTime;
+                }
+                if (IsRunning && CurrentTime <= 0)
+                {
+                    Stop();
+                }
             }
-
-            if (IsRunning && CurrentTime <= 0)
-            {
-                Stop();
-            }
-        }
-
-    public override bool IsFinished => CurrentTime <= 0;
-}
+    
+        public override bool IsFinished => CurrentTime <= 0;
+    }
 }

@@ -1,24 +1,31 @@
-using System;
-using Momentum.State;
-using Mono.Cecil.Cil;
-using UnityEngine;
 
-
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
-    public class IdleState : BaseState, IStateAutomatic, IInterruptible
+    public class IdleState : HeroState, IAutomatic, IInterruptible, ICancellable
     {
         public IdleState(Hero hero) : base(hero) {}
-        
+
         public override void Enter()
         {
+            movement.mode   = MovementMode.Dynamic;
+            movement.intent = MovementIntent.Idle;
+
             movement.IdleTimer.Reset();
             movement.IdleTimer.Start();
-            
+
+            Animation();
+        }
+
+        public override void Animation()
+        {
             animator.Play(HeroAnimation.Idle);
         }
 
+        public override void Tick()
+        {
+            // noop
+        }
 
         public override void Exit()
         {

@@ -1,21 +1,19 @@
-
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Momentum.Interface;
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 
     public class CommandValidatorSet
     {
         private readonly List<ICommandValidator> validators;
+        private IValidatorService service;
 
         public CommandValidatorSet(params ICommandValidator[] validators)
         {
             this.validators = validators.ToList();
+            service = ValidatorService.Get();
         }
 
         public static CommandValidatorSet Compose(CooldownValidator cooldownValidator, params CommandValidatorSet[] sets)
@@ -28,10 +26,28 @@ namespace Momentum.Actor.Hero
             return new CommandValidatorSet(validators.Concat(more).ToArray());
         }
 
-        public bool Validate(HeroContext hero)
+        public bool Validate()
         {
-            return validators.All(validator => validator.CanExecute(hero));
+            // Debug();
+            return validators.All(validator => validator.CanExecute(service));
         }
+
+        public bool Debug()
+        {
+            foreach (var validator in validators)
+            {
+                bool result = validator.CanExecute(service);
+                if (!result)
+                {
+                    UnityEngine.Debug.Log($"Validator failed: {validator.GetType().Name}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public IEnumerable<ICommandValidator> GetAll() => validators;
     }
 
     public static class CommonValidatorSets

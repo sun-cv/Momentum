@@ -1,10 +1,7 @@
-namespace Momentum.Interface
+namespace Momentum
 {
-
     public interface IInitialize
     {
         public void Initialize();
     }
-
-
 }

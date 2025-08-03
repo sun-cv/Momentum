@@ -1,13 +1,13 @@
 using System;
-using Momentum.Interface;
 
 
-namespace Momentum.State
+namespace Momentum
 {
 
     public interface IStateMachineController
     {
-        public void CommandState<T>(Action callback) where T : IState;
+        public void CommandState<T>(Action<Result> callback) where T : State;
+        public void InterruptState<T>() where T : IDisruption; 
+        public void CancelState();
     }
-
 }

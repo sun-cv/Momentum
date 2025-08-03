@@ -1,32 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Momentum.Interface;
-using Momentum.Markers;
-using Momentum.State;
 using UnityEngine;
 
 
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
-
-
-    public enum CommandType
-    {
-        Dash,
-    }
-
 
     public class CommandDispatcher : ICommandDispatcher
     {
         private ICommandQueue queue;
 
         public void Register(ICommandQueue queue)
-        {
+        {        
             this.queue = queue;
         }
 
-        public void Enqueue(ICommand command)
+        public void Enqueue(Command command)
         {
             queue.Enqueue(command);
         }
@@ -35,28 +26,34 @@ namespace Momentum.Actor.Hero
 
     public class CommandSystem
     {
-        private HeroContext             context;
-        private IStateMachineController stateMachine;
+        private HeroContext                 context;
+        private IStateMachineController     stateMachine;
 
         public  CommandDispatcher dispatcher    = new();
 
-        private CommandQueue central            = new();
-        private CommandQueue buffer             = new();
-        private CommandQueue command            = new();
+        private CommandQueue centralQueue       = new();
+        private CommandQueue bufferQueue        = new();
+        private CommandQueue commandQueue       = new();
 
-        private float gracePeriod               = .5f;
-        private float bufferPeriod              = .2f;
+        private Command command;
+        private Command pendingCommand;
 
-        private StatusFlag executing            = new();
+        private bool ActiveCommand => command != null;
+        private bool PendingCommand => pendingCommand != null;
+
+        private float MaxBuffer = 1;
+        private float MaxExpire = 1;
+
+        private bool debug = false;
 
         public void Initialize(HeroContext context)
         {
-            this.context = context;
-            stateMachine = Registry.Get<IStateMachineController>();
+            this.context    = context;
 
-            dispatcher.Register(central);
+            stateMachine    = Registry.Get<IStateMachineController>();
+
+            dispatcher.Register(centralQueue);
         }
-
 
         public void Tick()
         {
@@ -65,33 +62,35 @@ namespace Momentum.Actor.Hero
             ProcessNextCommand();
         }
 
-
         private void RouteCentral()
         {
-            while (!central.IsEmpty)
+            while (!centralQueue.IsEmpty)
             {
-                var request = central.Peek();
+                var request = centralQueue.Peek();
+
+                Register(request);
 
                 if (IsExpired(request))
                 {
-                    central.Dequeue();
+                    centralQueue.Dequeue();
                     continue;
                 }
 
-                if (IsValid(request))
+                if (!ActiveCommand && !PendingCommand && IsValid(request))
                 {
-                    command.Enqueue(request);
-                    central.Dequeue();
+                    commandQueue.Enqueue(request);
+                    centralQueue.Dequeue();
                     return;
                 }
 
                 if (IsBufferable(request))
                 {
-                    buffer.Enqueue(request);
-                    central.Dequeue();
+                    bufferQueue.Enqueue(request);
+                    centralQueue.Dequeue();
                     return;
                 }
-                central.Dequeue();
+
+                centralQueue.Dequeue();
                 return;
             }
         }
@@ -100,114 +99,179 @@ namespace Momentum.Actor.Hero
         private void ValidateBuffer()
         {
 
-            var bufferCount = buffer.Count;
+            float bufferCount = bufferQueue.Count;
 
             for (int i = 0; i < bufferCount; i++)
             {
-                var request = buffer.Peek();
+                var request = bufferQueue.Peek();
 
                 if (IsExpired(request))
                 {
-                    buffer.Dequeue();
+                    bufferQueue.Dequeue();
                     continue;
                 }
 
-                if (IsValid(request))
+                if (IsPriority(request) && IsValid(request))
                 {
-                    command.Enqueue(request);
-                    buffer.Dequeue();
+                    bufferQueue.Dequeue();
+                    commandQueue.Enqueue(request);
                     return;
+                }
+
+                if (!ActiveCommand && !PendingCommand && IsValid(request))
+                {
+                    bufferQueue.Dequeue();
+                    commandQueue.Enqueue(request);
+                    return;             
                 }
 
                 if (IsBuffering(request))
                 {
-                    buffer.Dequeue();
-                    buffer.Enqueue(request);
+                    bufferQueue.Dequeue();
+                    bufferQueue.Enqueue(request);
                     continue;
                 }
 
-                buffer.Dequeue();
+                bufferQueue.Dequeue();
             }
         }
 
         private void ProcessNextCommand()
         {
-            while (!command.IsEmpty)
+            while (!commandQueue.IsEmpty)
             {
-                var request = command.Peek();
+                var request = commandQueue.Peek();
 
                 if (IsExpired(request))
                 {
-                    command.Dequeue();
+                    commandQueue.Dequeue();
                     continue;
                 }
-
-                if (executing)
+ 
+                if (!ActiveCommand && !PendingCommand)
                 {
+                    command = request;
+                    command.Execute();
+                    commandQueue.Dequeue();
                     return;
                 }
 
-                executing.Set();
-
-                request.Execute(stateMachine, () => { executing.Clear(); });
-
-                command.Dequeue();
-                buffer.Clear();
-
+                if (command is ICancellable)
+                {
+                    Debug.Log("Cancel request");
+                    if (command.CanCancel())
+                    {
+                        Debug.Log("Cancel request accepted");
+                        pendingCommand = request;
+                        commandQueue.Dequeue(); 
+                        command.RequestCancel();
+                    }
+                    return;
+                }
                 return;
             }
-
         }
 
-
-        public bool IsExpired(ICommand command)
+        private void ClearCommand(Result result)
         {
-            bool expired = Time.time - command.RequestedTime > gracePeriod;
-            if (expired) Debug.Log($"Expired command: {command.GetType()}");
+            command = null;
+
+            switch (result)
+            {
+                case Result.Success:
+                    command = null;
+                    break;
+
+                case Result.Interrupted:
+                    command = null;
+                    bufferQueue.Clear();
+                    commandQueue.Clear();
+                    break;
+                    
+                case Result.Failed:
+                    break;
+
+                case Result.Cancelled:
+                    if (pendingCommand != null)
+                    {
+                        command = pendingCommand;
+                        pendingCommand  = null;
+                        command.Execute();
+                        return;
+                    }
+                    break;
+            }
+        }
+
+        bool IsExpired(Command request)
+        {
+            bool expired = Time.time - request.TimeRequested > request.ExpirePeriod && request.ExpirePeriod < MaxExpire;
+            if (expired && debug) Debug.Log($"Expired command: {request.GetType()}");
             return expired;
         }
 
-
-        public bool IsBuffering(ICommand command)
+        bool IsBuffering(Command request)
         {
-            bool buffering = Time.time - command.RequestedTime < bufferPeriod;
-            if (buffering) Debug.Log($"Buffering command: {command.GetType()}");
+            bool buffering = Time.time - request.TimeRequested < request.BufferPeriod && request.BufferPeriod < MaxBuffer;
+            if (buffering && debug) Debug.Log($"Buffering command: {request.GetType()}");
             return buffering;
         }
 
-
-        public bool IsValid(ICommand command)
+        bool IsValid(Command request)
         {
-            var validators = CommandValidatorRegistry.Get(command.GetType());
-            bool valid = validators.Validate(context);
-            if (!valid) Debug.Log($"Invalid command: {command.GetType()}");
+            var validators = CommandValidatorRegistry.Get(request.GetType());
+            bool valid = validators.Validate();
+            if (!valid && debug) Debug.Log($"Invalid command: {request.GetType()}");
             return valid;
         }
 
-        public bool IsBufferable(ICommand command)
+        bool IsBufferable(Command request)
         {
-            bool bufferable = command is ICommandBufferable;
-            if (!bufferable) Debug.Log($"Command is not bufferable: {command.GetType()}");
-            return bufferable;
+            if (request is IBufferable)
+            {
+                request.Buffer();
+                return true;
+            }
+            if (debug) Debug.Log($"Command is not bufferable: {request.GetType()}");
+            return false;
         }
 
+        bool IsPriority(Command request)
+        {
+            var requestPriority = request.Priority;
+            var currentPriority = command?.Priority ?? Priority.None;
+            var queuePriority   = commandQueue.HighestPriority();
+            var pendingPriority = pendingCommand?.Priority ?? Priority.None;
 
+            bool priority = requestPriority > currentPriority &&
+                            requestPriority > queuePriority &&
+                            requestPriority > pendingPriority;
+
+            if (!priority && debug) 
+            {
+                Debug.Log($"Low Priority command: {request.GetType()}");
+                Debug.Log($"currentPriority: {requestPriority > currentPriority}");
+                Debug.Log($"queuePriority: {requestPriority > queuePriority}");
+                Debug.Log($"pendingPriority: {requestPriority > pendingPriority}");
+            }
+            return priority;
+        }
+
+        void Register(Command request)
+        {
+            request.Initialize(stateMachine, result => ClearCommand(result));
+        }
     }
-
-
-
-
-
-
 
 
     public class CommandQueue : ICommandQueue
     {
-        protected readonly Queue<ICommand> queue  = new();
+        protected readonly Queue<Command> queue  = new();
+        protected Priority priority;
 
-        public void Enqueue(ICommand command)
+        public void Enqueue(Command command)
         {
-            if (queue.Any(queuedCommand => queuedCommand.Type == command.Type))
+            if (queue.Count(cmd => cmd.GetType() == command.GetType()) > 3)
             {
                 return;
             }
@@ -215,12 +279,12 @@ namespace Momentum.Actor.Hero
             queue.Enqueue(command);
         }
 
-        public ICommand Peek()
+        public Command Peek()
         {
             return queue.Count == 0 ? null : queue.Peek();
         }
 
-        public ICommand Dequeue()
+        public Command Dequeue()
         {
             return queue.Count == 0 ? null : queue.Dequeue();
         }
@@ -230,8 +294,14 @@ namespace Momentum.Actor.Hero
             queue.Clear();
         }
 
+        public Priority HighestPriority()
+        {
+            return IsEmpty ? Priority.None : queue.Max((command) => command.Priority);
+        }
+
         public bool IsEmpty => queue.Count == 0;
         public float Count => queue.Count;
     }
 
+    
 }

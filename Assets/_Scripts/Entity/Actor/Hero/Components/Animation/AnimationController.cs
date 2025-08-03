@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
     public interface IAnimationController {};
@@ -37,6 +37,11 @@ namespace Momentum.Actor.Hero
             duration = clipDurations[animationRequest.name];
         }
 
+        public float Duration(AnimatorRequest animationRequest)
+        {
+            return clipDurations[animationRequest.name];
+        }
+
 
         public void Tick()
         {
@@ -50,8 +55,8 @@ namespace Momentum.Actor.Hero
 
         private void SetAnimatorValues()
         {
-            animator.SetFloat("MoveX", context.movement.cardinal.x);
-            animator.SetFloat("MoveY", context.movement.cardinal.y);
+            animator.SetFloat("MoveX", context.movement.cardinalDirection.x);
+            animator.SetFloat("MoveY", context.movement.cardinalDirection.y);
         }
 
         private float GetAnimationClipLength(string clipName)

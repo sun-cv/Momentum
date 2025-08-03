@@ -1,16 +1,15 @@
 using System;
-using Momentum.State;
 
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 
-public abstract class BaseState : IState
+public abstract class HeroState : State
 {
     protected readonly Hero                 hero;
 
-     protected AnimationController           animator;
+    protected AnimationController           animator;
 
     protected HeroAttributes                attribute;
     protected HeroContext                   context;
@@ -19,63 +18,31 @@ public abstract class BaseState : IState
     protected HeroContext.Condition         condition;
     protected HeroContext.Movement          movement;
 
-    protected Action OnComplete;
+    protected MovementMode movementMode;
+    protected MovementIntent movementIntent;
+
+    protected Action<Result, TransitionMode> result;
+    protected Progress progress;
 
     protected const float crossFadeDuration = 0.1f;
 
-    protected BaseState(Hero hero)
+    protected HeroState(Hero hero)
     {
-        this.hero       = hero;
-        this.animator   = hero.animator;
+        this.hero           = hero;
+        this.animator       = hero.animator;
 
-        this.context    = hero.context;
-        this.input      = context.input;
-        this.state      = context.state;
-        this.attribute  = context.attributes;
-        this.condition  = context.condition;
-        this.movement   = context.movement;
+        this.context        = hero.context;
+        this.input          = context.input;
+        this.state          = context.state;
+        this.attribute      = context.attributes;
+        this.condition      = context.condition;
+        this.movement       = context.movement;
     }
 
-    public virtual void Enter()
+    public override void ReportResult(Result result, TransitionMode mode)
     {
-        // Noop
+        this.result.Invoke(result, mode);
     }
-
-    public virtual void Exit()
-    {
-        // Noop
-    }
-
-    public virtual void Tick()
-    {
-        // Noop
-    }
-
-    public virtual void TickFixed()
-    {
-        // Noop
-    }
-
-    public virtual void SignalComplete()
-    {
-        // noop
-    }
-
-    public virtual void Cancel()
-    {
-        // noop
-    }
-
-    public virtual void Interrupt()
-    {
-        // noop
-    }
-
-    public virtual void SetOnComplete(Action action)
-    {
-        // noop
-    }
-
 
 }
 

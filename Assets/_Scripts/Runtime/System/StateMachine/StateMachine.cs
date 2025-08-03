@@ -1,46 +1,38 @@
 using System;
 using System.Collections.Generic;
-using Momentum.Debugger;
-using Momentum.Markers;
+
 using UnityEngine;
 
 // BUG WARNING - potential bug auto switching back to transmissionmode.automatic on oncomplete?
 
-namespace Momentum.State
+namespace Momentum
 {
 
     public enum TransitionMode
     {
-        automatic,
-        command,
-        disruption,
-        forced
+        Automatic,
+        Manual,
+        Interrupted,
+        Cancelled
     }
 
     public class StateMachine
     {
 
-        IState previous;
-        IState current;
+        State previous;
+        State current;
 
-        TransitionMode mode                 = TransitionMode.automatic;
+        TransitionMode mode                 = TransitionMode.Automatic;
 
-        Dictionary<Type, IState> states     = new();
+        Dictionary<Type, State> states     = new();
         HashSet<Transition> transitions     = new();
 
         protected Dictionary<Type, StatusFlag> stateFlags   = new();
 
-        protected Action<Type> OnStateEnter;
-        protected Action<Type> OnStateExit;
-        protected Action<Type> OnStateCancel;
-        protected Action<Type> OnStateInterrupt;
-
         public void Tick()
         {
             CheckAutomaticTransition();           
-
             current.Tick();
-
             DebugLogState(current);
         }
 
@@ -49,25 +41,31 @@ namespace Momentum.State
             current.TickFixed();
         }
 
-        protected void SetState(IState state)
+        protected void SetState(State state)
         {
-            current = states[state.GetType()];
-            EnterState(current);
+            current = state;
+            EnterCurrentState();
         }
-    
-        public void ForceState<T>(Action onComplete) where T : IState
+
+        public void CommandState<T>(Action<Result> reportResult) where T : State
         {
-            var state = states.GetValueOrDefault(typeof(T));
+            var state = GetState<T>();
+
+            SetTransitionMode(TransitionMode.Manual);
 
             SetCurrent(state);
-            SetCurrentOncomplete(onComplete, TransitionMode.forced);
+            SetCurrentReportResult(reportResult);
 
-            CancelState(previous);
-            EnterState(current);
+            ExitAutomaticState();
+            EnterCurrentState();
         }
 
+        State GetState<T>()
+        {
+            return states.GetValueOrDefault(typeof(T));
+        }
 
-        public void InterruptState<T>(Action onComplete) where T : IState
+        public void InterruptState<T>() where T : IDisruption
         {
             if (current is not IInterruptible )
             {
@@ -75,73 +73,59 @@ namespace Momentum.State
                 return;
             }
 
-            if (states.GetValueOrDefault(typeof(T)) is not IStateDisruption state)
-            {
-                return;
-            }
-
-            SetCurrent(state);
-            SetCurrentOncomplete(onComplete, TransitionMode.disruption);
-
-            InterruptState(previous);
-            EnterState(current);
+            current.Interrupt();
         }
 
-
-        public void CommandState<T>(Action onComplete) where T : IState
+        public void CancelState()
         {
-            var command = states.GetValueOrDefault(typeof(T));
+            current.Cancel();
+        }
 
-            if (command is not IStateCommand state)
-            {
-                Debug.Log("Attempted to command invalid State change, state required to be ICommand");
-                return;
-            }
-
-            SetCurrent(state);
-            SetCurrentOncomplete(onComplete, TransitionMode.command);
-
-            ExitState(previous);
-            EnterState(current);
+        protected void SetTransitionMode(TransitionMode mode)
+        {
+            this.mode = mode;
         }
 
 
-        protected void ChangeState(IState state)
+        protected void ChangeState(State state)
         {
             if (state == current)
             {
                 return;
             }
-            
+
             SetCurrent(state);
 
-            ExitState(previous);
-            EnterState(current);
+            ExitAutomaticState();
+            EnterCurrentState();
         }
 
-        void EnterState(IState state)
+
+        void EnterCurrentState()
         {
-            state.Enter();
-            SetStateFlag(state.GetType());
+            SetStateFlag(current.GetType());
+            current.Enter();
         }
 
-        void ExitState(IState state)
+        void ExitAutomaticState()
         {
-            state.Exit();
-            ClearStateFlag(state.GetType());
+            if (previous is IAutomatic)
+            {
+                previous.Exit();
+            }   
+            ClearStateFlag(previous.GetType());
         }
 
-        void CancelState(IState state)
+        void SetCurrent(State state)
         {
-            state.Cancel();
-            ClearStateFlag(state.GetType());
+            previous = current;
+            current  = states[state.GetType()];
         }
 
-        void InterruptState(IState state)
+        void SetCurrentReportResult(Action<Result> resultReport)
         {
-            state.Interrupt();
-            ClearStateFlag(state.GetType());
-        } 
+            current.BindResult((result, transition)  => { resultReport(result); SetTransitionMode(transition);});
+        }
 
         protected void SetStateFlag(Type type)
         {
@@ -153,21 +137,10 @@ namespace Momentum.State
             if (stateFlags.TryGetValue(type, out var flag)) flag.Clear();
         }
 
-        void SetCurrent(IState state)
-        {
-            previous = current;
-            current  = states[state.GetType()];
-        }
-
-        void SetCurrentOncomplete(Action callback, TransitionMode _mode)
-        {
-            current.SetOnComplete(() => { callback(); mode = TransitionMode.automatic; });
-            mode = _mode;
-        }
 
         void CheckAutomaticTransition()
         {
-            if (mode != TransitionMode.automatic)
+            if (mode != TransitionMode.Automatic)
             {
                 return;
             }
@@ -179,7 +152,6 @@ namespace Momentum.State
                 ChangeState(transition.To);    
             }
         }
-
 
         Transition GetTransition()
         {
@@ -193,12 +165,12 @@ namespace Momentum.State
             return null;
         }
 
-        public void AddAnyTransition<T>(IState to, T condition)
+        public void AddAnyTransition<T>(State to, T condition)
         {
             transitions.Add(new Transition<T>(GetOrAddState(to), condition));
         }
 
-        protected IState GetOrAddState(IState _state)
+        protected State GetOrAddState(State _state)
         {
             var state = states.GetValueOrDefault(_state.GetType());
 
@@ -212,14 +184,14 @@ namespace Momentum.State
         }
 
 
-        public void DebugLogState(IState state)
+        public void DebugLogState(State state)
         {
             StateDebugDisplay.SetState("State:", state.GetType().Name);
             StateDebugDisplay.SetLatch(mode);
         }
 
-        protected void Any<T>(IState to, Func<bool> condition) => AddAnyTransition(to, condition);
-        protected void Add(IState state, StatusFlag flag) { GetOrAddState(state); stateFlags.Add(state.GetType(), flag); }
+        protected void Any<T>(State to, Func<bool> condition) => AddAnyTransition(to, condition);
+        protected void Add(State state, StatusFlag flag) { GetOrAddState(state); stateFlags.Add(state.GetType(), flag); }
 
     }   
 }

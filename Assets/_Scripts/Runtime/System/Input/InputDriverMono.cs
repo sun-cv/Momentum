@@ -1,10 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Momentum.Events;
-using Momentum.Interface;
 
 
-namespace Momentum.Input
+namespace Momentum
 {
 
 

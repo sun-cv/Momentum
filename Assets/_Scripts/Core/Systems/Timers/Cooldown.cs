@@ -1,11 +1,10 @@
-using Momentum.Markers;
 using UnityEngine;
 
-namespace Momentum.Timers
+namespace Momentum
 {
-    public class Cooldown : Timer
+    public class CooldownTimer : Timer
 {
-    public Cooldown(float value, StatusFlag flag) : base(value) 
+    public CooldownTimer(float value, StatusFlag flag) : base(value) 
     {
         OnTimerStart += ()=> flag.Set();
         OnTimerStop  += ()=> flag.Clear();

@@ -1,90 +1,81 @@
 using System;
-using Momentum.State;
-using Momentum.Timers;
-using UnityEditor.Rendering.LookDev;
+using Unity.VisualScripting;
 using UnityEngine;
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
 
-    public class BasicAttackState : BaseState, IStateCommand, IInterruptible
+    public class BasicAttackState : HeroState, IManual, IInterruptible, ICancellable
     {
         public HeroContext.Action.BasicAttack action;
-        public float duration;
 
         public BasicAttackState(Hero hero) : base(hero) 
         {
             action = hero.context.action.basicAttack;
+
+
         }
 
-        public override void SetOnComplete(Action callback)
+        public override void BindResult(Action<Result, TransitionMode> report)
         {
-            OnComplete = callback;
+            result = report;
         }
-
 
         public override void Enter()
         {
-            state.basicAttack.Set();
-            
-            action.direction        = movement.principal;  
-            action.distance         = attribute.attack.force * attribute.attack.duration;
-        
-            action.startPosition    = context.transform.position;
-            action.targetPosition   = action.startPosition + action.direction * action.distance;
+            movement.mode   = MovementMode.Impulse;
+            movement.intent = MovementIntent.Attack;
 
-            action.attackIntervalTimer              = new Stopwatch();
-            action.attackCooldownTimer              = new Countdown(attribute.attack.attackCooldown);
-            action.attackComboCooldownTimer         = new Countdown(attribute.attack.attackComboCooldown);
+            progress = new Progress(attribute.attack.duration);
 
-            action.attackIntervalTimer.OnTimerStart         += () => action.velocity = attribute.attack.force;
-            action.attackIntervalTimer.OnTimerStop          += () => action.attackCooldownTimer.Start();
-
-            action.attackCooldownTimer.OnTimerStart         += () => action.attackCooldown.Set();
-            action.attackCooldownTimer.OnTimerStop          += () => action.attackCooldown.Clear();
-
-            action.attackComboCooldownTimer.OnTimerStart    += () => { action.attackComboCooldown.Set();};
-            action.attackComboCooldownTimer.OnTimerStop     += () => { action.attackComboCooldown.Clear(); action.attackCount = 0; };
-
-            action.attackIntervalTimer.Start();
-            
             action.attackCount += 1;
 
-            if (action.attackCount == attribute.attack.attackCount)
-            {
-                action.attackComboCooldownTimer     = new Countdown(attribute.attack.attackComboCooldown);
-                action.attackComboCooldownTimer.Start();
-            }
+            movement.impulseDirection   = movement.lastDirection == Vector2.zero ? movement.defaultDirection : movement.lastDirection;
+            movement.force              = attribute.attack.force;
 
-            animator.Play(HeroAnimation.BasicAttack, out duration);
-
-            Debug.Log("Calling enter");
+            movement.impulseRequest.Set();
+            // Animation();     
+            progress.Start();       
         }
 
-        public override void TickFixed()
+        public override void Animation()
         {
-            float attackProgress    = Mathf.Clamp01(action.attackIntervalTimer.CurrentTime / duration);
-            Vector2 newPos          = Vector2.Lerp(action.startPosition, action.targetPosition, attackProgress);
-
-            context.transform.position = newPos;
-
-            if (attackProgress >= 1f)
-            {
-                SignalComplete();
-            }
-
+            animator.Play(HeroAnimation.BasicAttack);
         }
 
-        public override void SignalComplete()
+        public override void Tick()
         {
-            OnComplete.Invoke();
+            UpdateContext();
+            if (ExitConditionMet()) Exit();
+        }
+
+        public override void UpdateContext()
+        {
+            movement.progress = progress.Percent;
+        }
+
+        public override bool ExitConditionMet()
+        {
+            return progress.IsFinished;
         }
 
         public override void Exit()
         {
-            action.attackIntervalTimer.Stop();
-            state.basicAttack.Clear();
+            movement.mode = MovementMode.Dynamic;
+
+            CooldownService.Add(Cooldown.Create<AttackIntervalCooldown>(context));
+
+            ReportResult(Result.Success, TransitionMode.Automatic);
+        }
+
+        public override void Cancel()
+        {
+            movement.mode = MovementMode.Dynamic;
+            
+            CooldownService.Add(Cooldown.Create<AttackIntervalCooldown>(context));
+
+            ReportResult(Result.Cancelled, TransitionMode.Cancelled);
         }
     }
 }

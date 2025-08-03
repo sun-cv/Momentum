@@ -1,12 +1,12 @@
 using System;
 
 
-namespace Momentum.State
+namespace Momentum
 {
 
 public abstract class Transition 
 {
-    public IState To { get; protected set; }
+    public State To { get; protected set; }
     public abstract bool Evaluate();
 }
 
@@ -14,7 +14,7 @@ public class Transition<T> : Transition
 {
     public readonly T condition;
 
-    public Transition(IState to, T condition) 
+    public Transition(State to, T condition) 
     {
         To = to;
         this.condition = condition;

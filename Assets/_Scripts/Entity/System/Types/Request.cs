@@ -1,5 +1,5 @@
 
-namespace Momentum.Markers
+namespace Momentum
 {
 
     public class RequestFlag

@@ -1,7 +1,6 @@
-using Momentum.State;
 
 
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
     public class HeroStateMachine : StateMachine, IStateMachineController

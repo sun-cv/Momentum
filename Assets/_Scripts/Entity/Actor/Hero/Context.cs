@@ -1,11 +1,7 @@
 using UnityEngine;
-using Momentum.Markers;
-using Momentum.Definition;
-using Momentum.Timers;
 
 
-
-namespace Momentum.Actor.Hero
+namespace Momentum
 {
 
     public class HeroContext
@@ -26,7 +22,6 @@ namespace Momentum.Actor.Hero
         {
             public StatusFlag leftClick                 = new();
             public StatusFlag rightClick                = new();
-
 
             public Vector2 mousePosition;
         }
@@ -57,21 +52,41 @@ namespace Momentum.Actor.Hero
             public AutoBool idle;
             public AutoBool locomotion;
 
-            public CardinalDirection    cardinalDirection;
-            public PrincipalDirection   principalDirection;
+            public RequestFlag impulseRequest           = new();
+
+            public CardinalDirection  cardinal;
+            public PrincipalDirection principal;
+
+            public MovementMode mode;
+            public MovementIntent intent;
+            public MovementCondition condition;
 
             public float speed;
+            public float distance;
+            public float progress;
+            public float force;
 
             public Vector2 direction;
-            public Vector2 directionNormalized;
-            public Vector2 cardinal;
-            public Vector2 principal;
+            public Vector2 defaultDirection             = Vector2.down;
+            public Vector2 lastDirection;
+            public Vector2 targetDirection;
+            public Vector2 impulseDirection;
+            public Vector2 lockedDirection;
+            
+            public Vector2 cardinalDirection;
+            public Vector2 principalDirection;
 
             public Vector2 momentum;
             public Vector2 velocity;
             public Vector2 baseVelocity;
             public Vector2 finalVelocity;
             
+            public Vector2 position;
+            public Vector2 startPosition;
+            public Vector2 desiredPosition;
+            public Vector2 targetPosition;
+            public Vector2 endPosition;
+
             public Stopwatch IdleTimer                  = new();
 
             public Movement()
@@ -79,37 +94,29 @@ namespace Momentum.Actor.Hero
                 idle        = new(() => direction == Vector2.zero);
                 locomotion  = new(() => direction != Vector2.zero);
             }
+
+            public void Set(MovementMode mode, MovementIntent intent) { this.mode = mode; this.intent = intent; } 
+
         }
    
         public class Action
         {
 
             public Dash dash                            = new();
+            public BasicAttack basicAttack              = new(); 
+
 
             public class Dash
             {
                 public RequestFlag request              = new();
 
-                public float velocity;
                 public float distance;
-                public float defaultVelocity= 1;
-
-                public Vector2 direction;
-                public Vector2 startPosition;
-                public Vector2 targetPosition;
 
                 public StatusFlag dashCooldown          = new();
             
                 public Timer dashTimer;
-                public Timer dashCooldownTimer;
-
-                public Dash()
-                {
-                    velocity = defaultVelocity;
-                }                
+                public Timer dashCooldownTimer;        
             }
-
-            public BasicAttack basicAttack              = new(); 
 
             public class BasicAttack
             {
@@ -117,16 +124,7 @@ namespace Momentum.Actor.Hero
                 public RequestFlag request              = new();
             
                 public float attackCount;
-
-                public float velocity;
-                public float distance;
-                public float defaultVelocity= 1;
-
-                public Vector2 direction;
-                public Vector2 startPosition;
-                public Vector2 targetPosition;
-            
-            
+           
                 public StatusFlag attackCooldown        = new();
                 public StatusFlag attackComboCooldown   = new();
             
@@ -134,10 +132,6 @@ namespace Momentum.Actor.Hero
                 public Timer attackCooldownTimer;
                 public Timer attackComboCooldownTimer;
                 
-                public BasicAttack()
-                {
-                    velocity = defaultVelocity;
-                }
             }
 
             public ShieldBlock shieldBlock              = new();

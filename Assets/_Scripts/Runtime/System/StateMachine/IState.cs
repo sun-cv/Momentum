@@ -1,43 +1,32 @@
 using System;
-using UnityEngine;
+using NUnit.Framework.Internal;
 
 
-namespace Momentum.State
+namespace Momentum
 {
 
+    public interface IState {}
 
-public interface IState
-{
+    public abstract class State : IState
+    {
+        public abstract void Enter();    
+        public abstract void Exit(); 
+        public abstract void Tick();
 
-    void Enter();                 
-    void SignalComplete();
-    
-    void Exit();        
-    void Cancel();
-    void Interrupt();
+        public virtual  void Cancel() {}
+        public virtual  void Interrupt() {}
+        public virtual  void TickFixed() {}
+        public virtual  void Condition() {}
 
-    void Tick();
-    void TickFixed();
+        public virtual  void Audio() {}
+        public virtual  void Animation() {}
+        public virtual  void BindResult(Action<Result, TransitionMode> action) {}
+        public virtual  void ReportResult(Result result, TransitionMode mode) {}
+        public virtual  void UpdateContext() {}
+        public virtual  void UpdateCondition() {}
+        public virtual  bool ExitConditionMet() { return false;}
 
-    void Audio()       {}
-    void Animation()   {}
-
-    void SetOnComplete(Action action);
-}
-
-
-public enum DisruptionType { Interrupt, Knockback, Stun, Slow }
-
-public interface IStateAutomatic    : IState { public new void SignalComplete() {} public new void SetOnComplete(Action action) {}}
-public interface IStateCommand      : IState {}
-public interface IStateDisruption   : IState { DisruptionType Type { get; } };
-
-public interface IInterruptible {}
-public interface IKnockBackable {}
-public interface IStunnable     {}
-public interface ISlowable      {}
-
-
+    }
 
 
 }
