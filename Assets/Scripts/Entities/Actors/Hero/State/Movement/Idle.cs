@@ -1,20 +1,19 @@
 
 
+
+using UnityEngine;
+
 namespace Momentum.HSM.Hero.Movement
 {
 
     public class Idle : State 
     {
 
-        public Idle(State state) : base(state)
-        {
-
-        }
-
+        public Idle(State state, Context context) : base(state, context) {}
 
         protected override State GetTransition()
         {
-            
+           return null;
         }
 
         protected override void OnEnter()

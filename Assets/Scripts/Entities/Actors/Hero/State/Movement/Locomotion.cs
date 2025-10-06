@@ -1,5 +1,7 @@
 
 
+using UnityEngine;
+
 namespace Momentum.HSM.Hero.Movement
 {
 
@@ -9,10 +11,10 @@ namespace Momentum.HSM.Hero.Movement
         public readonly Idle Idle;
         public readonly Sprint Sprint;
 
-        public Locomotion(State state) : base(state)
+        public Locomotion(State state, Context context) : base(state, context)
         {
-            Idle    = new(this);
-            Sprint  = new(this);
+            Idle    = new(this, context);
+            Sprint  = new(this, context);
         }
 
         protected override State GetInitialState()
@@ -22,10 +24,13 @@ namespace Momentum.HSM.Hero.Movement
 
         protected override State GetTransition()
         {
-            // Movement Vector = 0 > Idle
-            // Movement Vector != 0 > Sprint;
+            if (entity.movement.idle)
+                return Idle;
+            
+            if(entity.movement.sprint)
+                return Sprint;
 
-            return null;
+            return Idle;
         }
 
         protected override void OnEnter()

@@ -7,13 +7,10 @@ namespace Momentum.HSM.Hero.Movement
     {
 
         public readonly Locomotion Locomotion;
-        public readonly Dash Dash;
 
-        public Enabled(State state) : base(state)
+        public Enabled(State state, Context context) : base(state, context)
         {
-            Locomotion  = new(this);
-            Dash        = new(this);
-
+            Locomotion  = new(this, context);
         }
 
         protected override State GetInitialState()
@@ -23,10 +20,7 @@ namespace Momentum.HSM.Hero.Movement
 
         protected override State GetTransition()
         {
-
-            // Dash Command > Dash;
-
-            return Locomotion;
+            return null;
         }
 
         protected override void OnEnter()

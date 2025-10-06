@@ -1,0 +1,8 @@
+[*.{cs,vb}]
+
+# IDE0130: Namespace does not match folder structure
+dotnet_style_namespace_match_folder = false
+[*.cs]
+
+# Default severity for analyzer diagnostics with category 'Style'
+dotnet_analyzer_diagnostic.category-Style.severity = none

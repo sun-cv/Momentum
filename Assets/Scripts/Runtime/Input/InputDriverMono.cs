@@ -5,7 +5,6 @@ using UnityEngine.InputSystem;
 namespace Momentum
 {
 
-
     public class InputDriverMono : MonoBehaviour
     {
         private InputActions inputAction;
@@ -89,6 +88,7 @@ namespace Momentum
         void OnAimPress(InputAction.CallbackContext _ctx)           => EventBus<AimPress>       .Raise(new ());
         void OnAimRelease(InputAction.CallbackContext _ctx)         => EventBus<AimRelease>     .Raise(new ());
     
-    
+        public Vector2 GetMovement()        => Mouse.current.position?.ReadValue() ?? Vector2.zero;
+        public Vector2 GetMousePosition()   => inputAction.Player.Move.ReadValue<Vector2>();
     }
 }

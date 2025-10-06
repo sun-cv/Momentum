@@ -1,33 +1,29 @@
 
 
-using System.Buffers.Text;
-
 namespace Momentum.HSM.Hero.Movement
 {
 
     public class RootMovement : State 
     {
         
-        public readonly Enabled enabled;
-        public readonly Disabled disabled;
+        public readonly Enabled Enabled;
+        public readonly Disabled Disabled;
 
 
-        public RootMovement() : base()
+        public RootMovement(Context context) : base(null, context)
         {
-            enabled  = new(this);
-            disabled = new(this);
+            Enabled  = new(this, context);
+            Disabled = new(this, context);
         }
 
 
         protected override State GetInitialState()
         {
-            return enabled;
+            return Enabled;
         }
 
         protected override State GetTransition()
         {
-            // Status == disabled ?? Disabled : Enabled;
-            // REWORK REQUIRED implement status component and read context?
             return null;
         }
 

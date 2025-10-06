@@ -7,10 +7,8 @@ namespace Momentum.HSM.Hero.Movement
     public class Dash : State 
     {
 
-        public Dash(State state) : base(state)
-        {
+        public Dash(State state, Context context) : base(state, context) {}
 
-        }
 
 
         protected override State GetTransition()
@@ -20,8 +18,7 @@ namespace Momentum.HSM.Hero.Movement
 
         protected override void OnEnter()
         {
-            // Add movement activity?
-            // Add();
+
         }
 
         protected override void OnUpdate(float deltaTime)

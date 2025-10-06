@@ -4,58 +4,17 @@ using UnityEngine;
 
 namespace Momentum
 {
+
+
     public class Provider : MonoBehaviour, IDependencyProvider
-    {
-        // [Provide]
-        public ServiceA ProvideServiceA()
-        {
-            return new ServiceA();
-        }
+    {       
+        [Provide] public IInputRouter           provideInputRouter()            => new InputRouter();
+        [Provide] public IAbilitySystem         provideAbilitySystem()          => new AbilitySystem();
+        [Provide] public ICommandSystem         provideCommandsystem()          => new CommandSystem();
+        [Provide] public IAttributeSystem       provideAttributeSystem()        => new AttributeSystem();
+        [Provide] public IMovementEngine        provideMovementEngine()         => new MovementEngine();
 
-        // [Provide]
-        public ServiceB ProvideServiceB()
-        {
-            return new ServiceB();
-        }
-
-        // [Provide]
-        public FactoryA ProvideFactoryA()
-        {
-            return new FactoryA();
-        }
-    }
-
-
-    public class ServiceA
-    {
-        public void Initialize(String string1)
-        {
-        }
+        [Provide] public IAnimationController   provideAnimationController()    => new AnimationController();
 
     }
-
-    public class ServiceB 
-    {
-        public void Initialize(String string1)
-        {
-        }
-
-    }
-
-    
-
-
-    public class FactoryA
-    {
-        ServiceA cachedServiceA;
-
-        public ServiceA CreateServiceA()
-        {
-            cachedServiceA ??= new ServiceA();
-            return cachedServiceA;
-        }
-    }
-
-    
-
 }

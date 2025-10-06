@@ -7,7 +7,7 @@ namespace Momentum.HSM.Hero.Movement
     public class Sprint : State 
     {
 
-        public Sprint(State state) : base(state)
+        public Sprint(State state, Context context) : base(state, context)
         {
 
         }
@@ -15,12 +15,12 @@ namespace Momentum.HSM.Hero.Movement
 
         protected override State GetInitialState()
         {
-
+            return null;
         }
 
         protected override State GetTransition()
         {
-
+           return null;
         }
 
         protected override void OnEnter()

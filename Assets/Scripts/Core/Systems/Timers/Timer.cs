@@ -11,6 +11,7 @@ public abstract class Timer : IDisposable
     protected float initialTime;
 
     public float InitialTime    { get; protected set; }
+    public float StartedTime    { get; protected set; }
     public float CurrentTime    { get; protected set; }
     public bool  IsRunning      { get; protected set; }
     public float Percent => initialTime > 0 ? Mathf.Clamp01(CurrentTime / initialTime) : 1f;
@@ -26,7 +27,8 @@ public abstract class Timer : IDisposable
     public virtual void Start()
     {
         CurrentTime = initialTime;
-
+        StartedTime = Time.time;
+        
         if (!IsRunning)
         {
             IsRunning = true;
