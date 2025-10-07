@@ -11,7 +11,7 @@ namespace Momentum
     public class Hero : Entity
     {
         public InputRouterComponent     input;
-        public AbilityComponent         ability;
+        // public AbilityComponent         ability;
         public CommandComponent         command;
         public AttributeComponent       attribute;
         public MovementEngineComponent  movement;
@@ -26,7 +26,7 @@ namespace Momentum
             CreateContext();
 
             input           .Initialize();
-            ability         .Initialize(context);
+            // ability         .Initialize(context);
             command         .Initialize(context, context.entity.Hero.Intent.input);
             attribute       .Initialize();
             movement        .Initialize(context, context.entity.Hero.Intent.movement);
@@ -37,8 +37,8 @@ namespace Momentum
         
         public void OnEnable() 
         {
-            command.System  .AssignAbilitySystem(ability.System);
-            command.System  .AssignAbilityMap(ability.Abilities);
+            // command.System  .AssignAbilitySystem(ability.System);
+            // command.System  .AssignAbilityMap(ability.Abilities);
         }
 
         public void Update()
@@ -46,7 +46,7 @@ namespace Momentum
             input.Router    .Tick();
 
             command.System  .Tick();
-            ability.System  .Tick();
+            // ability.System  .Tick();
 
             movementState   .Tick();
             behaviorState   .Tick();
@@ -73,7 +73,7 @@ namespace Momentum
                 component  = new ComponentContext()
                 {
                     input       = input,
-                    ability     = ability,
+                    // ability     = ability,
                     command     = command,
                     attribute   = attribute,
                     movement    = movement,

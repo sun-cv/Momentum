@@ -6,7 +6,7 @@ namespace Momentum
 {
 
     // [Serializable]
-    // class SpawnVFXEffect : AbilityEffect 
+    // class SpawnVFXEffect : Effect 
     // {
     //     public GameObject prefab;
     //     public override void Execute(AbilityContext context)

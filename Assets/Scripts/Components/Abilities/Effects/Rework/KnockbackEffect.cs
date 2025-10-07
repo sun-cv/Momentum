@@ -7,7 +7,7 @@ namespace Momentum
 
     
     // [Serializable]
-    // class KnockbackEffect : AbilityEffect 
+    // class KnockbackEffect : Effect 
     // {
     //     public float force;
 

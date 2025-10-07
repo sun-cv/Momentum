@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -7,67 +8,81 @@ namespace Momentum
 
 public abstract class MetaBase
 {
-    public Guid  Id                     { get; }                = Guid.NewGuid();
-
-    public float TimeCreated            { get; private set; }   = Time.time;
-    public float TimeExecuted           { get; private set; }
-    public float TimePaused             { get; private set; }
-    public float TimeResumed            { get; private set; }
-    public float TimeCancelled          { get; private set; }
-    public float TimeInterrupted        { get; private set; }
-    public float TimeCompleted          { get; private set; }
-
-
-
+    public Guid Id                      { get; }                = Guid.NewGuid();
+    public Status Status                { get; protected set; } = Status.None;
+    
+    public float TimeCreated            { get; private   set; }
     public void MarkCreated()           => TimeCreated          = Time.time;
-    public void MarkExecuted()          => TimeExecuted         = Time.time;
-    public void MarkPaused()            => TimePaused           = Time.time;
-    public void MarkResumed()           => TimeResumed          = Time.time;
-    public void MarkCancelled()         => TimeCancelled        = Time.time;
-    public void MarkInterrupted()       => TimeInterrupted      = Time.time;
-    public void MarkCompleted()         => TimeCompleted        = Time.time;
 }
 
 public class Meta : MetaBase {}
 
-public class RequestMeta : MetaBase
+public class RequestMeta : Meta
 {
-    public float TimeBuffered           { get; private set; }
-    public float TimeValidated          { get; private set; }
-    public float TimeInvalidated        { get; private set; }
-    public float TimePending            { get; private set; }
-    public float TimeExpired            { get; private set; }
-    public float TimeResolved           { get; private set; }
+    public Request  request             { get; private set; }
+    public Response response            { get; private set; }
 
-    public void MarkBuffered()          => TimeBuffered         = Time.time;
-    public void MarkValidated()         => TimeValidated        = Time.time;
-    public void MarkInvalidated()       => TimeInvalidated      = Time.time;
-    public void MarkPending()           => TimePending          = Time.time;
-    public void MarkExpired()           => TimeExpired          = Time.time;
-    public void MarkResolved()          => TimeResolved         = Time.time;
+    public float Accepted               { get; private set; }
+    public float Rejected               { get; private set; }
+    public float Pending                { get; private set; }
+    public float Expired                { get; private set; }
+
+    public void MarkAccepted()          { Accepted = Time.time; response = Response.Accepted; } 
+    public void MarkRejected()          { Rejected = Time.time; response = Response.Rejected; } 
+    public void MarkPending()           { Pending  = Time.time; response = Response.Pending;  } 
+    public void MarkExpired()           { Expired  = Time.time; response = Response.Expired;  }
 }
 
-public class AbilityMeta : MetaBase
+public class ExecutionMeta : Meta
 {
-    public float TimeActivating         { get; private set; }
-    public float TimeActivated          { get; private set; }
-    public float TimeDeactivating       { get; private set; }
-    public float TimeDeactivated        { get; private set; }
+    public Lifecycle Lifecycle          { get; private set; }
 
-    public void MarkActivating()        => TimeActivating       = Time.time;       
-    public void MarkActivated()         => TimeActivated        = Time.time;  
-    public void MarkDeactivating()      => TimeDeactivating     = Time.time;  
-    public void MarkDeactivated()       => TimeDeactivated      = Time.time;  
+    public float Queued                 { get; private set; }   
+    public float Running                { get; private set; }   
+    public float Paused                 { get; private set; }   
+    public float Completed              { get; private set; }   
+    public float Failed                 { get; private set; }   
+    public float Cancelled              { get; private set; }   
+    public float Interrupted            { get; private set; }   
 
-    public float TimeCastActivated      { get; private set; }
-    public float TimeCastCancelled      { get; private set; }
-    public float TimeCastInterrupted    { get; private set; }
-    public float TimeCastCompleted      { get; private set; }
+    public void MarkQueued()            { Queued      = Time.time; Lifecycle = Lifecycle.Queued;      Status = Status.Inactive; }         
+    public void MarkRunning()           { Running     = Time.time; Lifecycle = Lifecycle.Running;     Status = Status.Active;   }    
+    public void MarkPaused()            { Paused      = Time.time; Lifecycle = Lifecycle.Paused;      Status = Status.Disabled; }    
+    public void MarkCompleted()         { Completed   = Time.time; Lifecycle = Lifecycle.Completed;   Status = Status.Inactive; }    
+    public void MarkFailed()            { Failed      = Time.time; Lifecycle = Lifecycle.Failed;      Status = Status.Disabled; }    
+    public void MarkCancelled()         { Cancelled   = Time.time; Lifecycle = Lifecycle.Cancelled;   Status = Status.Disabled; }    
+    public void MarkInterrupted()       { Interrupted = Time.time; Lifecycle = Lifecycle.Interrupted; Status = Status.Disabled; }    
+}
 
-    public void MarkCastActivated()     => TimeCastActivated    = Time.time;  
-    public void MarkCastCancelled()     => TimeCastCancelled    = Time.time;  
-    public void MarkCastInterrupted()   => TimeCastInterrupted  = Time.time;  
-    public void MarkCastCompleted()     => TimeCastCompleted    = Time.time;  
+public class AbilityRequestMeta : RequestMeta
+{
+    public float Buffered               { get; private set; }
+    public float Validated              { get; private set; }
+    public float Resolved               { get; private set; }
+
+    public void MarkBuffered()          => Buffered         = Time.time;
+    public void MarkValidated()         => Validated        = Time.time;
+    public void MarkResolved()          => Resolved         = Time.time;
+}
+
+public class AbilityInstanceMeta : ExecutionMeta
+{
+
+    public float Activated              { get; private set; }
+    public float Deactivated            { get; private set; }
+
+    public void MarkActivated()         => Activated        = Time.time;  
+    public void MarkDeactivated()       => Deactivated      = Time.time;  
+
+    public float CastActivated          { get; private set; }
+    public float CastCancelled          { get; private set; }
+    public float CastInterrupted        { get; private set; }
+    public float CastCompleted          { get; private set; }
+
+    public void MarkCastActivated()     => CastActivated    = Time.time;  
+    public void MarkCastCancelled()     => CastCancelled    = Time.time;  
+    public void MarkCastInterrupted()   => CastInterrupted  = Time.time;  
+    public void MarkCastCompleted()     => CastCompleted    = Time.time;  
 }
 
 

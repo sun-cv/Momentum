@@ -5,33 +5,33 @@
 // namespace Momentum
 // {
 //     [EffectCategory("Movement")]
-//     public class MovementEffect : AbilityEffect 
+//     public class MovementEffect : Effect 
 //     {
 //         [Header("Effect specific")]
 //         public bool test;
 
-//         public override IRuntimeEffect CreateRuntime(AbilityInstance instance) => new Runtime(this, instance);
+//         public override IRuntimeEffect CreateRuntime(Instance instance) => new Runtime(this, instance);
 
 //         sealed class Runtime : IRuntimeEffect
 //         {
-//             readonly AbilityInstance ability;
+//             readonly Instance ability;
 //             readonly MovementEffect  effect;
 
-//             public Runtime(MovementEffect effect, AbilityInstance instance) 
+//             public Runtime(MovementEffect effect, Instance instance) 
 //             {
 //                 this.ability = instance; this.effect = effect;
 //             }
 
-//             public void OnPhase(AbilityPhase phase) 
+//             public void OnPhase(Phase phase) 
 //             {
 
-//                 if ((phase == AbilityPhase.CastStart) && effect.autoStart)
+//                 if ((phase == Phase.CastStart) && effect.autoStart)
 //                     Debug.Log("effect ability phase cast start");
 
-//                 if ((phase == AbilityPhase.CastComplete) && effect.autoComplete)
+//                 if ((phase == Phase.CastComplete) && effect.autoComplete)
 //                     Debug.Log("effect ability phase cast complete");
 
-//                 if ((phase == AbilityPhase.Cancel || phase == AbilityPhase.Interrupt) && effect.autoCancel)
+//                 if ((phase == Phase.Cancel || phase == Phase.Interrupt) && effect.autoCancel)
 //                     Debug.Log("effect ability phase cast cancel || interrupt.");            
 //             }
 

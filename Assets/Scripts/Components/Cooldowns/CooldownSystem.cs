@@ -1,10 +1,9 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Momentum.Test;
 using Unity.VisualScripting;
+using Momentum.Abilities;
 
 namespace Momentum
 {
@@ -13,9 +12,9 @@ namespace Momentum
     {
         private readonly Dictionary<Ability, Cooldown> cooldowns        = new();
         private readonly List<Ability> expired                          = new();
-        private readonly Dictionary<AbilityExecution, Cooldown> global  = new();
+        private readonly Dictionary<Execution, Cooldown> global  = new();
         
-        public void Resolve(AbilityInstance instance)
+        public void Resolve(Instance instance)
         {
             var ability  = instance.ability;
             var cooldown = instance.ability.cooldown;
@@ -28,20 +27,20 @@ namespace Momentum
             cooldown.Initialize(ability);
             cooldowns[ability] = cooldown;
 
-            if (ability.execution == AbilityExecution.Instant)
+            if (ability.execution == Execution.Instant)
             {
                 var gcd = new Cooldown();
                 // REWORK REQUIRED
                 gcd.rules.Add(new FixedDurationRule(){ duration = 1});
-                global.Add(AbilityExecution.Instant, gcd);
+                global.Add(Execution.Instant, gcd);
             }
         }
 
-        public void AddGlobalCooldown(AbilityMode model)
+        public void AddGlobalCooldown(Mode model)
         {
             var cooldown = new Cooldown();
             cooldown.rules.Add(new FixedDurationRule(){ duration = 5});
-            global.Add(AbilityExecution.Instant, cooldown);
+            global.Add(Execution.Instant, cooldown);
         }
 
         public bool IsTracking(Ability ability)

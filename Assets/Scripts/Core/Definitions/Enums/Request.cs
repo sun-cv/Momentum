@@ -2,35 +2,37 @@
 
 namespace Momentum
 {
+
     public enum Request
     {
-        Set,
-        Get,
+        Create,
+        Destroy,
         Start,
         Stop,
         Enter,
         Exit,
-        Create,
-        Destroy,
+        Set,
+        Get,
         Clear,
         Queue,
         Interrupt,
         Override,
         Switch,
         Transition,
-        Request,
-        Cancel,
+        Cancel
     }
-
-
     public enum Response
     {
-        Error,
         Success,
         Failure,
-        Pending,
+        Accepted,
+        Rejected,
         Denied,
+        Pending,
+        Expired,
         Canceled,
         Blocked,
+        Invalid
     }
+
 }

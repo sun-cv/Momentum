@@ -6,7 +6,7 @@ namespace Momentum.HSM.Hero.Behavior
 
     public class Alive : State 
     {
-        public IAbilitySystem ability;
+        // public IAbilitySystem ability;
 
         public Disabled Disabled;
         public Idle Idle;
@@ -20,7 +20,7 @@ namespace Momentum.HSM.Hero.Behavior
 
         public Alive(State state, Context context) : base(state, context) 
         {
-            ability     = component.ability.System;
+            // ability     = component.ability.System;
             Disabled    = new(this, context);   
             Idle        = new(this, context);
             Cast        = new(this, context);
@@ -31,23 +31,23 @@ namespace Momentum.HSM.Hero.Behavior
 
         protected override State GetTransition()
         {
-            if (disabled)
-                return Disabled;
+            // if (disabled)
+            //     return Disabled;
 
-            if (ability.HasEngaged(AbilityState.Dash)) 
-                return Dash;
+            // if (ability.HasEngaged(AbilityState.Dash)) 
+            //     return Dash;
 
-            if (ability.HasEngaged(AbilityState.ShieldHeld)) 
-                return ShieldHeld;
+            // if (ability.HasEngaged(AbilityState.ShieldHeld)) 
+            //     return ShieldHeld;
 
-            if (ability.HasEngaged(AbilityState.Attack)) 
-                return Attack;
+            // if (ability.HasEngaged(AbilityState.Attack)) 
+            //     return Attack;
 
-            if (ability.CastRequested)
-                return Cast;
+            // if (ability.CastRequested)
+            //     return Cast;
             
-            if (ActiveChild != Idle)
-                return Idle;
+            // if (ActiveChild != Idle)
+            //     return Idle;
 
             return null;
         }

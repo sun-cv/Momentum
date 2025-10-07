@@ -6,7 +6,7 @@ namespace Momentum
 {
 
     // [Serializable]
-    // class DamageEffect : AbilityEffect 
+    // class DamageEffect : Effect 
     // {
     //     public int amount;
 

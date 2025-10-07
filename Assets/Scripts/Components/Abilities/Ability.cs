@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
-namespace Momentum
+namespace Momentum.Abilities
 {
     
     [Serializable]
-    public struct AbilityRuntimeSettings
+    public struct RuntimeSettings
     {
         public bool cancellable;
         [Range(0f, 10f)]public float minimumRuntime;
@@ -19,14 +18,13 @@ namespace Momentum
     }
 
     [Serializable]
-    public struct AbilityQueueing
+    public struct Queueing
     {
         public bool bufferable;
-        [Range(0f, 10f)] public float inputBuffer;
-        [Range(0f, 10f)] public float expiration;
-        [Range(0f, 10f)] public float validBuffer;
+        [Range(0f, 1f)] public float input;
+        [Range(0f, 1f)] public float eligible;
+        [Range(0f, 1f)] public float expiration;
     }
-
 
 
     [CreateAssetMenu(fileName = "Ability", menuName = "Momentum/Entity/Ability")]
@@ -37,38 +35,38 @@ namespace Momentum
 
         [Header("Ability Classification")]
         [Range(0f, 100f)] public int priority              = 0;
-        public AbilityCategory       category;
-        public AbilityMode           mode;
-        public List<AbilityCategory> overrideCategories;
+        public Category       category;
+        public Mode           mode;
+        public List<Category> overrideCategories;
 
         [Header("Casting Conditions")]
         public bool requiresState; 
-        public AbilityState requiredState; 
+        public State requiredState; 
         [SerializeReference]
         public List<AbilityPredicate> predicates;
 
         [Header("Queueing Rules")]
-        public AbilityQueueing queueing;
+        public Queueing queueing;
 
         [Header("Runtime Rules")]
-        public AbilityRuntimeSettings runtime;
+        public RuntimeSettings runtime;
 
         [Header("Cooldown configuration")]
         public bool enableCooldown                          = true;
         public Cooldown cooldown;
 
         [Header("Casting")]
-        public AbilityExecution execution;
+        public Execution execution;
         [Range(0f, 10f)] public float castTime              = 0f;
         [Header("Combos")]
         public bool enableCombo;
-        public List<ComboSequence> combos;
+        // public List<ComboSequence> combos;
 
         [Header("Effects")]
         [SerializeReference]
-        public List<AbilityEffect> effects;
+        public List<Effect> effects;
 
-        private void OnEnable() { if (string.IsNullOrEmpty(id)) id = name; effects ??= new List<AbilityEffect>(); }
+        private void OnEnable() { if (string.IsNullOrEmpty(id)) id = name; effects ??= new List<Effect>(); }
     }
 }
 

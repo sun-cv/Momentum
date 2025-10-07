@@ -7,35 +7,35 @@
 // namespace Momentum
 // {
 //     [EffectCategory("Combat/Detection")]
-//     public class HitboxEffect : AbilityEffect 
+//     public class HitboxEffect : Effect 
 //     {
 //         [Header("Effect specific")]
 //         public GameObject hitboxPrefab;
 
-//         public override RuntimeEffect CreateRuntime(AbilityInstance instance) => new Runtime(this, instance);
+//         public override RuntimeEffect CreateRuntime(Instance instance) => new Runtime(this, instance);
 
 //         sealed class Runtime : RuntimeEffect
 //         {
-//             readonly AbilityInstance ability;
+//             readonly Instance ability;
 //             readonly HitboxEffect   effect;
 //             Transform   attach;
 //             GameObject  instance;
 //             Collider2D  hitbox;
 
-//             public Runtime(HitboxEffect effect, AbilityInstance instance) 
+//             public Runtime(HitboxEffect effect, Instance instance) 
 //             {
 //                 this.ability = instance; this.effect = effect;
 //             }
 
-//             public void OnPhase(AbilityPhase phase) 
+//             public void OnPhase(Phase phase) 
 //             {
-//                 if ((phase == AbilityPhase.CastStart) && effect.autoStart)
+//                 if ((phase == Phase.CastStart) && effect.autoStart)
 //                     Spawn();
                 
-//                 if ((phase == AbilityPhase.CastComplete) && effect.autoComplete)
+//                 if ((phase == Phase.CastComplete) && effect.autoComplete)
 //                     Despawn();
 
-//                 if ((phase == AbilityPhase.Cancel || phase == AbilityPhase.Interrupt) && effect.autoCancel)
+//                 if ((phase == Phase.Cancel || phase == Phase.Interrupt) && effect.autoCancel)
 //                     Despawn();
 //             }
 

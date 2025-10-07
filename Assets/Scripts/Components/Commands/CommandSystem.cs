@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using Momentum.Abilities;
 
 namespace Momentum
 {
-
 
 
     public interface ICommandSystem 
     {
         public void Initialize(InputIntent intent);
         public void Tick();
-        public void AssignAbilitySystem(IAbilitySystem system);
+        public void AssignAbilitySystem(IAbilityEngine system);
         public void AssignAbilityMap(List<Ability> abilities);
     }
 
@@ -27,7 +27,7 @@ namespace Momentum
         CommandRegistry  registry = new();
         CommandResolver  resolver = new();
 
-        IAbilitySystem   ability;
+        IAbilityEngine   ability;
 
         public void Initialize(InputIntent intent)
         {
@@ -36,10 +36,10 @@ namespace Momentum
 
         public void Tick()
         {
-            ability.Request(resolver.InputIntentToAbilities(registry, intent.activeButtons));
+            // ability.Request(resolver.InputIntentToAbilities(registry, intent.activeButtons));
         }
 
-        public void AssignAbilitySystem(IAbilitySystem system)
+        public void AssignAbilitySystem(IAbilityEngine system)
         {
             this.ability = system;
         }

@@ -6,7 +6,7 @@ namespace Momentum
 {
 
     // [Serializable]
-    // class AreaDamageEffect : AbilityEffect 
+    // class AreaDamageEffect : Effect 
     // {
     //     public float radius;
     //     public int amount;

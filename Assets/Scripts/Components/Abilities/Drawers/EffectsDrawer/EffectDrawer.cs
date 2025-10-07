@@ -6,8 +6,8 @@ using System.Collections.Generic;
 
 namespace Momentum
 {
-    [CustomPropertyDrawer(typeof(AbilityEffect), true)]
-    public class AbilityEffectDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(Effect), true)]
+    public class EffectDrawer : PropertyDrawer
     {
         static Dictionary<string, Type> typeMap;
 
@@ -71,7 +71,7 @@ namespace Momentum
 
         static void BuildTypeMap()
         {
-            var baseType = typeof(AbilityEffect);
+            var baseType = typeof(Effect);
 
             typeMap = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(asm =>
