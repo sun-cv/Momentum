@@ -6,24 +6,41 @@ namespace Momentum.Abilities
 {
     
     [Serializable]
-    public struct RuntimeSettings
+    public struct ArbitrationSettings
     {
-        public bool cancellable;
-        [Range(0f, 10f)]public float minimumRuntime;
-
-        public bool interruptible;
-        [Range(0f, 10f)]public float lingerDuration;
-
-        public bool becomeConcurrent;
+        [Range(0f, 100f)] public int priority;
+        public Mode        mode;
+        public List<Token> tokens;
+        public bool        preemptable;
+        public bool        preemptReserved;
     }
 
     [Serializable]
-    public struct Queueing
+    public struct CastingSettings
+    {
+        public bool requiresState; 
+        public State requiredState; 
+        [SerializeReference]
+        public List<AbilityPredicate> predicates;
+    }
+
+    [Serializable]
+    public struct BufferSettings
     {
         public bool bufferable;
         [Range(0f, 1f)] public float input;
         [Range(0f, 1f)] public float eligible;
         [Range(0f, 1f)] public float expiration;
+    }
+
+    [Serializable]
+    public struct RuntimeSettings
+    {
+        public bool cancellable;
+        [Range(0f, 10f)]public float minimumRuntime;
+        public bool interruptible;
+        [Range(0f, 10f)]public float lingerDuration;
+        public bool becomeConcurrent;
     }
 
 
@@ -33,20 +50,14 @@ namespace Momentum.Abilities
         [Header("Ability Identity")]
         public string id;
 
-        [Header("Ability Classification")]
-        [Range(0f, 100f)] public int priority              = 0;
-        public Category       category;
-        public Mode           mode;
-        public List<Category> overrideCategories;
+        [Header("Ability Arbitration")]
+        public ArbitrationSettings arbitration;
 
         [Header("Casting Conditions")]
-        public bool requiresState; 
-        public State requiredState; 
-        [SerializeReference]
-        public List<AbilityPredicate> predicates;
+        public CastingSettings casting;
 
-        [Header("Queueing Rules")]
-        public Queueing queueing;
+        [Header("Buffering Rules")]
+        public BufferSettings buffer;
 
         [Header("Runtime Rules")]
         public RuntimeSettings runtime;
@@ -70,5 +81,4 @@ namespace Momentum.Abilities
     }
 }
 
-            // REWORK REQUIRED - Remove once moved internal.
-        // public bool HasComboAtStep(int step) => combos != null && combos[step] != null;
+

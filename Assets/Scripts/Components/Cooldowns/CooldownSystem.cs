@@ -5,10 +5,10 @@ using Momentum.Test;
 using Unity.VisualScripting;
 using Momentum.Abilities;
 
-namespace Momentum
+namespace Momentum.Abilities
 {
 
-    public class AbilityCooldowns
+    public class Cooldowns
     {
         private readonly Dictionary<Ability, Cooldown> cooldowns        = new();
         private readonly List<Ability> expired                          = new();

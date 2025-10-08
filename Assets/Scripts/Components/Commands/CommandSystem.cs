@@ -47,8 +47,6 @@ namespace Momentum
         {
             registry.GenerateMap(abilities);
         }
-        
-
     }
 
 
@@ -79,7 +77,7 @@ namespace Momentum
 
             foreach (var ability in abilities)
             {
-                foreach ( var requirement in ability.predicates)
+                foreach ( var requirement in ability.casting.predicates)
                 {
                     if (requirement is not ButtonInputRequirement buttonInputRequirement)
                         continue;

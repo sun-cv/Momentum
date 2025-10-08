@@ -36,7 +36,7 @@ namespace Momentum
 
 
         public Button(ButtonInput input)        => Input = input;
-        public ButtonPredicate predicate        => new(){input = Input, condition = Condition };
+        public ButtonPredicate predicate        => new(){ input = Input, condition = Condition };
     }
 
 

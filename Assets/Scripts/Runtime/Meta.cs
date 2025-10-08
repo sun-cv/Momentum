@@ -10,9 +10,9 @@ public abstract class MetaBase
 {
     public Guid Id                      { get; }                = Guid.NewGuid();
     public Status Status                { get; protected set; } = Status.None;
-    
+
     public float TimeCreated            { get; private   set; }
-    public void MarkCreated()           => TimeCreated          = Time.time;
+    public void MarkCreated()           { TimeCreated = Time.time; }
 }
 
 public class Meta : MetaBase {}
@@ -33,7 +33,7 @@ public class RequestMeta : Meta
     public void MarkExpired()           { Expired  = Time.time; response = Response.Expired;  }
 }
 
-public class ExecutionMeta : Meta
+public class LifecycleMeta : Meta
 {
     public Lifecycle Lifecycle          { get; private set; }
 
@@ -52,37 +52,6 @@ public class ExecutionMeta : Meta
     public void MarkFailed()            { Failed      = Time.time; Lifecycle = Lifecycle.Failed;      Status = Status.Disabled; }    
     public void MarkCancelled()         { Cancelled   = Time.time; Lifecycle = Lifecycle.Cancelled;   Status = Status.Disabled; }    
     public void MarkInterrupted()       { Interrupted = Time.time; Lifecycle = Lifecycle.Interrupted; Status = Status.Disabled; }    
-}
-
-public class AbilityRequestMeta : RequestMeta
-{
-    public float Buffered               { get; private set; }
-    public float Validated              { get; private set; }
-    public float Resolved               { get; private set; }
-
-    public void MarkBuffered()          => Buffered         = Time.time;
-    public void MarkValidated()         => Validated        = Time.time;
-    public void MarkResolved()          => Resolved         = Time.time;
-}
-
-public class AbilityInstanceMeta : ExecutionMeta
-{
-
-    public float Activated              { get; private set; }
-    public float Deactivated            { get; private set; }
-
-    public void MarkActivated()         => Activated        = Time.time;  
-    public void MarkDeactivated()       => Deactivated      = Time.time;  
-
-    public float CastActivated          { get; private set; }
-    public float CastCancelled          { get; private set; }
-    public float CastInterrupted        { get; private set; }
-    public float CastCompleted          { get; private set; }
-
-    public void MarkCastActivated()     => CastActivated    = Time.time;  
-    public void MarkCastCancelled()     => CastCancelled    = Time.time;  
-    public void MarkCastInterrupted()   => CastInterrupted  = Time.time;  
-    public void MarkCastCompleted()     => CastCompleted    = Time.time;  
 }
 
 

@@ -5,6 +5,7 @@ namespace Momentum
 
     public enum Request
     {
+        None,
         Create,
         Destroy,
         Start,
@@ -15,24 +16,38 @@ namespace Momentum
         Get,
         Clear,
         Queue,
+        Execute,
+        Cancel,
         Interrupt,
         Override,
         Switch,
         Transition,
-        Cancel
     }
+
     public enum Response
     {
+        None,
+        Pending,
+        Buffered,
         Success,
         Failure,
         Accepted,
         Rejected,
-        Denied,
-        Pending,
         Expired,
         Canceled,
-        Blocked,
         Invalid
+    }
+
+    public enum Command
+    {
+        None,
+        Pend,
+        Buffer,
+        Accept,
+        Reject,
+        Expire,
+        Cancel,
+        Invalidate,
     }
 
 }

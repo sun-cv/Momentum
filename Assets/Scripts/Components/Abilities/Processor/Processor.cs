@@ -2,40 +2,36 @@
 
 namespace Momentum.Abilities
 {
-    public enum Decision { Accept, Reject, Buffer, Resolve, Execute, Pending }
-
     public interface IEvaluator
     {
-        public Decision Decide(Request ability);
+        public Response Evaluate(Request ability);
     }
 
     public class Processor
     {
+        Factory     factory;
+
         Resolver    resolver;
         Validator   validator;
 
-        public Decision Resolve(Request request)  => resolver.Decide(request);
-        public Decision Validate(Request request) => validator.Decide(request);
-    }
+        public Processor(Factory factory) 
+        {
+            this.factory = factory;
 
-
-    public class Resolver : IEvaluator
-    {
-
-        public Decision Decide(Request request) 
-        { 
-            return Decision.Accept;
+            resolver  = new Resolver();
+            validator = new Validator();
         }
 
+        public IEvaluator Resolver  => resolver;
+        public IEvaluator Validator => validator;
     }
 
     public class Validator : IEvaluator
     {
-        public Decision Decide(Request request) 
+        public Response Evaluate(Request request) 
         {
-            return Decision.Accept;
+            return Response.Accepted;
         }
-
     }
 
 }

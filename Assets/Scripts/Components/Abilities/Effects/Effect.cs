@@ -73,22 +73,22 @@ namespace Momentum
 
             switch(phase)
             {
-                case Phase.Activate:
+                case Phase.Activating:
                     OnActivate();
                     break;
-                case Phase.Execute:
+                case Phase.Executing:
                     OnExecute();
                     break;
-                case Phase.Cancel:
+                case Phase.Cancelled:
                     OnCancel();
                     break;
-                case Phase.Interrupt:
+                case Phase.Interrupted:
                     OnInterrupt();
                     break;
-                case Phase.Complete:
+                case Phase.Completed:
                     OnComplete();
                     break;
-                case Phase.Deactivate:
+                case Phase.Deactivated:
                     OnDeactivate();
                     break;
             }
@@ -100,16 +100,16 @@ namespace Momentum
 
             switch(phase)
             {
-                case CastPhase.Start:
+                case CastPhase.Starting:
                     OnCastStart();
                     break;
-                case CastPhase.Cancel:
+                case CastPhase.Cancelled:
                     OnCastCancel();
                     break;
-                case CastPhase.Interrupt:
+                case CastPhase.Interrupted:
                     OnCastInterrupt();
                     break;
-                case CastPhase.Complete:
+                case CastPhase.Completed:
                     OnCastComplete();
                     break;
             }
