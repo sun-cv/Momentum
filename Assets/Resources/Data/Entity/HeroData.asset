@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73feeb224d3281e4cafea8806d5491ed, type: 3}
+  m_Name: HeroData
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  Name: Hero
+  DefaultMainHand: Sword
+  DefaultOffHand: Shield
+  HealthRegen: 0
+  BaseHealthRegen: 0
+  HealthRegenCooldown: 0
+  MaxHealthMultiplier: 0
+  MinHealthTickRate: 0
+  Mana: 0
+  MaxMana: 0
+  ManaRegen: 0
+  BaseManaRegen: 0
+  ManaRegenCooldown: 0
+  MaxManaMultiplier: 0
+  MinManaTickRate: 0
