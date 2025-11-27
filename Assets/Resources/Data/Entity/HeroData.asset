@@ -9,12 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 73feeb224d3281e4cafea8806d5491ed, type: 3}
+  m_Script: {fileID: 11500000, guid: 26a418508ac386f4ca63303fcf432bd7, type: 3}
   m_Name: HeroData
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   Name: Hero
   DefaultMainHand: Sword
   DefaultOffHand: Shield
+  Health: 0
+  MaxHealth: 0
   HealthRegen: 0
   BaseHealthRegen: 0
   HealthRegenCooldown: 0

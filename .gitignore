@@ -84,10 +84,14 @@ crashlytics-build.properties
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta
 
+# File types
+*.png
 
-/Packages/
-/Deprecated/
-/Assets/Packages/
+/Packages
+/Resources
+/Assets/Packages
+/Assets/Game/Animations
+/Assets/Game/Sprites
 
 
 notes.md
