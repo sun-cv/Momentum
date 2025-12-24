@@ -4,36 +4,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 
-[Service]
-public class PlayerInput : IServiceTick, IDisposable
-{
-    private InputDriver driver = new();
-    private InputRouter router = new();
 
-    public PlayerInput() => Service.Register(this);
 
-    public void Initialize()
-    {
-        driver.Initialize();
-        router.Initialize();
-    }
 
-    public void Tick()
-    {
-        router.Tick();
-    }
 
-    public void Dispose()
-    {
-        driver.Dispose();
-        router.Dispose();
-    }
-
-    public GamePhase Phase  => GamePhase.Input;
-    public HashSet<InputButton> ActiveInput => router.ActiveButtons;
-}
-
-public class InputDriver : IDisposable
+public class InputDriver : RegisteredService, IDisposable
 {
     private InputActions input;
 
@@ -52,14 +27,14 @@ public class InputDriver : IDisposable
     void OnModifierPress   (InputAction.CallbackContext context) => EventBus<ModifierPress>     .Raise(new());
     void OnModifierRelease (InputAction.CallbackContext context) => EventBus<ModifierRelease>   .Raise(new());
 
-    void OnDodgePress      (InputAction.CallbackContext context) => EventBus<DodgePress>        .Raise(new());
-    void OnDodgeRelease    (InputAction.CallbackContext context) => EventBus<DodgeRelease>      .Raise(new());
+    void OnDodgePress      (InputAction.CallbackContext context) => EventBus<DashPress>         .Raise(new());
+    void OnDodgeRelease    (InputAction.CallbackContext context) => EventBus<DashRelease>       .Raise(new());
 
     void OnMovementVector  (InputAction.CallbackContext context) => EventBus<MovementVector>    .Raise(new MovementVector(context.ReadValue<Vector2>()));
     void OnMousePosition   (InputAction.CallbackContext context) => EventBus<MousePosition>     .Raise(new MousePosition (context.ReadValue<Vector2>()));
 
 
-    public void Initialize()
+    public override void Initialize()
     {
         input = new();
         input.Enable();
@@ -98,32 +73,39 @@ public class InputDriver : IDisposable
     }
 }
 
+public struct PendingInputEvent
+{
+    public InputIntent Intent   { get; set; }
+    public bool IsPress         { get; set; }
+}
 
-public class InputRouter : IDisposable
+
+public class InputRouter : RegisteredService, IServiceTick, IDisposable
 {
 
-    private Dictionary<InputIntent, InputButton> buttonMap   = new();
-    private HashSet<InputButton> activeButtons               = new();
+    Dictionary<InputIntent, InputButton> buttonMap  = new();
+    HashSet<InputButton> activeButtons              = new();
+    Queue<PendingInputEvent> pendingInputs          = new();
 
-    private Vector2 mousePositionVector;
-    private Vector2 movementDirectionVector;
+    Vector2 mousePositionVector;
+    Vector2 movementDirectionVector;
 
-    private EventBinding<InteractPress>         interactPress;
-    private EventBinding<InteractRelease>       interactRelease;
-    private EventBinding<ActionPress>           actionPress;
-    private EventBinding<ActionRelease>         actionRelease;
-    private EventBinding<Attack1Press>          attack1Press;
-    private EventBinding<Attack1Release>        attack1Release;
-    private EventBinding<Attack2Press>          attack2Press;
-    private EventBinding<Attack2Release>        attack2Release;
-    private EventBinding<ModifierPress>         modifierPress;
-    private EventBinding<ModifierRelease>       modifierRelease;
-    private EventBinding<DodgePress>            dodgePress;
-    private EventBinding<DodgeRelease>          dodgeRelease;
-    private EventBinding<MovementVector>        movementVector;
-    private EventBinding<MousePosition>         mousePosition;
+    EventBinding<InteractPress>         interactPress;
+    EventBinding<InteractRelease>       interactRelease;
+    EventBinding<ActionPress>           actionPress;
+    EventBinding<ActionRelease>         actionRelease;
+    EventBinding<Attack1Press>          attack1Press;
+    EventBinding<Attack1Release>        attack1Release;
+    EventBinding<Attack2Press>          attack2Press;
+    EventBinding<Attack2Release>        attack2Release;
+    EventBinding<ModifierPress>         modifierPress;
+    EventBinding<ModifierRelease>       modifierRelease;
+    EventBinding<DashPress>             dashPress;
+    EventBinding<DashRelease>           dashRelease;
+    EventBinding<MovementVector>        movementVector;
+    EventBinding<MousePosition>         mousePosition;
 
-    public void Initialize()
+    public override void Initialize()
     {
         mousePosition   = EventBus<MousePosition> .Subscribe(UpdateMousePosition);
         movementVector  = EventBus<MovementVector>.Subscribe(UpdateMovementIntent);    
@@ -138,8 +120,16 @@ public class InputRouter : IDisposable
         attack2Release  = BindRelease   <Attack2Release>    ();
         modifierPress   = BindPress     <ModifierPress>     ();
         modifierRelease = BindRelease   <ModifierRelease>   ();
-        dodgePress      = BindPress     <DodgePress>        ();
-        dodgeRelease    = BindRelease   <DodgeRelease>      ();
+        dashPress      = BindPress      <DashPress>        ();
+        dashRelease    = BindRelease    <DashRelease>      ();
+
+        foreach (InputIntent intent in EnumUtils.GetEnumValues<InputIntent>())
+        {
+            if (intent == InputIntent.None)
+                continue;
+
+            buttonMap[intent] = new InputButton(intent);
+        }
     }
 
     public void Dispose()
@@ -154,22 +144,37 @@ public class InputRouter : IDisposable
         EventBus<Attack2Release>    .Unsubscribe(attack2Release);  
         EventBus<ModifierPress>     .Unsubscribe(modifierPress);  
         EventBus<ModifierRelease>   .Unsubscribe(modifierRelease);  
-        EventBus<DodgePress>        .Unsubscribe(dodgePress);  
-        EventBus<DodgeRelease>      .Unsubscribe(dodgeRelease);  
+        EventBus<DashPress>         .Unsubscribe(dashPress);  
+        EventBus<DashRelease>       .Unsubscribe(dashRelease);  
     }
 
     public void Tick()
     {
+        ResolvePendingInput();
         UpdateButtons();
     }
 
-    private InputButton GetOrCreateButton(InputIntent input)
+
+    void ResolvePendingInput()
+    {
+        while(pendingInputs.TryDequeue(out var evt))
+        {
+            if (evt.IsPress)
+                GetOrCreateButton(evt.Intent).Press();
+            else
+                GetOrCreateButton(evt.Intent).Release();
+        }
+
+    }
+
+    InputButton GetOrCreateButton(InputIntent input)
     {
         if (!buttonMap.TryGetValue(input, out InputButton button))
         {
             button = new InputButton(input);
-            buttonMap[input]    = button;
+            buttonMap[input] = button;
         }
+
         return button;
     }
 
@@ -177,7 +182,7 @@ public class InputRouter : IDisposable
     {
         foreach (var button in buttonMap.Values)
         {
-            UpdateAndDebugLog(button);
+            button.Update();
 
             if (button.Condition != InputCondition.None)
                 activeButtons.Add(button);
@@ -186,44 +191,21 @@ public class InputRouter : IDisposable
         }
     }
 
-    void UpdateAndDebugLog(InputButton button)
-    {
-        button.Update();
-        Logwin.Log("Button input", button.Input);
-        Logwin.Log("Button condition", button.Condition);
-    }
-
     void UpdateMousePosition(MousePosition evt)     => mousePositionVector      = evt.vector;
     void UpdateMovementIntent(MovementVector evt)   => movementDirectionVector  = evt.vector;
 
-    EventBinding<T> BindPress<T>()   where T : IInputEvent => EventBus<T>.Subscribe(evt => { GetOrCreateButton(evt.Intent).Press();});
-    EventBinding<T> BindRelease<T>() where T : IInputEvent => EventBus<T>.Subscribe(evt => { GetOrCreateButton(evt.Intent).Release();});
+    EventBinding<T> BindPress<T>()   where T : IInputEvent => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = true  }); });
+    EventBinding<T> BindRelease<T>() where T : IInputEvent => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = false }); });
 
-    public Vector2 MousePosition                => mousePositionVector;
-    public Vector2 MovementDirection            => movementDirectionVector;
-    public HashSet<InputButton> ActiveButtons   => activeButtons;
+    public Vector2 MousePosition     => mousePositionVector;
+    public Vector2 MovementDirection => movementDirectionVector;
+
+    public Dictionary<InputIntent, InputButton> ButtonMap   => buttonMap;
+    public HashSet<InputButton> ActiveButtons               => activeButtons;
+    
+    public UpdatePriority Priority => ServiceUpdatePriority.InputRouter;
 }
 
-public enum InputIntent
-{
-    None,
-    Interact,
-    Action,
-    Attack1,
-    Attack2,
-    Modifier,
-    Dodge,
-}
-
-public enum InputCondition
-{
-    None,
-    PressedThisFrame,
-    Pressed,
-    Held,
-    ReleasedThisFrame,
-    ReleasedRecently,
-}
 
 public class InputButton
 {
@@ -233,60 +215,76 @@ public class InputButton
         get
         {
             if (pressedThisFrame)           return InputCondition.PressedThisFrame;
-            if (pressed)
-                if (frameCountPressed.CurrentFrame > GameSettings.INPUT_THRESHOLD_HOLD)
-                                            return InputCondition.Held;
-                else
-                                            return InputCondition.Pressed;
+            if (pressed)                    return InputCondition.Pressed;
             if (releasedThisFrame)          return InputCondition.ReleasedThisFrame;
-            if (frameCountReleased.CurrentFrame < GameSettings.INPUT_THRESHOLD_EXPIRY_RECENTLY_RELEASED)
-                                            return InputCondition.ReleasedRecently;
+            if (released)                   return InputCondition.ReleasedRecently;
                                             return InputCondition.None;
         }
     }
 
     public bool pressed                     = false;
+    public bool released                    = false;
     public bool pressedThisFrame            = false;
     public bool releasedThisFrame           = false;
 
-    public  FrameCount frameCountPressed    = new();
-    public  FrameCount frameCountReleased   = new();
+    public FrameCounter pressedframeCount   = new();
+    public FrameCounter releasedframeCount  = new();
 
     public InputButton(InputIntent input)   => Input = input;
 
     public void Update()
     {
-        if (pressedThisFrame && frameCountPressed.CurrentFrame != frameCountPressed.StartFrame)
+        if (pressedThisFrame && pressedframeCount.CurrentFrame != 0)
         {
-            pressedThisFrame = false;
-            pressed          = true;
+            pressedThisFrame    = false;
         }
 
-        if (releasedThisFrame && frameCountReleased.CurrentFrame != frameCountReleased.StartFrame)
+        if (releasedThisFrame && releasedframeCount.CurrentFrame != 0)
         {
-            releasedThisFrame = false;
+            releasedThisFrame   = false;
         }
 
-        if (Condition == InputCondition.None)
+        if (releasedframeCount.CurrentFrame >= Config.INPUT_THRESHOLD_RELEASE)
         {
-            frameCountReleased.Stop();
+            releasedframeCount.Stop();
+            released = false;
         }
     }
 
     public void Press()
     {
-        pressedThisFrame = true;
-        frameCountPressed.Reset();
-        frameCountPressed.Start();
+        ResetState();
+
+        pressedThisFrame  = true;
+        pressed           = true;
+        pressedframeCount.Start();
     }
 
     public void Release()
     {
-        pressed = false;
-        frameCountPressed.Stop();
+        pressedframeCount.Stop();
+
+        pressed           = false;
         releasedThisFrame = true;
-        frameCountReleased.Reset();
-        frameCountReleased.Start();
+        released          = true;
+
+        releasedframeCount.Start();
+    }
+
+    void ResetState()
+    {
+
+        pressed             = false;
+        released            = false;
+        pressedThisFrame    = false;
+        releasedThisFrame   = false;
+
+
+        pressedframeCount.Stop();
+        pressedframeCount.Reset();
+
+        releasedframeCount.Stop();
+        releasedframeCount.Reset();   
     }
 
 }
@@ -310,8 +308,8 @@ public struct Attack2Release        : IInputEvent { public readonly InputIntent 
 public struct ModifierPress         : IInputEvent { public readonly InputIntent Intent => InputIntent.Modifier; public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
 public struct ModifierRelease       : IInputEvent { public readonly InputIntent Intent => InputIntent.Modifier; public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct DodgePress            : IInputEvent { public readonly InputIntent Intent => InputIntent.Dodge;    public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct DodgeRelease          : IInputEvent { public readonly InputIntent Intent => InputIntent.Dodge;    public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct DashPress             : IInputEvent { public readonly InputIntent Intent => InputIntent.Dash;     public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct DashRelease           : IInputEvent { public readonly InputIntent Intent => InputIntent.Dash;     public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
 public struct MousePosition         : IInputEvent { public readonly InputIntent Intent => InputIntent.None;     public readonly InputCondition Condition => InputCondition.None; public Vector2 vector; public MousePosition(Vector2 value) => vector = value;   }
 public struct MovementVector        : IInputEvent { public readonly InputIntent Intent => InputIntent.None;     public readonly InputCondition Condition => InputCondition.None; public Vector2 vector; public MovementVector(Vector2 value) => vector = value;  }

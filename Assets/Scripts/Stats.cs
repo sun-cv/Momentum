@@ -1,20 +1,16 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.ShaderKeywordFilter;
 
 
 
-public class Stats : IServiceTick
+
+
+public class Stats : Service, IServiceTick
 {
     protected readonly Dictionary<string, float> stats  = new();
     protected readonly StatsMediator mediator           = new();
-
-    public Stats()
-    {
-        Service.Register(this);
-    }
-
-    public void Initialize() {}
+    
+    public void Initialize() => Services.RegisterTick(this);
 
     public void Tick()
     {
@@ -33,7 +29,7 @@ public class Stats : IServiceTick
     public float BaseValue(string stat) => stats[stat];
 
     public StatsMediator Mediator => mediator;
-    public GamePhase Phase => GamePhase.Stats;
+    public UpdatePriority Priority => ServiceUpdatePriority.Stats;
 }
 
 
@@ -95,8 +91,7 @@ public class Query
 public abstract class StatModifier : IDisposable
 {
     public bool MarkedForRemoval { get; private set; }
-    readonly    Countdown timer;
-    readonly    Frames    frames;
+    readonly    DualCountdown timer;
     public event Action<StatModifier> OnDispose = delegate { };
 
     protected StatModifier(float duration)
@@ -112,9 +107,9 @@ public abstract class StatModifier : IDisposable
     {
         if (duration <= 0) return;
 
-        frames = new(duration);
-        frames.OnTimerStop += () => MarkedForRemoval = true;
-        frames.Start();
+        timer = new(duration);
+        timer.OnTimerStop += () => MarkedForRemoval = true;
+        timer.Start();
     }
 
     public abstract void Handle(object sender, Query query);

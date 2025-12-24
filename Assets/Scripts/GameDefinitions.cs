@@ -1,5 +1,56 @@
 using System;
+using UnityEditor;
 using UnityEngine;
+
+//
+//  Interfaces & Base Abstracts
+//
+
+public interface IInitialize { public void Initialize(); }
+
+public interface IService                { };
+public interface IServiceTick : IService { public void Tick(); UpdatePriority Priority { get; } };
+public interface IServiceLoop : IService { public void Loop(); UpdatePriority Priority { get; } };
+public interface IServiceStep : IService { public void Step(); UpdatePriority Priority { get; } };
+public interface IServiceUtil : IService { public void Util(); UpdatePriority Priority { get; } };
+
+
+public abstract class Service
+{
+    public Guid RuntimeID               = Guid.NewGuid();
+}
+
+[Service]
+public abstract class RegisteredService : Service, IInitialize
+{
+    public abstract void Initialize();
+}
+
+
+
+
+//
+//  Data Definitions
+//
+
+
+public class Data
+{ 
+    public string Name                  { get; set; }
+}
+
+//
+//  Runtime Definitions
+//
+
+public class Runtime
+{
+    public Guid RuntimeID               = Guid.NewGuid();
+}
+
+public class Instance   : Runtime   {}
+public class Entity     : Instance  {}
+public class Item       : Entity    {}
 
 
 //
@@ -9,87 +60,43 @@ using UnityEngine;
 public class Controller : MonoBehaviour {}
 
 
-
 //
-//  Data Definitions
+//  Events 
 //
 
-
-public class Data       : ScriptableObject 
-{ 
-    public string Name { get; set; }
-}
-
-public class EntityData : Data {}
-public class ItemData   : Data {}
-public class WeaponData : Data {}
-public class EffectData : Data {}
-
+public class EventHandler {}
 
 
 
 //
-//  Runtime Definitions
+//  Entity
 //
-
-public class RuntimeInstance
-{
-    public string Name;
-    public int RuntimeID;
-}
-
-public class Entity     : RuntimeInstance {}
-public class Item       : RuntimeInstance {}
-public class Effect     : RuntimeInstance {}
-
-public class Weapon     : Item {}
-
-
 
 // Health
 
-public interface IHealthSet : IHasHealth, IHasHealthRegen, IHasHealthReserves {}
+public interface IHealthSet : IHasHealth {}
 public interface IHasHealth
 {
     public float Health                 { get; set; }
-    public float MaxHealth              { get;}
+    public float MaxHealth              { get; }
 }
 
-public interface IHasHealthRegen
-{
-    public float HealthRegen            { get; }
-    public float BaseHealthRegen        { get; }
-    public float HealthRegenCooldown    { get; }
-}
-
-public interface IHasHealthReserves
-{
-    public object HealthReserves        { get; }
-}
 
 
 // Mana
 
-public interface IManaSet : IHasMana, IHasManaRegen, IHasManaReserves {}
+public interface IManaSet : IHasMana, IHasManaRegen {}
 public interface IHasMana
 {
     public float Mana                   { get; set; }
     public float MaxMana                { get; }
-    public float MaxManaMultiplier      { get; }
-    public float MinManaTickRate        { get; }
 }
 
 public interface IHasManaRegen
 {
     public float ManaRegen              { get; }
-    public float BaseManaRegen          { get; }
-    public float ManaRegenCooldown      { get; }
 }
 
-public interface IHasManaReserves
-{
-    public object ManaReserves          { get; }
-}
 
 
 // Movement
@@ -106,14 +113,6 @@ public interface IHasSprint
 }
 
 
-// Effects
-
-public interface IHasEffects
-{
-    public Effect[] Effects             { get;}
-}
-
-
 
 // Combat
 
@@ -122,12 +121,7 @@ public interface IDamageable : IHasHealth
     public bool Invulnerable            { get; }
 };
 
-public interface IAttacker : IHasWeapons {}
-public interface IHasWeapons 
-{
-    public string DefaultMainHand       { get;}
-    public string DefaultOffHand        { get;}
-}
+public interface IAttacker {}
 
 
 
@@ -135,3 +129,92 @@ public interface IHasWeapons
 
 public interface IHero : IHealthSet, IManaSet, IMovementSet, IDamageable, IAttacker {}
 
+
+
+
+
+//
+//  Items
+//
+
+
+
+
+
+//
+// Effects
+//
+
+
+
+
+
+//
+// Enums
+//
+
+public enum Request
+{
+    Create,
+    Destroy,
+    Start,
+    Stop,
+    Set,
+    Get,
+    Lock,
+    Unlock,
+    Queue,
+    Interrupt,
+    Cancel,
+    Consume,
+}
+
+public enum Response
+{
+    Accepted,
+    Declined,
+    Success,
+    Failure,
+    Started,
+    Completed,
+    Pending,
+    Canceled,
+    Denied,
+}
+
+public enum Publish
+{
+    Created,
+    Destroyed,
+    Enabled,
+    Disabled,
+    Started,
+    Ended,
+    Triggered,
+    Fired,
+    Activated,
+    Deactivated,
+    Changed,
+    Canceled,
+}
+
+public enum InputCondition
+{
+    None,
+    PressedThisFrame,
+    Pressed,
+    Held,
+    ReleasedThisFrame,
+    ReleasedRecently,
+}
+
+public enum InputIntent
+{
+    None,
+    Interact,
+    Action,
+    Attack1,
+    Attack2,
+    Modifier,
+    Dash,
+}

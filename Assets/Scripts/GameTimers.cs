@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class Timers : IServiceTick
+
+
+
+public class Timers : RegisteredService, IServiceTick
 {
     private readonly List<Timer> timers  = new();
-    private readonly GamePhase phase     = GamePhase.System;
+    
+    public Timers() {}
 
-    private static Timers instance;
-    public static Timers Instance => instance ??= new Timers();
-
-    private Timers() {}
-
-    public void Initialize() {}
+    public override void Initialize() {}
 
     public void Tick()
     {
@@ -27,19 +26,27 @@ public class Timers : IServiceTick
     public void RegisterTimer(Timer timer)   => timers.Add(timer);
     public void DeregisterTimer(Timer timer) => timers.Remove(timer);
 
-    public GamePhase Phase => phase;
+    public UpdatePriority Priority => ServiceUpdatePriority.TimerManager;
 }
+
 
 
 public abstract class Timer : IDisposable
 {   
-    protected float initialTime;
+    protected Timers timers;
 
+    protected float initialTime;
     public float InitialTime    { get; protected set; }
     public float StartedTime    { get; protected set; }
     public float CurrentTime    { get; protected set; }
+
+    protected int initialFrame;
+    public int InitialFrame     { get; protected set; }
+    public int StartedFrame     { get; protected set; }
+    public int CurrentFrame     { get; protected set; }
+    
     public bool  IsRunning      { get; protected set; }
-    public float Percent => initialTime > 0 ? Mathf.Clamp01(CurrentTime / initialTime) : 1f;
+    public TimerUnit Unit       { get; protected set; }
 
     public Action OnTimerStart = delegate { };
     public Action OnTimerStop  = delegate { };
@@ -47,17 +54,37 @@ public abstract class Timer : IDisposable
     protected Timer(float value)
     {
         initialTime = value;
+        Unit        = TimerUnit.Time;
+
+        timers      = Services.Get<Timers>();
+    }
+
+    protected Timer(int value)
+    {
+        initialFrame = value;
+        Unit         = TimerUnit.Frame;
+
+        timers       = Services.Get<Timers>();
     }
 
     public virtual void Start()
     {
-        CurrentTime = initialTime;
-        StartedTime = Time.time;
+        if (Unit == TimerUnit.Time)
+        {
+            CurrentTime = initialTime;
+            StartedTime = Time.time;
+        }
+
+        if (Unit == TimerUnit.Frame)
+        {
+            CurrentFrame = initialFrame;
+            StartedFrame = Clock.FrameCount;
+        }
         
         if (!IsRunning)
         {
             IsRunning = true;
-            Timers.Instance.RegisterTimer(this);
+            timers.RegisterTimer(this);
             OnTimerStart.Invoke();
         }
     }
@@ -67,7 +94,7 @@ public abstract class Timer : IDisposable
         if (IsRunning)
         {
             IsRunning = false;
-            Timers.Instance.DeregisterTimer(this);
+            timers.DeregisterTimer(this);
             OnTimerStop.Invoke();
         }
         return this;
@@ -78,13 +105,60 @@ public abstract class Timer : IDisposable
 
     public void Resume() => IsRunning = true;
     public void Pause()  => IsRunning = false;
-    public void Cancel()  { IsRunning = false; Timers.Instance.DeregisterTimer(this); }
+    public void Cancel()  { IsRunning = false; timers.DeregisterTimer(this); }
+
+    public virtual void Restart()
+    {
+        if (Unit == TimerUnit.Time)
+            CurrentTime = initialTime;
+
+        if (Unit == TimerUnit.Frame)
+            CurrentFrame = initialFrame;
+    }
+    public virtual void Restart(float newTime)
+    {
+        if (Unit != TimerUnit.Time) 
+            return;
+
+        initialTime = newTime;
+        Reset();
+    }
+    
+    public virtual void Restart(int newFrame)
+    {
+        if (Unit != TimerUnit.Frame) 
+            return;
+
+        initialFrame = newFrame;
+        Reset();
+    }
 
 
-    public virtual void Reset() => CurrentTime = initialTime;
+
+    public virtual void Reset()
+    {
+        Stop();
+        if (Unit == TimerUnit.Time)
+            CurrentTime = initialTime;
+
+        if (Unit == TimerUnit.Frame)
+            CurrentFrame = initialFrame;
+    }
     public virtual void Reset(float newTime)
     {
+        if (Unit != TimerUnit.Time) 
+            return;
+
         initialTime = newTime;
+        Reset();
+    }
+
+    public virtual void Reset(int newFrame)
+    {
+        if (Unit != TimerUnit.Frame) 
+            return;
+
+        initialFrame = newFrame;
         Reset();
     }
 
@@ -107,149 +181,84 @@ public abstract class Timer : IDisposable
         }
         if (disposing)
         {
-            Timers.Instance.DeregisterTimer(this);
+            timers.DeregisterTimer(this);
         }
         disposed = true;
     }
 }
 
 
-public class Countdown : Timer
+public enum TimerMode { Up, Down }
+public enum TimerUnit { Time, Frame }
+
+public class GenericTimer : Timer
 {
-    public Countdown(float value) : base(value) {}
+    readonly TimerMode mode;
 
-        public override void Tick()
-        {
-            if (IsRunning && CurrentTime > 0)
-            {
-                CurrentTime -= Clock.TickDelta;
-            }
-            if (IsRunning && CurrentTime <= 0)
-            {
-                Stop();
-            }
-        }
-
-    public override bool IsFinished => CurrentTime <= 0;
-}
-
-
-public class Stopwatch : Timer
-{
-    private readonly List<float> lapTimes = new();
-
-    public IReadOnlyList<float> LapTimes => lapTimes;
-
-    public Stopwatch() : base(0) {}
-
-    public override void Tick()
+    public GenericTimer(TimerMode mode, float value = 0 ) : base(value)
     {
-        if (IsRunning)
-        {
-            CurrentTime -= Clock.TickDelta;
-        }
+        this.mode = mode;
     }
 
-    public override bool IsFinished => !IsRunning;
-    public float LastLap => lapTimes.Count > 0 ? lapTimes[^1] : 0;
-    
-    public void Lap()
+    public GenericTimer(TimerMode mode, int frames = 0) : base(frames)
     {
-        lapTimes.Add(CurrentTime);
-    }
-
-    public void ClearLaps()
-    {
-        lapTimes.Clear();
-    }
-
-    public override void Reset()
-    {
-        base.Reset();
-        ClearLaps();
-        CurrentTime = 0;
-    }
-}
-
-
-public class ProgressTimer : Timer
-{
-    public ProgressTimer(float value) : base(value){}
-
-    public override void Start()
-    {
-        CurrentTime = 0;
-
-        if (!IsRunning)
-        {
-            IsRunning = true;
-            Timers.Instance.RegisterTimer(this);
-            OnTimerStart.Invoke();
-        }
+        this.mode = mode;
     }
 
     public override void Tick()
     {
-        if (IsRunning)
-        {
-            CurrentTime -= Clock.TickDelta;
-        }
-        if (Percent >= 1)
-        {
-            Stop();
-            Reset();
-        }
-    }
+        if (!IsRunning) return;
 
-    public override void Reset() => CurrentTime = 0;
-    public override void Reset(float newTime)
-    {
-        initialTime = newTime;
-        Reset();
-    }
-
-    public override bool IsFinished => !IsRunning;
-    public bool Complete            => IsFinished;
-}
-
-
-public class Frames : Countdown
-{
-    public Frames(int frames) : base(frames * Clock.TickDelta) {}
-}
-
-public class FrameCount : Timer
-{
-    
-    public int CurrentFrame { get; protected set; }
-    public int StartFrame   { get; protected set; }
-    public int CountLimit = 60 * 60 * 10; // 10
-
-    public FrameCount() : base(0) { }
-
-    public override void Start()
-    {
-        StartFrame = Clock.FrameCount;
+        if (Unit == TimerUnit.Time)
+            CurrentTime += mode == TimerMode.Up ? Clock.DeltaTime : -Clock.DeltaTime;
         
-        if (!IsRunning)
-        {
-            IsRunning = true;
-            Timers.Instance.RegisterTimer(this);
-            OnTimerStart.Invoke();
-        }
-    }
-
-    public override void Tick()
-    {
-        if (IsRunning)
-            CurrentFrame++;
-        
-        if (CurrentFrame > CountLimit)
+        if (Unit == TimerUnit.Time && mode == TimerMode.Down && CurrentTime <= 0)
             Stop();
+
+
+        if (Unit == TimerUnit.Frame)
+            CurrentFrame += mode == TimerMode.Up ? 1 : -1;
+
+        if (Unit == TimerUnit.Frame && mode == TimerMode.Down && CurrentFrame <= 0)
+            Stop();
+
     }
 
-    public override void Reset()    => CurrentFrame = 0;    
     public override bool IsFinished => !IsRunning;
-    public float ElapsedSeconds     => CurrentFrame * Clock.TickDelta;
 
+}
+
+
+
+
+public class DurationCountdown : GenericTimer
+{
+    public DurationCountdown(float startValue) : base(TimerMode.Down, startValue ) {}
+}
+
+public class FrameCountdown  : GenericTimer
+{
+    public FrameCountdown (int startValue) : base(TimerMode.Down, startValue) {}
+}
+
+public class FrameCounter  : GenericTimer
+{
+    public FrameCounter () : base(TimerMode.Up, 0) {}
+}
+
+public class DurationCounter  : GenericTimer
+{
+    public DurationCounter () : base(TimerMode.Up, 0) {}
+}
+
+public class Stopwatch : GenericTimer
+{
+    public Stopwatch() : base(TimerMode.Up, 0f) {}
+}
+
+
+public class DualCountdown : GenericTimer
+{
+    public DualCountdown(int frames) : base(TimerMode.Down, frames) {}
+    public DualCountdown(float time) : base(TimerMode.Down, time)   {}
 }

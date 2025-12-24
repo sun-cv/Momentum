@@ -3,45 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-public static class EventBus<T> where T : IEvent 
-{
-    static readonly HashSet<IEventBinding<T>> bindings = new();
-
-    public static EventBinding<T> Subscribe(Action<T> handler)
-    {
-        var binding = new EventBinding<T>(handler);
-        Register(binding);
-        return binding;
-    }
-
-    public static void Unsubscribe(EventBinding<T> binding)
-    {
-        Deregister(binding);
-    }
-
-
-    public static void Raise(T @event) 
-    {
-        var snapshot = new HashSet<IEventBinding<T>>(bindings);
-        foreach (var binding in snapshot) 
-        {
-            if (bindings.Contains(binding)) 
-            {
-                binding.OnEvent.Invoke(@event);
-                binding.OnEventNoArgs.Invoke();
-            }
-        }
-    }
-
-    public static void Register(EventBinding<T>   binding)  => bindings.Add(binding);
-    public static void Deregister(EventBinding<T> binding)  => bindings.Remove(binding);
-
-    static void Clear()                                     => bindings.Clear();
-    static bool DelegateEquals(Action<T> a, Action<T> b)    => a?.GetInvocationList().SequenceEqual(b?.GetInvocationList()) ?? false;
-}
 
 
 public interface IEvent {};
+
+public interface IEventRequest  : IEvent { public Guid Id { get; }}
+public interface IEventResponse : IEvent { public Guid Id { get; }}
+public interface IEventPublish  : IEvent { public Guid Id { get; }}
 
 public interface IEventBinding<T> 
 {
@@ -77,6 +45,103 @@ public class EventBinding<T> : IEventBinding<T> where T : IEvent
     public void Add(Action<T> onEvent)          => this.onEvent += onEvent;
     public void Remove(Action<T> onEvent)       => this.onEvent -= onEvent;
 }
+
+
+
+
+
+public static class EventBus<T> where T : IEvent 
+{
+    static readonly HashSet<IEventBinding<T>> bindings = new();
+
+    public static EventBinding<T> Subscribe(Action<T> handler)
+    {
+        var binding = new EventBinding<T>(handler);
+        Register(binding);
+        return binding;
+    }
+
+    public static void Unsubscribe(EventBinding<T> binding)
+    {
+        Deregister(binding);
+    }
+
+    public static T SubscribeOnce(Action triggerEvent)
+    {
+        T result = default;
+        EventBinding<T> binding = null;
+
+        binding = Subscribe(evt =>
+        {
+            result = evt;
+            Unsubscribe(binding);
+        });
+
+        triggerEvent();
+
+        return result;
+    }
+
+    public static void Raise(T @event) 
+    {
+        var snapshot = new HashSet<IEventBinding<T>>(bindings);
+        foreach (var binding in snapshot) 
+        {
+            if (bindings.Contains(binding)) 
+            {
+                binding.OnEvent.Invoke(@event);
+                binding.OnEventNoArgs.Invoke();
+            }
+        }
+    }
+
+    public static void Register(EventBinding<T>   binding)  => bindings.Add(binding);
+    public static void Deregister(EventBinding<T> binding)  => bindings.Remove(binding);
+
+    static void Clear()                                     => bindings.Clear();
+    static bool DelegateEquals(Action<T> a, Action<T> b)    => a?.GetInvocationList().SequenceEqual(b?.GetInvocationList()) ?? false;
+}
+
+
+
+
+
+public class LocalEventbus
+{
+    private readonly Dictionary<Type, HashSet<object>> bindings = new();
+
+    public EventBinding<T> Subscribe<T>(Action<T> handler) where T : IEvent
+    {
+        if (!bindings.TryGetValue(typeof(T), out var set))
+        {
+            set = new HashSet<object>();
+            bindings[typeof(T)] = set;
+        }
+
+        var binding = new EventBinding<T>(handler);
+        set.Add(binding);
+        return binding;
+    }
+
+    public void Unsubscribe<T>(EventBinding<T> binding) where T : IEvent
+    {
+        if (bindings.TryGetValue(typeof(T), out var set))
+        {
+            set.Remove(binding);
+            if (set.Count == 0)
+                bindings.Remove(typeof(T));
+        }
+    }
+
+    public void Raise<T>(T @event) where T : IEvent
+    {
+        if (!bindings.TryGetValue(typeof(T), out var set)) return;
+        foreach (var obj in set.Cast<EventBinding<T>>().ToArray())
+            ((IEventBinding<T>)obj).OnEvent.Invoke(@event);
+    }
+}
+
+
 
 
 public class EventBus
@@ -136,5 +201,43 @@ public class EventBus
                     foreach (var callback in noArgList.ToArray())
                         callback();
         }
+    }
+
+
+    public class Local<T> where T : IEvent 
+    {
+        static readonly HashSet<IEventBinding<T>> bindings = new();
+
+        public static EventBinding<T> Subscribe(Action<T> handler)
+        {
+            var binding = new EventBinding<T>(handler);
+            Register(binding);
+            return binding;
+        }
+
+        public static void Unsubscribe(EventBinding<T> binding)
+        {
+            Deregister(binding);
+        }
+
+
+        public static void Raise(T @event) 
+        {
+            var snapshot = new HashSet<IEventBinding<T>>(bindings);
+            foreach (var binding in snapshot) 
+            {
+                if (bindings.Contains(binding)) 
+                {
+                    binding.OnEvent.Invoke(@event);
+                    binding.OnEventNoArgs.Invoke();
+                }
+            }
+        }
+
+        public static void Register(EventBinding<T>   binding)  => bindings.Add(binding);
+        public static void Deregister(EventBinding<T> binding)  => bindings.Remove(binding);
+
+        static void Clear()                                     => bindings.Clear();
+        static bool DelegateEquals(Action<T> a, Action<T> b)    => a?.GetInvocationList().SequenceEqual(b?.GetInvocationList()) ?? false;
     }
 }

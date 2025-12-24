@@ -1,11 +1,98 @@
 
 
 
-public class EffectsHandler
+
+
+using System.Collections.Generic;
+
+public class Effect     : Instance
 {
+    public string Name                          { get; init; }
+    public bool Active                          { get; init; }
+    public bool Cancelable                      { get; init; }
+}
+
+public interface ITrigger                   { public WeaponPhase Trigger         { get; init; }}
+public interface IDuration                  { public float Duration              { get; init; }}
+public interface IDurationFrames            { public int DurationFrames          { get; init; }}
+public interface IDisableMove               { public bool DisableMove            { get; init; }}
+public interface IDisableAttack             { public bool DisableAttack          { get; init; }}
+public interface IDisableRotate             { public bool DisableRotate          { get; init; }}
+public interface ITriggerLock               { public bool RequestTriggerLock     { get; init; } public List<InputIntent> TriggerLocks { get; init; }}
+public interface IType                      { public string Type                 { get; init; }}
+public interface IModifiable                { public float Modifier              { get; init; }}
+public interface INoUnitCollision           { public bool NoUnitCollision        { get; init; }}
+public interface IImmuneToForce             { public bool ImmuneToForce          { get; init; }}
+public interface ICanAffectInvulnerable     { public bool CanAffectInvulnerable  { get; init; }}
 
 
+public interface IDisableRules : IDisableAttack, IDisableMove, IDisableRotate {}
+public interface ICollisionRules : INoUnitCollision, IImmuneToForce {}
 
+
+public interface IEffectCallback
+{
+    public string OnApplyFunctionName           { get; init; }
+    public string OnClearFunctionName           { get; init; }
 }
 
 
+
+public class SwordSwingDisable : Effect, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, ITriggerLock
+{
+    public int DurationFrames                   { get; init; }
+
+    public bool DisableAttack                   { get; init; }
+    public bool DisableRotate                   { get; init; }
+    public bool DisableMove                     { get; init; }
+    
+    public bool RequestTriggerLock              { get; init; }
+    public List<InputIntent> TriggerLocks       { get; init; }
+}
+
+
+
+public class ShieldParryActivation : Effect, IDurationFrames
+{
+    public int DurationFrames                   { get; init; }
+}
+
+
+public class ShieldBlockActivation : Effect, IDuration
+{
+    public float Duration                       { get; init; }
+}
+
+
+public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDisableAttack, IDisableRotate
+{
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public float Duration                       { get; init; }
+    
+    public bool DisableAttack                   { get; init; }
+    public bool DisableRotate                   { get; init; }
+}
+
+
+public class ShieldBraceAim : Effect, ITrigger, IDurationFrames
+{
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public int DurationFrames                   { get; init; }
+}
+
+public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
+{
+    public string Type                          { get; init; }
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public int DurationFrames                   { get; init; }
+
+    public float Modifier                       { get; init; }
+}
+public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
+{
+    public string Type                          { get; init; }
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public int DurationFrames                   { get; init; }
+
+    public float Modifier                       { get; init; }
+}

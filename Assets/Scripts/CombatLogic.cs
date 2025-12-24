@@ -10,8 +10,7 @@ public class Combat
     [Function]
     public static void CalculateDamage(Entity victim, Entity attacker, object args)
     {
-        Debug.Log(args);
-        Debug.Log("Called Calculate");
+
     }   
 
     [Function]
@@ -23,8 +22,14 @@ public class Combat
 
         if (victim is IHasHealth applicable)
             applicable.Health -= damage;
-        
-        Debug.Log("Called Apply");
     }
 
+
+
+
 }
+
+
+
+
+

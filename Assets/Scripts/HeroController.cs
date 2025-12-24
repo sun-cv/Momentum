@@ -3,75 +3,74 @@ using UnityEngine;
 
 public class HeroController : Controller
 {
-    Hero hero;
+    readonly Hero        hero           = new();
+    readonly Context     context        = new();
 
     public Rigidbody2D          body;
     public CapsuleCollider2D    hitbox;
 
     public void Initialize(HeroData data)
     {
-        hero = new(data);
-        hero.Stats.Mediator.AddModifier(new BasicStatModifier("MaxHealth", (int)1, (a) => a + 10 ));
+        hero    .Initialize(data);
+        context .Initialize();
+
+        Services.Get<WeaponSystem>().AssignContext(context);
+        Services.Get<WeaponSystem>().AssignWeaponSet(context.weaponSet);
+
+        Services.Get<MovementEngine>().AssignHero(hero, context, body);
+
     }
 
     public Hero Hero => hero;
 }
 
 
-public class Hero : Entity, IHero
+public class Hero : Entity
 {
     HeroStats stats;
 
-    public string DefaultMainHand       { get; set; }
-    public string DefaultOffHand        { get; set; }
-
-    public bool Invulnerable            { get; set; }
-
     public float Health                 { get; set; }
     public float MaxHealth              => stats.MaxHealth;
-    public float HealthRegen            => stats.HealthRegen;
-    public float BaseHealthRegen        => stats.BaseHealthRegen;
-    public float HealthRegenCooldown    => stats.HealthRegenCooldown;
-    public float MaxHealthMultiplier    => stats.MaxHealthMultiplier;
-    public float MinHealthTickRate      { get; }
-    public object HealthReserves        { get; set; }   
 
     public float Mana                   { get; set; }
     public float MaxMana                => stats.MaxMana;
-    public float ManaRegen              => stats.ManaRegen;
-    public float BaseManaRegen          => stats.BaseManaRegen;
-    public float ManaRegenCooldown      => stats.ManaRegenCooldown;
-    public float MaxManaMultiplier      => stats.MaxManaMultiplier;
-    public float MinManaTickRate        { get; }
-    public object ManaReserves          { get; set; }
 
-    public float SpeedMultiplierCap     { get; set; }
-    public float AutoSprintBuffer       { get; set; }
+    public float Speed                  { get; } = 10;
+    public float Damage                 { get; }
 
-    public Hero(HeroData definition)
+    public void Initialize(HeroData definition)
     {
         DataMapper.Map(definition, this);
         stats = new(definition);
+        stats.Initialize();
     }
 
     public Stats Stats => stats;
 }
 
+public class HeroStats : Stats
+{
+    public HeroStats(HeroData hero)
+    {
+        stats.Add("MaxHealth"          , hero.MaxHealth);
+        stats.Add("MaxMana"            , hero.MaxMana);
+    }
+
+    public float MaxHealth              => this["MaxHealth"];
+    public float MaxMana                => this["MaxMana"];
+}
+
+
 public static class HeroFactory
 {
     public static HeroController Create()
     {
-        var data = Registry.Data.Get<HeroData>("HeroData");
-        if (data == null)
-        {
-            Debug.Log("Failed HeroData load");
-            return null;
-        }
+        var data = new HeroData();
 
-        var prefab = Registry.Prefab.Get<GameObject>("Hero");
+        var prefab = Registry.Prefabs.Get<GameObject>("Hero");
         if (data == null)
         {
-            Debug.Log("Failed HeroPrefab load");
+            Debug.Log("Failed to load HeroPrefab");
             return null;
         }
 
@@ -82,34 +81,4 @@ public static class HeroFactory
 
         return controller;
     }
-}
-
-public class HeroStats : Stats
-{
-    public HeroStats(HeroData hero)
-    {
-        stats.Add("MaxHealth"          , hero.MaxHealth);
-        stats.Add("HealthRegen"        , hero.HealthRegen);
-        stats.Add("BaseHealthRegen"    , hero.BaseHealthRegen);
-        stats.Add("HealthRegenCooldown", hero.HealthRegenCooldown);
-
-
-        stats.Add("MaxMana"            , hero.MaxMana);
-        stats.Add("ManaRegen"          , hero.ManaRegen);
-        stats.Add("BaseManaRegen"      , hero.BaseManaRegen);
-        stats.Add("ManaRegenCooldown"  , hero.ManaRegenCooldown);
-
-    }
-
-    public float MaxHealth              => this["MaxHealth"];
-    public float HealthRegen            => this["HealthRegen"];
-    public float BaseHealthRegen        => this["BaseHealthRegen"];
-    public float HealthRegenCooldown    => this["HealthRegenCooldown"];
-    public float MaxHealthMultiplier    => this["MaxHealthMultiplier"];
-
-    public float MaxMana                => this["MaxMana"];
-    public float ManaRegen              => this["ManaRegen"];
-    public float BaseManaRegen          => this["BaseManaRegen"];
-    public float ManaRegenCooldown      => this["ManaRegenCooldown"];
-    public float MaxManaMultiplier      => this["MaxManaMultiplier"];
 }

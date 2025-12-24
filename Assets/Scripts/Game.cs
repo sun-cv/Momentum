@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+
+
+
 
 
 public class Game : MonoBehaviour
@@ -12,11 +14,6 @@ public class Game : MonoBehaviour
     {
         engine = new();
         engine.Startup();
-    }
-
-    public void Start()
-    {
-        engine.Start();
     }
 
     public void FixedUpdate()
@@ -32,66 +29,19 @@ public class Game : MonoBehaviour
 }
 
 
+
+
+
 public class GameEngine
 {
-    public readonly Runtime runtime     = new();
-
-    public HeroController controller;
-    public bool triggered;
+    readonly Clock   clock  = new();
+    readonly GameLoop loop  = new();
 
     public void Startup()
     {
-        runtime .Initialize();
-        Service .Initialize();
         Registry.Initialize();
-    }
-
-    public void Start()
-    {
-        Register();
-        controller = HeroFactory.Create();
-    }
-
-    private void Register()
-    {
-        Service.Register(Timers.Instance);
-    }
-
-    public void Tick()
-    {
-        runtime.Tick();
-        Logwin.Log("MaxHealth", controller.Hero.MaxHealth);
-        Logwin.Log("Health", controller.Hero.Health);
-
-        var button = Registry.Service.Get<PlayerInput>().ActiveInput.FirstOrDefault(b => b.Input == InputIntent.Attack2);
-
-        if ( button != null && !triggered)
-        {
-            triggered = true;
-            controller.Hero.Stats.Mediator.AddModifier(new BasicStatModifier("MaxHealth", 120, (value) => value + 20));
-            
-            Function.Call("ApplyDamage", new { victim = controller.Hero, damage = 10});
-            Function.Call("CalculateDamage", new { victim = controller.Hero, attacker = controller.Hero, args = new { Name = "test"}});
-        }
-
-        if (controller.Hero.MaxHealth == 20)
-            triggered = false;
-    }
-
-    public void Shutdown()
-    {
-        Service.Dispose();   
-    }
-}
-
-public class Runtime
-{
-    Clock clock = new();
-    GameLoop  loop  = new();
-
-    public void Initialize()
-    {
-        loop.Initialize(clock);
+        Services.Initialize();
+        loop    .Initialize(clock);
     }
 
     public void Tick()
@@ -99,15 +49,21 @@ public class Runtime
         clock.Tick();
     }
 
+    public void Shutdown()
+    {
+        Services.Dispose();   
+    }
 }
+
+
 
 
 public class Clock
 {
-    public const float TickRate     = GameSettings.TICK_RATE_TICK;
-    public const float LoopRate     = GameSettings.TICK_RATE_LOOP;
-    public const float StepRate     = GameSettings.TICK_RATE_STEP;
-    public const float UtilRate     = GameSettings.TICK_RATE_UTIL;
+    public const float TickRate     = Config.TICK_RATE_TICK;
+    public const float LoopRate     = Config.TICK_RATE_LOOP;
+    public const float StepRate     = Config.TICK_RATE_STEP;
+    public const float UtilRate     = Config.TICK_RATE_UTIL;
 
     public const float TickDuration = 1f/TickRate;
     public const float LoopDuration = 1f/LoopRate;
@@ -129,7 +85,7 @@ public class Clock
     public Clock() => Time.fixedDeltaTime = TickDuration;
     
     public static int FrameCount    => frameCount;
-    public static float TickDelta   => TickDuration;
+    public static float DeltaTime   => TickDuration;
 
     public void Tick()
     {
@@ -163,6 +119,9 @@ public class Clock
 }
 
 
+
+
+
 public class GameLoop
 {
     private Clock clock;
@@ -177,105 +136,148 @@ public class GameLoop
         this.clock.OnUtil += Util;
     }
 
-    public void Start()
-    {
-        Service.Initialize();
-    }
-
     public void Tick()
     {
-        Service.Tick();
+        GameTick.Tick();
     }
     public void Loop()
     {
-        Service.Loop();
+        GameTick.Loop();
     }
     public void Step()
     {
-        Service.Step();
+        GameTick.Step();
     }
     public void Util()
     {
-        Service.Util();
+        GameTick.Util();
     }
 }
 
 
-public enum GamePhase
-{
-    System,
-    Input,
-    Stats,
-    Combat,
-}
 
-public interface IService { GamePhase Phase { get; } public void Initialize(); };
-public interface IServiceTick : IService { public void Tick(); };
-public interface IServiceLoop : IService { public void Loop(); };
-public interface IServiceStep : IService { public void Step(); };
-public interface IServiceUtil : IService { public void Util(); };
 
-public static class Service
+public static class GameTick
 {
     
-    private static readonly List<IService> services = new();
+    private static readonly List<IServiceTick> tickServices = new();
+    private static readonly List<IServiceLoop> loopServices = new();
+    private static readonly List<IServiceStep> stepServices = new();
+    private static readonly List<IServiceUtil> utilServices = new();
 
     public static void Tick()
     {
-        foreach(var service in services)
-            if (service is IServiceTick registered)
-                registered.Tick();
+        foreach(var service in tickServices)
+                service.Tick();
     }
     public static void Loop()
     {
-        foreach(var service in services)
-            if (service is IServiceLoop registered)
-                registered.Loop();
+        foreach(var service in loopServices)
+                service.Loop();
     }
     public static void Step()
     {
-        foreach(var service in services)
-            if (service is IServiceStep registered)
-                registered.Step();
+        foreach(var service in stepServices)
+                service.Step();
     }
     public static void Util()
     {
-        foreach(var service in services)
-            if (service is IServiceUtil registered)
-                registered.Util();
+        foreach(var service in utilServices)
+                service.Util();
     }
 
     public static void Register(IService service)
     {
-        if (!services.Contains(service))
+        if (service is IServiceTick tickService)
         {
-            services.Add(service);
-            services.Sort((a, b) => a.Phase.CompareTo(b.Phase));
+            tickServices.Add(tickService);
+            tickServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
         }
-        else
-            Debug.LogWarning($"GameService: Attempted to register {service.GetType().Name}, but it was already registered.");
-    }
 
+        if (service is IServiceLoop loopService)
+        {
+            loopServices.Add(loopService);
+            loopServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+        }
+
+        if (service is IServiceStep stepService)
+        {
+            stepServices.Add(stepService);
+            stepServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+        }
+
+        if (service is IServiceUtil utilService)
+        {
+            utilServices.Add(utilService);
+            utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+        }
+    }
     public static void Deregister(IService service)
     {
-        if (services.Contains(service))
-            services.Remove(service);
-        else
-            Debug.LogWarning($"GameService: Attempted to deregister {service.GetType().Name}, but it was not registered.");
+        if (service is IServiceTick st)   tickServices.Remove(st);
+        if (service is IServiceLoop sl)   loopServices.Remove(sl);
+        if (service is IServiceStep ss)   stepServices.Remove(ss);
+        if (service is IServiceUtil su)   utilServices.Remove(su);
     }
+}
 
+
+
+public static class Services
+{
     public static void Initialize()
     {
+        var services = Registry.Services.RegisteredServices.Values;
+
         foreach (var service in services)
-            service.Initialize();
+        {
+            if (service is IInitialize instance)
+                instance.Initialize();
+        }
     }
 
     public static void Dispose()
     {
-        foreach (var service in services)
-            if (service is IDisposable disposable)
-                disposable.Dispose();
+        var services = Registry.Services.RegisteredServices;
+
+        foreach (var service in services.Values)
+        {
+            if (service is IDisposable instance)
+                instance.Dispose();
+        }
     }
+
+    public static T Get<T>() => Registry.Services.Get<T>();
+    public static void Register<T>(T service) => Registry.Services.Register<T>(service);
+    public static void RegisterTick(IService service) => GameTick.Register(service);
 }
 
+
+public enum UpdatePhase
+{
+    System,
+    Input,
+    PreUpdate,
+    Update,
+    PostUpdate
+}
+
+
+public readonly struct UpdatePriority : IComparable<UpdatePriority>
+{
+    public UpdatePhase Phase { get; }
+    public int Priority { get; }
+
+    public UpdatePriority(UpdatePhase phase, int priority = 50)
+    {
+        Phase    = phase;
+        Priority = priority;
+    }
+
+    public int CompareTo(UpdatePriority other)
+    {
+        int phaseCompare = Phase.CompareTo(other.Phase);
+        return phaseCompare != 0 ? phaseCompare : Priority.CompareTo(other.Priority);
+    }
+}
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -9,16 +10,15 @@ using UnityEngine;
 public class FunctionAttribute : Attribute {};
 
 
-[AttributeUsage(AttributeTargets.Class)]
-public class ServiceAttribute : Attribute {};
+[AttributeUsage(AttributeTargets.Class, Inherited = true)]
+public class ServiceAttribute : Attribute {  };
 
 public delegate void RegisteredFunction(object args);
  
 
-
 public static class Function
 {
-    public static void Call(string name, object args) => Registry.Function.Call(name, args);
+    public static void Call(string name, object args) => Registry.Functions.Call(name, args);
 }
 
 
@@ -27,43 +27,13 @@ public static class Registry
 
     public static void Initialize()
     {
-        Registry.Data.Initialize();
-        Registry.Prefab.Initialize();
-        Registry.Service.Initialize();
-        Registry.Function.Initialize();
+        Registry.Prefabs.Initialize();
+        Registry.Services.Initialize();
+        Registry.Functions.Initialize();
     }
 
-    public static class Data
-    {
-        private static readonly Dictionary<string, object> dictionary = new();
 
-        public static void Initialize() => Reload();
-
-        public static void Reload()
-        {
-            LoadData();
-        }
-
-        private static void LoadData()
-        {
-
-            foreach (var data in Resources.LoadAll<EntityData>("Data/Entity"))
-                dictionary[data.name] = data;
-
-            foreach (var data in Resources.LoadAll<WeaponData>("Data/Weapon/"))
-                dictionary[data.name] = data;
-        }
-
-        public static T Get<T>(string name) where T : class
-        {
-            if (dictionary.TryGetValue(name, out var value))
-                return value as T;
-            return null;
-        }
-
-    }
-
-    public static class Prefab 
+    public static class Prefabs
     {
 
         private static readonly Dictionary<string, GameObject> dictionary = new();
@@ -94,7 +64,7 @@ public static class Registry
         }
     }
 
-    public static class Service
+    public static class Services
     {
         private static readonly Dictionary<Type, object> dictionary = new();
 
@@ -160,7 +130,9 @@ public static class Registry
                     var service = Activator.CreateInstance(type);
 
                     if (service is IService typed)
-                        typed.Initialize();
+                    {
+                        GameTick.Register(typed);
+                    }
 
                     dictionary[type] = service;
                     Debug.Log($"Registered {type.Name}");
@@ -168,11 +140,12 @@ public static class Registry
             }
         }
 
+        public static Dictionary<Type, object> RegisteredServices => dictionary;
     }
 
 
 
-    public static class Function
+    public static class Functions
     {
     
         private static readonly Dictionary<string, RegisteredFunction> function = new();

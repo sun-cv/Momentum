@@ -92,6 +92,8 @@ crashlytics-build.properties
 /Assets/Packages
 /Assets/Game/Animations
 /Assets/Game/Sprites
+/Assets/Plugins
 
+/Aseprite
 
 notes.md
