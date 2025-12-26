@@ -1,9 +1,10 @@
-
-
-
-
-
 using System.Collections.Generic;
+
+
+
+
+
+
 
 public class Effect     : Instance
 {
@@ -12,18 +13,32 @@ public class Effect     : Instance
     public bool Cancelable                      { get; init; }
 }
 
-public interface ITrigger                   { public WeaponPhase Trigger         { get; init; }}
-public interface IDuration                  { public float Duration              { get; init; }}
-public interface IDurationFrames            { public int DurationFrames          { get; init; }}
-public interface IDisableMove               { public bool DisableMove            { get; init; }}
-public interface IDisableAttack             { public bool DisableAttack          { get; init; }}
-public interface IDisableRotate             { public bool DisableRotate          { get; init; }}
-public interface ITriggerLock               { public bool RequestTriggerLock     { get; init; } public List<InputIntent> TriggerLocks { get; init; }}
-public interface IType                      { public string Type                 { get; init; }}
-public interface IModifiable                { public float Modifier              { get; init; }}
-public interface INoUnitCollision           { public bool NoUnitCollision        { get; init; }}
-public interface IImmuneToForce             { public bool ImmuneToForce          { get; init; }}
-public interface ICanAffectInvulnerable     { public bool CanAffectInvulnerable  { get; init; }}
+public enum EffectType
+{
+    Speed,
+    Grip
+}
+
+
+public interface ITrigger                   { public WeaponPhase Trigger            { get; init; }}
+public interface IType                      { public EffectType Type                { get; init; }}
+public interface IDuration                  { public float Duration                 { get; init; }}
+public interface IDurationFrames            { public int DurationFrames             { get; init; }}
+public interface IDisableMove               { public bool DisableMove               { get; init; }}
+public interface IDisableAttack             { public bool DisableAttack             { get; init; }}
+public interface IDisableRotate             { public bool DisableRotate             { get; init; }}
+
+public interface ITriggerLock               { public bool RequestTriggerLock        { get; init; } 
+                                              public List<InputIntent> TriggerLocks { get; init; }}
+
+
+public interface IModifiable                { public float Modifier                 { get; init; } 
+                                              public float ModifierTarget           { get; init; } 
+                                              public float ModifierSpeed            { get; init; }}
+
+public interface INoUnitCollision           { public bool NoUnitCollision           { get; init; }}
+public interface IImmuneToForce             { public bool ImmuneToForce             { get; init; }}
+public interface ICanAffectInvulnerable     { public bool CanAffectInvulnerable     { get; init; }}
 
 
 public interface IDisableRules : IDisableAttack, IDisableMove, IDisableRotate {}
@@ -82,17 +97,21 @@ public class ShieldBraceAim : Effect, ITrigger, IDurationFrames
 
 public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
-    public string Type                          { get; init; }
+    public EffectType Type                      { get; init; }
     public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }
+    public float ModifierTarget                 { get; init; } = 0;
+    public float ModifierSpeed                  { get; init; } = 0;
 }
 public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
-    public string Type                          { get; init; }
+    public EffectType Type                      { get; init; }
     public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }
-}
+    public float ModifierTarget                 { get; init; } = 0;
+    public float ModifierSpeed                  { get; init; } = 0;
+    }

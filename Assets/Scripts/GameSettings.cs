@@ -12,10 +12,9 @@ public static class Config
     public const float INPUT_THRESHOLD_RELEASE  = 40;
     public const float COMMAND_BUFFER_EXPIRY    = 10;
 
-    public const float MOVEMENT_GROUND_FRICTION = 50f;
-    public const float MOVEMENT_MAX_SPEED       = 20f;
-    public const float MOVEMENT_ACCELERATION    = 100f;
-    public const float MOVEMENT_DECELERATION    = 200;
+    public const float MOVEMENT_MAX_SPEED       = 15f;
+    public const float MOVEMENT_ACCELERATION    = 300f;
+    public const float MOVEMENT_FRICTION        = 5f;
     public const float MOVEMENT_IMPULSE_DECAY   = 10f;
 }
 

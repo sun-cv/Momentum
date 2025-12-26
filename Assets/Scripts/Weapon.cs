@@ -130,9 +130,32 @@ public class Weapon : Item
     public float MinimumChargeToFire            { get; init; } = 0;
     /// <summary>For OnRelease triggers: force fire when max charge is reached </summary>
     public bool ForceMaxChargeRelease           { get; init; } = false;
-    /// <summary>Number of times weapon may be fired </summary>
+
+
+    /// ============================================================================
+    /// PLAYER MODIFIERS
+    /// ============================================================================
+
+    /// <summary>Cancel movement</summary>
+    public bool CancelMovement                  { get; init; } = false;
+    /// <summary>Cancel movement when charging</summary>
+    public bool ChargeCancelMovement            { get; init; } = false;
+    /// <summary>Set velocity</summary>
+    public int Velocity                         { get; init; } = 0;
+    /// <summary>Set velocity</summary>
+    public int ChargeVelocity                   { get; init; } = 0;
+
+    /// ============================================================================
+    /// WEAPON CONFIGURATION
+    /// ============================================================================
+
+    /// <summary>Number of times weapon can be fired</summary>
     public int ClipSize                         { get; init; } = 0;
-    /// <summary>Custom predicates - intended for player context </summary>
+    /// <summary>Duration in seconds regen of clip</summary>
+    public float ClipRegenInterval              { get; init; } = 0;
+    /// <summary>Regen full clip size?</summary>
+    public bool FullClipRegen                   { get; init; } = false;
+    /// <summary>Custom predicates - intended for player context</summary>
     public WeaponTriggerCondition Condition     { get; init; } = new();
     /// <summary>List of effects applied by weapon</summary>
     public List<Effect> Effects                 { get; init; } = new();

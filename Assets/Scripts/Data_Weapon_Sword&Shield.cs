@@ -179,23 +179,13 @@ public class ShieldParry : DamagingWeapon
             new ShieldMobility()
             {
                 Name                = "ShieldParrySlow",
-                Type                = "SPEED",
+                Type                = EffectType.Speed,
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 10,
-                Modifier            = .25f,
-            },
-            new ShieldMobility()
-            {
-                Name                = "ShieldParrySlowTransition",
-                Type                = "SPEED",
-                Trigger             = WeaponPhase.Fire,
-                Active              = true,
-                Cancelable          = true,
-                DurationFrames      = 60,
+                DurationFrames      = 40,
                 Modifier            = .50f,
-            }
+            },
         }; 
  
     }
@@ -244,12 +234,14 @@ public class ShieldBlock : DamagingWeapon
             new ShieldMobility()
             {
                 Name                = "ShieldBlockSlow",
-                Type                = "SPEED",
+                Type                = EffectType.Grip,
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 9999,
                 Modifier            = .50f,
+                ModifierTarget      = .25f,
+                ModifierSpeed       = 2,
             }
         };
     }

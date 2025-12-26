@@ -54,6 +54,7 @@ public abstract class Timer : IDisposable
     protected Timer(float value)
     {
         initialTime = value;
+        InitialTime = initialTime;
         Unit        = TimerUnit.Time;
 
         timers      = Services.Get<Timers>();
@@ -62,6 +63,7 @@ public abstract class Timer : IDisposable
     protected Timer(int value)
     {
         initialFrame = value;
+        InitialFrame = initialFrame;
         Unit         = TimerUnit.Frame;
 
         timers       = Services.Get<Timers>();
@@ -195,6 +197,8 @@ public class GenericTimer : Timer
 {
     readonly TimerMode mode;
 
+    float percent;
+
     public GenericTimer(TimerMode mode, float value = 0 ) : base(value)
     {
         this.mode = mode;
@@ -215,17 +219,25 @@ public class GenericTimer : Timer
         if (Unit == TimerUnit.Time && mode == TimerMode.Down && CurrentTime <= 0)
             Stop();
 
-
         if (Unit == TimerUnit.Frame)
             CurrentFrame += mode == TimerMode.Up ? 1 : -1;
 
         if (Unit == TimerUnit.Frame && mode == TimerMode.Down && CurrentFrame <= 0)
             Stop();
 
+        CalculatePercentage();
+    }
+
+    void CalculatePercentage()
+    {
+        float total = Unit == TimerUnit.Time ? InitialTime : InitialFrame;
+        float raw = CurrentTime / total;
+
+        percent = mode == TimerMode.Down ? 1f - raw : raw;
     }
 
     public override bool IsFinished => !IsRunning;
-
+    public float PercentComplete    => percent;
 }
 
 

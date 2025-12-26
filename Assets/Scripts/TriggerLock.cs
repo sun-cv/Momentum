@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 
 
 
@@ -19,7 +18,6 @@ public class TriggerLocks : RegisteredService
 
     void HandleLockRequest(LockRequest evt)
     {
-
         Response response = Response.Declined;       
 
         switch(evt.Action)
@@ -76,6 +74,8 @@ public class TriggerLocks : RegisteredService
     public void SetAcceptingLocks(bool value) => acceptingLocks = value;
 
     void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
+
+    public IReadOnlyDictionary<InputIntent, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
 } 
 
 public enum LockAction

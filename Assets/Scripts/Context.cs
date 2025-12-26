@@ -24,5 +24,7 @@ public class Context : Instance
     public bool IsInvulnerable;
 
     public Vector2 MovementDirection    => router.MovementDirection;
+    public Vector2 Velocity             => Services.Get<MovementEngine>().Velocity;
+    public Vector2 Momentum             => Services.Get<MovementEngine>().Momentum;
     
 }

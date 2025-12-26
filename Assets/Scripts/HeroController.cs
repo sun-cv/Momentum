@@ -17,11 +17,12 @@ public class HeroController : Controller
         Services.Get<WeaponSystem>().AssignContext(context);
         Services.Get<WeaponSystem>().AssignWeaponSet(context.weaponSet);
 
-        Services.Get<MovementEngine>().AssignHero(hero, context, body);
+        Services.Get<MovementEngine>().AssignHero(this);
 
     }
 
-    public Hero Hero => hero;
+    public Hero Hero        => hero;
+    public Context Context  => context;
 }
 
 
@@ -35,7 +36,7 @@ public class Hero : Entity
     public float Mana                   { get; set; }
     public float MaxMana                => stats.MaxMana;
 
-    public float Speed                  { get; } = 10;
+    public float Speed                  { get; } = 5;
     public float Damage                 { get; }
 
     public void Initialize(HeroData definition)

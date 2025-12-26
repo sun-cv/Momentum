@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
-using UnityEngine;
+
 
 public class WeaponState
 {
@@ -96,15 +95,17 @@ public class WeaponSystem : RegisteredService, IServiceTick
         {
             if (!HasAllRequiredInputs(weapon))
             {
-                // Debug.Log($"{weapon.Name} inputs no longer satisfied, releasing");
                 state.ReadyToRelease = true;
                 return;
             }
         }
 
+        if (CheckInputReleaseTriggers())
+            return;
+
         if (ShouldTerminate())
         {
-            HandleTermination();
+            state.ReadyToRelease = true;
             return;
         }
 
@@ -126,73 +127,54 @@ public class WeaponSystem : RegisteredService, IServiceTick
     
     bool ShouldValidateInputs()
     {
-        switch (weapon.Activation)
+        return weapon.Activation switch
         {
-            case WeaponActivation.WhileHeld:
-                return true;
-                
-            case WeaponActivation.OnRelease:
-                // Only during charging - once fired, we don't care
-                return state.Phase == WeaponPhase.Charging;
-                
-            case WeaponActivation.OnPress:
-            case WeaponActivation.OnCharge:
-            default:
-                return false;
-        }
+            WeaponActivation.WhileHeld => true,
+            WeaponActivation.OnRelease => state.Phase == WeaponPhase.Charging,
+            _ => false,
+        };
     }
 
     bool ShouldTerminate()
     {
-        switch (weapon.Termination)
+        return weapon.Termination switch
         {
-            case WeaponTermination.OnRelease:
-                return weapon.Input.Any(input => !IsInputHeld(input));
-                
-            case WeaponTermination.OnRootRelease:
-                return weapon.RequiredHeldInputs.Any(input => !IsInputHeld(input));
-                
-            case WeaponTermination.AfterFire:
-            case WeaponTermination.Manual:
-            default:
-                return false;
-        }
+            WeaponTermination.OnRelease => weapon.Input.Any(input => !IsInputHeld(input)),
+            WeaponTermination.OnRootRelease => weapon.RequiredHeldInputs.Any(input => !IsInputHeld(input)),
+            _ => false,
+        };
     }
 
-    void HandleTermination()
+    bool CheckInputReleaseTriggers()
     {
-        switch (weapon.Activation)
+        if (weapon.Activation == WeaponActivation.OnRelease && state.Phase == WeaponPhase.Charging)
         {
-            case WeaponActivation.OnRelease:
-                if (state.Phase == WeaponPhase.Charging)
+            if (weapon.Input.Any(input => !IsInputHeld(input)))
+            {
+                if (GetChargePercent() >= weapon.MinimumChargeToFire)
                 {
-                    bool minChargeMet = GetChargePercent() >= weapon.MinimumChargeToFire;
-                    if (minChargeMet)
-                    {
-                        FireWeapon();
-                        return; // Don't terminate yet
-                    }
+                    FireWeapon();
+                    return true;
                 }
-                break;
-                
-            case WeaponActivation.WhileHeld:
-                // End Fire phase when released
-                if (state.Phase == WeaponPhase.Fire)
-                {
-                    TransitionToFireEnd();
-                    return;
-                }
-                break;
+            }
         }
-        
-        state.ReadyToRelease = true;
+
+        if (weapon.Activation == WeaponActivation.WhileHeld && state.Phase == WeaponPhase.Fire)
+        {
+            if (weapon.Input.Any(input => !IsInputHeld(input)))
+            {
+                TransitionToFireEnd();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void AdvanceCharging()
     {
         int chargeFrames    = GetChargeFrames(weapon);
         bool chargeComplete = state.PhaseFrames.CurrentFrame >= chargeFrames;
-        bool minChargeMet   = GetChargePercent() >= weapon.MinimumChargeToFire;
 
         switch (weapon.Activation)
         {
@@ -208,8 +190,6 @@ public class WeaponSystem : RegisteredService, IServiceTick
                 break;
 
             case WeaponActivation.OnRelease:
-                // Check for early release (handled by termination)
-                // Check for force release at max charge
                 if (chargeComplete && weapon.ForceMaxChargeRelease)
                     FireWeapon();
                 break;

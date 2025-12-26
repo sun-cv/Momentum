@@ -210,24 +210,24 @@ public readonly struct EffectPublish : IEventPublish
 
 public class EffectCache : IDisposable
 {
-    EventBinding<EffectPublish> binding;
-    List<EffectInstance> activeEffects = new();
+    readonly EventBinding<EffectPublish> binding;
+    readonly List<EffectInstance> activeEffects = new();
 
-    Func<EffectInstance, bool> filter;
-    bool isDirty;
+    readonly Func<EffectInstance, bool> filter;
+
+    public Action<EffectInstance> OnApply;
+    public Action<EffectInstance> OnClear;
+    public Action<EffectInstance> OnCancel;
 
     public EffectCache(Func<EffectInstance, bool> filter = null)
     {
         this.filter = filter;
-        binding = EventBus<EffectPublish>.Subscribe(HandleEffectPublish);
+        binding     = EventBus<EffectPublish>.Subscribe(HandleEffectPublish);
     }
 
     void HandleEffectPublish(EffectPublish evt)
     {
         var instance = evt.Payload.Instance;
-        
-        Debug.Log($"Effect Cache {instance.Effect.Name}");
-
 
         if (filter != null && !filter(instance))
             return;
@@ -236,22 +236,19 @@ public class EffectCache : IDisposable
         {
             case Publish.Activated:
                 activeEffects.Add(instance);
-                isDirty = true;
+                OnApply?.Invoke(instance);
                 break;
             case Publish.Canceled:
-            case Publish.Deactivated:
                 if (activeEffects.Remove(instance))
-                    isDirty = true;
+                    OnCancel?.Invoke(instance);
+                break;
+            case Publish.Deactivated:               
+                if (activeEffects.Remove(instance))
+                    OnClear?.Invoke(instance);
                 break;
         }
-
-
-        Debug.Log($"Effect Cache after{instance.Effect.Name}");
-
     }
 
-    public void Clean() => isDirty = false;
-    public bool Dirty => isDirty;
     public IReadOnlyList<EffectInstance> Effects => activeEffects;
     public void Dispose() => EventBus<EffectPublish>.Unsubscribe(binding);
 }
