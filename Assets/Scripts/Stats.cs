@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 
 
-
 public class Stats : Service, IServiceTick
 {
     protected readonly Dictionary<string, float> stats  = new();
@@ -27,7 +26,7 @@ public class Stats : Service, IServiceTick
     }
 
     public float BaseValue(string stat) => stats[stat];
-
+    public void SetStat(string stat, float value) => stats.Add(stat, value);
     public StatsMediator Mediator => mediator;
     public UpdatePriority Priority => ServiceUpdatePriority.Stats;
 }

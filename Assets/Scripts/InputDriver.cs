@@ -286,7 +286,6 @@ public class InputButton
         releasedframeCount.Stop();
         releasedframeCount.Reset();   
     }
-
 }
 
 

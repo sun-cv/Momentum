@@ -48,16 +48,16 @@ public class Weapon : Item
     
     public string Name                          { get; init; } = "";
     
-    /// <summary>The inputs required to activate this weapon</summary>
-    public List<InputIntent> Input              { get; init; } = new();
+    /// <summary>The actions required to activate this weapon</summary>
+    public List<Capability> Action              { get; init; } = new();
     /// <summary>What causes this weapon to fire</summary>
     public WeaponActivation Activation          { get; init; } = WeaponActivation.OnPress;
     /// <summary>What causes this weapon to terminate </summary>
     public WeaponTermination Termination        { get; init; } = WeaponTermination.AfterFire;
     /// <summary>How this weapon becomes available for activation</summary>
     public WeaponAvailability Availability      { get; init; } = WeaponAvailability.OnPhase;
-    /// <summary>Default weapon mapping for this input (used for Availability.Default)</summary>
-    public InputIntent DefaultWeapon            { get; init; } = InputIntent.None;
+    /// <summary>Default weapon mapping for this action (used for Availability.Default)</summary>
+    public Capability DefaultWeapon             { get; init; } = Capability.None;
 
     // ============================================================================
     // CONTROL SYSTEM - What weapons become available
@@ -86,7 +86,7 @@ public class Weapon : Item
     /// If any of these are released, the weapon terminates (based on Termination setting).
     /// These are tracked separately from Input - they define the "hold chain root".
     /// </summary>
-    public List<InputIntent> RequiredHeldInputs { get; init; } = new();
+    public List<Capability> RequiredHeldActions { get; init; } = new();
 
     // ============================================================================
     // INTERRUPTION & CANCELING
@@ -122,6 +122,7 @@ public class Weapon : Item
     public float FireDuration                   { get; init; } = 0;
     /// <summary>Fire phase duration in frames (takes priority over ChargeTime if set)</summary>
     public int FireDurationFrames               { get; init; } = 0;
+
     // ============================================================================
     // CHARGE BEHAVIOR
     // ============================================================================
@@ -136,14 +137,18 @@ public class Weapon : Item
     /// PLAYER MODIFIERS
     /// ============================================================================
 
+    public bool WeaponOverridesMovement         { get; init; } = false;
+    /// <summary>Lock players current movement direction</summary>
+    public bool LockDirection                   { get; init; } = false;
     /// <summary>Cancel movement</summary>
     public bool CancelMovement                  { get; init; } = false;
     /// <summary>Cancel movement when charging</summary>
     public bool ChargeCancelMovement            { get; init; } = false;
     /// <summary>Set velocity</summary>
-    public int Velocity                         { get; init; } = 0;
+    public int Speed                            { get; init; } = -1;
+    public int Modifier                         { get; init; } = -1;
     /// <summary>Set velocity</summary>
-    public int ChargeVelocity                   { get; init; } = 0;
+    public int ChargeVelocity                   { get; init; } = -1;
 
     /// ============================================================================
     /// WEAPON CONFIGURATION
@@ -179,8 +184,8 @@ public class WeaponSet
     public Dictionary<string, Weapon> Weapons => weapons;
     public List<Weapon> WeaponList => weapons.Values.ToList();
 
-    public Weapon DefaultWeapon(InputIntent intent) 
+    public Weapon DefaultWeapon(Capability action) 
         => weapons.Values.FirstOrDefault(weapon => 
-            weapon.Input.SequenceEqual(new List<InputIntent>() { intent }) && 
+            weapon.Action.SequenceEqual(new List<Capability>() { action }) && 
             weapon.Availability == WeaponAvailability.Default);
 }

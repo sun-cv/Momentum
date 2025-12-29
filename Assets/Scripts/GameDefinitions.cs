@@ -1,5 +1,4 @@
 using System;
-using UnityEditor;
 using UnityEngine;
 
 //
@@ -196,6 +195,9 @@ public enum Publish
     Deactivated,
     Changed,
     Canceled,
+    Equipped,
+    Released,
+    PhaseChange,
 }
 
 public enum InputCondition
@@ -217,4 +219,21 @@ public enum InputIntent
     Attack2,
     Modifier,
     Dash,
+}
+
+
+public enum Capability
+{
+    None,
+    Interact,
+    Action,
+    Attack1,
+    Attack2,
+    Modifier,
+    Movement,
+    Dash,
+    Sprint,
+    Rotation,
+    ItemUse,
+    MenuAccess,
 }

@@ -10,4 +10,7 @@ public class HeroData : Data
 
     public float Mana                   = 0;
     public float MaxMana                = 0;
+
+    public float Speed                  = 5;
+
 };

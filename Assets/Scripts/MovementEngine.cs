@@ -8,21 +8,33 @@ using UnityEngine;
 
 public class MovementEngine : RegisteredService, IServiceTick
 {
+    readonly float maxSpeed     = Config.MOVEMENT_MAX_SPEED;
+    readonly float acceleration = Config.MOVEMENT_ACCELERATION;
+    readonly float friction     = Config.MOVEMENT_FRICTION;
+
     EffectCache cache;
 
     Hero        hero;
     Context     context;
     Rigidbody2D body;
 
-    readonly float maxSpeed     = Config.MOVEMENT_MAX_SPEED;
-    readonly float acceleration = Config.MOVEMENT_ACCELERATION;
-    readonly float friction     = Config.MOVEMENT_FRICTION;
+    Weapon      weapon;
+    WeaponPhase phase;
 
     float modifier              = 1.0f;
     Dictionary<EffectType, List<IMovementModifier>> modifiers;
 
+    float speed;
+
+    bool    lockDirection;
+
+    Vector2 direction;
+    Vector2 directionLock;
+    Vector2 directionTrail;
+
     Vector2 momentum;
     Vector2 velocity;
+
 
     public override void Initialize()
     {
@@ -33,68 +45,157 @@ public class MovementEngine : RegisteredService, IServiceTick
         cache.OnClear   += ClearModifier;
         
         modifiers = new();
+
+        EventBus<WeaponPublish>.Subscribe(HandleWeaponPublish);
     }
 
     public void Tick()   
     {
-        ApplyFriction();
+        SetDirection();
+        SetSpeed();
 
-        ResolveEffectModifier();
+        ApplyFriction();
+        CalculateModifier();
         CalculateVelocity();
 
-        if (context.CanMove)
+        if (HasActiveWeapon())
+            ApplyWeaponMovement();
+
+        if (CanMove())
             ApplyVelocity();
 
         DebugLog();
     }
 
-
-    void ResolveEffectModifier()
+    bool CanMove()
     {
-        if (modifiers.Count == 0)
-            return;
-
-        float sumOfTypeAverages = 0f;
-        int typeCount = 0;
-
-        foreach (var modifierList in modifiers.Values)
-        {
-            if (modifierList.Count == 0)
-                continue;
-
-            float typeSum = 0f;
-
-            foreach (var modifier in modifierList)
-                typeSum += modifier.Resolve();
-
-            sumOfTypeAverages += typeSum / modifierList.Count;
-            typeCount++;
-        }
-
-        modifier = typeCount > 0 ? sumOfTypeAverages / typeCount : 1f;
+        return context.CanMove;
     }
+
+    // ============================================================================
+    // MOVEMENT CALCULATIONS
+    // ============================================================================
+
 
     void CalculateVelocity()
     {
-        float effectiveSpeed = Mathf.Clamp(hero.Speed * modifier, 0, maxSpeed);
-        Vector2 targetVelocity = effectiveSpeed * context.MovementDirection.normalized;
+
+        Vector2 targetVelocity = Mathf.Clamp(speed * modifier, 0, maxSpeed) * direction;
+
         velocity = Vector2.MoveTowards(velocity, targetVelocity, acceleration * Clock.DeltaTime);
-        
         momentum = velocity;
     }
 
-    void ApplyFriction()
+    void CalculateModifier()
     {
-        float frictionAmount = Mathf.Clamp01(friction * Clock.DeltaTime);
-        velocity *= 1 - frictionAmount;
+        float sumOfAverages = 0f;
+        int typeCount       = 0;
+    
+        foreach (var list in modifiers.Values)
+        {
+            int count = list.Count;
+            if (count == 0) continue;
+    
+            float sum = 0f;
+
+            for (int i = 0; i < count; i++)
+                sum += list[i].Resolve();
+    
+            sumOfAverages += sum / count;
+            typeCount++;
+        }
+    
+        modifier = typeCount == 0 ? 1f : sumOfAverages / typeCount;
     }
 
+
+    void ApplyFriction() => velocity *= 1 - Mathf.Clamp01(friction * Clock.DeltaTime);
     void ApplyVelocity() => body.linearVelocity = velocity;
 
-    void DebugLog()
+    // ============================================================================
+    // WEAPON MANAGEMENT
+    // ============================================================================
+
+    void HandleWeaponPublish(WeaponPublish evt)
     {
-        Logwin.Log("Movement Engine Velocity:", velocity);
-        Logwin.Log("Movement Engine Modifier:", modifier);
+        switch(evt.Action)
+        {
+            case Publish.Equipped:
+                HandleWeaponEquip(evt.Payload.Weapon);
+                break;
+            case Publish.PhaseChange:
+                HandleWeaponPhaseChange(evt.Payload.Phase);
+                break;
+            case Publish.Released:
+                HandleWeaponRelease();
+                break;
+        }
+    }
+
+    void HandleWeaponEquip(Weapon weapon)
+    {
+        this.weapon = weapon;
+
+        if (weapon.LockDirection)
+        {
+            directionLock = direction == Vector2.zero ? directionTrail : direction;
+            lockDirection = true;
+        }
+
+    }
+
+    void HandleWeaponPhaseChange(WeaponPhase phase)
+    {
+        this.phase = phase;
+    }
+
+    void HandleWeaponRelease()
+    {
+        weapon          = null;
+        lockDirection   = false;
+    }
+
+    void ApplyWeaponMovement()
+    {
+        if (!weapon.WeaponOverridesMovement)
+            return;
+
+        float weaponSpeed = weapon.Speed >= 0 ? weapon.Speed : speed;
+        float weaponMod = weapon.Modifier >= 0 ? weapon.Modifier : modifier;
+
+        Vector2 targetVelocity = Mathf.Clamp(weaponSpeed * weaponMod, 0, maxSpeed) * direction;
+
+        velocity = targetVelocity;
+        momentum = velocity;
+    }
+
+
+    // ============================================================================
+    // EFFECT MODIFIER MANAGEMENT
+    // ============================================================================
+
+
+    void CreateModifier(EffectInstance instance)
+    {
+        var coded = instance.Effect as IType;
+
+        if (!modifiers.ContainsKey(coded.Type))
+            modifiers[coded.Type] = new List<IMovementModifier>();
+
+        modifiers[coded.Type].Add(CreateModifierForType(coded.Type, instance));
+    }
+
+
+    void ClearModifier(EffectInstance instance)
+    {
+        var coded = instance.Effect as IType;
+
+        if (modifiers.TryGetValue(coded.Type, out var list))
+        {
+            var modifier = list.FirstOrDefault(m => m.Instance == instance);
+            if (modifier != null)
+                list.Remove(modifier);
+        }
     }
 
     IMovementModifier CreateModifierForType(EffectType type, EffectInstance instance)
@@ -107,33 +208,40 @@ public class MovementEngine : RegisteredService, IServiceTick
         };
     }
 
-    void CreateModifier(EffectInstance instance)
+
+
+    // ============================================================================
+    // HELPER METHODS
+    // ============================================================================
+
+    bool HasActiveWeapon()   => weapon != null;
+
+    void SetDirection()
     {
-        var coded = instance.Effect as IType;
+        if (context.MovementDirection == Vector2.zero && direction != Vector2.zero)
+            directionTrail = direction;
 
-        if (!modifiers.ContainsKey(coded.Type))
-            modifiers[coded.Type] = new List<IMovementModifier>();
-
-        modifiers[coded.Type].Add(CreateModifierForType(coded.Type, instance));
+        direction = lockDirection ? directionLock : context.MovementDirection.normalized;
     }
 
-    void ClearModifier(EffectInstance instance)
+    void SetSpeed()
     {
-        var coded = instance.Effect as IType;
-        
-        if (modifiers.TryGetValue(coded.Type, out var list))
-        {
-            var modifier = list.FirstOrDefault(m => m.Instance == instance);
-            if (modifier != null)
-                list.Remove(modifier);
-        }
+        speed = hero.Speed;
     }
 
-    public void AssignHero(HeroController controller)
+    void DebugLog()
     {
-        hero       = controller.Hero;
-        context    = controller.Context;
-        body       = controller.body;
+        Logwin.Log("Movement Engine Velocity:", velocity);
+        Logwin.Log("Movement Engine Modifier:", modifier);
+        Logwin.Log("Movement Engine Cache:", cache.Effects.Count);
+    }
+
+
+    public void AssignHero(Hero hero)
+    {
+        this.hero       = hero;
+        this.context    = hero.Context;
+        this.body       = hero.Character.body;
 
         body.freezeRotation = true;
         body.gravityScale   = 0;
@@ -144,6 +252,14 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;
 }
+
+
+
+
+
+// ============================================================================
+// MODIFIERS
+// ============================================================================
 
 
 public interface IMovementModifier

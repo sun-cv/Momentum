@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 
 
 
 
 public class Command : Instance
 {
-    public InputIntent Input    { get; init; }
+    public Capability  Action   { get; init; }
     public InputButton Button   { get; init; }
 
     public bool locked;
 
-    public Command(InputIntent input, InputButton button)
+    public Command(Capability action, InputButton button)
     {
-        Input  = input;
+        Action = action;
         Button = button;
     }
 
@@ -32,8 +31,8 @@ public class CommandSystem : RegisteredService, IServiceTick
 
     InputRouter router;
 
-    Dictionary<InputIntent, Command> active = new();
-    Dictionary<InputIntent, Command> buffer = new();
+    Dictionary<Capability, Command> active = new();
+    Dictionary<Capability, Command> buffer = new();
 
 
     public override void Initialize()
@@ -67,19 +66,19 @@ public class CommandSystem : RegisteredService, IServiceTick
         var toCreate = router.ActiveButtons.Where(button => button.pressedThisFrame == true).ToList();
 
         foreach (var button in toCreate)
-            buffer[button.Input] = new(button.Input, button);
+            buffer[IntentMap.Input[button.Input]] = new(IntentMap.Input[button.Input], button);
 
         return toCreate.Count > 0;
     }
 
-    bool RemoveReleasedCommands(Dictionary<InputIntent, Command> commands)
+    bool RemoveReleasedCommands(Dictionary<Capability, Command> commands)
     {
         if (commands.Count == 0) return false;
 
         var toRemove = commands.Values.Where(command => !command.Locked && command.Button.releasedThisFrame).ToList();
 
         foreach (var command in toRemove)
-            commands.Remove(command.Input);
+            commands.Remove(command.Action);
 
         return toRemove.Count > 0;
     }
@@ -105,13 +104,13 @@ public class CommandSystem : RegisteredService, IServiceTick
 
     void ConsumeCommand(Command command)
     {   
-        var instance  = buffer.Values.Where(instance => instance.Input == command.Input).OrderBy(instance => instance.Button.pressedframeCount.CurrentFrame).First();
+        var instance  = buffer.Values.Where(instance => instance.Action == command.Action).OrderBy(instance => instance.Button.pressedframeCount.CurrentFrame).First();
 
-        buffer.Remove(command.Input);
-        active[command.Input] = instance;
+        buffer.Remove(command.Action);
+        active[command.Action] = instance;
     }
-    void LockCommand(Command command)    => active[command.Input].Lock();
-    void UnlockCommand(Command command)  => active[command.Input].Unlock();
+    void LockCommand(Command command)    => active[command.Action].Lock();
+    void UnlockCommand(Command command)  => active[command.Action].Unlock();
 
     void PublishUpdate() => OnEvent<CommandPublish>(new(Guid.NewGuid(), Publish.Changed, new(){ Active = Snapshot.ReadOnly(active), Buffer = Snapshot.ReadOnly(buffer) }));
 
@@ -136,8 +135,8 @@ public readonly struct CommandRequestPayload
 
 public readonly struct CommandStatePayload
 {
-    public IReadOnlyDictionary<InputIntent, Command> Active { get; init; }
-    public IReadOnlyDictionary<InputIntent, Command> Buffer { get; init; }
+    public IReadOnlyDictionary<Capability, Command> Active { get; init; }
+    public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }
 }
 
 public readonly struct CommandRequest : IEventRequest
@@ -178,4 +177,29 @@ public readonly struct CommandPublish : IEventPublish
         Event   = evt;
         Payload = payload;
     }
+}
+
+public static class IntentMap
+{
+    public static readonly Dictionary<InputIntent, Capability> Input = new()
+    {
+        { InputIntent.None,     Capability.None },
+        { InputIntent.Interact, Capability.Interact },
+        { InputIntent.Action,   Capability.Action },
+        { InputIntent.Attack1,  Capability.Attack1 },
+        { InputIntent.Attack2,  Capability.Attack2 },
+        { InputIntent.Modifier, Capability.Modifier },
+        { InputIntent.Dash,     Capability.Dash },
+    };
+
+    public static readonly Dictionary<Capability, InputIntent> Capabilities = new()
+    {
+        { Capability.None,       InputIntent.None },
+        { Capability.Interact,   InputIntent.Interact },
+        { Capability.Action,     InputIntent.Action },
+        { Capability.Attack1,    InputIntent.Attack1 },
+        { Capability.Attack2,    InputIntent.Attack2 },
+        { Capability.Modifier,   InputIntent.Modifier },
+        { Capability.Dash,       InputIntent.Dash },
+    };
 }

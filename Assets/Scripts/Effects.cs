@@ -28,8 +28,8 @@ public interface IDisableMove               { public bool DisableMove           
 public interface IDisableAttack             { public bool DisableAttack             { get; init; }}
 public interface IDisableRotate             { public bool DisableRotate             { get; init; }}
 
-public interface ITriggerLock               { public bool RequestTriggerLock        { get; init; } 
-                                              public List<InputIntent> TriggerLocks { get; init; }}
+public interface IActionLock                { public bool RequestActionLock         { get; init; } 
+                                              public List<Capability> ActionLocks   { get; init; }}
 
 
 public interface IModifiable                { public float Modifier                 { get; init; } 
@@ -53,7 +53,7 @@ public interface IEffectCallback
 
 
 
-public class SwordSwingDisable : Effect, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, ITriggerLock
+public class SwordSwingDisable : Effect, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, IActionLock
 {
     public int DurationFrames                   { get; init; }
 
@@ -61,8 +61,8 @@ public class SwordSwingDisable : Effect, IDurationFrames, IDisableAttack, IDisab
     public bool DisableRotate                   { get; init; }
     public bool DisableMove                     { get; init; }
     
-    public bool RequestTriggerLock              { get; init; }
-    public List<InputIntent> TriggerLocks       { get; init; }
+    public bool RequestActionLock               { get; init; }
+    public List<Capability> ActionLocks         { get; init; }
 }
 
 
@@ -105,6 +105,7 @@ public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiab
     public float ModifierTarget                 { get; init; } = 0;
     public float ModifierSpeed                  { get; init; } = 0;
 }
+
 public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
     public EffectType Type                      { get; init; }
@@ -114,4 +115,28 @@ public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, IModifia
     public float Modifier                       { get; init; }
     public float ModifierTarget                 { get; init; } = 0;
     public float ModifierSpeed                  { get; init; } = 0;
-    }
+}
+
+
+public class DashDisable : Effect, IDurationFrames, IDisableRotate, IDisableMove, IActionLock
+{
+    public int DurationFrames                   { get; init; }
+
+    public bool DisableRotate                   { get; init; }
+    public bool DisableMove                     { get; init; }
+    
+    public bool RequestActionLock               { get; init; }
+    public List<Capability> ActionLocks         { get; init; }
+
+}
+
+public class DashMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
+{
+    public EffectType Type                      { get; init; }
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public int DurationFrames                   { get; init; }
+
+    public float Modifier                       { get; init; }
+    public float ModifierTarget                 { get; init; } = 0;
+    public float ModifierSpeed                  { get; init; } = 0;
+}

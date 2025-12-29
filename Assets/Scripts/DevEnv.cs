@@ -8,16 +8,14 @@ using UnityEngine;
 public class DevEnv : RegisteredService, IServiceTick
 {
     
-    public HeroController controller;
+    public Hero hero;
     public bool triggered;
     
     public override void Initialize()
     {
         Debug.Log("Initializing dev env");
 
-        controller = HeroFactory.Create();
-
-
+        hero = HeroFactory.Create();
     }
 
     public void Tick()

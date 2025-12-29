@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
 
 
-public class TriggerLocks : RegisteredService
+public class ActionLocks : RegisteredService
 {
 
-    readonly Dictionary<InputIntent, List<string>> locks = new();
+    readonly Dictionary<Capability, List<string>> locks = new();
     bool acceptingLocks = true;
 
     public override void Initialize()
@@ -25,13 +26,12 @@ public class TriggerLocks : RegisteredService
             case LockAction.Lock:                
                     if (!acceptingLocks)
                         break;
-    
-                    AddLock(evt.Payload.Input, evt.Payload.Origin);
+                    AddLock(evt.Payload.Action, evt.Payload.Origin);
                     response = Response.Accepted;
                 break;
 
             case LockAction.Unlock:
-                    RemoveLock(evt.Payload.Input, evt.Payload.Origin);
+                    RemoveLock(evt.Payload.Action, evt.Payload.Origin);
                     response = Response.Accepted;
                 break;
             
@@ -51,31 +51,30 @@ public class TriggerLocks : RegisteredService
     }
 
 
-    void AddLock(InputIntent trigger, string origin)
+    void AddLock(Capability action, string origin)
     {
-        if (!locks.TryGetValue(trigger, out var list))
+        if (!locks.TryGetValue(action, out var list))
         {   
             list = new();
-            locks[trigger] = list;
+            locks[action] = list;
         }
         
         list.Add(origin);
     }
 
-    void RemoveLock(InputIntent trigger, string origin)
+    void RemoveLock(Capability action, string origin)
     {
-        if (!locks.TryGetValue(trigger, out var list))
+        if (!locks.TryGetValue(action, out var list))
             return;
         
         list.Remove(origin);
     }
 
-    public bool IsLocked(InputIntent trigger) => locks.TryGetValue(trigger, out var list) && list.Count > 0;
-    public void SetAcceptingLocks(bool value) => acceptingLocks = value;
+    public bool IsLocked(Capability action)     => locks.TryGetValue(action, out var list) && list.Count > 0;
+    public void SetAcceptingLocks(bool value)   => acceptingLocks = value;
+    void OnEvent<T>(T evt) where T : IEvent     => EventBus<T>.Raise(evt);
 
-    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
-
-    public IReadOnlyDictionary<InputIntent, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
+    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
 } 
 
 public enum LockAction
@@ -88,13 +87,13 @@ public enum LockAction
 
 public readonly struct LockRequestPayload
 {
-    public InputIntent Input { get; init; }
+    public Capability Action { get; init; }
     public string Origin     { get; init; }
 }
 
 public readonly struct LockStatePayload
 {
-    public IReadOnlyDictionary<InputIntent, IReadOnlyList<string>> Locks { get; init; }
+    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get; init; }
 }
 
 public readonly struct LockRequest  : IEventRequest

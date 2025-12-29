@@ -11,9 +11,11 @@ public class Context : Instance
 
     public void Initialize()
     {
+
         effects = Services.Get<EffectRegister>();
         router  = Services.Get<InputRouter>();
     }
+
     public WeaponSet weaponSet          = new SwordAndShield();
 
     public bool CanMove                 => effects.Get<IDisableMove>  (effect => !effect.DisableMove  ); 
@@ -26,5 +28,4 @@ public class Context : Instance
     public Vector2 MovementDirection    => router.MovementDirection;
     public Vector2 Velocity             => Services.Get<MovementEngine>().Velocity;
     public Vector2 Momentum             => Services.Get<MovementEngine>().Momentum;
-    
 }

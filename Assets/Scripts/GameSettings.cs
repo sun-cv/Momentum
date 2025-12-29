@@ -12,8 +12,8 @@ public static class Config
     public const float INPUT_THRESHOLD_RELEASE  = 40;
     public const float COMMAND_BUFFER_EXPIRY    = 10;
 
-    public const float MOVEMENT_MAX_SPEED       = 15f;
-    public const float MOVEMENT_ACCELERATION    = 300f;
+    public const float MOVEMENT_MAX_SPEED       = 25f;
+    public const float MOVEMENT_ACCELERATION    = 200f;
     public const float MOVEMENT_FRICTION        = 5f;
     public const float MOVEMENT_IMPULSE_DECAY   = 10f;
 }
@@ -39,5 +39,8 @@ public static class ServiceUpdatePriority
     public static UpdatePriority EffectManager      = new(UpdatePhase.PreUpdate, 50);
 
     public static UpdatePriority MovementEngine     = new(UpdatePhase.Update,    10);
+
+
+    public static UpdatePriority CameraRig          = new(UpdatePhase.PostUpdate, 10);
 
 }

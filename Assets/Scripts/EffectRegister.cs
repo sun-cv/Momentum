@@ -100,14 +100,17 @@ public class EffectRegister : RegisteredService
 
     void RegisterTriggerLock(EffectInstance instance)
     {
-        if (instance is not ITriggerLock effect)
+        if (instance.Effect is not IActionLock effect)
             return;
 
-        foreach (var trigger in effect.TriggerLocks)
+        if (effect.ActionLocks == null)
+            return;
+
+        foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Lock,   new() { Input = trigger, Origin = instance.Effect.Name }));
-            instance.OnClear   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Unlock, new() { Input = trigger, Origin = instance.Effect.Name }));
-            instance.OnCancel  += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Unlock, new() { Input = trigger, Origin = instance.Effect.Name }));
+            instance.OnApply   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnClear   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnCancel  += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
         }
     }
 
