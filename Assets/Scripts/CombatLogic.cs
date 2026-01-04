@@ -1,8 +1,7 @@
-
-
-
-
 using UnityEngine;
+
+
+
 
 public class Combat
 {
@@ -23,8 +22,6 @@ public class Combat
         if (victim is IHasHealth applicable)
             applicable.Health -= damage;
     }
-
-
 
 
 }

@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 
 
 
-public class InputDriver : RegisteredService, IDisposable
+public class InputDriver : RegisteredService, IServiceTick, IDisposable
 {
     private InputActions input;
 
@@ -29,9 +29,6 @@ public class InputDriver : RegisteredService, IDisposable
 
     void OnDodgePress      (InputAction.CallbackContext context) => EventBus<DashPress>         .Raise(new());
     void OnDodgeRelease    (InputAction.CallbackContext context) => EventBus<DashRelease>       .Raise(new());
-
-    void OnMovementVector  (InputAction.CallbackContext context) => EventBus<MovementVector>    .Raise(new MovementVector(context.ReadValue<Vector2>()));
-    void OnMousePosition   (InputAction.CallbackContext context) => EventBus<MousePosition>     .Raise(new MousePosition (context.ReadValue<Vector2>()));
 
 
     public override void Initialize()
@@ -57,12 +54,21 @@ public class InputDriver : RegisteredService, IDisposable
         input.Player.Dodge.performed    += OnDodgePress;
         input.Player.Dodge.canceled     += OnDodgeRelease;
 
-        input.Player.Move.performed     += OnMovementVector;
-        input.Player.Move.canceled      += OnMovementVector;
-
-        input.Player.Mouse.performed    += OnMousePosition;
-        input.Player.Mouse.canceled     += OnMousePosition;
     }
+
+    public void Tick()
+    {
+        PollContinousInputs();
+    }
+
+    void PollContinousInputs()
+    {
+        PollMousePosition();
+        PollMovementVector();
+    }
+    
+    void PollMousePosition()    => EventBus<MousePosition> .Raise(new MousePosition(input.Player.Mouse.ReadValue<Vector2>()));
+    void PollMovementVector()   => EventBus<MovementVector>.Raise(new MovementVector(input.Player.Move.ReadValue<Vector2>()));
 
     public void Dispose()
     {
@@ -71,6 +77,8 @@ public class InputDriver : RegisteredService, IDisposable
         input?.Dispose();
         input = null;
     }
+
+    public UpdatePriority Priority => ServiceUpdatePriority.InputDriver;
 }
 
 public struct PendingInputEvent
@@ -227,8 +235,8 @@ public class InputButton
     public bool pressedThisFrame            = false;
     public bool releasedThisFrame           = false;
 
-    public FrameCounter pressedframeCount   = new();
-    public FrameCounter releasedframeCount  = new();
+    public FrameWatch pressedframeCount   = new();
+    public FrameWatch releasedframeCount  = new();
 
     public InputButton(InputIntent input)   => Input = input;
 

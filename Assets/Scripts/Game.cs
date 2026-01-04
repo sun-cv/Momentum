@@ -16,7 +16,7 @@ public class Game : MonoBehaviour
         engine.Startup();
     }
 
-    public void FixedUpdate()
+    public void Update()
     {
         engine.Tick();
     }
@@ -25,17 +25,15 @@ public class Game : MonoBehaviour
     {
         engine.Shutdown();
     }
-
 }
-
 
 
 
 
 public class GameEngine
 {
-    readonly Clock   clock  = new();
-    readonly GameLoop loop  = new();
+    readonly Clock   clock          = new();
+    readonly GameLoop loop          = new();
 
     public void Startup()
     {
@@ -56,6 +54,23 @@ public class GameEngine
 }
 
 
+public class GamePhysics : RegisteredService, IServiceTick
+{
+
+    public override void Initialize()
+    {
+        Physics.simulationMode = SimulationMode.Script;
+    }
+
+    public void Tick()
+    {
+        Physics.Simulate(Clock.TickRate);
+    }
+
+    public UpdatePriority Priority => ServiceUpdatePriority.PhysicsSimulation;
+
+}
+
 
 
 public class Clock
@@ -65,10 +80,10 @@ public class Clock
     public const float StepRate     = Config.TICK_RATE_STEP;
     public const float UtilRate     = Config.TICK_RATE_UTIL;
 
-    public const float TickDuration = 1f/TickRate;
-    public const float LoopDuration = 1f/LoopRate;
-    public const float StepDuration = 1f/StepRate;
-    public const float UtilDuration = 1f/UtilRate;
+    public const float TickDelta = 1f/TickRate;
+    public const float LoopDelta = 1f/LoopRate;
+    public const float StepDelta = 1f/StepRate;
+    public const float UtilDelta = 1f/UtilRate;
 
     public event Action OnTick;
     public event Action OnLoop;
@@ -81,43 +96,40 @@ public class Clock
     float accumulator4; 
 
     static int frameCount;
-
-    public Clock() => Time.fixedDeltaTime = TickDuration;
     
     public static int FrameCount    => frameCount;
-    public static float DeltaTime   => TickDuration;
+    public static float DeltaTime   => Time.deltaTime;
 
     public void Tick()
     {
-        accumulator1 += TickDuration;
-        accumulator2 += TickDuration;
-        accumulator3 += TickDuration;
-        accumulator4 += TickDuration;
+        accumulator1 += DeltaTime;
+        accumulator2 += DeltaTime;
+        accumulator3 += DeltaTime;
+        accumulator4 += DeltaTime;
 
-        while (accumulator1 >= TickDuration)
+        while (accumulator1 >= TickDelta)
         {
-            accumulator1 -= TickDuration;
+            accumulator1 -= TickDelta;
             frameCount++;            
             OnTick?.Invoke();
         }
-        while (accumulator2 >= LoopDuration)
+        while (accumulator2 >= LoopDelta)
         {
-            accumulator2 -= LoopDuration;
+            accumulator2 -= LoopDelta;
             OnLoop?.Invoke();
         }
-        while (accumulator3 >= StepDuration)
+        while (accumulator3 >= StepDelta)
         {
-            accumulator3 -= StepDuration;
+            accumulator3 -= StepDelta;
             OnStep?.Invoke();
         }
-        while (accumulator4 >= UtilDuration)
+        while (accumulator4 >= UtilDelta)
         {
-            accumulator4 -= UtilDuration;
+            accumulator4 -= UtilDelta;
             OnUtil?.Invoke();
         }
     }
 }
-
 
 
 
@@ -159,68 +171,91 @@ public class GameLoop
 
 public static class GameTick
 {
-    
     private static readonly List<IServiceTick> tickServices = new();
     private static readonly List<IServiceLoop> loopServices = new();
     private static readonly List<IServiceStep> stepServices = new();
     private static readonly List<IServiceUtil> utilServices = new();
 
+    private static readonly List<IService> pendingRegistrations = new();
+    private static readonly List<IService> pendingDeregistrations = new();
+
     public static void Tick()
     {
+        ProcessPending();
+        
         foreach(var service in tickServices)
-                service.Tick();
+            service.Tick();
     }
+    
     public static void Loop()
-    {
+    {        
         foreach(var service in loopServices)
-                service.Loop();
+            service.Loop();
     }
+    
     public static void Step()
-    {
+    {        
         foreach(var service in stepServices)
-                service.Step();
+            service.Step();
     }
+    
     public static void Util()
-    {
+    {        
         foreach(var service in utilServices)
-                service.Util();
+            service.Util();
+    }
+
+    private static void ProcessPending()
+    {
+        foreach (var service in pendingDeregistrations)
+        {
+            if (service is IServiceTick st) tickServices.Remove(st);
+            if (service is IServiceLoop sl) loopServices.Remove(sl);
+            if (service is IServiceStep ss) stepServices.Remove(ss);
+            if (service is IServiceUtil su) utilServices.Remove(su);
+        }
+
+        pendingDeregistrations.Clear();
+
+        foreach (var service in pendingRegistrations)
+        {
+            if (service is IServiceTick tickService)
+            {
+                tickServices.Add(tickService);
+                tickServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            }
+
+            if (service is IServiceLoop loopService)
+            {
+                loopServices.Add(loopService);
+                loopServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            }
+
+            if (service is IServiceStep stepService)
+            {
+                stepServices.Add(stepService);
+                stepServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            }
+
+            if (service is IServiceUtil utilService)
+            {
+                utilServices.Add(utilService);
+                utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            }
+        }
+        pendingRegistrations.Clear();
     }
 
     public static void Register(IService service)
     {
-        if (service is IServiceTick tickService)
-        {
-            tickServices.Add(tickService);
-            tickServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-        }
-
-        if (service is IServiceLoop loopService)
-        {
-            loopServices.Add(loopService);
-            loopServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-        }
-
-        if (service is IServiceStep stepService)
-        {
-            stepServices.Add(stepService);
-            stepServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-        }
-
-        if (service is IServiceUtil utilService)
-        {
-            utilServices.Add(utilService);
-            utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-        }
+        pendingRegistrations.Add(service);
     }
+
     public static void Deregister(IService service)
     {
-        if (service is IServiceTick st)   tickServices.Remove(st);
-        if (service is IServiceLoop sl)   loopServices.Remove(sl);
-        if (service is IServiceStep ss)   stepServices.Remove(ss);
-        if (service is IServiceUtil su)   utilServices.Remove(su);
+        pendingDeregistrations.Add(service);
     }
 }
-
 
 
 public static class Services
@@ -257,9 +292,10 @@ public enum UpdatePhase
 {
     System,
     Input,
-    PreUpdate,
-    Update,
-    PostUpdate
+    Logic,
+    Physics,
+    Resolve,
+    Render
 }
 
 

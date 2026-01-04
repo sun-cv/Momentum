@@ -27,6 +27,7 @@ public interface IDurationFrames            { public int DurationFrames         
 public interface IDisableMove               { public bool DisableMove               { get; init; }}
 public interface IDisableAttack             { public bool DisableAttack             { get; init; }}
 public interface IDisableRotate             { public bool DisableRotate             { get; init; }}
+public interface ICancelableOnRelease       { public bool CancelOnRelease           { get; init; }}
 
 public interface IActionLock                { public bool RequestActionLock         { get; init; } 
                                               public List<Capability> ActionLocks   { get; init; }}
@@ -79,11 +80,12 @@ public class ShieldBlockActivation : Effect, IDuration
 }
 
 
-public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDisableAttack, IDisableRotate
+public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDisableAttack, ICancelableOnRelease, IDisableRotate
 {
     public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
     public float Duration                       { get; init; }
-    
+
+    public bool CancelOnRelease                 { get; init; }
     public bool DisableAttack                   { get; init; }
     public bool DisableRotate                   { get; init; }
 }
@@ -106,12 +108,13 @@ public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiab
     public float ModifierSpeed                  { get; init; } = 0;
 }
 
-public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
+public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, ICancelableOnRelease, IModifiable
 {
     public EffectType Type                      { get; init; }
     public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
     public int DurationFrames                   { get; init; }
 
+    public bool CancelOnRelease                 { get; init; }
     public float Modifier                       { get; init; }
     public float ModifierTarget                 { get; init; } = 0;
     public float ModifierSpeed                  { get; init; } = 0;

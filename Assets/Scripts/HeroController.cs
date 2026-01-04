@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 
@@ -33,9 +34,11 @@ public class Hero
         stats   .Initialize(data);
         context .Initialize();
 
-        Services.Get<CameraRig>()       .AssignHero(this);
-        Services.Get<WeaponSystem>()    .AssignHero(this);
+        Services.Get<WeaponController>().AssignHero(this);
         Services.Get<MovementEngine>()  .AssignHero(this);
+
+        Services.Get<CameraRig>()       .AssignHero(this);
+        Services.Get<CameraRig>()       .SetCameraTarget(new HeroCameraTarget(){ Hero = this });
 
         Health  = MaxHealth;
         Mana    = MaxMana;
@@ -66,7 +69,7 @@ public static class HeroFactory
     public static Hero Create()
     {
         var prefab      = Registry.Prefabs.Get<GameObject>("HeroController");
-        var instance    = Object.Instantiate(prefab);
+        var instance    = UnityEngine.Object.Instantiate(prefab);
         var controller  = instance.GetComponent<HeroController>();
 
         var hero        = new Hero();
@@ -76,4 +79,12 @@ public static class HeroFactory
 
         return hero;
     }
+}
+
+
+public readonly struct HeroCameraTarget :ICameraTarget
+{
+    public Hero Hero { get; init; }
+    public readonly bool IsValid            => Hero != null;
+    public readonly Vector3 GetPosition()   => Hero.Character.transform.position;
 }

@@ -41,6 +41,7 @@ public class CommandSystem : RegisteredService, IServiceTick
         Services.RegisterTick(this);
 
         EventBus<CommandRequest>.Subscribe(HandleCommandRequest);
+        PublishUpdate();
     }
 
     public void Tick()

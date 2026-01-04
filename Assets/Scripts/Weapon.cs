@@ -76,7 +76,9 @@ public class Weapon : Item
     /// <summary>Weapons that are removed from availability during FireEnd phase</summary>
     public List<string> RemoveControlOnFireEnd  { get; init; } = new();
     /// <summary>Automatic weapon chain - available during FireEnd/ControlWindow</summary>
-    public string SwapOnFire                    { get; init; } = null;
+    public string SwapOnFire                    { get; init; } = "";
+
+    public bool ForceReleaseOnSwap              { get; init; } = false;
     // ============================================================================
     // CHAIN ANCHORING
     // ============================================================================
@@ -102,7 +104,7 @@ public class Weapon : Item
     // ============================================================================
     
     /// <summary>Should this weapon lock its trigger inputs while active?</summary>
-    public bool LockTrigger                     { get; init; } = false;
+    public bool LockTriggerAction               { get; init; } = false;
     /// <summary>Should this weapon respect trigger lock requests from effects?</summary>
     public bool AcceptTriggerLockRequests       { get; init; } = false;
 

@@ -16,14 +16,23 @@ public class DevEnv : RegisteredService, IServiceTick
         Debug.Log("Initializing dev env");
 
         hero = HeroFactory.Create();
+
+        Log.Configure((config) => config
+        .System(LogSystem.Weapon, LogLevel.Trace)
+        .System(LogSystem.Movement, LogLevel.Trace)
+        .System(LogSystem.Effects, LogLevel.Debug));
+
     }
 
     public void Tick()
     {
-        
 
     }
 
+    public void Loop()
+    {
+        
+    }
 
 
     public UpdatePriority Priority => ServiceUpdatePriority.DevEnv;

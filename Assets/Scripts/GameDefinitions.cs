@@ -200,6 +200,19 @@ public enum Publish
     PhaseChange,
 }
 
+public enum Status
+{
+    Idle,
+    Enabling,
+    Enabled,
+    Cancelling,
+    Cancelled,
+    Interrupting,
+    Interrupted,
+    Disabling,
+    Disabled,
+}
+
 public enum InputCondition
 {
     None,

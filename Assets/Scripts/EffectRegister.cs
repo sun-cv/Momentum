@@ -66,12 +66,15 @@ public class EffectRegister : RegisteredService
         switch(evt.Action)
         {
             case EffectAction.Create:
+                    Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Creating Effect { evt.Payload.Effect.Name}");
                     RegisterEffect(evt.Payload.Entity, evt.Payload.Effect);
                 break;
             case EffectAction.Cancel:
+                    Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Canceling Effect { evt.Payload.Effect.Name}");
                     CancelEffect(evt.Payload.Effect);
                 break;
             case EffectAction.Get:
+                    Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Getting Effect { evt.Payload.Effect.Name}");
                     GetEffects(evt);
                 break;
 
@@ -87,14 +90,13 @@ public class EffectRegister : RegisteredService
         instance.OnCancel  += () => EventBus<EffectPublish>.Raise(new(Guid.NewGuid(), Publish.Canceled,    new() { Instance = instance}));
         
         RegisterTriggerLock(instance);
+        RegisterDebugLog(instance);
         
         instance.OnClear   += () => effects.Remove(instance);
         instance.OnCancel  += () => effects.Remove(instance);
 
         effects.Add(instance);
         instance.Initialize();
-
-        Debug.Log(effect.Name);
     }
 
 
@@ -106,6 +108,9 @@ public class EffectRegister : RegisteredService
         if (effect.ActionLocks == null)
             return;
 
+        if (!effect.RequestActionLock)
+            return; 
+            
         foreach (var action in effect.ActionLocks)
         {
             instance.OnApply   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
@@ -114,12 +119,20 @@ public class EffectRegister : RegisteredService
         }
     }
 
+    void RegisterDebugLog(EffectInstance instance)
+    {
+
+        instance.OnApply   += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Activating Effect {instance.Effect.Name}");
+        instance.OnClear   += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Clearing Effect {instance.Effect.Name}");
+        instance.OnCancel  += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Canceling Effect {instance.Effect.Name}");
+    }
+
     public void CancelEffect(Effect effect)         => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
     public void GetEffects(EffectRequest request)   => EventBus<EffectResponse>.Raise(new(request.Id, Response.Success, new() { Effects = GetEntityEffects(request.Payload.Entity) }));
 
     private static T FirstEffectOrDefault<T>(IEnumerable<EffectInstance> source, Func<EffectInstance, bool> predicate = null) where T : class
     {
-        var query = source.Select(e => e.Effect);
+        var query = source.Select(instance => instance.Effect);
         if (predicate != null)
             query = source.Where(predicate).Select(e => e.Effect);
 

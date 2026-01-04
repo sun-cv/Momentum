@@ -12,6 +12,8 @@ public class MovementEngine : RegisteredService, IServiceTick
     readonly float acceleration = Config.MOVEMENT_ACCELERATION;
     readonly float friction     = Config.MOVEMENT_FRICTION;
 
+    readonly bool normalizeVelocity = false;
+
     EffectCache cache;
 
     Hero        hero;
@@ -34,6 +36,7 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     Vector2 momentum;
     Vector2 velocity;
+    Vector2 subPixelAccumulator;
 
 
     public override void Initialize()
@@ -111,6 +114,7 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     void ApplyFriction() => velocity *= 1 - Mathf.Clamp01(friction * Clock.DeltaTime);
     void ApplyVelocity() => body.linearVelocity = velocity;
+
 
     // ============================================================================
     // WEAPON MANAGEMENT
@@ -221,7 +225,12 @@ public class MovementEngine : RegisteredService, IServiceTick
         if (context.MovementDirection == Vector2.zero && direction != Vector2.zero)
             directionTrail = direction;
 
-        direction = lockDirection ? directionLock : context.MovementDirection.normalized;
+        Vector2 inputDir = lockDirection ? directionLock : context.MovementDirection;
+
+        if (normalizeVelocity && inputDir.sqrMagnitude > 1f)
+            inputDir = inputDir.normalized;
+
+        direction = inputDir;
     }
 
     void SetSpeed()
@@ -231,9 +240,10 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     void DebugLog()
     {
-        Logwin.Log("Movement Engine Velocity:", velocity);
-        Logwin.Log("Movement Engine Modifier:", modifier);
-        Logwin.Log("Movement Engine Cache:", cache.Effects.Count);
+        Log.Debug(LogSystem.Movement, LogCategory.State, "Velocity", () => velocity);
+        Log.Debug(LogSystem.Movement, LogCategory.State, "Modifier", () => modifier);
+        Log.Trace(LogSystem.Movement, LogCategory.Validation, "Effect Cache", () => cache.Effects.Count);
+        Log.Trace(LogSystem.Movement, LogCategory.State, "ActiveEffects", () => $"{string.Join(", ", cache.Effects.Select(effect => effect.Effect.Name))}");
     }
 
 
@@ -245,6 +255,7 @@ public class MovementEngine : RegisteredService, IServiceTick
 
         body.freezeRotation = true;
         body.gravityScale   = 0;
+        body.interpolation  = RigidbodyInterpolation2D.Interpolate;
     }
 
     public Vector2 Velocity => velocity;
@@ -284,7 +295,7 @@ public class SpeedMovementModifier : IMovementModifier
 public class GripMovementModifier : IMovementModifier
 {
     readonly EffectInstance instance;
-    readonly DurationCountdown timer;
+    readonly ClockTimer timer;
 
     public GripMovementModifier(EffectInstance effectInstance)
     {

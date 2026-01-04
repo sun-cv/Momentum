@@ -36,7 +36,7 @@ public class SwordStrike : DamagingWeapon
         ChargeTimeFrames            = 3;
         FireDurationFrames          = 20;
         ControlWindow               = 0.3f;
-        SwapOnFire                  = "SwordCleave";
+        AddControlOnFire            = new() { "SwordCleave"};
         Effects = new()
         {
             new SwordSwingDisable()
@@ -74,11 +74,12 @@ public class SwordCleave : DamagingWeapon
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
         Availability                = WeaponAvailability.OnPhase;
+        LockTriggerAction           = true;
         AcceptTriggerLockRequests   = true;
-        ChargeTimeFrames            = 0;
-        FireDurationFrames          = 15;
+        ChargeTimeFrames            = 3;
+        FireDurationFrames          = 30;
         ControlWindow               = 0.3f;
-        SwapOnFire                  = "SwordRend";
+        AddControlOnFire            = new() { "SwordRend"};
         Effects = new()
         {
             new SwordSwingDisable()
@@ -97,7 +98,7 @@ public class SwordCleave : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 25,
+                DurationFrames      = 30,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -116,10 +117,13 @@ public class SwordRend : DamagingWeapon
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
         Availability                = WeaponAvailability.OnPhase;
+        LockTriggerAction           = true;
         AcceptTriggerLockRequests   = true;
-        ChargeTimeFrames            = 0;
+        ChargeTimeFrames            = 3;
         FireDurationFrames          = 25;
         ControlWindow               = 0.3f;
+        SwapOnFire                  = "null";
+        ForceReleaseOnSwap          = true;
         Effects = new()
         {
             new SwordSwingDisable()
@@ -127,7 +131,7 @@ public class SwordRend : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 20,
+                DurationFrames      = 60,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -138,7 +142,7 @@ public class SwordRend : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 25,
+                DurationFrames      = 60,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -226,7 +230,7 @@ public class ShieldBlock : DamagingWeapon
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = false,
-                Duration            = .5f,
+                Duration            = 1.0f,
                 DisableAttack       = true,
                 DisableRotate       = true,
             },
@@ -237,6 +241,7 @@ public class ShieldBlock : DamagingWeapon
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = true,
+                CancelOnRelease     = true,
                 Duration            = 9999,
                 DisableAttack       = true,
                 DisableRotate       = true,
@@ -249,6 +254,7 @@ public class ShieldBlock : DamagingWeapon
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = true,
+                CancelOnRelease     = true,
                 DurationFrames      = 9999,
                 Modifier            = .50f,
                 ModifierTarget      = .25f,
@@ -390,14 +396,16 @@ public class ShieldCharge : DamagingWeapon
 {
     public ShieldCharge()
     {
+
+        
         Name                        = "ShieldCharge";
-        Action                       = new() { Capability.Attack2, Capability.Dash };
+        Action                       = new() { Capability.Attack2, Capability.Attack1 };
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.OnRootRelease;
         Availability                = WeaponAvailability.OnPhase;
         RequiredHeldActions         = new() { Capability.Attack2 };
-        ChargeTimeFrames            = 8;
-        FireDuration                = 30;
+        ChargeTimeFrames            = 5;
+        FireDuration                = 20;
         ControlWindow               = 0.3f;
         SwapOnFire                  = "ShieldFire";
         AddControlOnFireEnd         = new() { "ShieldBlock" };

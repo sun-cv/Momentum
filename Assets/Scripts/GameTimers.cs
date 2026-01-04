@@ -214,7 +214,7 @@ public class GenericTimer : Timer
         if (!IsRunning) return;
 
         if (Unit == TimerUnit.Time)
-            CurrentTime += mode == TimerMode.Up ? Clock.DeltaTime : -Clock.DeltaTime;
+            CurrentTime += mode == TimerMode.Up ? Clock.TickDelta : -Clock.TickDelta;
         
         if (Unit == TimerUnit.Time && mode == TimerMode.Down && CurrentTime <= 0)
             Stop();
@@ -243,29 +243,24 @@ public class GenericTimer : Timer
 
 
 
-public class DurationCountdown : GenericTimer
+public class ClockWatch : GenericTimer
 {
-    public DurationCountdown(float startValue) : base(TimerMode.Down, startValue ) {}
+    public ClockWatch() : base(TimerMode.Up, 0f) {}
 }
 
-public class FrameCountdown  : GenericTimer
+public class ClockTimer : GenericTimer
 {
-    public FrameCountdown (int startValue) : base(TimerMode.Down, startValue) {}
+    public ClockTimer(float startValue) : base(TimerMode.Down, startValue ) {}
 }
 
-public class FrameCounter  : GenericTimer
+public class FrameWatch : GenericTimer
 {
-    public FrameCounter () : base(TimerMode.Up, 0) {}
+    public FrameWatch() : base(TimerMode.Up, 0) {}
 }
 
-public class DurationCounter  : GenericTimer
+public class FrameTimer : GenericTimer
 {
-    public DurationCounter () : base(TimerMode.Up, 0) {}
-}
-
-public class Stopwatch : GenericTimer
-{
-    public Stopwatch() : base(TimerMode.Up, 0f) {}
+    public FrameTimer(int startValue) : base(TimerMode.Down, startValue) {}
 }
 
 
