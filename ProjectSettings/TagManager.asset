@@ -15,22 +15,22 @@ TagManager:
   - 
   - 
   - 
+  - Player
+  - Enemy
+  - NPC
+  - 
+  - Environment
+  - Prop
   - 
   - 
   - 
   - 
+  - HB_Player
+  - HB_Enemy
+  - HB_NPC
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - HB_Environment
+  - HB_Prop
   - 
   - 
   - 
@@ -67,6 +67,9 @@ TagManager:
     locked: 0
   - name: Foreground
     uniqueID: 360460707
+    locked: 0
+  - name: UI
+    uniqueID: 1291620931
     locked: 0
   m_RenderingLayers:
   - Default

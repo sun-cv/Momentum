@@ -2,16 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEngine;
 
 
 
 
 
-public class EffectInstance
+public class EffectInstance : Instance
 {
-    public Entity Owner;
-    public Effect Effect;
+    public Effect   Effect;
+    public Instance Owner;
 
     public Action OnApply;
     public Action OnClear;
@@ -19,9 +18,9 @@ public class EffectInstance
 
     public DualCountdown timer;
 
-    public EffectInstance(Entity entity, Effect effect)
+    public EffectInstance(Instance instance, Effect effect)
     {
-        Owner  = entity;
+        Owner  = instance;
         Effect = effect;
 
         CreateTimer();
@@ -52,11 +51,11 @@ public class EffectInstance
 }
 
 
-public class EffectRegister : RegisteredService
+public class EffectRegister
 {
     List<EffectInstance> effects = new();
 
-    public override void Initialize()
+    public EffectRegister()
     {
         EventBus<EffectRequest>.Subscribe(HandleEffectRequest);
     } 
@@ -67,7 +66,7 @@ public class EffectRegister : RegisteredService
         {
             case EffectAction.Create:
                     Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Creating Effect { evt.Payload.Effect.Name}");
-                    RegisterEffect(evt.Payload.Entity, evt.Payload.Effect);
+                    RegisterEffect(evt.Payload.Instance, evt.Payload.Effect);
                 break;
             case EffectAction.Cancel:
                     Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Canceling Effect { evt.Payload.Effect.Name}");
@@ -81,7 +80,7 @@ public class EffectRegister : RegisteredService
         }
     }
 
-    public void RegisterEffect(Entity entity, Effect effect)
+    public void RegisterEffect(Instance entity, Effect effect)
     {
         var instance = new EffectInstance(entity, effect);
 
@@ -113,9 +112,9 @@ public class EffectRegister : RegisteredService
             
         foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
-            instance.OnClear   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
-            instance.OnCancel  += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockAction.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnApply   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockTrigger.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnClear   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnCancel  += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
         }
     }
 
@@ -128,7 +127,7 @@ public class EffectRegister : RegisteredService
     }
 
     public void CancelEffect(Effect effect)         => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
-    public void GetEffects(EffectRequest request)   => EventBus<EffectResponse>.Raise(new(request.Id, Response.Success, new() { Effects = GetEntityEffects(request.Payload.Entity) }));
+    public void GetEffects(EffectRequest request)   => EventBus<EffectResponse>.Raise(new(request.Id, Response.Success, new() { Effects = GetInstanceEffects(request.Payload.Instance) }));
 
     private static T FirstEffectOrDefault<T>(IEnumerable<EffectInstance> source, Func<EffectInstance, bool> predicate = null) where T : class
     {
@@ -144,9 +143,9 @@ public class EffectRegister : RegisteredService
         return FirstEffectOrDefault<T>(effects, predicate);
     }
 
-    public List<Effect> GetEntityEffects(Entity entity)
+    public List<Effect> GetInstanceEffects(Instance instance)
     {
-        return effects.Where(instance => instance.Owner == entity).Select(instance => instance.Effect).ToList();
+        return effects.Where(entity => entity.Owner == instance).Select(instance => instance.Effect).ToList();
     }
 
     public bool Get<T>(Func<T, bool> selector, bool defaultValue = true) where T : class => GetPredicate<T>() != null ? selector(GetPredicate<T>()) : defaultValue;
@@ -165,26 +164,26 @@ public enum EffectAction
 
 public readonly struct EffectRequestPayload
 {
-    public Entity Entity { get; init; }
-    public Effect Effect { get; init; }
+    public Effect Effect                    { get; init; }
+    public Instance Instance                { get; init; }
 }
 
 public readonly struct EffectResponsePayload
 {
-    public Entity Entity { get; init; }
-    public readonly List<Effect> Effects { get; init; }
+    public Instance Instance                { get; init; }
+    public readonly List<Effect> Effects    { get; init; }
 }
 
 public readonly struct EffectStatePayload
 {
-    public EffectInstance Instance { get; init; }
+    public EffectInstance Instance          { get; init; }
 }
 
 public readonly struct EffectRequest : IEventRequest
 {
-    public Guid Id                      { get; }
-    public EffectAction Action          { get; }
-    public EffectRequestPayload Payload { get; }
+    public Guid Id                          { get; }
+    public EffectAction Action              { get; }
+    public EffectRequestPayload Payload     { get; }
 
     public EffectRequest(Guid id, EffectAction action, EffectRequestPayload payload)
     {
@@ -196,9 +195,9 @@ public readonly struct EffectRequest : IEventRequest
 
 public readonly struct EffectResponse : IEventResponse
 {
-    public Guid Id                      { get; }
-    public Response Action              { get; }
-    public EffectResponsePayload Payload   { get; }
+    public Guid Id                          { get; }
+    public Response Action                  { get; }
+    public EffectResponsePayload Payload    { get; }
 
     public EffectResponse(Guid id, Response response, EffectResponsePayload payload)
     {
@@ -210,9 +209,9 @@ public readonly struct EffectResponse : IEventResponse
 
 public readonly struct EffectPublish : IEventPublish
 {
-    public Guid Id                      { get; }
-    public Publish Action               { get; }
-    public EffectStatePayload Payload   { get; }
+    public Guid Id                          { get; }
+    public Publish Action                   { get; }
+    public EffectStatePayload Payload       { get; }
 
     public EffectPublish(Guid id, Publish action, EffectStatePayload payload)
     {

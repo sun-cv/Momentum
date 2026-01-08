@@ -9,23 +9,33 @@ public class DevEnv : RegisteredService, IServiceTick
 {
     
     public Hero hero;
-    public bool triggered;
+    public bool triggered = false;
     
     public override void Initialize()
     {
         Debug.Log("Initializing dev env");
 
-        hero = HeroFactory.Create();
-
         Log.Configure((config) => config
+        .System(LogSystem.Engine, LogLevel.Debug)
         .System(LogSystem.Weapon, LogLevel.Trace)
-        .System(LogSystem.Movement, LogLevel.Trace)
-        .System(LogSystem.Effects, LogLevel.Debug));
+        .System(LogSystem.Movement, LogLevel.Debug)
+        .System(LogSystem.Physics, LogLevel.Debug)
+        .System(LogSystem.Equipment, LogLevel.Trace));
 
     }
 
+
     public void Tick()
     {
+
+        if (!triggered)
+        {
+            hero        = HeroFactory.Create();
+            Services.Get<CameraRig>().SetCameraTarget(new HeroCameraTarget(){ Hero = hero });
+            Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
+            Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
+            triggered   = true;
+        }
 
     }
 

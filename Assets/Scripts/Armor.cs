@@ -1,0 +1,8 @@
+
+
+
+
+public class ArmorDefinition : Definition
+{
+    
+}

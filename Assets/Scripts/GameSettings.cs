@@ -17,7 +17,7 @@ public static class Config
 
     public const float MOVEMENT_MAX_SPEED       = 25f;
     public const float MOVEMENT_ACCELERATION    = 200f;
-    public const float MOVEMENT_FRICTION        = 5f;
+    public const float MOVEMENT_FRICTION        = 10f;
     public const float MOVEMENT_IMPULSE_DECAY   = 10f;
 }
 

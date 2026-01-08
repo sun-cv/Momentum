@@ -1,9 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+// using UnityEngine.AddressableAssets;
+// using UnityEngine.ResourceManagement.AsyncOperations;
 
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -35,32 +38,59 @@ public static class Registry
 
     public static class Prefabs
     {
+        private static readonly Dictionary<string, GameObject>           cache           = new();
+        private static readonly Dictionary<string, AsyncOperationHandle> handles         = new();
+        private static readonly Dictionary<string, HashSet<string>>      labelToPrefabs  = new();
 
-        private static readonly Dictionary<string, GameObject> dictionary = new();
-    
-        public static void Initialize() => Reload();
-    
-        public static void Reload()
+        public static void Initialize()
         {
-            Load();
-            LoadPrefab();   
+            LoadLabel("Core");
         }
-    
-        private static void Load()
+
+        private static void LoadLabel(string label)
         {
+            if (handles.ContainsKey(label))
+                return;
+
+            var prefabNames = new HashSet<string>();
+
+            var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => {cache[prefab.name] = prefab; prefabNames.Add(prefab.name);});
+            
+            handle.WaitForCompletion();
+            
+            handles[label]          = handle;
+            labelToPrefabs[label]   = prefabNames;
         }
-    
-        private static void LoadPrefab()
+
+        public static GameObject Get(string name)
         {
-            foreach (var data in Resources.LoadAll<GameObject>("Prefab/Entity"))
-                dictionary[data.name] = data;
-        }
-    
-        public static T Get<T>(string name) where T : class
-        {
-            if (dictionary.TryGetValue(name, out var value))
-                return value as T;
+            if (cache.TryGetValue(name, out var prefab))
+                return prefab;
+
+            Debug.LogError($"Prefab '{name}' not found.");
             return null;
+        }
+
+        public static void LoadGroup(string label)
+        {
+            LoadLabel(label);
+        }
+
+        public static void UnloadGroup(string label)
+        {
+            if (!handles.TryGetValue(label, out var handle))
+                return;
+
+            if (labelToPrefabs.TryGetValue(label, out var prefabNames))
+            {
+                foreach (var name in prefabNames)
+                    cache.Remove(name);
+
+                labelToPrefabs.Remove(label);
+            }
+
+            Addressables.Release(handle);
+            handles.Remove(label);
         }
     }
 

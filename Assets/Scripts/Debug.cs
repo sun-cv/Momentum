@@ -18,6 +18,7 @@ public enum LogLevel
 public enum LogSystem
 {
     Timers,
+    Engine,
     System,
     Dev,
     Input,
@@ -26,6 +27,7 @@ public enum LogSystem
     Weapon,
     Effects,
     Movement,
+    Equipment,
     Physics,
     Camera,
 }
@@ -68,10 +70,10 @@ public static class Log
             UnityEngine.Debug.Log(messageBuilder());
     }
 
-    private static void WriteLogwin(LogLevel level, LogSystem system, LogCategory category, string key, Func<object> valueBuilder)
+    private static void WriteLogwin(LogLevel level, LogSystem system, LogCategory category, string handle, string key, Func<object> valueBuilder)
     {
         if (IsEnabled(level, system, category))
-            Logwin.Log(key, valueBuilder(), system.ToString());
+            Logwin.Log(key, valueBuilder(), handle);
     }
 
     public static void Configure(Action<LogConfig> configure)
@@ -123,28 +125,28 @@ public static class Log
 
     public static void Trace(LogSystem system, LogCategory category, Func<string> log) 
         => WriteLog(LogLevel.Trace, system, category, log);
-    public static void Trace(LogSystem system, LogCategory category, string key, Func<object> log) 
-        => WriteLogwin(LogLevel.Trace, system, category, key, log);
+    public static void Trace(LogSystem system, LogCategory category,string handle, string key, Func<object> log) 
+        => WriteLogwin(LogLevel.Trace, system, category, handle,  key, log);
 
     public static void Debug(LogSystem system, LogCategory category, Func<string> log) 
         => WriteLog(LogLevel.Debug, system, category, log);
-    public static void Debug(LogSystem system, LogCategory category, string key, Func<object> log) 
-        => WriteLogwin(LogLevel.Debug, system, category, key, log);
+    public static void Debug(LogSystem system, LogCategory category,string handle, string key, Func<object> log) 
+        => WriteLogwin(LogLevel.Debug, system, category, handle, key, log);
 
     public static void Event(LogSystem system, LogCategory category, Func<string> log) 
         => WriteLog(LogLevel.Event, system, category, log);
-    public static void Event(LogSystem system, LogCategory category, string key, Func<object> log) 
-        => WriteLogwin(LogLevel.Event, system, category, key, log);
+    public static void Event(LogSystem system, LogCategory category,string handle, string key, Func<object> log) 
+        => WriteLogwin(LogLevel.Event, system, category, handle, key, log);
 
     public static void Admin(LogSystem system, LogCategory category, Func<string> log) 
         => WriteLog(LogLevel.Admin, system, category, log);
-    public static void Admin(LogSystem system, LogCategory category, string key, Func<object> log) 
-        => WriteLogwin(LogLevel.Admin, system, category, key, log);
+    public static void Admin(LogSystem system, LogCategory category,string handle, string key, Func<object> log) 
+        => WriteLogwin(LogLevel.Admin, system, category, handle, key, log);
 
     public static void Error(LogSystem system, LogCategory category, Func<string> log) 
         => WriteLog(LogLevel.Error, system, category, log);
-    public static void Error(LogSystem system, LogCategory category, string key, Func<object> log) 
-        => WriteLogwin(LogLevel.Error, system, category, key, log);
+    public static void Error(LogSystem system, LogCategory category,string handle, string key, Func<object> log) 
+        => WriteLogwin(LogLevel.Error, system, category, handle, key, log);
 
 }
 

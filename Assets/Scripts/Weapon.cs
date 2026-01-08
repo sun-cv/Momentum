@@ -17,7 +17,7 @@ public enum WeaponPhase
 /// <summary>What causes this weapon to fire?</summary>
 public enum WeaponActivation
 {
-    OnPress,          // <summary>Fires immediately on activation<summary>
+    OnPress,          // Fires immediately on activation
     OnCharge,         // Fires when charge completes
     OnRelease,        // Fires when trigger input released (after min charge)
     WhileHeld,        // Continuously active while held
@@ -40,16 +40,18 @@ public enum WeaponAvailability
     OnHeld,           // Auto-activates when parent active + input held
 }
 
-public class Weapon : Item
+
+public class DamagingWeapon     : WeaponAction { }
+public class MovementWeapon     : WeaponAction { }
+
+public class WeaponAction       : Definition
 {
     // ============================================================================
     // IDENTITY
     // ============================================================================
     
-    public string Name                          { get; init; } = "";
-    
-    /// <summary>The actions required to activate this weapon</summary>
-    public List<Capability> Action              { get; init; } = new();
+    /// <summary>The capabilities required to activate this weapon</summary>
+    public List<Capability> Trigger             { get; init; } = new();
     /// <summary>What causes this weapon to fire</summary>
     public WeaponActivation Activation          { get; init; } = WeaponActivation.OnPress;
     /// <summary>What causes this weapon to terminate </summary>
@@ -83,12 +85,8 @@ public class Weapon : Item
     // CHAIN ANCHORING
     // ============================================================================
     
-    /// <summary>
-    /// Root inputs that anchor this weapon chain.
-    /// If any of these are released, the weapon terminates (based on Termination setting).
-    /// These are tracked separately from Input - they define the "hold chain root".
-    /// </summary>
-    public List<Capability> RequiredHeldActions { get; init; } = new();
+    /// <summary> Root inputs that anchor this weapon chain. If any of these are released, the weapon terminates</summary>
+    public List<Capability> RequiredHeldTriggers { get; init; } = new();
 
     // ============================================================================
     // INTERRUPTION & CANCELING
@@ -134,23 +132,25 @@ public class Weapon : Item
     /// <summary>For OnRelease triggers: force fire when max charge is reached </summary>
     public bool ForceMaxChargeRelease           { get; init; } = false;
 
-
     /// ============================================================================
     /// PLAYER MODIFIERS
     /// ============================================================================
 
     public bool WeaponOverridesMovement         { get; init; } = false;
-    /// <summary>Lock players current movement direction</summary>
+    /// <summary>Lock players current movement direction in all phases</summary>
     public bool LockDirection                   { get; init; } = false;
-    /// <summary>Cancel movement</summary>
+    /// <summary>Lock players current movement direction when charging</summary>
+    public bool LockDirectionOnCharge           { get; init; } = false;
+    /// <summary>Cancel movement in all phases</summary>
     public bool CancelMovement                  { get; init; } = false;
     /// <summary>Cancel movement when charging</summary>
     public bool ChargeCancelMovement            { get; init; } = false;
     /// <summary>Set velocity</summary>
-    public int Speed                            { get; init; } = -1;
-    public int Modifier                         { get; init; } = -1;
-    /// <summary>Set velocity</summary>
+    public int Velocity                         { get; init; } = -1;
+    /// <summary>Set velocity when charging</summary>
     public int ChargeVelocity                   { get; init; } = -1;
+    /// <summary>Set Modifier %/summary>
+    public float Modifier                       { get; init; } = -1;
 
     /// ============================================================================
     /// WEAPON CONFIGURATION
@@ -170,24 +170,139 @@ public class Weapon : Item
 
 public class WeaponTriggerCondition
 {
-    public Func<Context, bool> Activate         { get; init; }
-    public Func<Context, bool> Cancel           { get; init; }
+    public Func<Entity, bool> Activate         { get; init; }
+    public Func<Entity, bool> Cancel           { get; init; }
 }
 
-public class DamagingWeapon     : Weapon { }
-public class MovementWeapon     : Weapon { }
-public class ConditionalWeapon  : Weapon { }
-public class EnemyWeapon        : Weapon { }
-
-public class WeaponSet
+public class WeaponDefinition : Definition
 {
-    public Dictionary<string, Weapon> weapons;
+    public Dictionary<string, WeaponAction> actions;
+    public Dictionary<string, WeaponAction> Actions => actions;
+}
 
-    public Dictionary<string, Weapon> Weapons => weapons;
-    public List<Weapon> WeaponList => weapons.Values.ToList();
 
-    public Weapon DefaultWeapon(Capability action) 
-        => weapons.Values.FirstOrDefault(weapon => 
-            weapon.Action.SequenceEqual(new List<Capability>() { action }) && 
-            weapon.Availability == WeaponAvailability.Default);
+// ============================================================================
+// WEAPON INSTANCE & STATE
+// ============================================================================
+public class WeaponInstance : Instance
+{
+    public WeaponAction Action  { get; init; }
+    public WeaponState  State   { get; init; }
+    public WeaponInstance(WeaponAction action)
+    {
+        Action  = action;
+        State   = new();
+    }
+
+    public int GetChargeFrames()
+    {
+        if (Action.ChargeTimeFrames > 0)
+            return Action.ChargeTimeFrames;
+        if (Action.ChargeTime > 0)
+            return (int)(Action.ChargeTime * 60);
+        return 0;
+    }
+
+    public int GetFireDurationFrames()
+    {
+        if (Action.FireDurationFrames > 0)
+            return Action.FireDurationFrames;
+        if (Action.FireDuration > 0)
+            return (int)(Action.FireDuration * 60);
+        return 0;
+    }
+
+    public float GetChargePercent()
+    {
+        int chargeFrames = GetChargeFrames();
+        if (chargeFrames == 0)
+            return 1.0f;
+        return (float)State.PhaseFrames.CurrentFrame / chargeFrames;
+    }
+
+    public bool IsChargeComplete()  => State.PhaseFrames.CurrentFrame >= GetChargeFrames();
+    public bool IsFireComplete()    => State.PhaseFrames.CurrentFrame >= GetFireDurationFrames();
+    public bool ShouldValidateActivationTriggers()
+    {
+        return Action.Activation switch
+        {
+            WeaponActivation.WhileHeld => true,
+            WeaponActivation.OnRelease => State.Phase == WeaponPhase.Charging,
+            _ => false,
+        };
+    }
+}
+
+
+
+public class WeaponState
+{
+    public WeaponPhase Phase                    { get; set; } = WeaponPhase.Idle;
+
+    public FrameWatch PhaseFrames               { get; set; } = new();
+    public FrameWatch ActiveFrames              { get; set; } = new();
+    public ClockTimer ControlWindow             { get; set; }
+
+    public HashSet<Guid> OwnedCommands          { get; set; } = new();
+    public HashSet<string> AvailableControls    { get; set; } = new();
+    
+    public bool HasFired                        { get; set; }
+    public bool ReadyToRelease                  { get; set; }
+
+    public void Reset()
+    {
+        PhaseFrames.Reset();
+        ActiveFrames.Reset();
+        ControlWindow = null;
+
+        Phase = WeaponPhase.Idle;
+        HasFired = false;
+        ReadyToRelease = false;
+
+        OwnedCommands.Clear();
+        AvailableControls.Clear();
+    }
+}
+
+
+public class WeaponLoadout
+{
+    private Dictionary<string, (WeaponAction action, Entity source)> actions = new();
+    
+    public void AddAction(WeaponAction action, Entity source)
+    {
+        actions[action.Name] = (action, source);
+    }
+    
+    public void RemoveAction(string actionName)
+    {
+        actions.Remove(actionName);
+    }
+    
+    public WeaponAction GetAction(string name)
+    {
+        return actions.TryGetValue(name, out var tuple) ? tuple.action : null;
+    }
+    
+    public Entity GetSource(string name)
+    {
+        return actions.TryGetValue(name, out var tuple) ? tuple.source : null;
+    }
+    
+    public bool TryGetAction(string name, out WeaponAction action)
+    {
+        action = null;
+        if (!actions.TryGetValue(name, out var tuple))
+            return false;
+
+        action = tuple.action;
+        return true;
+    }
+
+    public WeaponAction DefaultWeapon(Capability capability)
+        => actions.Values
+            .Select(t => t.action)
+            .FirstOrDefault(a => 
+                a.Trigger.SequenceEqual(new List<Capability>() { capability }) && 
+                a.Availability == WeaponAvailability.Default);
 }

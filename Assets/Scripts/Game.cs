@@ -16,9 +16,14 @@ public class Game : MonoBehaviour
         engine.Startup();
     }
 
-    public void Update()
+    public void FixedUpdate()
     {
         engine.Tick();
+    }
+
+    public void LateUpdate()
+    {
+        engine.Late();
     }
 
     public void OnDisable()
@@ -47,28 +52,15 @@ public class GameEngine
         clock.Tick();
     }
 
+    public void Late()
+    {
+        clock.Late();
+    }
+
     public void Shutdown()
     {
         Services.Dispose();   
     }
-}
-
-
-public class GamePhysics : RegisteredService, IServiceTick
-{
-
-    public override void Initialize()
-    {
-        Physics.simulationMode = SimulationMode.Script;
-    }
-
-    public void Tick()
-    {
-        Physics.Simulate(Clock.TickRate);
-    }
-
-    public UpdatePriority Priority => ServiceUpdatePriority.PhysicsSimulation;
-
 }
 
 
@@ -89,11 +81,12 @@ public class Clock
     public event Action OnLoop;
     public event Action OnStep;
     public event Action OnUtil;
+    public event Action OnLate;
 
-    float accumulator1; 
-    float accumulator2; 
-    float accumulator3; 
-    float accumulator4; 
+    float tickAccumulator; 
+    float loopAccumulator; 
+    float stepAccumulator; 
+    float utilAccumulator; 
 
     static int frameCount;
     
@@ -102,32 +95,38 @@ public class Clock
 
     public void Tick()
     {
-        accumulator1 += DeltaTime;
-        accumulator2 += DeltaTime;
-        accumulator3 += DeltaTime;
-        accumulator4 += DeltaTime;
 
-        while (accumulator1 >= TickDelta)
+        tickAccumulator += DeltaTime;
+        loopAccumulator += DeltaTime;
+        stepAccumulator += DeltaTime;
+        utilAccumulator += DeltaTime;
+
+        while (tickAccumulator >= TickDelta)
         {
-            accumulator1 -= TickDelta;
+            tickAccumulator -= TickDelta;
             frameCount++;            
             OnTick?.Invoke();
         }
-        while (accumulator2 >= LoopDelta)
+        while (loopAccumulator >= LoopDelta)
         {
-            accumulator2 -= LoopDelta;
+            loopAccumulator -= LoopDelta;
             OnLoop?.Invoke();
         }
-        while (accumulator3 >= StepDelta)
+        while (stepAccumulator >= StepDelta)
         {
-            accumulator3 -= StepDelta;
+            stepAccumulator -= StepDelta;
             OnStep?.Invoke();
         }
-        while (accumulator4 >= UtilDelta)
+        while (utilAccumulator >= UtilDelta)
         {
-            accumulator4 -= UtilDelta;
+            utilAccumulator -= UtilDelta;
             OnUtil?.Invoke();
         }
+    }
+
+    public void Late()
+    {
+        OnLate?.Invoke();
     }
 }
 
@@ -146,6 +145,9 @@ public class GameLoop
         this.clock.OnLoop += Loop;
         this.clock.OnStep += Step;
         this.clock.OnUtil += Util;
+        this.clock.OnLate += Late;
+
+        Time.fixedDeltaTime  = Clock.TickDelta;
     }
 
     public void Tick()
@@ -164,6 +166,10 @@ public class GameLoop
     {
         GameTick.Util();
     }
+    public void Late()
+    {
+        GameTick.Late();
+    }
 }
 
 
@@ -171,17 +177,22 @@ public class GameLoop
 
 public static class GameTick
 {
-    private static readonly List<IServiceTick> tickServices = new();
-    private static readonly List<IServiceLoop> loopServices = new();
-    private static readonly List<IServiceStep> stepServices = new();
-    private static readonly List<IServiceUtil> utilServices = new();
+    private static readonly List<IServiceTick> tickServices         = new();
+    private static readonly List<IServiceLoop> loopServices         = new();
+    private static readonly List<IServiceStep> stepServices         = new();
+    private static readonly List<IServiceUtil> utilServices         = new();
+    private static readonly List<IServiceLate> lateServices         = new();
 
-    private static readonly List<IService> pendingRegistrations = new();
-    private static readonly List<IService> pendingDeregistrations = new();
+    private static readonly List<IService> pendingRegistrations     = new();
+    private static readonly List<IService> pendingDeregistrations   = new();
+
+    static int   tickHerz;
+    static float timeHerz;
 
     public static void Tick()
     {
         ProcessPending();
+        MeasureTickRate();
         
         foreach(var service in tickServices)
             service.Tick();
@@ -205,14 +216,21 @@ public static class GameTick
             service.Util();
     }
 
+    public static void Late()
+    {
+        foreach(var service in lateServices)
+            service.Late();
+    }
+
     private static void ProcessPending()
     {
         foreach (var service in pendingDeregistrations)
         {
-            if (service is IServiceTick st) tickServices.Remove(st);
-            if (service is IServiceLoop sl) loopServices.Remove(sl);
-            if (service is IServiceStep ss) stepServices.Remove(ss);
-            if (service is IServiceUtil su) utilServices.Remove(su);
+            if (service is IServiceTick ServiceTick) tickServices.Remove(ServiceTick);
+            if (service is IServiceLoop ServiceLoop) loopServices.Remove(ServiceLoop);
+            if (service is IServiceStep ServiceStep) stepServices.Remove(ServiceStep);
+            if (service is IServiceUtil ServiceUtil) utilServices.Remove(ServiceUtil);
+            if (service is IServiceLate ServiceLate) lateServices.Remove(ServiceLate);
         }
 
         pendingDeregistrations.Clear();
@@ -242,8 +260,28 @@ public static class GameTick
                 utilServices.Add(utilService);
                 utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
             }
+
+            if (service is IServiceLate lateService)
+            {
+                lateServices.Add(lateService);
+                lateServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            }
         }
         pendingRegistrations.Clear();
+    }
+
+    private static void MeasureTickRate()
+    {
+        timeHerz += Clock.DeltaTime;
+        tickHerz++;
+
+        if (timeHerz >= 1f)
+        {
+            Log.Debug(LogSystem.Engine, LogCategory.State, "Engine", "Tick Rate", () => tickHerz / timeHerz);
+
+            timeHerz = 0f;
+            tickHerz = 0;
+        }
     }
 
     public static void Register(IService service)

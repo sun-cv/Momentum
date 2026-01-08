@@ -2,11 +2,90 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+// ============================================================================
+// WEAPON MOVEMENT STATE
+// ============================================================================
+
+public readonly struct WeaponMovementState
+{
+    public readonly bool  CancelMovement;
+    public readonly bool  LockDirection;
+    public readonly bool  OverrideMovement;
+    public readonly float VelocityOverride;
+    public readonly float ModifierOverride;
+    
+    public WeaponMovementState(WeaponAction action, WeaponPhase phase)
+    {
+        CancelMovement      = ResolveCancelMovement  (action, phase);
+        LockDirection       = ResolveLockDirection   (action, phase);
+        VelocityOverride    = ResolveVelocityOverride(action, phase);
+        ModifierOverride    = ResolveModifierOverride(action, phase);
+        OverrideMovement    = ResolveOverrideMovement(action, phase);
+    }
+    
+    static bool ResolveCancelMovement(WeaponAction action, WeaponPhase phase)
+    {
+        if (action.CancelMovement)
+            return true;
+
+        return phase switch
+        {
+            WeaponPhase.Charging => action.ChargeCancelMovement,
+            _ => false
+        };
+    }
+    
+    static bool ResolveLockDirection(WeaponAction action, WeaponPhase phase)
+    {
+        if (action.LockDirection)
+            return true;
+
+        return phase switch
+        {
+            WeaponPhase.Charging    => action.LockDirectionOnCharge,
+            _ => false
+        };
+    }
+    
+    static float ResolveVelocityOverride(WeaponAction action, WeaponPhase phase)
+    {
+        if (action.Velocity >= 0)
+            return action.Velocity;
+
+        return phase switch
+        {
+            WeaponPhase.Charging when action.ChargeVelocity >= 0 => action.ChargeVelocity,
+            _ => -1
+        };
+    }
+    
+    static float ResolveModifierOverride(WeaponAction action, WeaponPhase phase)
+    {
+        if (phase == WeaponPhase.Fire && action is MovementWeapon movement && movement.Modifier >= 0)
+            return movement.Modifier;
+        return -1;
+    }
+    
+    static bool ResolveOverrideMovement(WeaponAction action, WeaponPhase phase)
+    {
+        if (action.WeaponOverridesMovement)
+            return true;
+
+        return phase switch
+        {
+            _ => false
+        };
+    }
+
+    public static WeaponMovementState None => default;
+}
 
 
+// ============================================================================
+// MOVEMENT ENGINE
+// ============================================================================
 
-
-public class MovementEngine : RegisteredService, IServiceTick
+public class MovementEngine : IServiceTick
 {
     readonly float maxSpeed     = Config.MOVEMENT_MAX_SPEED;
     readonly float acceleration = Config.MOVEMENT_ACCELERATION;
@@ -17,18 +96,20 @@ public class MovementEngine : RegisteredService, IServiceTick
     EffectCache cache;
 
     Hero        hero;
-    Context     context;
     Rigidbody2D body;
 
-    Weapon      weapon;
-    WeaponPhase phase;
+    WeaponInstance      instance;
+    WeaponState         state;
+    WeaponAction        weapon;
+    WeaponPhase         phase;
+    
+    WeaponMovementState weaponMovementState;
 
-    float modifier              = 1.0f;
-    Dictionary<EffectType, List<IMovementModifier>> modifiers;
 
-    float speed;
-
+    float   speed;
     bool    lockDirection;
+    float   modifier                                            = 1.0f;
+    Dictionary<EffectType, List<IMovementModifier>> modifiers   = new();
 
     Vector2 direction;
     Vector2 directionLock;
@@ -36,57 +117,116 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     Vector2 momentum;
     Vector2 velocity;
-    Vector2 subPixelAccumulator;
 
+    Vector2 movementStartPosition;
 
-    public override void Initialize()
+    public MovementEngine(Hero hero)
     {
+        GameTick.Register(this);
+
         cache = new((effectInstance) => effectInstance.Effect is IType instance && (instance.Type == EffectType.Speed || instance.Type == EffectType.Grip));
 
         cache.OnApply   += CreateModifier;
         cache.OnCancel  += ClearModifier;
         cache.OnClear   += ClearModifier;
         
-        modifiers = new();
-
+        weaponMovementState = WeaponMovementState.None;
         EventBus<WeaponPublish>.Subscribe(HandleWeaponPublish);
+
+
+        this.hero           = hero;
+        body                = hero.Character.body;
+
+        body.freezeRotation = true;
+        body.gravityScale   = 0;
+        body.interpolation  = RigidbodyInterpolation2D.Interpolate;
     }
 
     public void Tick()   
     {
         SetDirection();
         SetSpeed();
-
-        ApplyFriction();
+                
         CalculateModifier();
         CalculateVelocity();
 
-        if (HasActiveWeapon())
-            ApplyWeaponMovement();
+        ApplyFriction();
 
         if (CanMove())
             ApplyVelocity();
+
 
         DebugLog();
     }
 
     bool CanMove()
     {
-        return context.CanMove;
+        return hero.CanMove;
     }
 
     // ============================================================================
     // MOVEMENT CALCULATIONS
     // ============================================================================
 
-
     void CalculateVelocity()
     {
-
+        if (HasActiveWeapon())
+            ApplyWeaponInfluencedVelocity();
+        else
+            ApplyNormalVelocity();
+    }
+    
+    void ApplyNormalVelocity()
+    {
         Vector2 targetVelocity = Mathf.Clamp(speed * modifier, 0, maxSpeed) * direction;
 
         velocity = Vector2.MoveTowards(velocity, targetVelocity, acceleration * Clock.DeltaTime);
         momentum = velocity;
+    }
+    
+    void ApplyWeaponInfluencedVelocity()
+    {
+        if (weaponMovementState.CancelMovement)
+        {
+            velocity = Vector2.zero;
+            momentum = velocity;
+            return;
+        }
+        
+
+        Vector2 effectiveDirection = ResolveDirection();
+
+        float effectiveSpeed    = weaponMovementState.VelocityOverride != -1 ?  weaponMovementState.VelocityOverride       : speed;
+        float effectiveModifier = weaponMovementState.ModifierOverride != -1 ?  weaponMovementState.ModifierOverride    : modifier;
+        
+        Vector2 targetVelocity  = Mathf.Clamp(effectiveSpeed * effectiveModifier, 0, maxSpeed) * effectiveDirection;
+        
+        velocity = weaponMovementState.OverrideMovement ? targetVelocity : Vector2.MoveTowards(velocity, targetVelocity, acceleration * Clock.TickDelta);
+        momentum = velocity;
+
+        // if (HasActiveWeapon())
+        // {
+        //     Log.Debug(LogSystem.Movement, LogCategory.State, 
+        //         () => $"Phase: {phase}, Frame: {state.PhaseFrames.CurrentFrame}, " +
+        //               $"Override: {weaponMovementState.OverrideMovement}, " +
+        //               $"Velocity: {velocity.magnitude:F3}");
+        // }
+    }
+    
+    Vector2 ResolveDirection()
+    {
+        if (weaponMovementState.LockDirection)
+        {
+            if (!lockDirection)
+            {
+                directionLock = direction == Vector2.zero ? directionTrail : direction;
+                lockDirection = true;
+            }
+            return directionLock;
+        }
+        
+        lockDirection = false;
+        return direction;
     }
 
     void CalculateModifier()
@@ -111,73 +251,57 @@ public class MovementEngine : RegisteredService, IServiceTick
         modifier = typeCount == 0 ? 1f : sumOfAverages / typeCount;
     }
 
-
     void ApplyFriction() => velocity *= 1 - Mathf.Clamp01(friction * Clock.DeltaTime);
-    void ApplyVelocity() => body.linearVelocity = velocity;
-
+    void ApplyVelocity() =>  body.MovePosition(body.position + velocity * Time.fixedDeltaTime);
 
     // ============================================================================
     // WEAPON MANAGEMENT
     // ============================================================================
 
+
+
     void HandleWeaponPublish(WeaponPublish evt)
     {
+
+        switch(evt.Action)
+        {
+            case Publish.Equipped when evt.Payload.Instance.Action.Name == "SwordAndShieldDash":
+                movementStartPosition = body.position;
+                break;
+
+            case Publish.Released when weapon?.Name == "SwordAndShieldDash":
+                float distance = Vector2.Distance(movementStartPosition, body.position);
+                Log.Debug(LogSystem.Movement, LogCategory.State, () => $"Distance: {distance:F3}");
+                break;
+        }
         switch(evt.Action)
         {
             case Publish.Equipped:
-                HandleWeaponEquip(evt.Payload.Weapon);
+                instance            = evt.Payload.Instance;
+                state               = instance.State;
+                weapon              = instance.Action;
+                weaponMovementState = new WeaponMovementState(weapon, WeaponPhase.Idle);
                 break;
+                
             case Publish.PhaseChange:
-                HandleWeaponPhaseChange(evt.Payload.Phase);
+                phase               = state.Phase;
+                weaponMovementState = new WeaponMovementState(weapon, phase);
                 break;
+                
             case Publish.Released:
-                HandleWeaponRelease();
+                weapon              = null;
+                weaponMovementState = WeaponMovementState.None;
+                lockDirection       = false;
                 break;
         }
-    }
 
-    void HandleWeaponEquip(Weapon weapon)
-    {
-        this.weapon = weapon;
 
-        if (weapon.LockDirection)
-        {
-            directionLock = direction == Vector2.zero ? directionTrail : direction;
-            lockDirection = true;
-        }
 
     }
-
-    void HandleWeaponPhaseChange(WeaponPhase phase)
-    {
-        this.phase = phase;
-    }
-
-    void HandleWeaponRelease()
-    {
-        weapon          = null;
-        lockDirection   = false;
-    }
-
-    void ApplyWeaponMovement()
-    {
-        if (!weapon.WeaponOverridesMovement)
-            return;
-
-        float weaponSpeed = weapon.Speed >= 0 ? weapon.Speed : speed;
-        float weaponMod = weapon.Modifier >= 0 ? weapon.Modifier : modifier;
-
-        Vector2 targetVelocity = Mathf.Clamp(weaponSpeed * weaponMod, 0, maxSpeed) * direction;
-
-        velocity = targetVelocity;
-        momentum = velocity;
-    }
-
 
     // ============================================================================
     // EFFECT MODIFIER MANAGEMENT
     // ============================================================================
-
 
     void CreateModifier(EffectInstance instance)
     {
@@ -189,14 +313,13 @@ public class MovementEngine : RegisteredService, IServiceTick
         modifiers[coded.Type].Add(CreateModifierForType(coded.Type, instance));
     }
 
-
     void ClearModifier(EffectInstance instance)
     {
         var coded = instance.Effect as IType;
 
         if (modifiers.TryGetValue(coded.Type, out var list))
         {
-            var modifier = list.FirstOrDefault(m => m.Instance == instance);
+            var modifier = list.FirstOrDefault(modifier => modifier.Instance == instance);
             if (modifier != null)
                 list.Remove(modifier);
         }
@@ -208,24 +331,22 @@ public class MovementEngine : RegisteredService, IServiceTick
         {
             EffectType.Speed => new SpeedMovementModifier(instance),
             EffectType.Grip  => new GripMovementModifier(instance),
-            _ => throw new System.ArgumentException($"Unsupported effect type: {type}")
+            _ => null
         };
     }
-
-
 
     // ============================================================================
     // HELPER METHODS
     // ============================================================================
 
-    bool HasActiveWeapon()   => weapon != null;
+    bool HasActiveWeapon() => weapon != null;
 
     void SetDirection()
     {
-        if (context.MovementDirection == Vector2.zero && direction != Vector2.zero)
+        if (hero.MovementDirection == Vector2.zero && direction != Vector2.zero)
             directionTrail = direction;
 
-        Vector2 inputDir = lockDirection ? directionLock : context.MovementDirection;
+        Vector2 inputDir = hero.MovementDirection;
 
         if (normalizeVelocity && inputDir.sqrMagnitude > 1f)
             inputDir = inputDir.normalized;
@@ -240,22 +361,11 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     void DebugLog()
     {
-        Log.Debug(LogSystem.Movement, LogCategory.State, "Velocity", () => velocity);
-        Log.Debug(LogSystem.Movement, LogCategory.State, "Modifier", () => modifier);
-        Log.Trace(LogSystem.Movement, LogCategory.Validation, "Effect Cache", () => cache.Effects.Count);
-        Log.Trace(LogSystem.Movement, LogCategory.State, "ActiveEffects", () => $"{string.Join(", ", cache.Effects.Select(effect => effect.Effect.Name))}");
-    }
-
-
-    public void AssignHero(Hero hero)
-    {
-        this.hero       = hero;
-        this.context    = hero.Context;
-        this.body       = hero.Character.body;
-
-        body.freezeRotation = true;
-        body.gravityScale   = 0;
-        body.interpolation  = RigidbodyInterpolation2D.Interpolate;
+        Log.Debug(LogSystem.Movement, LogCategory.Control,"Movement", "Movement.Speed",     () => speed);  
+        Log.Trace(LogSystem.Movement, LogCategory.State,  "Movement", "Movement.Velocity",  () => velocity);
+        Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Movement.Modifier",  () => modifier);
+        Log.Trace(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Cache",       () => cache.Effects.Count);
+        Log.Debug(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Active",      () => $"{string.Join(", ", cache.Effects.Select(effect => effect.Effect.Name))}");
     }
 
     public Vector2 Velocity => velocity;
@@ -264,21 +374,15 @@ public class MovementEngine : RegisteredService, IServiceTick
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;
 }
 
-
-
-
-
 // ============================================================================
 // MODIFIERS
 // ============================================================================
-
 
 public interface IMovementModifier
 {
     public EffectInstance Instance { get; }
     public float Resolve();
 }
-
 
 public class SpeedMovementModifier : IMovementModifier
 {
@@ -312,4 +416,3 @@ public class GripMovementModifier : IMovementModifier
 
     public EffectInstance Instance => instance;
 }
-

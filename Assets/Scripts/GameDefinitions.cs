@@ -12,6 +12,7 @@ public interface IServiceTick : IService { public void Tick(); UpdatePriority Pr
 public interface IServiceLoop : IService { public void Loop(); UpdatePriority Priority { get; } };
 public interface IServiceStep : IService { public void Step(); UpdatePriority Priority { get; } };
 public interface IServiceUtil : IService { public void Util(); UpdatePriority Priority { get; } };
+public interface IServiceLate : IService { public void Late(); UpdatePriority Priority { get; } };
 
 
 public abstract class Service
@@ -29,17 +30,19 @@ public abstract class RegisteredService : Service, IInitialize
 
 
 //
-//  Data Definitions
+//  Definition
 //
 
 
-public class Data
+public class Definition
 { 
+    public string ID                    { get; set; }
     public string Name                  { get; set; }
 }
 
+
 //
-//  Runtime Definitions
+//  Runtime
 //
 
 public class Runtime
@@ -48,8 +51,26 @@ public class Runtime
 }
 
 public class Instance   : Runtime   {}
-public class Entity     : Instance  {}
+public class Entity     : Runtime   {}
 public class Item       : Entity    {}
+
+
+public abstract class Equipment : Item
+{
+    public EquipmentSlotType SlotType           { get; init; }
+}
+
+public class Weapon : Equipment
+{
+    public WeaponDefinition Definition          { get; init; }
+}
+
+public class Armor : Equipment
+{
+    public ArmorDefinition Definition           { get; init; }
+}
+
+
 
 
 //
@@ -71,64 +92,33 @@ public class EventHandler {}
 //  Entity
 //
 
-// Health
 
-public interface IHealthSet : IHasHealth {}
 public interface IHasHealth
 {
-    public float Health                 { get; set; }
-    public float MaxHealth              { get; }
+    float Health                { get; set; }
+    float MaxHealth             { get; }
 }
 
-
-
-// Mana
-
-public interface IManaSet : IHasMana, IHasManaRegen {}
 public interface IHasMana
 {
-    public float Mana                   { get; set; }
-    public float MaxMana                { get; }
+    float Mana                  { get; set; }
+    float MaxMana               { get; }
 }
 
-public interface IHasManaRegen
+public interface ICanMove
 {
-    public float ManaRegen              { get; }
+    float Speed                 { get; }
 }
-
-
-
-// Movement
-
-public interface IMovementSet : IHasMovement, IHasSprint {}
-public interface IHasMovement
-{
-    public float SpeedMultiplierCap     { get; }
-}
-
-public interface IHasSprint
-{
-    public float AutoSprintBuffer       { get; }
-}
-
-
-
-// Combat
 
 public interface IDamageable : IHasHealth
 {
-    public bool Invulnerable            { get; }
-};
-
-public interface IAttacker {}
+    bool Invulnerable           { get; }
+}
 
 
-
-// Entities
-
-public interface IHero : IHealthSet, IManaSet, IMovementSet, IDamageable, IAttacker {}
-
-
+public interface IHero : IHasHealth, IHasMana, ICanMove, IDamageable
+{
+}
 
 
 
