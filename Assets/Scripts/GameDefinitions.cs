@@ -12,7 +12,6 @@ public interface IServiceTick : IService { public void Tick(); UpdatePriority Pr
 public interface IServiceLoop : IService { public void Loop(); UpdatePriority Priority { get; } };
 public interface IServiceStep : IService { public void Step(); UpdatePriority Priority { get; } };
 public interface IServiceUtil : IService { public void Util(); UpdatePriority Priority { get; } };
-public interface IServiceLate : IService { public void Late(); UpdatePriority Priority { get; } };
 
 
 public abstract class Service
@@ -45,39 +44,27 @@ public class Definition
 //  Runtime
 //
 
-public class Runtime
-{
-    public Guid RuntimeID               = Guid.NewGuid();
-}
+public class Runtime                        {public Guid RuntimeID                  { get; set; } = Guid.NewGuid();}
+public class Instance           : Runtime   {}
+public class Entity             : Runtime   { public GameObject Instance            { get; set; }}
+public class Enemy              : Entity    {}
+public class Item               : Entity    {}
 
-public class Instance   : Runtime   {}
-public class Entity     : Runtime   {}
-public class Item       : Entity    {}
-
-
-public abstract class Equipment : Item
-{
-    public EquipmentSlotType SlotType           { get; init; }
-}
-
-public class Weapon : Equipment
-{
-    public WeaponDefinition Definition          { get; init; }
-}
-
-public class Armor : Equipment
-{
-    public ArmorDefinition Definition           { get; init; }
-}
+public abstract class Equipment : Item      { public EquipmentSlotType SlotType     { get; init; }}
+public class Weapon             : Equipment { public WeaponDefinition Definition    { get; init; }}
+public class Armor              : Equipment { public ArmorDefinition Definition     { get; init; }}
 
 
 
 
 //
-//  MonoBeviours
+//  Unity Lifecle/bridge
 //
-
 public class Controller : MonoBehaviour {}
+
+
+
+
 
 
 //
@@ -93,32 +80,35 @@ public class EventHandler {}
 //
 
 
-public interface IHasHealth
+
+public interface IDamageable
 {
+    bool Invulnerable           { get; }
     float Health                { get; set; }
     float MaxHealth             { get; }
 }
 
-public interface IHasMana
+public interface ICaster
 {
     float Mana                  { get; set; }
     float MaxMana               { get; }
 }
 
-public interface ICanMove
+public interface IAttacker
 {
+    bool CanAttack              { get; }
+    float Attack                { get; }
+    float AttackMultiplier      { get; }
+}
+
+public interface IMovable
+{
+    bool CanMove                { get; }
     float Speed                 { get; }
+    float SpeedMultiplier       { get; }
 }
 
-public interface IDamageable : IHasHealth
-{
-    bool Invulnerable           { get; }
-}
-
-
-public interface IHero : IHasHealth, IHasMana, ICanMove, IDamageable
-{
-}
+public interface IHero : IMovable, IAttacker, IDamageable {}
 
 
 
@@ -186,6 +176,7 @@ public enum Publish
     Changed,
     Canceled,
     Equipped,
+    Unequipped,
     Released,
     PhaseChange,
 }

@@ -39,7 +39,7 @@ public struct DefaultTargetProvider : ICameraTarget
 
 
 
-public class CameraRig : RegisteredService, IServiceTick, IServiceLate
+public class CameraRig : RegisteredService, IServiceTick
 {
     GameObject  cameraRig;
     CameraContext context;
@@ -70,7 +70,7 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate
 
         context.cameraRoot.orthographic         = true;
 
-        context.camera.Lens.OrthographicSize    = Config.GRAPHICS_ORTHOGRAPHIC;
+        context.camera.Lens.OrthographicSize    = Config.Graphics.ORTHOGRAPHIC_SIZE;
         context.camera.Target.TrackingTarget    = target.transform;
 
         context.brain.UpdateMethod = CinemachineBrain.UpdateMethods.SmartUpdate;
@@ -81,17 +81,12 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate
 
     public void Tick()
     {
-        foreach (var behavior in activeBehaviors)
-            cameraBehaviors[behavior].Tick();
-    }
-
-    public void Late()
-    {
-        foreach (var behavior in activeBehaviors)
-            cameraBehaviors[behavior].Tick();
-
         UpdateCameraTargetPosition();
+
+        foreach (var behavior in activeBehaviors)
+            cameraBehaviors[behavior].Tick();
     }
+
 
     void UpdateCameraTargetPosition()
     {

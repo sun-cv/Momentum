@@ -25,10 +25,12 @@ public class Stats : Service, IServiceTick
         }
     }
 
-    public float BaseValue(string stat) => stats[stat];
-    public void SetStat(string stat, float value) => stats.Add(stat, value);
-    public StatsMediator Mediator => mediator;
-    public UpdatePriority Priority => ServiceUpdatePriority.Stats;
+    public float GetStat(string stat)               => stats[stat];
+    public void SetStat(string stat, float value)   => stats.Add(stat, value);
+    public void AddModifier(StatModifier modifier)  => Mediator.AddModifier(modifier);
+
+    public StatsMediator Mediator   => mediator;
+    public UpdatePriority Priority  => ServiceUpdatePriority.Stats;
 }
 
 
@@ -102,15 +104,6 @@ public abstract class StatModifier : IDisposable
         timer.Start();
     }
 
-    protected StatModifier(int duration)
-    {
-        if (duration <= 0) return;
-
-        timer = new(duration);
-        timer.OnTimerStop += () => MarkedForRemoval = true;
-        timer.Start();
-    }
-
     public abstract void Handle(object sender, Query query);
     
     public void Dispose()
@@ -125,16 +118,10 @@ public class BasicStatModifier : StatModifier
     readonly string stat;
     readonly Func<float, float> operation;
 
-    public BasicStatModifier(string stat, int frames, Func<float, float> operation) : base(frames)
-    {
-        this.stat = stat;
-        this.operation = operation;
-    }
-
     public BasicStatModifier(string stat, float duration, Func<float, float> operation) : base(duration)
     {
-        this.stat = stat;
-        this.operation = operation;
+        this.stat       = stat;
+        this.operation  = operation;
     }
     
     public override void Handle(object sender, Query query )

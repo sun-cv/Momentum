@@ -4,6 +4,12 @@ using System.Linq;
 using UnityEngine;
 
 
+
+    //
+    // FIX CASTING, ENTITY INTERFACE
+    // 
+
+
 // ============================================================================
 // PHASE HANDLERS
 // ============================================================================
@@ -152,8 +158,12 @@ public class WhileHeldActivationStrategy : IActivationStrategy
 
     public bool CheckReleaseTriggersInFire(WeaponInstance weapon, WeaponSystem controller)
     {
-        if (weapon.Action.Trigger.Any(action => !controller.IsTriggerActive(action)))
+
+        Debug.Log($"Check release {weapon.Action.Name} triggers active:{weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger))}");
+
+        if (weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger)))
         {
+            Debug.Log("FireRelease to fireend");
             controller.TransitionTo(WeaponPhase.FireEnd);
             return true;
         }
@@ -231,7 +241,7 @@ public class WeaponActivationValidator
     WeaponValidation CheckActivationCondition(WeaponAction weapon)
     {
         if (weapon.Condition.Activate != null &&
-            !weapon.Condition.Activate(controller.Entity))
+            !weapon.Condition.Activate(controller.Owner))
         {
             return WeaponValidation.Fail("Activate condition returned false");
         }
@@ -261,9 +271,13 @@ public class WeaponActivationValidator
         return WeaponValidation.Pass();
     }
 
+    //
+    // FIX CASTING, ENTITY INTERFACE
+    // 
+
     WeaponValidation CheckContext(WeaponAction weapon)
     {
-        if (!weapon.CanCancelDisables && !controller.Entity.CanAttack)
+        if (!weapon.CanCancelDisables &&  controller.Owner is Hero entity && !entity.CanAttack)
             return WeaponValidation.Fail($"Context disallows attack (CanCancelDisables={weapon.CanCancelDisables})");
 
         return WeaponValidation.Pass();
@@ -288,7 +302,7 @@ public class WeaponActivationValidator
         if (!controller.OnlyCancelableLocksRemain() && !incomingWeapon.CanCancelDisables)
             return WeaponValidation.Fail("Non-cancelable locks remain and weapon cannot cancel disables");
 
-        bool canCancelViaCondition  = controller.CurrentWeapon.Action.Condition.Cancel != null && controller.CurrentWeapon.Action.Condition.Cancel(controller.Entity);
+        bool canCancelViaCondition  = controller.CurrentWeapon.Action.Condition.Cancel != null && controller.CurrentWeapon.Action.Condition.Cancel(controller.Owner);
         bool canCancelViaDisable    = incomingWeapon.CanCancelDisables;
 
         if (canCancelViaCondition || canCancelViaDisable)
@@ -306,7 +320,7 @@ public class WeaponActivationValidator
 
 public class WeaponSystem : IServiceTick
 {
-    Hero                                                    entity;
+    Entity                                                  owner;
     WeaponLoadout                                           loadout;
     WeaponInstance                                          instance;
 
@@ -321,7 +335,7 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
-    public WeaponSystem(Hero entity)
+    public WeaponSystem(Entity entity)
     {
         GameTick.Register(this);
 
@@ -329,7 +343,7 @@ public class WeaponSystem : IServiceTick
         cooldown    = new();
         validator   = new(this);
         
-        this.entity = entity;
+        owner = entity;
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
@@ -337,8 +351,7 @@ public class WeaponSystem : IServiceTick
         EventBus<CommandPublish>        .Subscribe(HandleCommandPublish);
         EventBus<EffectPublish>         .Subscribe(HandleEffectNonCancelableLockCount);
         EventBus<LockPublish>           .Subscribe(HandleLockPublish);
-        EventBus<EquipmentEquipped>     .Subscribe(HandleEquipmentEquipped);
-        EventBus<EquipmentUnequipped>   .Subscribe(HandleEquipmentUnequipped);
+        EventBus<EquipmentPublish>      .Subscribe(HandleEquipmentPublish);
     }
 
 
@@ -407,6 +420,11 @@ public class WeaponSystem : IServiceTick
     bool ShouldReleaseWeapon()
     {
 
+        if (instance.Action.Activation == WeaponActivation.WhileHeld && instance.State.Phase == WeaponPhase.Fire)
+        {
+            return false;
+        }
+
         if (instance.ShouldValidateActivationTriggers() && !HasAllRequiredTriggers(instance.Action))
         {
             Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Missing required actions");
@@ -437,9 +455,11 @@ public class WeaponSystem : IServiceTick
 
     public void TransitionTo(WeaponPhase newPhase)
     {
-        
         instance.State.Phase = newPhase;
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Instance = instance }));
+
+        Debug.Log(instance.State.Phase);
+
+        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
 
         if (phaseHandlers.TryGetValue(newPhase, out var handler))
             handler.Enter(instance, this);
@@ -586,7 +606,7 @@ public class WeaponSystem : IServiceTick
     void EquipWeapon(WeaponAction Action)
     {
         instance = new WeaponInstance(Action);
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Instance = instance }));
+        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Instance = instance }));
     }
 
     void ActivateWeapon()
@@ -624,7 +644,7 @@ public class WeaponSystem : IServiceTick
         if (instance.Action.Cooldown > 0)
             cooldown.RegisterWeapon(instance.Action);
 
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Released, new() { Instance = instance }));
+        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Released, new() { Owner = owner, Instance = instance }));
 
         instance.State.Reset();
         instance = null;
@@ -822,25 +842,26 @@ public class WeaponSystem : IServiceTick
         locks = evt.Payload.Locks;
     }
 
-    void HandleEquipmentEquipped(EquipmentEquipped evt)
+    void HandleEquipmentPublish(EquipmentPublish evt)
     {
         if (evt.Payload.Equipment is not Weapon weapon)
             return;
-        
-        foreach (var action in weapon.Definition.Actions)
-            loadout.AddAction(action.Value, weapon);
+
+        switch(evt.Action)
+        {
+            case Publish.Equipped:
+                foreach (var action in weapon.Definition.Actions)
+                    loadout.AddAction(action.Value, weapon);
+                break;
+                
+            case Publish.Unequipped:
+                foreach (var action in weapon.Definition.Actions)
+                    loadout.RemoveAction(action.Key);
+                break;
+        }
+
     }
     
-    void HandleEquipmentUnequipped(EquipmentUnequipped evt)
-    {
-        if (evt.Payload.Equipment is not Weapon weapon)
-            return;
-        
-        foreach (var action in weapon.Definition.Actions)
-            loadout.RemoveAction(action.Key);
-    }
-
-
     // ============================================================================
     // QUERIES & ACCESSORS
     // ============================================================================
@@ -858,7 +879,7 @@ public class WeaponSystem : IServiceTick
 
     void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
 
-    public Hero Entity                                                  => entity;
+    public Entity Owner                                                 => owner;
     public WeaponInstance CurrentWeapon                                 => instance;
     public WeaponCooldown Cooldown                                      => cooldown;
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks => locks;
@@ -884,19 +905,20 @@ public class WeaponSystem : IServiceTick
 
 public readonly struct WeaponStatePayload
 {
+    public readonly Entity Owner            { get; init; }
     public readonly WeaponInstance Instance { get; init; }
 }
 
 public readonly struct WeaponPublish : IEvent
 {
-    public Guid Id { get; }
-    public Publish Action { get; }
-    public WeaponStatePayload Payload { get; }
+    public Guid Id                      { get; }
+    public Publish Action               { get; }
+    public WeaponStatePayload Payload   { get; }
 
     public WeaponPublish(Guid id, Publish action, WeaponStatePayload payload)
     {
-        Id = id;
-        Action = action;
+        Id      = id;
+        Action  = action;
         Payload = payload;
     }
 }

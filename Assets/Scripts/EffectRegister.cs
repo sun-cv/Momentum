@@ -53,10 +53,12 @@ public class EffectInstance : Instance
 
 public class EffectRegister
 {
-    List<EffectInstance> effects = new();
+    readonly Entity owner;
+    readonly List<EffectInstance> effects = new();
 
-    public EffectRegister()
+    public EffectRegister(Entity entity)
     {
+        owner = entity;
         EventBus<EffectRequest>.Subscribe(HandleEffectRequest);
     } 
 
@@ -65,18 +67,11 @@ public class EffectRegister
         switch(evt.Action)
         {
             case EffectAction.Create:
-                    Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Creating Effect { evt.Payload.Effect.Name}");
                     RegisterEffect(evt.Payload.Instance, evt.Payload.Effect);
                 break;
             case EffectAction.Cancel:
-                    Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Canceling Effect { evt.Payload.Effect.Name}");
                     CancelEffect(evt.Payload.Effect);
                 break;
-            case EffectAction.Get:
-                    Log.Debug(LogSystem.Effects, LogCategory.State, () => $"Getting Effect { evt.Payload.Effect.Name}");
-                    GetEffects(evt);
-                break;
-
         }
     }
 
@@ -84,9 +79,9 @@ public class EffectRegister
     {
         var instance = new EffectInstance(entity, effect);
 
-        instance.OnApply   += () => EventBus<EffectPublish>.Raise(new(Guid.NewGuid(), Publish.Activated,   new() { Instance = instance}));
-        instance.OnClear   += () => EventBus<EffectPublish>.Raise(new(Guid.NewGuid(), Publish.Deactivated, new() { Instance = instance}));
-        instance.OnCancel  += () => EventBus<EffectPublish>.Raise(new(Guid.NewGuid(), Publish.Canceled,    new() { Instance = instance}));
+        instance.OnApply   += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Activated,   new() { Owner = owner, Instance = instance}));
+        instance.OnClear   += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Deactivated, new() { Owner = owner, Instance = instance}));
+        instance.OnCancel  += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Canceled,    new() { Owner = owner, Instance = instance}));
         
         RegisterTriggerLock(instance);
         RegisterDebugLog(instance);
@@ -112,45 +107,33 @@ public class EffectRegister
             
         foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockTrigger.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
-            instance.OnClear   += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
-            instance.OnCancel  += () => EventBus<LockRequest>.Raise(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnApply   += () => OnEvent<LockRequest>(new(Guid.NewGuid(), LockTrigger.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnClear   += () => OnEvent<LockRequest>(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnCancel  += () => OnEvent<LockRequest>(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
         }
     }
 
     void RegisterDebugLog(EffectInstance instance)
     {
-
         instance.OnApply   += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Activating Effect {instance.Effect.Name}");
         instance.OnClear   += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Clearing Effect {instance.Effect.Name}");
         instance.OnCancel  += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Canceling Effect {instance.Effect.Name}");
     }
 
-    public void CancelEffect(Effect effect)         => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
-    public void GetEffects(EffectRequest request)   => EventBus<EffectResponse>.Raise(new(request.Id, Response.Success, new() { Effects = GetInstanceEffects(request.Payload.Instance) }));
+    public void CancelEffect(Effect effect) => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
 
-    private static T FirstEffectOrDefault<T>(IEnumerable<EffectInstance> source, Func<EffectInstance, bool> predicate = null) where T : class
+
+    public bool Get<T>(Func<T, bool> selector, bool defaultValue = true) where T : class
     {
-        var query = source.Select(instance => instance.Effect);
-        if (predicate != null)
-            query = source.Where(predicate).Select(e => e.Effect);
-
-        return query.OfType<T>().FirstOrDefault();
+        foreach (var instance in effects)
+        {
+            if (instance.Effect is T effect)
+                return selector(effect);
+        }
+        return defaultValue;
     }
 
-    public T GetPredicate<T>(Func<EffectInstance,bool> predicate = null) where T : class
-    {
-        return FirstEffectOrDefault<T>(effects, predicate);
-    }
-
-    public List<Effect> GetInstanceEffects(Instance instance)
-    {
-        return effects.Where(entity => entity.Owner == instance).Select(instance => instance.Effect).ToList();
-    }
-
-    public bool Get<T>(Func<T, bool> selector, bool defaultValue = true) where T : class => GetPredicate<T>() != null ? selector(GetPredicate<T>()) : defaultValue;
-
-
+    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
     public List<EffectInstance> Effects => effects;
 }
 
@@ -164,18 +147,21 @@ public enum EffectAction
 
 public readonly struct EffectRequestPayload
 {
+    public Entity Owner                     { get; init; }
     public Effect Effect                    { get; init; }
     public Instance Instance                { get; init; }
 }
 
 public readonly struct EffectResponsePayload
 {
+    public Entity Owner                     { get; init; }
     public Instance Instance                { get; init; }
     public readonly List<Effect> Effects    { get; init; }
 }
 
 public readonly struct EffectStatePayload
 {
+    public Entity Owner                     { get; init; }
     public EffectInstance Instance          { get; init; }
 }
 

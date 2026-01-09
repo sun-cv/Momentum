@@ -31,9 +31,15 @@ public class DevEnv : RegisteredService, IServiceTick
         if (!triggered)
         {
             hero        = HeroFactory.Create();
+
+            hero.Equipment.Equip(new Sword());
+            hero.Equipment.Equip(new Shield());
+            hero.Equipment.Equip(new Dash());
+
             Services.Get<CameraRig>().SetCameraTarget(new HeroCameraTarget(){ Hero = hero });
             Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
             Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
+            
             triggered   = true;
         }
 

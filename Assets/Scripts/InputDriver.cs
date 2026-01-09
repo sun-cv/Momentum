@@ -252,7 +252,7 @@ public class InputButton
             releasedThisFrame   = false;
         }
 
-        if (releasedframeCount.CurrentFrame >= Config.INPUT_THRESHOLD_RELEASE)
+        if (releasedframeCount.CurrentFrame >= Config.Input.RELEASE_THRESHOLD)
         {
             releasedframeCount.Stop();
             released = false;

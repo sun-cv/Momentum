@@ -51,11 +51,12 @@ public class EquipmentSlot
 
 public class EquipmentManager
 {
-    private readonly Dictionary<EquipmentSlotType, EquipmentSlot> slots = new();
+    readonly Entity owner;
+    readonly Dictionary<EquipmentSlotType, EquipmentSlot> slots = new();
     
-    public EquipmentManager()
+    public EquipmentManager(Entity entity)
     {
-        Services.Register(this);
+        owner = entity;
 
         slots[EquipmentSlotType.Head    ] = new() { SlotType = EquipmentSlotType.Head       };
         slots[EquipmentSlotType.Cloak   ] = new() { SlotType = EquipmentSlotType.Cloak      };
@@ -75,7 +76,7 @@ public class EquipmentManager
         if (!slot.Equip(item))
             return false;
 
-        OnEvent<EquipmentEquipped>(new(Guid.NewGuid(), new() { Equipment = item, Slot = item.SlotType } ));
+        OnEvent<EquipmentPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
         
         DebugLog();
         return true;
@@ -89,7 +90,7 @@ public class EquipmentManager
         var item = slot.Unequip();
 
         if (item != null)
-            OnEvent<EquipmentUnequipped>(new(Guid.NewGuid(), new() { Equipment = item, Slot = item.SlotType } ));
+            OnEvent<EquipmentPublish>(new(Guid.NewGuid(), Publish.Unequipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
         
         DebugLog();
         return item;
@@ -130,30 +131,22 @@ public class EquipmentManager
 
 public readonly struct EquipmentPayload
 {
-    public Equipment Equipment      { get; init; }
-    public EquipmentSlotType Slot   { get; init; }
+    public readonly Entity Owner             { get; init; }
+    public readonly Equipment Equipment      { get; init; }
+    public readonly EquipmentSlotType Slot   { get; init; }
 }
 
-public readonly struct EquipmentEquipped : IEvent
+public readonly struct EquipmentPublish : IEvent
 {
     public Guid Id                  { get; }
+    public Publish Action           { get; }
     public EquipmentPayload Payload { get; }
     
-    public EquipmentEquipped(Guid id, EquipmentPayload payload)
+    public EquipmentPublish(Guid id, Publish action, EquipmentPayload payload)
     {
         Id      = id;
+        Action  = action;
         Payload = payload;
     }
 }
 
-public readonly struct EquipmentUnequipped : IEvent
-{
-    public Guid Id                  { get; }
-    public EquipmentPayload Payload { get; }
-    
-    public EquipmentUnequipped(Guid id, EquipmentPayload payload)
-    {
-        Id      = id;
-        Payload = payload;
-    }
-}

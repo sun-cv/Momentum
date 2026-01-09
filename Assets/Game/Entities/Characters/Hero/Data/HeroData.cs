@@ -12,4 +12,6 @@ public class HeroDefinition : Definition
 
     public float Speed                  = 5;
 
+    public float Attack                 = 0;
+
 };

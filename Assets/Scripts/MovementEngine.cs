@@ -87,15 +87,15 @@ public readonly struct WeaponMovementState
 
 public class MovementEngine : IServiceTick
 {
-    readonly float maxSpeed     = Config.MOVEMENT_MAX_SPEED;
-    readonly float acceleration = Config.MOVEMENT_ACCELERATION;
-    readonly float friction     = Config.MOVEMENT_FRICTION;
+    readonly float maxSpeed     = Settings.Movement.MAX_SPEED;
+    readonly float acceleration = Settings.Movement.ACCELERATION;
+    readonly float friction     = Settings.Movement.FRICTION;
 
     readonly bool normalizeVelocity = false;
 
     EffectCache cache;
 
-    Hero        hero;
+    Entity      owner;
     Rigidbody2D body;
 
     WeaponInstance      instance;
@@ -120,7 +120,7 @@ public class MovementEngine : IServiceTick
 
     Vector2 movementStartPosition;
 
-    public MovementEngine(Hero hero)
+    public MovementEngine(Entity entity)
     {
         GameTick.Register(this);
 
@@ -134,8 +134,17 @@ public class MovementEngine : IServiceTick
         EventBus<WeaponPublish>.Subscribe(HandleWeaponPublish);
 
 
-        this.hero           = hero;
-        body                = hero.Character.body;
+        owner           = entity;
+
+
+        //
+        // FIX CASTING, ENTITY INTERFACE
+        // 
+
+        if (entity is Hero instance)
+        {
+            body            = instance.Character.body;
+        }
 
         body.freezeRotation = true;
         body.gravityScale   = 0;
@@ -159,9 +168,14 @@ public class MovementEngine : IServiceTick
         DebugLog();
     }
 
+
+    //
+    // FIX CASTING, ENTITY INTERFACE
+    // 
+
     bool CanMove()
     {
-        return hero.CanMove;
+        return owner is Hero instance && instance.CanMove;
     }
 
     // ============================================================================
@@ -274,6 +288,7 @@ public class MovementEngine : IServiceTick
                 Log.Debug(LogSystem.Movement, LogCategory.State, () => $"Distance: {distance:F3}");
                 break;
         }
+
         switch(evt.Action)
         {
             case Publish.Equipped:
@@ -341,12 +356,19 @@ public class MovementEngine : IServiceTick
 
     bool HasActiveWeapon() => weapon != null;
 
+    //
+    // FIX CASTING, ENTITY INTERFACE
+    // 
+
     void SetDirection()
     {
-        if (hero.MovementDirection == Vector2.zero && direction != Vector2.zero)
+        if (owner is not Hero entity)
+            return;
+
+        if (entity.MovementDirection == Vector2.zero && direction != Vector2.zero)
             directionTrail = direction;
 
-        Vector2 inputDir = hero.MovementDirection;
+        Vector2 inputDir = entity.MovementDirection;
 
         if (normalizeVelocity && inputDir.sqrMagnitude > 1f)
             inputDir = inputDir.normalized;
@@ -354,9 +376,17 @@ public class MovementEngine : IServiceTick
         direction = inputDir;
     }
 
+
+    //
+    // FIX CASTING, ENTITY INTERFACE
+    // 
+
     void SetSpeed()
     {
-        speed = hero.Speed;
+        if (owner is not Hero entity)
+            return;
+
+        speed = entity.Speed;
     }
 
     void DebugLog()

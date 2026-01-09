@@ -21,11 +21,6 @@ public class Game : MonoBehaviour
         engine.Tick();
     }
 
-    public void LateUpdate()
-    {
-        engine.Late();
-    }
-
     public void OnDisable()
     {
         engine.Shutdown();
@@ -52,11 +47,6 @@ public class GameEngine
         clock.Tick();
     }
 
-    public void Late()
-    {
-        clock.Late();
-    }
-
     public void Shutdown()
     {
         Services.Dispose();   
@@ -67,10 +57,10 @@ public class GameEngine
 
 public class Clock
 {
-    public const float TickRate     = Config.TICK_RATE_TICK;
-    public const float LoopRate     = Config.TICK_RATE_LOOP;
-    public const float StepRate     = Config.TICK_RATE_STEP;
-    public const float UtilRate     = Config.TICK_RATE_UTIL;
+    public const float TickRate     = Config.Timing.TICK_RATE_TICK;
+    public const float LoopRate     = Config.Timing.TICK_RATE_LOOP;
+    public const float StepRate     = Config.Timing.TICK_RATE_STEP;
+    public const float UtilRate     = Config.Timing.TICK_RATE_UTIL;
 
     public const float TickDelta = 1f/TickRate;
     public const float LoopDelta = 1f/LoopRate;
@@ -145,7 +135,6 @@ public class GameLoop
         this.clock.OnLoop += Loop;
         this.clock.OnStep += Step;
         this.clock.OnUtil += Util;
-        this.clock.OnLate += Late;
 
         Time.fixedDeltaTime  = Clock.TickDelta;
     }
@@ -166,10 +155,6 @@ public class GameLoop
     {
         GameTick.Util();
     }
-    public void Late()
-    {
-        GameTick.Late();
-    }
 }
 
 
@@ -181,7 +166,6 @@ public static class GameTick
     private static readonly List<IServiceLoop> loopServices         = new();
     private static readonly List<IServiceStep> stepServices         = new();
     private static readonly List<IServiceUtil> utilServices         = new();
-    private static readonly List<IServiceLate> lateServices         = new();
 
     private static readonly List<IService> pendingRegistrations     = new();
     private static readonly List<IService> pendingDeregistrations   = new();
@@ -216,12 +200,6 @@ public static class GameTick
             service.Util();
     }
 
-    public static void Late()
-    {
-        foreach(var service in lateServices)
-            service.Late();
-    }
-
     private static void ProcessPending()
     {
         foreach (var service in pendingDeregistrations)
@@ -230,7 +208,6 @@ public static class GameTick
             if (service is IServiceLoop ServiceLoop) loopServices.Remove(ServiceLoop);
             if (service is IServiceStep ServiceStep) stepServices.Remove(ServiceStep);
             if (service is IServiceUtil ServiceUtil) utilServices.Remove(ServiceUtil);
-            if (service is IServiceLate ServiceLate) lateServices.Remove(ServiceLate);
         }
 
         pendingDeregistrations.Clear();
@@ -261,11 +238,6 @@ public static class GameTick
                 utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
             }
 
-            if (service is IServiceLate lateService)
-            {
-                lateServices.Add(lateService);
-                lateServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            }
         }
         pendingRegistrations.Clear();
     }
