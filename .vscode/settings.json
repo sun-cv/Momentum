@@ -10,28 +10,26 @@
         "**/Logs/": true,
         "**/UserSettings/": true,
         "**/.vs/": true,
-        "**/*.csproj": true,
-        "**/*.sln": true,
-        
+        "**/*.meta": true,
         "README.md": true,
         "**/AddressableAssetsData": true,
         "**/Assets/Plugins": true,
         "**/Packages": true,
         "**/.vscode": true,
         "**/ProjectSettings": true,
-        "**.editorConfig": true,
+        "**.editorConfig": true
     },
     "files.associations": {
         "*.asset": "yaml",
         "*.meta": "yaml",
         "*.prefab": "yaml",
-        "*.unity": "yaml",
+        "*.unity": "yaml"
     },
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj",
         "*.cs": "${capture}.*.cs, ${capture}.cs.meta",
-        "*.shader": "${capture}.shader.meta",
+        "*.shader": "${capture}.shader.meta"
     },
     "dotnet.defaultSolution": "Momentum.sln"
 }

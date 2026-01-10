@@ -41,6 +41,9 @@ public interface INoUnitCollision           { public bool NoUnitCollision       
 public interface IImmuneToForce             { public bool ImmuneToForce             { get; init; }}
 public interface ICanAffectInvulnerable     { public bool CanAffectInvulnerable     { get; init; }}
 
+public interface IImmuneToDamage            { public bool ImmuneToDamage            { get; init; }}
+public interface IInvulnerable              { public bool Invulnerable              { get; init; }}
+public interface IStunned                   { public bool Stunned                   { get; init; }}
 
 public interface IDisableRules : IDisableAttack, IDisableMove, IDisableRotate {}
 public interface ICollisionRules : INoUnitCollision, IImmuneToForce {}

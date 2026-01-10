@@ -16,11 +16,12 @@ public class Combat
     public static void ApplyDamage(Entity victim, int damage)
     {
         if (victim is IDamageable damageable)
+        {
             if (damageable.Invulnerable)
                 return;
 
-        if (victim is IHasHealth applicable)
-            applicable.Health -= damage;
+            damageable.Health -= damage;
+        }
     }
 
 

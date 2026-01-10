@@ -123,12 +123,22 @@ public class EffectRegister
     public void CancelEffect(Effect effect) => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
 
 
-    public bool Get<T>(Func<T, bool> selector, bool defaultValue = true) where T : class
+    public bool Can<T>(Func<T, bool> isBlocked, bool defaultValue = true) where T : class
     {
         foreach (var instance in effects)
         {
-            if (instance.Effect is T effect)
-                return selector(effect);
+            if (instance.Effect is T effect && isBlocked(effect))
+                return false; 
+        }
+        return defaultValue;
+    }
+
+    public bool Has<T>(Func<T, bool> hasCondition, bool defaultValue = false) where T : class
+    {
+        foreach (var instance in effects)
+        {
+            if (instance.Effect is T effect && hasCondition(effect))
+                return true; 
         }
         return defaultValue;
     }

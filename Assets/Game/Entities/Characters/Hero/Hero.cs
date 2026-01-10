@@ -9,8 +9,8 @@ public class Hero : Entity, IHero
     //========================================
 
     public HeroDefinition   Definition  { get; private set; }
-    public Character        Character   { get; private set; }
-    public GameObject       Instance    { get; private set; }
+    public CharacterBridge  Character   { get; private set; }
+    public HeroState        State       { get; private set; }
     public HeroStats        Stats       { get; private set; }
     public EquipmentManager Equipment   { get; private set; }
     public WeaponSystem     Weapons     { get; private set; }
@@ -35,25 +35,21 @@ public class Hero : Entity, IHero
     //========================================
     // State
     //========================================
-    
-    TimePredicate idle;
+        
+    public bool Stunned                 { get => State.Stunned;         set => State.Stunned        = value; }
+    public bool Disabled                { get => State.Disabled;        set => State.Disabled       = value; }
+    public bool Invulnerable            { get => State.Invulnerable;    set => State.Invulnerable   = value; }
 
-    public bool CanMove                 => Effects.Get<IDisableMove>  (effect => !effect.DisableMove  , defaultValue: true); 
-    public bool CanAttack               => Effects.Get<IDisableAttack>(effect => !effect.DisableAttack, defaultValue: true); 
-    public bool CanRotate               => Effects.Get<IDisableRotate>(effect => !effect.DisableRotate, defaultValue: true); 
+    public bool CanMove                 => State.CanMove;
+    public bool CanAttack               => State.CanAttack;
+    public bool CanRotate               => State.CanRotate; 
 
-    public bool Invulnerable            => false;
+    public Vector2 MovementDirection    => State.MovementDirection;
+    public Vector2 Velocity             => State.Velocity;
+    public Vector2 Momentum             => State.Momentum;
 
-    public bool IsDisabled;
-    public bool IsStunned;
-    public bool IsInvulnerable;
-
-    public Vector2 MovementDirection    => Services.Get<InputRouter>().MovementDirection;
-    public Vector2 Velocity             => Movement.Velocity;
-    public Vector2 Momentum             => Movement.Momentum;
-
-    public bool IsMoving                => Velocity != Vector2.zero;
-    public TimePredicate IsIdle         => idle ??= new (() => !IsMoving);
+    public bool IsMoving                => State.IsMoving;
+    public TimePredicate IsIdle         => State.IsIdle;
 
 
     public void Initialize(HeroDefinition definition, GameObject instance)
@@ -67,6 +63,8 @@ public class Hero : Entity, IHero
         Weapons     = new(this);
         Movement    = new(this);
         Effects     = new(this);
+
+        State       = new(this);
 
         Health      = MaxHealth;
         Mana        = MaxMana;
