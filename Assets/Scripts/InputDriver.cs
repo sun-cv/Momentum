@@ -95,8 +95,8 @@ public class InputRouter : RegisteredService, IServiceTick, IDisposable
     HashSet<InputButton> activeButtons              = new();
     Queue<PendingInputEvent> pendingInputs          = new();
 
-    Vector2 mousePositionVector;
-    Vector2 movementDirectionVector;
+    RemoteVector2 mousePositionVector               = new();
+    RemoteVector2 movementDirectionVector           = new();
 
     EventBinding<InteractPress>         interactPress;
     EventBinding<InteractRelease>       interactRelease;
@@ -199,14 +199,14 @@ public class InputRouter : RegisteredService, IServiceTick, IDisposable
         }
     }
 
-    void UpdateMousePosition(MousePosition evt)     => mousePositionVector      = evt.vector;
-    void UpdateMovementIntent(MovementVector evt)   => movementDirectionVector  = evt.vector;
+    void UpdateMousePosition(MousePosition evt)             => mousePositionVector.Value      = evt.vector;
+    void UpdateMovementIntent(MovementVector evt)           => movementDirectionVector.Value  = evt.vector;
 
-    EventBinding<T> BindPress<T>()   where T : IInputEvent => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = true  }); });
-    EventBinding<T> BindRelease<T>() where T : IInputEvent => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = false }); });
+    EventBinding<T> BindPress<T>()   where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = true  }); });
+    EventBinding<T> BindRelease<T>() where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = false }); });
 
-    public Vector2 MousePosition     => mousePositionVector;
-    public Vector2 MovementDirection => movementDirectionVector;
+    public RemoteVector2 RemoteMousePosition                => mousePositionVector;
+    public RemoteVector2 RemoteMovementDirection            => movementDirectionVector;
 
     public Dictionary<InputIntent, InputButton> ButtonMap   => buttonMap;
     public HashSet<InputButton> ActiveButtons               => activeButtons;

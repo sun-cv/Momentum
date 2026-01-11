@@ -51,12 +51,12 @@ public class EquipmentSlot
 
 public class EquipmentManager
 {
-    readonly Entity owner;
+    readonly Actor owner;
     readonly Dictionary<EquipmentSlotType, EquipmentSlot> slots = new();
     
-    public EquipmentManager(Entity entity)
+    public EquipmentManager(Actor actor)
     {
-        owner = entity;
+        owner = actor;
 
         slots[EquipmentSlotType.Head    ] = new() { SlotType = EquipmentSlotType.Head       };
         slots[EquipmentSlotType.Cloak   ] = new() { SlotType = EquipmentSlotType.Cloak      };
@@ -131,7 +131,7 @@ public class EquipmentManager
 
 public readonly struct EquipmentPayload
 {
-    public readonly Entity Owner             { get; init; }
+    public readonly Actor Owner              { get; init; }
     public readonly Equipment Equipment      { get; init; }
     public readonly EquipmentSlotType Slot   { get; init; }
 }

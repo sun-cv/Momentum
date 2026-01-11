@@ -39,6 +39,8 @@ public class GameEngine
     {
         Registry.Initialize();
         Services.Initialize();
+        Services.Bind();
+
         loop    .Initialize(clock);
     }
 
@@ -278,6 +280,17 @@ public static class Services
         {
             if (service is IInitialize instance)
                 instance.Initialize();
+        }
+    }
+
+    public static void Bind()
+    {
+        var services = Registry.Services.RegisteredServices.Values;
+
+        foreach (var service in services)
+        {
+            if (service is IBind instance)
+                instance.Bind();
         }
     }
 

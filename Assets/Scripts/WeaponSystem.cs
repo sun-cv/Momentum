@@ -5,10 +5,6 @@ using UnityEngine;
 
 
 
-    //
-    // FIX CASTING, ENTITY INTERFACE
-    // 
-
 
 // ============================================================================
 // PHASE HANDLERS
@@ -158,12 +154,8 @@ public class WhileHeldActivationStrategy : IActivationStrategy
 
     public bool CheckReleaseTriggersInFire(WeaponInstance weapon, WeaponSystem controller)
     {
-
-        Debug.Log($"Check release {weapon.Action.Name} triggers active:{weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger))}");
-
         if (weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger)))
         {
-            Debug.Log("FireRelease to fireend");
             controller.TransitionTo(WeaponPhase.FireEnd);
             return true;
         }
@@ -271,13 +263,10 @@ public class WeaponActivationValidator
         return WeaponValidation.Pass();
     }
 
-    //
-    // FIX CASTING, ENTITY INTERFACE
-    // 
 
     WeaponValidation CheckContext(WeaponAction weapon)
     {
-        if (!weapon.CanCancelDisables &&  controller.Owner is Hero entity && !entity.CanAttack)
+        if (!weapon.CanCancelDisables &&  controller.Owner is IAttacker actor && !actor.CanAttack)
             return WeaponValidation.Fail($"Context disallows attack (CanCancelDisables={weapon.CanCancelDisables})");
 
         return WeaponValidation.Pass();
@@ -320,7 +309,7 @@ public class WeaponActivationValidator
 
 public class WeaponSystem : IServiceTick
 {
-    Entity                                                  owner;
+    Actor                                                   owner;
     WeaponLoadout                                           loadout;
     WeaponInstance                                          instance;
 
@@ -335,7 +324,7 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
-    public WeaponSystem(Entity entity)
+    public WeaponSystem(Actor actor)
     {
         GameTick.Register(this);
 
@@ -343,7 +332,7 @@ public class WeaponSystem : IServiceTick
         cooldown    = new();
         validator   = new(this);
         
-        owner = entity;
+        owner = actor;
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
@@ -453,13 +442,17 @@ public class WeaponSystem : IServiceTick
         };
     }
 
+    // REWORK REQUIRED ONEVENT HITBOX CREATION
+
     public void TransitionTo(WeaponPhase newPhase)
     {
+
         instance.State.Phase = newPhase;
 
-        Debug.Log(instance.State.Phase);
-
         OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
+
+        if (instance.State.Phase == WeaponPhase.Fire && instance.Action.Name == "SwordStrike")
+            OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = instance.Action.Hitboxes.First(), Weapon = instance.Action}));
 
         if (phaseHandlers.TryGetValue(newPhase, out var handler))
             handler.Enter(instance, this);
@@ -622,6 +615,8 @@ public class WeaponSystem : IServiceTick
     {
         StoreAllCommandIDs(active, instance.Action.Trigger);
     }
+
+
 
     void EnableWeapon()
     {
@@ -851,7 +846,7 @@ public class WeaponSystem : IServiceTick
         {
             case Publish.Equipped:
                 foreach (var action in weapon.Definition.Actions)
-                    loadout.AddAction(action.Value, weapon);
+                    loadout.AddAction(action.Value, owner);
                 break;
                 
             case Publish.Unequipped:
@@ -879,7 +874,7 @@ public class WeaponSystem : IServiceTick
 
     void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
 
-    public Entity Owner                                                 => owner;
+    public Actor Owner                                                  => owner;
     public WeaponInstance CurrentWeapon                                 => instance;
     public WeaponCooldown Cooldown                                      => cooldown;
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks => locks;
@@ -905,7 +900,7 @@ public class WeaponSystem : IServiceTick
 
 public readonly struct WeaponStatePayload
 {
-    public readonly Entity Owner            { get; init; }
+    public readonly Actor Owner             { get; init; }
     public readonly WeaponInstance Instance { get; init; }
 }
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 
 
 
@@ -53,12 +52,12 @@ public class EffectInstance : Instance
 
 public class EffectRegister
 {
-    readonly Entity owner;
+    readonly Actor owner;
     readonly List<EffectInstance> effects = new();
 
-    public EffectRegister(Entity entity)
+    public EffectRegister(Actor actor)
     {
-        owner = entity;
+        owner = actor;
         EventBus<EffectRequest>.Subscribe(HandleEffectRequest);
     } 
 
@@ -75,9 +74,9 @@ public class EffectRegister
         }
     }
 
-    public void RegisterEffect(Instance entity, Effect effect)
+    public void RegisterEffect(Instance actor, Effect effect)
     {
-        var instance = new EffectInstance(entity, effect);
+        var instance = new EffectInstance(actor, effect);
 
         instance.OnApply   += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Activated,   new() { Owner = owner, Instance = instance}));
         instance.OnClear   += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Deactivated, new() { Owner = owner, Instance = instance}));
@@ -157,21 +156,21 @@ public enum EffectAction
 
 public readonly struct EffectRequestPayload
 {
-    public Entity Owner                     { get; init; }
+    public Actor Owner                      { get; init; }
     public Effect Effect                    { get; init; }
     public Instance Instance                { get; init; }
 }
 
 public readonly struct EffectResponsePayload
 {
-    public Entity Owner                     { get; init; }
+    public Actor Owner                      { get; init; }
     public Instance Instance                { get; init; }
     public readonly List<Effect> Effects    { get; init; }
 }
 
 public readonly struct EffectStatePayload
 {
-    public Entity Owner                     { get; init; }
+    public Actor Owner                      { get; init; }
     public EffectInstance Instance          { get; init; }
 }
 
@@ -264,41 +263,3 @@ public class EffectCache : IDisposable
     public void Dispose() => EventBus<EffectPublish>.Unsubscribe(binding);
 }
 
-
-    // public bool TryGet<T>(out T effect, Func<EffectInstance,bool> predicate = null) where T : class
-    // {
-    //     effect = FirstEffectOrDefault<T>(effects, predicate);
-    //     return effect != null;
-    // }
-
-
-    // public T GetEffectType<T>() where T : class => FirstEffectOrDefault<T>(effects);
-    // public bool TryGetEffectType<T>(out T effect) where T : class
-    // {
-    //     effect = GetEffectType<T>();
-    //     return effect != null;
-    // }
-
-    // public T GetEntityEffectType<T>(Entity entity) where T : class => FirstEffectOrDefault<T>(effects, e => e.Owner == entity);
-    // public bool TryGetEntityEffectType<T>(Entity entity, out T effect) where T : class
-    // {
-    //     effect = GetEntityEffectType<T>(entity);
-    //     return effect != null;
-    // }
-
-    // public T GetEffectClass<T>(string className) where T : class => FirstEffectOrDefault<T>(effects, e => e.Effect.Class == className);
-    // public bool TryGetEffectClass<T>(string className, out T effect) where T : class
-    // {
-    //     effect = GetEffectClass<T>(className);
-    //     return effect != null;
-    // }
-
-    // public T GetEntityEffectClass<T>(Entity entity, string className) where T : class => FirstEffectOrDefault<T>(effects, e => e.Owner == entity && e.Effect.Class == className);
-    // public bool TryGetEntityEffectClass<T>(Entity entity, string className, out T effect) where T : class
-    // {
-    //     effect = GetEntityEffectClass<T>(entity, className);
-    //     return effect != null;
-    // }
-
-    // public EffectInstance GetEffect(Effect effect)  => effects.Where(instance => instance.Effect == effect).FirstOrDefault();
-    // public List<EffectInstance> GetEntityEffects(Entity entity) => effects.Where(instance => instance.Owner == entity).ToList();

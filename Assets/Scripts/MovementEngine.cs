@@ -93,15 +93,16 @@ public class MovementEngine : IServiceTick
 
     readonly bool normalizeVelocity = false;
 
-    EffectCache cache;
+    EffectCache     cache;
 
-    Entity      owner;
-    Rigidbody2D body;
+    Actor           owner;
+    IMovableActor   actor;
+    Rigidbody2D     body;
 
-    WeaponInstance      instance;
-    WeaponState         state;
-    WeaponAction        weapon;
-    WeaponPhase         phase;
+    WeaponInstance  instance;
+    WeaponState     state;
+    WeaponAction    weapon;
+    WeaponPhase     phase;
     
     WeaponMovementState weaponMovementState;
 
@@ -120,8 +121,14 @@ public class MovementEngine : IServiceTick
 
     Vector2 movementStartPosition;
 
-    public MovementEngine(Entity entity)
+    public MovementEngine(Actor actor)
     {
+        if (actor.Bridge is not ActorBridge bridge)
+        {
+            Log.Error(LogSystem.Movement, LogCategory.Activation, () => $"Movement Engine activation requires Actor Bridge (actor {actor.RuntimeID} failed)");
+            return;
+        }
+
         GameTick.Register(this);
 
         cache = new((effectInstance) => effectInstance.Effect is IType instance && (instance.Type == EffectType.Speed || instance.Type == EffectType.Grip));
@@ -131,20 +138,12 @@ public class MovementEngine : IServiceTick
         cache.OnClear   += ClearModifier;
         
         weaponMovementState = WeaponMovementState.None;
+
         EventBus<WeaponPublish>.Subscribe(HandleWeaponPublish);
 
-
-        owner           = entity;
-
-
-        //
-        // FIX CASTING, ENTITY INTERFACE
-        // 
-
-        if (entity is Hero instance)
-        {
-            body            = instance.Character.body;
-        }
+        this.owner          = actor;
+        this.body           = bridge.Body;
+        this.actor          = actor as IMovableActor;
 
         body.freezeRotation = true;
         body.gravityScale   = 0;
@@ -161,6 +160,8 @@ public class MovementEngine : IServiceTick
 
         ApplyFriction();
 
+
+
         if (CanMove())
             ApplyVelocity();
 
@@ -169,13 +170,9 @@ public class MovementEngine : IServiceTick
     }
 
 
-    //
-    // FIX CASTING, ENTITY INTERFACE
-    // 
-
     bool CanMove()
     {
-        return owner is Hero instance && instance.CanMove;
+        return owner is IMovable actor && actor.CanMove;
     }
 
     // ============================================================================
@@ -210,21 +207,13 @@ public class MovementEngine : IServiceTick
 
         Vector2 effectiveDirection = ResolveDirection();
 
-        float effectiveSpeed    = weaponMovementState.VelocityOverride != -1 ?  weaponMovementState.VelocityOverride       : speed;
-        float effectiveModifier = weaponMovementState.ModifierOverride != -1 ?  weaponMovementState.ModifierOverride    : modifier;
+        float effectiveSpeed    = weaponMovementState.VelocityOverride != -1 ?  weaponMovementState.VelocityOverride : speed;
+        float effectiveModifier = weaponMovementState.ModifierOverride != -1 ?  weaponMovementState.ModifierOverride : modifier;
         
         Vector2 targetVelocity  = Mathf.Clamp(effectiveSpeed * effectiveModifier, 0, maxSpeed) * effectiveDirection;
         
-        velocity = weaponMovementState.OverrideMovement ? targetVelocity : Vector2.MoveTowards(velocity, targetVelocity, acceleration * Clock.TickDelta);
+        velocity = weaponMovementState.OverrideMovement ? targetVelocity : Vector2.MoveTowards(velocity, targetVelocity, acceleration * Clock.DeltaTime);
         momentum = velocity;
-
-        // if (HasActiveWeapon())
-        // {
-        //     Log.Debug(LogSystem.Movement, LogCategory.State, 
-        //         () => $"Phase: {phase}, Frame: {state.PhaseFrames.CurrentFrame}, " +
-        //               $"Override: {weaponMovementState.OverrideMovement}, " +
-        //               $"Velocity: {velocity.magnitude:F3}");
-        // }
     }
     
     Vector2 ResolveDirection()
@@ -356,19 +345,13 @@ public class MovementEngine : IServiceTick
 
     bool HasActiveWeapon() => weapon != null;
 
-    //
-    // FIX CASTING, ENTITY INTERFACE
-    // 
-
     void SetDirection()
     {
-        if (owner is not Hero entity)
-            return;
 
-        if (entity.MovementDirection == Vector2.zero && direction != Vector2.zero)
+        if (actor.MovementDirection == Vector2.zero && direction != Vector2.zero)
             directionTrail = direction;
 
-        Vector2 inputDir = entity.MovementDirection;
+        Vector2 inputDir = actor.MovementDirection;
 
         if (normalizeVelocity && inputDir.sqrMagnitude > 1f)
             inputDir = inputDir.normalized;
@@ -377,16 +360,9 @@ public class MovementEngine : IServiceTick
     }
 
 
-    //
-    // FIX CASTING, ENTITY INTERFACE
-    // 
-
     void SetSpeed()
     {
-        if (owner is not Hero entity)
-            return;
-
-        speed = entity.Speed;
+        speed = actor.Speed;
     }
 
     void DebugLog()

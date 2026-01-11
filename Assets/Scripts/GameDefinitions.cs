@@ -5,7 +5,8 @@ using UnityEngine;
 //  Interfaces & Base Abstracts
 //
 
-public interface IInitialize { public void Initialize(); }
+public interface IInitialize    { public void Initialize(); }
+public interface IBind          { public void Bind(); } 
 
 public interface IService                { };
 public interface IServiceTick : IService { public void Tick(); UpdatePriority Priority { get; } };
@@ -44,13 +45,14 @@ public class Definition
 //  Runtime
 //
 
-public class Runtime                        {public Guid RuntimeID                  { get; set; } = Guid.NewGuid();}
+public class Runtime                        { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
 public class Instance           : Runtime   {}
-public class Entity             : Runtime   { public GameObject Instance            { get; set; }}
-public class Enemy              : Entity    {}
-public class Item               : Entity    {}
+public class Entity             : Runtime   {}
+public class Actor              : Entity    { public Bridge Bridge                  { get; set; }}
+public class Enemy              : Actor     { }
+public class Item               : Entity    { }
 
-public abstract class Equipment : Item      { public EquipmentSlotType SlotType     { get; init; }}
+public abstract class Equipment : Entity    { public EquipmentSlotType SlotType     { get; init; }}
 public class Weapon             : Equipment { public WeaponDefinition Definition    { get; init; }}
 public class Armor              : Equipment { public ArmorDefinition Definition     { get; init; }}
 
@@ -76,39 +78,64 @@ public class EventHandler {}
 
 
 //
-//  Entity
+//  Actor
 //
 
 
 
 public interface IDamageable
 {
-    bool Invulnerable           { get; }
-    float Health                { get; set; }
-    float MaxHealth             { get; }
+    bool Invulnerable                   { get; }
+    float Health                        { get; set; }
+    float MaxHealth                     { get; }
 }
 
 public interface ICaster
 {
-    float Mana                  { get; set; }
-    float MaxMana               { get; }
+    float Mana                          { get; set; }
+    float MaxMana                       { get; }
 }
 
 public interface IAttacker
 {
-    bool CanAttack              { get; }
-    float Attack                { get; }
-    float AttackMultiplier      { get; }
+    bool CanAttack                      { get; }
+    float Attack                        { get; }
+    float AttackMultiplier              { get; }
 }
 
 public interface IMovable
 {
-    bool CanMove                { get; }
-    float Speed                 { get; }
-    float SpeedMultiplier       { get; }
+    bool CanMove                        { get; }
+    float Speed                         { get; }
+    float SpeedMultiplier               { get; }
 }
 
-public interface IHero : IMovable, IAttacker, IDamageable {}
+public interface IHasVelocity
+{
+    Vector2 Velocity                    { get; }
+    Vector2 Momentum                    { get; }
+}
+
+public interface IHasDirection
+{
+    Vector2 MovementDirection           { get; }
+    CardinalDirection FacingDirection   { get; }
+}
+
+public interface IHasIntent
+{
+    CardinalDirection IntentDirection   { get; }
+}
+
+public interface IOrientable
+{
+    CardinalDirection FacingDirection   { get; }
+    bool CanRotate                      { get; }
+}
+
+public interface IMovableActor : IMovable, IHasVelocity, IHasDirection, IOrientable {}
+
+public interface IHero : IMovableActor, IHasIntent, IAttacker, IDamageable {}
 
 
 

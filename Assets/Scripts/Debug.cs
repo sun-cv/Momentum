@@ -28,6 +28,7 @@ public enum LogSystem
     Effects,
     Movement,
     Equipment,
+    Hitboxes,
     Physics,
     Camera,
 }

@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-// using UnityEngine.AddressableAssets;
-// using UnityEngine.ResourceManagement.AsyncOperations;
+
 
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -54,7 +53,7 @@ public static class Registry
 
             var prefabNames = new HashSet<string>();
 
-            var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => {cache[prefab.name] = prefab; prefabNames.Add(prefab.name);});
+            var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => { cache[prefab.name] = prefab; prefabNames.Add(prefab.name); });
             
             handle.WaitForCompletion();
             

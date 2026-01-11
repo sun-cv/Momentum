@@ -5,9 +5,9 @@
 
 public class State
 {
-    public Entity Owner { get; }
+    public Actor Owner { get; }
 
-    public State(Entity owner)
+    public State(Actor owner)
     {
         Owner = owner;
     }

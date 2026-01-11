@@ -8,9 +8,18 @@
 
 > ## **To be fixed**
 >
->> - Fix Entity Casting to Hero by implementing interface structure
->>   - Weapon System
->>   - Movement Engine
+>> 
+
+> ## **Rework Required**
+>
+
+>> Hitbox: process predicate, process hit, process projectiles
+>> Hitbox: Weapon timing handling on active frames?
+>> Hitbox: Weaopon system Hitbox creation request in transition to
+
+>> Dash is weapon? -> Rephrase. Dash should be weapon, dash is equippable weapon?
+
+>> replace Debug.LogError
 
 # **Concepts**
 

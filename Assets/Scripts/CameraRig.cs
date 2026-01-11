@@ -39,7 +39,7 @@ public struct DefaultTargetProvider : ICameraTarget
 
 
 
-public class CameraRig : RegisteredService, IServiceTick
+public class CameraRig : RegisteredService, IServiceTick, IBind
 {
     GameObject  cameraRig;
     CameraContext context;
@@ -140,6 +140,8 @@ public class CameraRig : RegisteredService, IServiceTick
         }
     }
 
+    public Camera Camera => context.cameraRoot;
+
     public UpdatePriority Priority => ServiceUpdatePriority.CameraRig;
 
     readonly Dictionary<CameraBehavior, ICameraBehavior> cameraBehaviors  = new()
@@ -149,6 +151,12 @@ public class CameraRig : RegisteredService, IServiceTick
         { CameraBehavior.PlayerDeadzone,    new DeadzoneCameraBehavior()    }
     };
 
+
+    public void Bind()
+    {
+        foreach(var (type, behavior) in cameraBehaviors) 
+            behavior.Bind();
+    }
 
 }
 
@@ -164,10 +172,10 @@ public interface ICameraBehavior
 {
     public void Initialize(CameraContext context);
     public void Tick();
-    public void Late();
     public bool IsValid(ICameraTarget target);
     public void Enable(ICameraTarget target);
     public void Disable();
+    public void Bind();
     public void Cleanup();
 }
 
@@ -230,8 +238,6 @@ public class CameraOffsetBehavior : ICameraBehavior
         }
     }
 
-    public void Late() {}
-
 
     void StoreLastMoveDirection()
     {
@@ -257,6 +263,8 @@ public class CameraOffsetBehavior : ICameraBehavior
         offsetTween = DOTween.To(() => context.composer.TargetOffset, x => context.composer.TargetOffset = x, offset, maxDuration).SetEase(easing);
     }
 
+    public void Bind() {}
+
     public void Cleanup()
     {
         offsetTween?.Kill();
@@ -267,6 +275,8 @@ public class CameraMouseOffsetBehavior : ICameraBehavior
 {
     CameraContext                   context;
     IAdvancedCameraTarget           target;
+
+    RemoteVector2                   mousePosition;
 
     readonly float followSpeedX     = 1f;
     readonly float followSpeedY     = 1f;
@@ -308,7 +318,7 @@ public class CameraMouseOffsetBehavior : ICameraBehavior
 
     public void Tick()
     {
-        Vector2 mouseWorldPos   = context.cameraRoot.ScreenToWorldPoint(Services.Get<InputRouter>().MousePosition);
+        Vector2 mouseWorldPos   = context.cameraRoot.ScreenToWorldPoint((Vector2)mousePosition);
         Vector2 characterPos    = target.GetPosition();
         Vector2 worldDelta      = mouseWorldPos - characterPos;
         Vector2 normalizedDelta = worldDelta / maxDistance;
@@ -324,8 +334,6 @@ public class CameraMouseOffsetBehavior : ICameraBehavior
         }
     }
 
-    public void Late() {}
-
     void ApplyOffset(Vector3 offset)
     {
         offsetTween?.Kill();
@@ -336,6 +344,11 @@ public class CameraMouseOffsetBehavior : ICameraBehavior
         );
 
         offsetTween = DOTween.To(() => context.composer.TargetOffset, x => context.composer.TargetOffset = x, offset, maxDuration).SetEase(easing);
+    }
+
+    public void Bind()
+    {
+        mousePosition = Services.Get<InputRouter>().RemoteMousePosition;
     }
 
     public void Cleanup()
@@ -438,8 +451,6 @@ public class DeadzoneCameraBehavior : ICameraBehavior
         }
     }
 
-    public void Late() {}
-
     bool ShouldOpenDeadzone()
     {
         return target.Idle.Timer.CurrentTime > idleTimeThreshold && timer.CurrentTime > deadzoneTimeThreshold;
@@ -491,6 +502,8 @@ public class DeadzoneCameraBehavior : ICameraBehavior
 
         sizeTween = DOTween.To(() => context.composer.Composition.DeadZone.Size, x => context.composer.Composition.DeadZone.Size = x, toSize, duration).SetEase(ease);
     }
+
+    public void Bind() {}
 
     public void Cleanup()
     {

@@ -166,12 +166,18 @@ public class WeaponAction       : Definition
     public WeaponTriggerCondition Condition     { get; init; } = new();
     /// <summary>List of effects applied by weapon</summary>
     public List<Effect> Effects                 { get; init; } = new();
+
+    /// ============================================================================
+    /// Hitboxes
+    /// ============================================================================
+    
+    public List<HitboxDefinition> Hitboxes             { get; init; } = new();
 }
 
 public class WeaponTriggerCondition
 {
-    public Func<Entity, bool> Activate         { get; init; }
-    public Func<Entity, bool> Cancel           { get; init; }
+    public Func<Actor, bool> Activate         { get; init; }
+    public Func<Actor, bool> Cancel           { get; init; }
 }
 
 public class WeaponDefinition : Definition
@@ -267,9 +273,9 @@ public class WeaponState
 
 public class WeaponLoadout
 {
-    private Dictionary<string, (WeaponAction action, Entity source)> actions = new();
+    private Dictionary<string, (WeaponAction action, Actor source)> actions = new();
     
-    public void AddAction(WeaponAction action, Entity source)
+    public void AddAction(WeaponAction action, Actor source)
     {
         actions[action.Name] = (action, source);
     }
@@ -284,7 +290,7 @@ public class WeaponLoadout
         return actions.TryGetValue(name, out var tuple) ? tuple.action : null;
     }
     
-    public Entity GetSource(string name)
+    public Actor GetSource(string name)
     {
         return actions.TryGetValue(name, out var tuple) ? tuple.source : null;
     }

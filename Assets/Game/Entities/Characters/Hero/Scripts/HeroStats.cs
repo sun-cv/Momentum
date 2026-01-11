@@ -23,7 +23,6 @@ public class HeroStats : Stats
     float health; 
     float mana;
 
-
     public float MaxHealth          => this[nameof(MaxHealth)]; 
     public float Health
     {

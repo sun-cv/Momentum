@@ -66,6 +66,20 @@ public class SwordStrike : DamagingWeapon
                 ActionLocks         = new(){ Capability.Attack1 }
             }
         };
+
+        Hitboxes = new()
+        {
+            new()
+            {
+                Prefab              = "HB_SwordSwing",
+                Offset              = new(){ x = 0, y = 0 },
+                Quaternion          = new(){ z = 0 },
+                FrameStart          = 1,
+                FrameEnd            = 60,
+                Behavior            = HitboxBehavior.Attached,
+                AllowMultiHit       = false,
+            }
+        };
     }
 }
 

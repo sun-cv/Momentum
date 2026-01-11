@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEngine;
 
 
@@ -20,13 +19,16 @@ public class DevEnv : RegisteredService, IServiceTick
         .System(LogSystem.Weapon, LogLevel.Trace)
         .System(LogSystem.Movement, LogLevel.Debug)
         .System(LogSystem.Physics, LogLevel.Debug)
-        .System(LogSystem.Equipment, LogLevel.Trace));
+        .System(LogSystem.Equipment, LogLevel.Trace)
+        .System(LogSystem.Hitboxes, LogLevel.Trace)
+        .System(LogSystem.Input, LogLevel.Debug));
 
     }
 
 
     public void Tick()
     {
+
 
         if (!triggered)
         {

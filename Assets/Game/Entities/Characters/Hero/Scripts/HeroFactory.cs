@@ -13,8 +13,9 @@ public static class HeroFactory
         var instance    = UnityEngine.Object.Instantiate(prefab);
 
         var hero        = new Hero();
+        hero.Bridge     = new ActorBridge(hero, instance);
 
-        hero.Initialize(definition, instance);
+        hero.Initialize(definition);
         
         return hero;
     }

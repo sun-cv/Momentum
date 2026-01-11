@@ -15,6 +15,12 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 8c6aab97e23e7ef4d9188f091303462d
   m_SerializeEntries:
+  - m_GUID: 585f2757aeafedf44b6a36dc40cb867f
+    m_Address: Weapons/Sword/HB_SwordSwing
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Core
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 63bf0ff2ae1874740bf7b1b1a8a3084b
     m_Address: Hero/Controller
     m_ReadOnly: 0
