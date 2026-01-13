@@ -19,6 +19,9 @@ public class HeroState : State
     bool disabled       = false;
     bool invulnerable   = false;
 
+    public bool Parrying                        => effects.Has<ShieldParryWindow>((effect) => effect is not null);
+    public bool Blocking                        => effects.Has<ShieldBlockWindow>((effect) => effect is not null);
+
     public bool Stunned                         { get => effects.Has<IStunned>(effect => effect.Stunned,        defaultValue: stunned); set => stunned = value; }
     public bool Disabled                        { get => disabled;          set => disabled         = value; }
     public bool Invulnerable                    { get => invulnerable;      set => invulnerable     = value; }
@@ -28,9 +31,7 @@ public class HeroState : State
     public bool CanRotate                       => effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !Disabled); 
 
 
-        // 
-        // REWORK REQUIRED -> Helper for Cardinal facing direction based on Movement Direction.
-        // 
+
 
     public CardinalDirection FacingDirection    => Direction.FromMovement(MovementDirection);
     public CardinalDirection IntentDirection    => Direction.FromIntentZone(worldPosition.MouseDirectionFrom(hero.Bridge.View.transform.position));

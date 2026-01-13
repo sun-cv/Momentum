@@ -95,7 +95,7 @@ public readonly struct LockStatePayload
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get; init; }
 }
 
-public readonly struct LockRequest  : IEventRequest
+public readonly struct LockRequest  : ISystemEvent
 { 
     public Guid Id                      { get; }
     public LockTrigger Trigger          { get; }
@@ -108,7 +108,7 @@ public readonly struct LockRequest  : IEventRequest
         Payload = payload;
     }
 }
-public readonly struct LockResponse : IEventResponse
+public readonly struct LockResponse : ISystemEvent
 { 
     public Guid Id                      { get; }
     public Response Action              { get; }
@@ -120,7 +120,7 @@ public readonly struct LockResponse : IEventResponse
     }
 }
 
-public readonly struct LockPublish  : IEventPublish
+public readonly struct LockPublish  : ISystemEvent
 {
     public Guid Id                      { get; }
     public Publish Action               { get; }

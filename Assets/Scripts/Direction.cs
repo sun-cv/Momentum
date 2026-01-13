@@ -54,11 +54,10 @@ public static class Direction
 
         return angle switch
         {
-            var direction when angle > 90f  - verticalField && angle < 90f  + verticalField   => CardinalDirection.North,
-            var direction when angle > 270f - verticalField && angle < 270f + verticalField   => CardinalDirection.South,
-            var direction when angle < horizontalField      || angle > 360f - horizontalField => CardinalDirection.East,
-            var direction when angle > 180f - verticalField && angle < 180f + verticalField   => CardinalDirection.West,
-            _ => CardinalDirection.South,
+            var direction when angle > 90f  - verticalField   && angle < 90f  + verticalField   => CardinalDirection.North,
+            var direction when angle > 270f - verticalField   && angle < 270f + verticalField   => CardinalDirection.South,
+            var direction when angle > 180f - horizontalField && angle < 180f + horizontalField => CardinalDirection.West,
+            var direction => CardinalDirection.East,
         };
     }
 
@@ -73,12 +72,17 @@ public static class Direction
         
         return angle switch
         {
-            var direction when angle > 90f  - verticalField && angle < 90f  + verticalField   => CardinalDirection.North,
-            var direction when angle > 270f - verticalField && angle < 270f + verticalField   => CardinalDirection.South,
-            var direction when angle < horizontalField      || angle > 360f - horizontalField => CardinalDirection.East,
-            var direction when angle > 180f - verticalField && angle < 180f + verticalField   => CardinalDirection.West,
-            _ => CardinalDirection.South,
+            var direction when angle > 90f  - verticalField   && angle < 90f  + verticalField   => CardinalDirection.North,
+            var direction when angle > 270f - verticalField   && angle < 270f + verticalField   => CardinalDirection.South,
+            var direction when angle > 180f - horizontalField && angle < 180f + horizontalField => CardinalDirection.West,
+            var direction => CardinalDirection.East,
         };
+    }
+
+    public static Quaternion ToRotation(Vector2 direction)
+    {
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        return Quaternion.Euler(0, 0, angle);
     }
 
 }

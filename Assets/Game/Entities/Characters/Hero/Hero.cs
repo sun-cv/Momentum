@@ -34,7 +34,11 @@ public class Hero : Actor, IHero
     //========================================
     // State
     //========================================
-        
+    
+    public bool Parrying                        => State.Parrying;
+    public bool Blocking                        => State.Blocking;
+
+
     public bool Stunned                         { get => State.Stunned;         set => State.Stunned        = value; }
     public bool Disabled                        { get => State.Disabled;        set => State.Disabled       = value; }
     public bool Invulnerable                    { get => State.Invulnerable;    set => State.Invulnerable   = value; }

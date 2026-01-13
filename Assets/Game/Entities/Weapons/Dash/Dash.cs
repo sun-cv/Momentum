@@ -62,6 +62,16 @@ public class BaseDash : MovementWeapon
                 ActionLocks         = new(){ Capability.Dash }
             },
 
+            new DashDisable()
+            {
+                Name                = "DashDisableAttack",
+                Active              = true,
+                Cancelable          = false,
+                DisableAttack       = true,
+                DurationFrames      = 15,
+                RequestActionLock   = true,
+            },
+
             new DashMobility()
             {
                 Trigger             = WeaponPhase.FireEnd,

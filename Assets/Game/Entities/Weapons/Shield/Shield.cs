@@ -42,16 +42,19 @@ public class ShieldParry : DamagingWeapon
         Availability                = WeaponAvailability.Default;
         RequiredHeldTriggers        = new() { Capability.Attack2 };
         ChargeTimeFrames            = 1;
-        FireDurationFrames          = 40;
+        FireDurationFrames          = 10;
         AddControlOnFireEnd         = new() { "ShieldBlock" };
+        CanInterrupt                = true;
+        CanCancelDisables           = true;
+        Cooldown                    = .2f;
         Effects = new()
         {
-            new ShieldParryActivation()
+            new ShieldParryWindow()
             {   
-                Name                = "ShieldParryActivation",
+                Name                = "ShieldParryWindow",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 40,
+                DurationFrames      = 60,
             },
 
             new ShieldMobility()
@@ -61,11 +64,25 @@ public class ShieldParry : DamagingWeapon
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 40,
+                DurationFrames      = 5,
                 Modifier            = .50f,
             },
         }; 
- 
+        Hitboxes = new()
+        {
+            new()
+            {
+                Prefab              = "HB_ShieldParry",
+                Offset              = new(){ x = 0, y = 0 },
+                FrameStart          = 1,
+                FrameEnd            = 30,
+                Lifetime            = HitboxLifetime.FrameBased,
+                Behavior            = HitboxBehavior.Attached,
+                Phase               = WeaponPhase.Fire,
+                PersistPastSource   = true,
+                AllowMultiHit       = false,
+            }
+        };
     }
 }
 
@@ -90,12 +107,14 @@ public class ShieldBlock : DamagingWeapon
 
         Effects = new()
         {
-            new ShieldBlockActivation()
+            new ShieldBlockWindow()
             {
-                Name                = "ShieldBlockActivation",
+                Name                = "ShieldBlockWindow",
                 Duration            = 9999,
                 Active              = true,
                 Cancelable          = true,
+                CancelOnRelease     = true,
+
             },
 
             new ShieldBraceDisable()
@@ -104,7 +123,7 @@ public class ShieldBlock : DamagingWeapon
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = false,
-                Duration            = 1.0f,
+                DurationFrames      = 20,
                 DisableAttack       = true,
                 DisableRotate       = true,
             },
@@ -133,6 +152,19 @@ public class ShieldBlock : DamagingWeapon
                 Modifier            = .50f,
                 ModifierTarget      = .25f,
                 ModifierSpeed       = 2,
+            }
+        };
+        Hitboxes = new()
+        {
+            new()
+            {
+                Prefab              = "HB_ShieldBlock",
+                Offset              = new(){ x = 0, y = 0 },
+                FrameStart          = 1,
+                Behavior            = HitboxBehavior.Attached,
+                Lifetime            = HitboxLifetime.Permanent,
+                Phase               = WeaponPhase.Charging,
+                AllowMultiHit       = false,
             }
         };
     }

@@ -45,6 +45,10 @@ public class DevEnv : RegisteredService, IServiceTick
             triggered   = true;
         }
 
+
+        Log.Trace(LogSystem.Weapon, LogCategory.Effect, "Weapon Trace", "Parry", () => hero.Parrying);
+        Log.Trace(LogSystem.Weapon, LogCategory.Effect, "Weapon Trace", "block", () => hero.Blocking);
+
     }
 
     public void Loop()

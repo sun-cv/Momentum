@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 
 
 
@@ -306,7 +307,6 @@ public class WeaponActivationValidator
 // ============================================================================
 
 
-
 public class WeaponSystem : IServiceTick
 {
     Actor                                                   owner;
@@ -324,6 +324,8 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
+    EventCache<HitboxRequest, HitboxResponse>               hitboxEventCache;
+
     public WeaponSystem(Actor actor)
     {
         GameTick.Register(this);
@@ -336,6 +338,8 @@ public class WeaponSystem : IServiceTick
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
+
+        hitboxEventCache = new(HandleHitboxResponse);
 
         EventBus<CommandPublish>        .Subscribe(HandleCommandPublish);
         EventBus<EffectPublish>         .Subscribe(HandleEffectNonCancelableLockCount);
@@ -446,15 +450,16 @@ public class WeaponSystem : IServiceTick
 
     public void TransitionTo(WeaponPhase newPhase)
     {
-
         instance.State.Phase = newPhase;
 
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
+        PublishWeaponTransition();
+        RequestHitboxes();
+        EnterHandler();
+    }
 
-        if (instance.State.Phase == WeaponPhase.Fire && instance.Action.Name == "SwordStrike")
-            OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = instance.Action.Hitboxes.First(), Weapon = instance.Action}));
-
-        if (phaseHandlers.TryGetValue(newPhase, out var handler))
+    void EnterHandler()
+    {
+        if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
             handler.Enter(instance, this);
     }
 
@@ -635,6 +640,7 @@ public class WeaponSystem : IServiceTick
         Log.Trace(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.Status.Release", () => $"{instance.Action.Name}");
 
         CancelEffects();
+        DestroyHitboxes();
 
         if (instance.Action.Cooldown > 0)
             cooldown.RegisterWeapon(instance.Action);
@@ -656,7 +662,7 @@ public class WeaponSystem : IServiceTick
         {
             if (ShouldApplyEffect(effect))
             {
-                OnEvent<EffectRequest>(new(Guid.NewGuid(), EffectAction.Create, new() { Effect = effect }));
+                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Create, new() { Effect = effect }));
                 pushed++;
             }
         }
@@ -675,8 +681,27 @@ public class WeaponSystem : IServiceTick
         foreach (var effect in instance.Action.Effects)
         {
             if (effect.Cancelable && effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                OnEvent<EffectRequest>(new(Guid.NewGuid(), EffectAction.Cancel, new() { Instance = instance, Effect = effect }));
+                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
         }
+    }
+    
+    // ============================================================================
+    // HITBOX MANAGEMENT
+    // ============================================================================
+
+    void RequestHitboxes()
+    {
+        foreach (var hitboxDefinition in instance.Action.Hitboxes)
+        {
+            if (instance.State.Phase == hitboxDefinition.Phase)
+                OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition }));
+        }
+    }
+
+    void DestroyHitboxes()
+    {
+        foreach (var (hitboxId, definition) in instance.State.OwnedHitboxes)
+            OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Destroy, new() { Owner = owner, Definition = definition, HitboxId = hitboxId }));
     }
 
     // ============================================================================
@@ -854,9 +879,18 @@ public class WeaponSystem : IServiceTick
                     loadout.RemoveAction(action.Key);
                 break;
         }
-
     }
     
+    void HandleHitboxResponse(HitboxRequest request, HitboxResponse response)
+    {
+        instance.State.OwnedHitboxes.Add(response.Payload.HitboxId, response.Payload.Definition);
+    }
+
+    void PublishWeaponTransition()
+    {
+        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
+    }
+
     // ============================================================================
     // QUERIES & ACCESSORS
     // ============================================================================
@@ -904,7 +938,7 @@ public readonly struct WeaponStatePayload
     public readonly WeaponInstance Instance { get; init; }
 }
 
-public readonly struct WeaponPublish : IEvent
+public readonly struct WeaponPublish : ISystemEvent
 {
     public Guid Id                      { get; }
     public Publish Action               { get; }

@@ -65,10 +65,10 @@ public class EffectRegister
     {
         switch(evt.Action)
         {
-            case EffectAction.Create:
+            case Request.Create:
                     RegisterEffect(evt.Payload.Instance, evt.Payload.Effect);
                 break;
-            case EffectAction.Cancel:
+            case Request.Cancel:
                     CancelEffect(evt.Payload.Effect);
                 break;
         }
@@ -121,6 +121,16 @@ public class EffectRegister
 
     public void CancelEffect(Effect effect) => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
 
+    public bool Is<T>() where T : class
+    {
+        foreach (var instance in effects)
+        {
+            if (instance.Effect is T effect)
+                return true; 
+        }
+        return false;
+    }
+
 
     public bool Can<T>(Func<T, bool> isBlocked, bool defaultValue = true) where T : class
     {
@@ -154,18 +164,11 @@ public enum EffectAction
     Get,
 }
 
-public readonly struct EffectRequestPayload
+public readonly struct EffectPayload
 {
     public Actor Owner                      { get; init; }
     public Effect Effect                    { get; init; }
     public Instance Instance                { get; init; }
-}
-
-public readonly struct EffectResponsePayload
-{
-    public Actor Owner                      { get; init; }
-    public Instance Instance                { get; init; }
-    public readonly List<Effect> Effects    { get; init; }
 }
 
 public readonly struct EffectStatePayload
@@ -174,13 +177,13 @@ public readonly struct EffectStatePayload
     public EffectInstance Instance          { get; init; }
 }
 
-public readonly struct EffectRequest : IEventRequest
+public readonly struct EffectRequest : ISystemEvent
 {
     public Guid Id                          { get; }
-    public EffectAction Action              { get; }
-    public EffectRequestPayload Payload     { get; }
+    public Request Action                   { get; }
+    public EffectPayload Payload            { get; }
 
-    public EffectRequest(Guid id, EffectAction action, EffectRequestPayload payload)
+    public EffectRequest(Guid id, Request action, EffectPayload payload)
     {
         Id      = id;
         Action  = action;
@@ -188,21 +191,8 @@ public readonly struct EffectRequest : IEventRequest
     }
 }
 
-public readonly struct EffectResponse : IEventResponse
-{
-    public Guid Id                          { get; }
-    public Response Action                  { get; }
-    public EffectResponsePayload Payload    { get; }
 
-    public EffectResponse(Guid id, Response response, EffectResponsePayload payload)
-    {
-        Id       = id;
-        Action   = response;
-        Payload  = payload;
-    }
-}
-
-public readonly struct EffectPublish : IEventPublish
+public readonly struct EffectPublish : ISystemEvent
 {
     public Guid Id                          { get; }
     public Publish Action                   { get; }

@@ -71,22 +71,24 @@ public class SwordSwingDisable : Effect, IDurationFrames, IDisableAttack, IDisab
 
 
 
-public class ShieldParryActivation : Effect, IDurationFrames
+public class ShieldParryWindow : Effect, IDurationFrames
 {
     public int DurationFrames                   { get; init; }
 }
 
 
-public class ShieldBlockActivation : Effect, IDuration
+public class ShieldBlockWindow : Effect, IDuration, ICancelableOnRelease
 {
     public float Duration                       { get; init; }
+    public bool CancelOnRelease                 { get; init; }
 }
 
 
-public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDisableAttack, ICancelableOnRelease, IDisableRotate
+public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDurationFrames, IDisableAttack, ICancelableOnRelease, IDisableRotate
 {
     public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
     public float Duration                       { get; init; }
+    public int DurationFrames                   { get; init; }
 
     public bool CancelOnRelease                 { get; init; }
     public bool DisableAttack                   { get; init; }
@@ -124,10 +126,11 @@ public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, ICancela
 }
 
 
-public class DashDisable : Effect, IDurationFrames, IDisableRotate, IDisableMove, IActionLock
+public class DashDisable : Effect, IDurationFrames, IDisableRules, IActionLock
 {
     public int DurationFrames                   { get; init; }
 
+    public bool DisableAttack                   { get; init; }
     public bool DisableRotate                   { get; init; }
     public bool DisableMove                     { get; init; }
     

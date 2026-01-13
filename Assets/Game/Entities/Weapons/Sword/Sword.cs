@@ -38,7 +38,7 @@ public class SwordStrike : DamagingWeapon
         Availability                = WeaponAvailability.Default;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 20;
+        FireDurationFrames          = 30;
         ControlWindow               = 0.3f;
         AddControlOnFire            = new() { "SwordCleave"};
         Effects = new()
@@ -48,7 +48,7 @@ public class SwordStrike : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 9,
+                DurationFrames      = 23,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -59,7 +59,7 @@ public class SwordStrike : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 20,
+                DurationFrames      = 30,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -73,10 +73,10 @@ public class SwordStrike : DamagingWeapon
             {
                 Prefab              = "HB_SwordSwing",
                 Offset              = new(){ x = 0, y = 0 },
-                Quaternion          = new(){ z = 0 },
                 FrameStart          = 1,
-                FrameEnd            = 60,
+                FrameEnd            = 20,
                 Behavior            = HitboxBehavior.Attached,
+                Phase               = WeaponPhase.Fire,
                 AllowMultiHit       = false,
             }
         };
@@ -105,7 +105,7 @@ public class SwordCleave : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 15,
+                DurationFrames      = 23,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -123,6 +123,21 @@ public class SwordCleave : DamagingWeapon
                 ActionLocks         = new(){ Capability.Attack1 }
             }
         };
+
+        Hitboxes = new()
+        {
+            new()
+            {
+                Prefab              = "HB_SwordSwing",
+                Offset              = new(){ x = 0, y = 0 },
+                FrameStart          = 1,
+                FrameEnd            = 20,
+                Behavior            = HitboxBehavior.Attached,
+                Phase               = WeaponPhase.Fire,                
+                AllowMultiHit       = false,
+            }
+        };
+
     }
 }
 
@@ -138,7 +153,7 @@ public class SwordRend : DamagingWeapon
         LockTriggerAction           = true;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 25;
+        FireDurationFrames          = 30;
         ControlWindow               = 0.3f;
         SwapOnFire                  = "null";
         ForceReleaseOnSwap          = true;
@@ -149,7 +164,7 @@ public class SwordRend : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 60,
+                DurationFrames      = 23,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -160,11 +175,24 @@ public class SwordRend : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 60,
+                DurationFrames      = 30,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
+            }
+        };
+        Hitboxes = new()
+        {
+            new()
+            {
+                Prefab              = "HB_SwordSwing",
+                Offset              = new(){ x = 0, y = 0 },
+                FrameStart          = 1,
+                FrameEnd            = 20,
+                Behavior            = HitboxBehavior.Attached,
+                Phase               = WeaponPhase.Fire,                
+                AllowMultiHit       = false,
             }
         };
     }

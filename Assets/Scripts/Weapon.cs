@@ -251,21 +251,25 @@ public class WeaponState
 
     public HashSet<Guid> OwnedCommands          { get; set; } = new();
     public HashSet<string> AvailableControls    { get; set; } = new();
-    
+
     public bool HasFired                        { get; set; }
     public bool ReadyToRelease                  { get; set; }
 
+    public Dictionary<Guid, HitboxDefinition> 
+                                 OwnedHitboxes  { get; set; } = new();
+
+
     public void Reset()
     {
-        PhaseFrames.Reset();
+        PhaseFrames .Reset();
         ActiveFrames.Reset();
-        ControlWindow = null;
 
-        Phase = WeaponPhase.Idle;
-        HasFired = false;
-        ReadyToRelease = false;
+        ControlWindow   = null;
+        Phase           = WeaponPhase.Idle;
+        HasFired        = false;
+        ReadyToRelease  = false;
 
-        OwnedCommands.Clear();
+        OwnedCommands    .Clear();
         AvailableControls.Clear();
     }
 }

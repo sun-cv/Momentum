@@ -6,10 +6,7 @@ using System.Linq;
 
 
 public interface IEvent {};
-
-public interface IEventRequest  : IEvent { public Guid Id { get; }}
-public interface IEventResponse : IEvent { public Guid Id { get; }}
-public interface IEventPublish  : IEvent { public Guid Id { get; }}
+public interface ISystemEvent : IEvent { public Guid Id { get; } }
 
 public interface IEventBinding<T> 
 {
@@ -240,4 +237,48 @@ public class EventBus
         static void Clear()                                     => bindings.Clear();
         static bool DelegateEquals(Action<T> a, Action<T> b)    => a?.GetInvocationList().SequenceEqual(b?.GetInvocationList()) ?? false;
     }
+}
+
+
+
+
+public class EventCache<TRequest, TResponse> where TRequest : ISystemEvent where TResponse : ISystemEvent
+{
+    private readonly Dictionary<Guid, TRequest> pending = new();
+    private readonly Action<TRequest, TResponse> onResponse;
+
+    public EventCache(Action<TRequest, TResponse> onResponse)
+    {
+        this.onResponse = onResponse;
+        EventBus<TResponse>.Subscribe(Receive);
+    }
+
+    public Guid Send(TRequest request)
+    {
+        var id = Guid.NewGuid();
+        pending[id] = request;
+
+        OnEvent(request);
+
+        return id;
+    }
+
+    void Receive(TResponse response)
+    {
+        if (!pending.TryGetValue(response.Id, out var request))
+            return;
+
+        onResponse(request, response);
+        pending.Remove(response.Id);
+    }
+
+
+    public void Clear()
+    {
+        pending.Clear();
+    }
+
+    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
+
+    public int PendingCount => pending.Count;
 }

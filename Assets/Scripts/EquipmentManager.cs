@@ -136,7 +136,7 @@ public readonly struct EquipmentPayload
     public readonly EquipmentSlotType Slot   { get; init; }
 }
 
-public readonly struct EquipmentPublish : IEvent
+public readonly struct EquipmentPublish : ISystemEvent
 {
     public Guid Id                  { get; }
     public Publish Action           { get; }

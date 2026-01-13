@@ -96,12 +96,19 @@ public interface ICaster
     float MaxMana                       { get; }
 }
 
-public interface IAttacker
+public interface IAttacker : IHasIntent
 {
     bool CanAttack                      { get; }
     float Attack                        { get; }
     float AttackMultiplier              { get; }
 }
+
+public interface IHasVelocity
+{
+    Vector2 Velocity                    { get; }
+    Vector2 Momentum                    { get; }
+}
+
 
 public interface IMovable
 {
@@ -110,11 +117,6 @@ public interface IMovable
     float SpeedMultiplier               { get; }
 }
 
-public interface IHasVelocity
-{
-    Vector2 Velocity                    { get; }
-    Vector2 Momentum                    { get; }
-}
 
 public interface IHasDirection
 {
@@ -133,11 +135,12 @@ public interface IOrientable
     bool CanRotate                      { get; }
 }
 
-public interface IMovableActor : IMovable, IHasVelocity, IHasDirection, IOrientable {}
+public interface IMovableActor  : IMovable, IHasVelocity, IHasDirection, IOrientable    {}
 
-public interface IHero : IMovableActor, IHasIntent, IAttacker, IDamageable {}
+public interface IHero          : IMovableActor, IAttacker, ICaster, IDamageable        {}
+public interface IEnemy         : IMovableActor, IAttacker, IDamageable                 {}
 
-
+// public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
 //
 //  Items

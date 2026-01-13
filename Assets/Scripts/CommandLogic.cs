@@ -140,7 +140,7 @@ public readonly struct CommandStatePayload
     public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }
 }
 
-public readonly struct CommandRequest : IEventRequest
+public readonly struct CommandRequest : ISystemEvent
 {
     public Guid Id                          { get; }
     public CommandAction Action             { get; }
@@ -154,7 +154,7 @@ public readonly struct CommandRequest : IEventRequest
     }
 }
 
-public readonly struct CommandResponse : IEventResponse
+public readonly struct CommandResponse : ISystemEvent
 {
     public Guid Id                          { get; }
     public Response Response                { get; }
@@ -166,7 +166,7 @@ public readonly struct CommandResponse : IEventResponse
     }
 }
 
-public readonly struct CommandPublish : IEventPublish
+public readonly struct CommandPublish : ISystemEvent
 {
     public Guid Id                          { get; }
     public Publish Event                    { get; }

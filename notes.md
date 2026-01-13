@@ -34,3 +34,9 @@
 
 > #### buildings
 > 1. Entry to buildings does not have load screen, it fades what would not be visible through the doorway to black and does a Tardis - the inside is bigger than the outside.
+
+
+> ### **EnemieS**
+
+> #### flying
+> 1. flying drone requires shield throw to down for attack

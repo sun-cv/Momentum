@@ -27,6 +27,17 @@ MonoBehaviour:
     m_SerializedLabels:
     - Core
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcd5f2b31c6cd6a4f8e9a9162f538adc
+    m_Address: Shield/HB_ShieldBlock
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e231eaf64433d134bac32ca178bec684
+    m_Address: Shield/HB_ShieldParry
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: d1f7e4b937989e8449ae085fa883fb88, type: 2}
   m_SchemaSet:
