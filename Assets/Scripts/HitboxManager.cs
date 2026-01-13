@@ -322,7 +322,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void PublishHitbox(Guid id, HitboxInstance instance)
     {
-        OnEvent<HitboxResponse>(new(id, Response.Success, new() { Owner = instance.Owner, Definition = instance.Definition, HitboxId = id }));
+        OnEvent<HitboxResponse>(new(id, Response.Success, new() { Owner = instance.Owner, Definition = instance.Definition, HitboxId = instance.HitboxId }));
     }
 
     // ============================================================================

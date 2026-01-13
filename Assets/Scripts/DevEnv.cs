@@ -12,9 +12,8 @@ public class DevEnv : RegisteredService, IServiceTick
     
     public override void Initialize()
     {
-        Debug.Log("Initializing dev env");
-
         Log.Configure((config) => config
+        .Category(LogCategory.Admin)
         .System(LogSystem.Engine, LogLevel.Debug)
         .System(LogSystem.Weapon, LogLevel.Trace)
         .System(LogSystem.Movement, LogLevel.Debug)

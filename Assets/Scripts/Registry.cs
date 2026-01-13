@@ -66,7 +66,7 @@ public static class Registry
             if (cache.TryGetValue(name, out var prefab))
                 return prefab;
 
-            Debug.LogError($"Prefab '{name}' not found.");
+            Log.Debug(LogSystem.System, LogCategory.Admin, () => $"Prefab '{name}' not found.");
             return null;
         }
 
@@ -164,7 +164,7 @@ public static class Registry
                     }
 
                     dictionary[type] = service;
-                    Debug.Log($"Registered {type.Name}");
+                    Log.Debug( LogSystem.System, LogCategory.Admin, () => $"Registered {type.Name}");
                 }
             }
         }

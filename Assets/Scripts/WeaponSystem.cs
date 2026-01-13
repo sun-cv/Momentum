@@ -324,7 +324,7 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
-    EventCache<HitboxRequest, HitboxResponse>               hitboxEventCache;
+    EventCache<HitboxRequest, HitboxResponse>               hitboxEvents;
 
     public WeaponSystem(Actor actor)
     {
@@ -339,7 +339,7 @@ public class WeaponSystem : IServiceTick
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        hitboxEventCache = new(HandleHitboxResponse);
+        hitboxEvents = new(HandleHitboxResponse);
 
         EventBus<CommandPublish>        .Subscribe(HandleCommandPublish);
         EventBus<EffectPublish>         .Subscribe(HandleEffectNonCancelableLockCount);
@@ -694,7 +694,7 @@ public class WeaponSystem : IServiceTick
         foreach (var hitboxDefinition in instance.Action.Hitboxes)
         {
             if (instance.State.Phase == hitboxDefinition.Phase)
-                OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition }));
+                hitboxEvents.Send(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition }));
         }
     }
 
@@ -925,6 +925,8 @@ public class WeaponSystem : IServiceTick
         Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.NonCancelable",  () => NonCancelableAttackLocks );
         Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.Active",         () => locks == null ? "<none>" : string.Join(", ", locks.Select(kvp => $"{kvp.Key}({kvp.Value.Count})")) ); 
         Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance.Action.Name)}" : "Ready");
+        Log.Trace(LogSystem.Weapon, LogCategory.State,          "Weapon Trace", "hitbox ids",           () => instance?.State.OwnedHitboxes.Count());
+        Log.Trace(LogSystem.Weapon, LogCategory.State,          "Weapon Trace", "pending requests",     () => hitboxEvents.PendingCount);
     }
 }
 

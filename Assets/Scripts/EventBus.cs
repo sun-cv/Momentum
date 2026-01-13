@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -253,14 +254,10 @@ public class EventCache<TRequest, TResponse> where TRequest : ISystemEvent where
         EventBus<TResponse>.Subscribe(Receive);
     }
 
-    public Guid Send(TRequest request)
+    public void Send(TRequest request)
     {
-        var id = Guid.NewGuid();
-        pending[id] = request;
-
+        pending[request.Id] = request;
         OnEvent(request);
-
-        return id;
     }
 
     void Receive(TResponse response)

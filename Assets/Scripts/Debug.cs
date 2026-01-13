@@ -35,6 +35,7 @@ public enum LogSystem
 
 public enum LogCategory
 {
+    Admin,
     Phase,
     State,
     Activation,
@@ -86,6 +87,7 @@ public static class Log
 
     public class LogConfig
     {
+
         public LogConfig Global(LogLevel level) { globalLevel = level; return this; }
         
         public LogConfig System(LogSystem system, LogLevel level) 
