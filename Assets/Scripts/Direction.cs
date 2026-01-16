@@ -15,7 +15,7 @@ public enum CardinalDirection
 
 
 
-public static class Direction
+public static class Orientation
 {
     
     public static CardinalDirection FromMovement(Vector2 input)
@@ -100,19 +100,24 @@ public class WorldPosition : RegisteredService, IBind
         return Camera.ScreenToWorldPoint((Vector2)MousePosition);
     }
 
-    public Vector2 DirectionTo(Vector2 from, Vector2 to)
+    public Vector2 DirectionTo(Vector2 to, Vector2 from)
     {
         return (to - from).normalized;
     }
 
-    public Vector2 MouseDirectionFrom(Vector2 position)
+    public Vector2 MouseDirectionTo(Vector2 position)
     {
         return DirectionTo(position, Mouse());
+    }
+
+    public Vector2 MouseDirectionFrom(Vector2 position)
+    {
+        return DirectionTo(Mouse(), position);
     }
     
     public CardinalDirection MouseCardinalFrom(Vector2 position)
     {
-        return Direction.FromVector(position);
+        return Orientation.FromVector(position);
     }
 
     public float DistanceToMouse(Vector2 position)

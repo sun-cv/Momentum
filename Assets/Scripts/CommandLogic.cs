@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 
@@ -9,13 +10,15 @@ public class Command : Instance
 {
     public Capability  Action   { get; init; }
     public InputButton Button   { get; init; }
+    public int FrameCreated     { get; init; }
 
     public bool locked;
 
     public Command(Capability action, InputButton button)
     {
-        Action = action;
-        Button = button;
+        Action       = action;
+        Button       = button;
+        FrameCreated = Clock.FrameCount;
     }
 
     public void Lock()   => locked = true;
@@ -26,20 +29,17 @@ public class Command : Instance
 
 
 
-public class CommandSystem : RegisteredService, IServiceTick
+public class CommandSystem
 {
-
-    InputRouter router;
+    IntentSystem intent;
 
     Dictionary<Capability, Command> active = new();
     Dictionary<Capability, Command> buffer = new();
 
 
-    public override void Initialize()
+    public void Initialize(IntentSystem intent)
     {
-        router       = Services.Get<InputRouter>();
-        Services.RegisterTick(this);
-
+        this.intent = intent;
         EventBus<CommandRequest>.Subscribe(HandleCommandRequest);
         PublishUpdate();
     }
@@ -58,44 +58,62 @@ public class CommandSystem : RegisteredService, IServiceTick
 
     void MonitorEdgeRelease()
     {
-        if (RemoveReleasedCommands(buffer) | RemoveReleasedCommands(active))
+        if (RemoveExpiredBufferCommands() || RemoveReleasedActiveCommands())
             PublishUpdate();
     }
 
     bool CreatePressedCommands()
     {
-        var toCreate = router.ActiveButtons.Where(button => button.pressedThisFrame == true).ToList();
+        var toCreate = intent.Input.ActiveButtons.Where(button => button.pressedThisFrame).ToList();
 
         foreach (var button in toCreate)
-            buffer[IntentMap.Input[button.Input]] = new(IntentMap.Input[button.Input], button);
+        {
+            var capability = IntentMap.Input[button.Input];
 
+            if (buffer.ContainsKey(capability))
+                buffer.Remove(capability);
+
+            buffer[capability] = new(capability, button);        
+        }
         return toCreate.Count > 0;
     }
 
-    bool RemoveReleasedCommands(Dictionary<Capability, Command> commands)
+    bool RemoveExpiredBufferCommands()
     {
-        if (commands.Count == 0) return false;
+        if (buffer.Count == 0) return false;
 
-        var toRemove = commands.Values.Where(command => !command.Locked && command.Button.releasedThisFrame).ToList();
-
+    var toRemove = buffer.Values
+        .Where(command => !command.Locked && command.Button.released && command.Button.releasedframeCount.CurrentFrame > Config.Input.BUFFER_WINDOW_FRAMES)
+        .ToList();
         foreach (var command in toRemove)
-            commands.Remove(command.Action);
+            buffer.Remove(command.Action);
 
         return toRemove.Count > 0;
     }
 
+    bool RemoveReleasedActiveCommands()
+    {
+        if (active.Count == 0) return false;
+
+        var toRemove = active.Values.Where(command => !command.Locked && command.Button.released).ToList();
+
+        foreach (var command in toRemove)
+            active.Remove(command.Action);
+
+        return toRemove.Count > 0;
+    }
 
     void HandleCommandRequest(CommandRequest evt)
     {
         switch (evt.Action)
         {
-            case CommandAction.Consume:
+            case Request.Consume:
                 ConsumeCommand(evt.Payload.Command);
                 break;
-            case CommandAction.Lock:
+            case Request.Lock:
                 LockCommand(evt.Payload.Command);
                 break;
-            case CommandAction.Unlock:
+            case Request.Unlock:
                 UnlockCommand(evt.Payload.Command);
                 break;
         }
@@ -110,24 +128,16 @@ public class CommandSystem : RegisteredService, IServiceTick
         buffer.Remove(command.Action);
         active[command.Action] = instance;
     }
-    void LockCommand(Command command)    => active[command.Action].Lock();
-    void UnlockCommand(Command command)  => active[command.Action].Unlock();
+    void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Lock();
+    void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
 
     void PublishUpdate() => OnEvent<CommandPublish>(new(Guid.NewGuid(), Publish.Changed, new(){ Active = Snapshot.ReadOnly(active), Buffer = Snapshot.ReadOnly(buffer) }));
 
-
     void OnEvent<T>(T evt) where T : IEvent     => EventBus<T>.Raise(evt);
-    public UpdatePriority Priority              => ServiceUpdatePriority.CommandSystem;
 }
 
 
 
-public enum CommandAction
-{
-    Consume,
-    Lock,
-    Unlock
-}
 
 public readonly struct CommandRequestPayload
 {
@@ -143,10 +153,10 @@ public readonly struct CommandStatePayload
 public readonly struct CommandRequest : ISystemEvent
 {
     public Guid Id                          { get; }
-    public CommandAction Action             { get; }
+    public Request Action                   { get; }
     public CommandRequestPayload Payload    { get; }
 
-    public CommandRequest(Guid id, CommandAction action, CommandRequestPayload payload)
+    public CommandRequest(Guid id, Request action, CommandRequestPayload payload)
     {
         Id      = id;
         Action  = action;

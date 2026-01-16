@@ -6,13 +6,13 @@ using UnityEngine;
 
 public class RemoteVector2
 {
-    Vector2 value;
+    Vector2 vector;
 
-    public Vector2 Value
+    public Vector2 Vector
     {
-        get => value;
-        set => this.value = value;
+        get => vector;
+        set => this.vector = value;
     }
 
-    public static implicit operator Vector2(RemoteVector2 remote) => remote.value;
+    public static implicit operator Vector2(RemoteVector2 remote) => remote.vector;
 }

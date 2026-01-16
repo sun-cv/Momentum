@@ -21,6 +21,11 @@ public class Game : MonoBehaviour
         engine.Tick();
     }
 
+    public void LateUpdate()
+    {
+        engine.Late();
+    }
+
     public void OnDisable()
     {
         engine.Shutdown();
@@ -47,6 +52,11 @@ public class GameEngine
     public void Tick()
     {
         clock.Tick();
+    }
+
+    public void Late()
+    {
+        clock.Late();
     }
 
     public void Shutdown()
@@ -137,6 +147,7 @@ public class GameLoop
         this.clock.OnLoop += Loop;
         this.clock.OnStep += Step;
         this.clock.OnUtil += Util;
+        this.clock.OnLate += Late;
 
         Time.fixedDeltaTime  = Clock.TickDelta;
     }
@@ -157,6 +168,10 @@ public class GameLoop
     {
         GameTick.Util();
     }
+    public void Late()
+    {
+        GameTick.Late();
+    }
 }
 
 
@@ -168,6 +183,7 @@ public static class GameTick
     private static readonly List<IServiceLoop> loopServices         = new();
     private static readonly List<IServiceStep> stepServices         = new();
     private static readonly List<IServiceUtil> utilServices         = new();
+    private static readonly List<IServiceLate> lateServices         = new();
 
     private static readonly List<IService> pendingRegistrations     = new();
     private static readonly List<IService> pendingDeregistrations   = new();
@@ -200,6 +216,12 @@ public static class GameTick
     {        
         foreach(var service in utilServices)
             service.Util();
+    }
+
+    public static void Late()
+    {
+        foreach(var service in lateServices)
+            service.Late();  
     }
 
     private static void ProcessPending()
@@ -238,6 +260,12 @@ public static class GameTick
             {
                 utilServices.Add(utilService);
                 utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            }
+
+            if (service is IServiceLate lateService)
+            {
+                lateServices.Add(lateService);
+                lateServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
             }
 
         }

@@ -20,8 +20,8 @@ public static class Config
 
     public static class Input
     {
-        public const float RELEASE_THRESHOLD        = 40f;
-        public const float COMMAND_BUFFER_EXPIRY    = 10f;
+        public const float RELEASE_THRESHOLD        = 300f;
+        public const float BUFFER_WINDOW_FRAMES     = 10f;
 
         public const float INTENT_DEFAULT           = 45f;
         public const float INTENT_HORIZONTAL        = 50f;
@@ -38,6 +38,8 @@ public static class Settings
         public const float ACCELERATION             = 200f;
         public const float FRICTION                 = 10f;
         public const float IMPULSE_DECAY            = 10f;
+
+        public const bool NORMALIZE_VELOCITY        = false;
     }
 
 }
@@ -53,7 +55,7 @@ public static class ServiceUpdatePriority
     public static UpdatePriority InputDriver        = new(UpdatePhase.Input,    10);
     public static UpdatePriority InputRouter        = new(UpdatePhase.Input,    20);
 
-
+    public static UpdatePriority IntentSystem       = new(UpdatePhase.Logic,    10);
     public static UpdatePriority Stats              = new(UpdatePhase.Logic,    20);
     public static UpdatePriority CommandSystem      = new(UpdatePhase.Logic,    30);
     public static UpdatePriority WeaponLogic        = new(UpdatePhase.Logic,    40);

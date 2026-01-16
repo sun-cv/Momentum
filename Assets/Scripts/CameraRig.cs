@@ -39,7 +39,7 @@ public struct DefaultTargetProvider : ICameraTarget
 
 
 
-public class CameraRig : RegisteredService, IServiceTick, IBind
+public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IBind
 {
     GameObject  cameraRig;
     CameraContext context;
@@ -81,10 +81,13 @@ public class CameraRig : RegisteredService, IServiceTick, IBind
 
     public void Tick()
     {
-        UpdateCameraTargetPosition();
-
         foreach (var behavior in activeBehaviors)
             cameraBehaviors[behavior].Tick();
+    }
+
+    public void Late()
+    {
+        UpdateCameraTargetPosition();
     }
 
 

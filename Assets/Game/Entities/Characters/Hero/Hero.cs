@@ -9,6 +9,7 @@ public class Hero : Actor, IHero
     //========================================
 
     public HeroDefinition   Definition          { get; private set; }
+    public IntentSystem     Intent              { get; private set; }
     public HeroState        State               { get; private set; }
     public HeroStats        Stats               { get; private set; }
     public EquipmentManager Equipment           { get; private set; }
@@ -35,32 +36,35 @@ public class Hero : Actor, IHero
     // State
     //========================================
     
-    public bool Parrying                        => State.Parrying;
-    public bool Blocking                        => State.Blocking;
+    public bool Parrying                            => State.Parrying;
+    public bool Blocking                            => State.Blocking;
 
 
-    public bool Stunned                         { get => State.Stunned;         set => State.Stunned        = value; }
-    public bool Disabled                        { get => State.Disabled;        set => State.Disabled       = value; }
-    public bool Invulnerable                    { get => State.Invulnerable;    set => State.Invulnerable   = value; }
+    public bool Stunned                             { get => State.Stunned;         set => State.Stunned        = value; }
+    public bool Disabled                            { get => State.Disabled;        set => State.Disabled       = value; }
+    public bool Invulnerable                        { get => State.Invulnerable;    set => State.Invulnerable   = value; }
 
-    public bool CanMove                         => State.CanMove;
-    public bool CanAttack                       => State.CanAttack;
-    public bool CanRotate                       => State.CanRotate; 
+    public bool CanMove                             => State.CanMove;
+    public bool CanAttack                           => State.CanAttack;
+    public bool CanRotate                           => State.CanRotate; 
 
-    public CardinalDirection FacingDirection    => State.FacingDirection;
-    public CardinalDirection IntentDirection    => State.IntentDirection;
-    public Vector2 MovementDirection            => State.MovementDirection;
-    public Vector2 Velocity                     => State.Velocity;
-    public Vector2 Momentum                     => State.Momentum;
-
-    public bool IsMoving                        => State.IsMoving;
-    public TimePredicate IsIdle                 => State.IsIdle;
+    public Vector2 Direction                        => State.Direction;
+    public Vector2 AimDirection                     => State.AimDirection;
+    public Vector2 LastDirection                    => State.LastDirection;
+    public CardinalDirection CardinalDirection      => State.CardinalAimDirection;
+    public CardinalDirection CardinalAimDirection   => State.CardinalAimDirection;
+    public Vector2 Velocity                         => State.Velocity;
+    public Vector2 Momentum                         => State.Momentum;
+    
+    public bool IsMoving                            => State.IsMoving;
+    public TimePredicate IsIdle                     => State.IsIdle;
 
 
     public void Initialize(HeroDefinition definition)
     {
         Definition  = definition;
 
+        Intent      = new(this);
         Stats       = new(this);
         Equipment   = new(this);
         Weapons     = new(this);

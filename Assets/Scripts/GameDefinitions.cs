@@ -13,6 +13,7 @@ public interface IServiceTick : IService { public void Tick(); UpdatePriority Pr
 public interface IServiceLoop : IService { public void Loop(); UpdatePriority Priority { get; } };
 public interface IServiceStep : IService { public void Step(); UpdatePriority Priority { get; } };
 public interface IServiceUtil : IService { public void Util(); UpdatePriority Priority { get; } };
+public interface IServiceLate : IService { public void Late(); UpdatePriority Priority { get; } };
 
 
 public abstract class Service
@@ -85,60 +86,61 @@ public class EventHandler {}
 
 public interface IDamageable
 {
-    bool Invulnerable                   { get; }
-    float Health                        { get; set; }
-    float MaxHealth                     { get; }
+    bool Invulnerable                       { get; }
+    float Health                            { get; set; }
+    float MaxHealth                         { get; }
 }
 
 public interface ICaster
 {
-    float Mana                          { get; set; }
-    float MaxMana                       { get; }
+    float Mana                              { get; set; }
+    float MaxMana                           { get; }
 }
 
-public interface IAttacker : IHasIntent
+public interface IAttacker : IHasAim
 {
-    bool CanAttack                      { get; }
-    float Attack                        { get; }
-    float AttackMultiplier              { get; }
+    bool CanAttack                          { get; }
+    float Attack                            { get; }
+    float AttackMultiplier                  { get; }
 }
 
 public interface IHasVelocity
 {
-    Vector2 Velocity                    { get; }
-    Vector2 Momentum                    { get; }
+    Vector2 Velocity                        { get; }
+    Vector2 Momentum                        { get; }
 }
 
 
 public interface IMovable
 {
-    bool CanMove                        { get; }
-    float Speed                         { get; }
-    float SpeedMultiplier               { get; }
+    bool CanMove                            { get; }
+    float Speed                             { get; }
+    float SpeedMultiplier                   { get; }
 }
-
 
 public interface IHasDirection
 {
-    Vector2 MovementDirection           { get; }
-    CardinalDirection FacingDirection   { get; }
+    Vector2 Direction                       { get; }
+    Vector2 LastDirection                   { get; }
+    CardinalDirection CardinalDirection     { get; }
 }
 
-public interface IHasIntent
+public interface IHasAim
 {
-    CardinalDirection IntentDirection   { get; }
+    Vector2 AimDirection                    { get; }
+    CardinalDirection CardinalAimDirection  { get; }
 }
 
 public interface IOrientable
 {
-    CardinalDirection FacingDirection   { get; }
-    bool CanRotate                      { get; }
+    CardinalDirection CardinalDirection     { get; }
+    bool CanRotate                          { get; }
 }
 
-public interface IMovableActor  : IMovable, IHasVelocity, IHasDirection, IOrientable    {}
+public interface IMovableActor  : IMovable, IHasVelocity, IHasDirection, IOrientable        {}
 
-public interface IHero          : IMovableActor, IAttacker, ICaster, IDamageable        {}
-public interface IEnemy         : IMovableActor, IAttacker, IDamageable                 {}
+public interface IHero          : IMovableActor, IAttacker, ICaster, IHasAim, IDamageable   {}
+public interface IEnemy         : IMovableActor, IAttacker, IDamageable                     {}
 
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
@@ -176,6 +178,7 @@ public enum Request
     Interrupt,
     Cancel,
     Consume,
+    Clear,
 }
 
 public enum Response
@@ -244,7 +247,6 @@ public enum InputIntent
     Modifier,
     Dash,
 }
-
 
 public enum Capability
 {

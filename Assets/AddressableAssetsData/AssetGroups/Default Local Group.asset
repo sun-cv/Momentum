@@ -36,7 +36,8 @@ MonoBehaviour:
   - m_GUID: e231eaf64433d134bac32ca178bec684
     m_Address: Shield/HB_ShieldParry
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Core
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: d1f7e4b937989e8449ae085fa883fb88, type: 2}

@@ -163,8 +163,8 @@ public class HitboxManager : RegisteredService, IServiceTick
 
         var owner = pending.Owner as IAttacker;
 
-        Vector2 intentVector        = Direction.ToVector(owner.IntentDirection);
-        Quaternion intentRotation   = Direction.ToRotation(intentVector);
+        Vector2 intentVector        = Orientation.ToVector(owner.CardinalAimDirection);
+        Quaternion intentRotation   = Orientation.ToRotation(intentVector);
         Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Offset);
 
         var prefab      = Registry.Prefabs.Get(pending.Definition.Prefab);

@@ -158,13 +158,23 @@ public static class Registry
                 {
                     var service = Activator.CreateInstance(type);
 
-                    if (service is IService typed)
-                    {
-                        GameTick.Register(typed);
-                    }
+                    if (service is IServiceTick tick)
+                        GameTick.Register(tick);
+
+                    if (service is IServiceLoop loop)
+                        GameTick.Register(loop);
+
+                    if (service is IServiceStep step)
+                        GameTick.Register(step);
+
+                    if (service is IServiceUtil util)
+                        GameTick.Register(util);
+
+                    if (service is IServiceLate late)
+                        GameTick.Register(late);
 
                     dictionary[type] = service;
-                    Log.Debug( LogSystem.System, LogCategory.Admin, () => $"Registered {type.Name}");
+                    Log.Debug(LogSystem.System, LogCategory.Admin, () => $"Registered {type.Name}");
                 }
             }
         }

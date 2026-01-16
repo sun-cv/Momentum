@@ -38,7 +38,7 @@ public class SwordStrike : DamagingWeapon
         Availability                = WeaponAvailability.Default;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 30;
+        FireDurationFrames          = 20;
         ControlWindow               = 0.3f;
         AddControlOnFire            = new() { "SwordCleave"};
         Effects = new()
@@ -48,7 +48,7 @@ public class SwordStrike : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 23,
+                DurationFrames      = 20,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -64,7 +64,8 @@ public class SwordStrike : DamagingWeapon
                 DisableRotate       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
-            }
+            },
+
         };
 
         Hitboxes = new()
@@ -95,7 +96,7 @@ public class SwordCleave : DamagingWeapon
         LockTriggerAction           = true;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 30;
+        FireDurationFrames          = 20;
         ControlWindow               = 0.3f;
         AddControlOnFire            = new() { "SwordRend"};
         Effects = new()
@@ -105,7 +106,7 @@ public class SwordCleave : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 23,
+                DurationFrames      = 20,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -153,7 +154,7 @@ public class SwordRend : DamagingWeapon
         LockTriggerAction           = true;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 30;
+        FireDurationFrames          = 20;
         ControlWindow               = 0.3f;
         SwapOnFire                  = "null";
         ForceReleaseOnSwap          = true;
@@ -164,7 +165,7 @@ public class SwordRend : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 23,
+                DurationFrames      = 20,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
@@ -181,6 +182,8 @@ public class SwordRend : DamagingWeapon
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             }
+
+
         };
         Hitboxes = new()
         {

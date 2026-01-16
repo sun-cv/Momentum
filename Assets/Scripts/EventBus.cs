@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 
 
@@ -243,12 +242,12 @@ public class EventBus
 
 
 
-public class EventCache<TRequest, TResponse> where TRequest : ISystemEvent where TResponse : ISystemEvent
+public class EventHandler<TRequest, TResponse> where TRequest : ISystemEvent where TResponse : ISystemEvent
 {
     private readonly Dictionary<Guid, TRequest> pending = new();
     private readonly Action<TRequest, TResponse> onResponse;
 
-    public EventCache(Action<TRequest, TResponse> onResponse)
+    public EventHandler(Action<TRequest, TResponse> onResponse)
     {
         this.onResponse = onResponse;
         EventBus<TResponse>.Subscribe(Receive);

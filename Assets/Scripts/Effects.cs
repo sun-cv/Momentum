@@ -43,7 +43,7 @@ public interface ICanAffectInvulnerable     { public bool CanAffectInvulnerable 
 
 public interface IImmuneToDamage            { public bool ImmuneToDamage            { get; init; }}
 public interface IInvulnerable              { public bool Invulnerable              { get; init; }}
-public interface IStunned                   { public bool Stunned                   { get; init; }}
+public interface IStunned                   { public bool Stunned                   { get; init; }} // REWORK REQUIREd ? Maintain as effect? Move into status handler?
 
 public interface IDisableRules : IDisableAttack, IDisableMove, IDisableRotate {}
 public interface ICollisionRules : INoUnitCollision, IImmuneToForce {}
@@ -139,7 +139,7 @@ public class DashDisable : Effect, IDurationFrames, IDisableRules, IActionLock
 
 }
 
-public class DashMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
+public class WeaponMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
     public EffectType Type                      { get; init; }
     public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;

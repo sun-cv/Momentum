@@ -199,8 +199,8 @@ public class InputRouter : RegisteredService, IServiceTick, IDisposable
         }
     }
 
-    void UpdateMousePosition(MousePosition evt)             => mousePositionVector.Value      = evt.vector;
-    void UpdateMovementIntent(MovementVector evt)           => movementDirectionVector.Value  = evt.vector;
+    void UpdateMousePosition(MousePosition evt)             => mousePositionVector.Vector      = evt.vector;
+    void UpdateMovementIntent(MovementVector evt)           => movementDirectionVector.Vector  = evt.vector;
 
     EventBinding<T> BindPress<T>()   where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = true  }); });
     EventBinding<T> BindRelease<T>() where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Intent = evt.Intent, IsPress = false }); });

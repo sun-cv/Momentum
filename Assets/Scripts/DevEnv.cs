@@ -13,7 +13,6 @@ public class DevEnv : RegisteredService, IServiceTick
     public override void Initialize()
     {
         Log.Configure((config) => config
-        .Category(LogCategory.Admin)
         .System(LogSystem.Engine, LogLevel.Debug)
         .System(LogSystem.Weapon, LogLevel.Trace)
         .System(LogSystem.Movement, LogLevel.Debug)
@@ -21,7 +20,6 @@ public class DevEnv : RegisteredService, IServiceTick
         .System(LogSystem.Equipment, LogLevel.Trace)
         .System(LogSystem.Hitboxes, LogLevel.Trace)
         .System(LogSystem.Input, LogLevel.Debug));
-
     }
 
 
