@@ -2,22 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 
 
 
 
 public class Command : Instance
 {
-    public Capability  Action   { get; init; }
-    public InputButton Button   { get; init; }
+    public Capability           Action  { get; init; }
+    public InputButton          Button  { get; init; }
+    public InputIntentSnapshot  Intent  { get; init; }
+
     public int FrameCreated     { get; init; }
 
     public bool locked;
 
-    public Command(Capability action, InputButton button)
+    public Command()
     {
-        Action       = action;
-        Button       = button;
         FrameCreated = Clock.FrameCount;
     }
 
@@ -26,6 +27,7 @@ public class Command : Instance
 
     public bool Locked   => locked;
 }
+
 
 
 
@@ -64,16 +66,22 @@ public class CommandSystem
 
     bool CreatePressedCommands()
     {
-        var toCreate = intent.Input.ActiveButtons.Where(button => button.pressedThisFrame).ToList();
+        var toCreate = intent.InputRouter.ActiveButtons.Where(button => button.pressedThisFrame).ToList();
 
         foreach (var button in toCreate)
         {
-            var capability = IntentMap.Input[button.Input];
+            var capability  = IntentMap.Input[button.Input];
+            var command     = new Command()
+            {
+                Action = capability,
+                Button = button,
+                Intent = intent.Input.Snapshot()
+            };
 
             if (buffer.ContainsKey(capability))
                 buffer.Remove(capability);
 
-            buffer[capability] = new(capability, button);        
+            buffer[capability] = command;       
         }
         return toCreate.Count > 0;
     }
@@ -192,25 +200,25 @@ public readonly struct CommandPublish : ISystemEvent
 
 public static class IntentMap
 {
-    public static readonly Dictionary<InputIntent, Capability> Input = new()
+    public static readonly Dictionary<PlayerAction, Capability> Input = new()
     {
-        { InputIntent.None,     Capability.None },
-        { InputIntent.Interact, Capability.Interact },
-        { InputIntent.Action,   Capability.Action },
-        { InputIntent.Attack1,  Capability.Attack1 },
-        { InputIntent.Attack2,  Capability.Attack2 },
-        { InputIntent.Modifier, Capability.Modifier },
-        { InputIntent.Dash,     Capability.Dash },
+        { PlayerAction.None,     Capability.None },
+        { PlayerAction.Interact, Capability.Interact },
+        { PlayerAction.Action,   Capability.Action },
+        { PlayerAction.Attack1,  Capability.Attack1 },
+        { PlayerAction.Attack2,  Capability.Attack2 },
+        { PlayerAction.Modifier, Capability.Modifier },
+        { PlayerAction.Dash,     Capability.Dash },
     };
 
-    public static readonly Dictionary<Capability, InputIntent> Capabilities = new()
+    public static readonly Dictionary<Capability, PlayerAction> Capabilities = new()
     {
-        { Capability.None,       InputIntent.None },
-        { Capability.Interact,   InputIntent.Interact },
-        { Capability.Action,     InputIntent.Action },
-        { Capability.Attack1,    InputIntent.Attack1 },
-        { Capability.Attack2,    InputIntent.Attack2 },
-        { Capability.Modifier,   InputIntent.Modifier },
-        { Capability.Dash,       InputIntent.Dash },
+        { Capability.None,       PlayerAction.None },
+        { Capability.Interact,   PlayerAction.Interact },
+        { Capability.Action,     PlayerAction.Action },
+        { Capability.Attack1,    PlayerAction.Attack1 },
+        { Capability.Attack2,    PlayerAction.Attack2 },
+        { Capability.Modifier,   PlayerAction.Modifier },
+        { Capability.Dash,       PlayerAction.Dash },
     };
 }

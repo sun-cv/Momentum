@@ -19,6 +19,12 @@ public enum HitboxLifetime
     Permanent
 }
 
+public enum HitboxDirection
+{
+    Cardinal,
+    Intercardinal,
+}
+
 public class HitboxDefinition : Definition
 {
     public string Prefab                        { get; init; }
@@ -29,12 +35,14 @@ public class HitboxDefinition : Definition
     public bool AllowMultiHit                   { get; init; }
     public HitboxBehavior Behavior              { get; init; }
     public HitboxLifetime Lifetime              { get; init; }
-
+    public HitboxDirection AvailableDirections  { get; init; }
     public float ProjectileSpeed                { get; init; }
     public Vector3 ProjectileDirection          { get; init; }
 
     public WeaponAction Activation              { get; init; }
     public WeaponPhase Phase                    { get; init; }
+
+
 
     public Func<Actor, bool> ConditionalRelease { get; init; }
 }
@@ -43,7 +51,8 @@ public class PendingHitbox
 {       
     public Guid RequestId                       { get; init; }
     public Actor Owner                          { get; init; }
-    public HitboxDefinition Definition          { get; init; } 
+    public HitboxDefinition Definition          { get; init; }
+    public InputIntentSnapshot Input            { get; init; }
 }       
 
 public class HitboxInstance : Instance      
@@ -52,6 +61,7 @@ public class HitboxInstance : Instance
     public Actor Owner                          { get; init; }
     public WeaponAction Weapon                  { get; set;  }
     public HitboxDefinition Definition          { get; init; }
+    public InputIntentSnapshot Input            { get; init; }
 
     public int CurrentFrame                     { get; set;  }
     public GameObject Hitbox                    { get; set;  }
@@ -158,14 +168,13 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void CreateHitbox(PendingHitbox pending)
     {
-
         pending.Owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 
-        var owner = pending.Owner as IAttacker;
-
-        Vector2 intentVector        = Orientation.ToVector(owner.CardinalAimDirection);
+        Vector2 intentVector        = GetIntentVector(pending);
         Quaternion intentRotation   = Orientation.ToRotation(intentVector);
         Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Offset);
+
+        Debug.Log(intentVector);
 
         var prefab      = Registry.Prefabs.Get(pending.Definition.Prefab);
         var hitbox      = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
@@ -189,7 +198,8 @@ public class HitboxManager : RegisteredService, IServiceTick
         {
             HitboxId    = Guid.NewGuid(),
             Owner       = pending.Owner,
-            Definition  = pending.Definition
+            Definition  = pending.Definition,
+            Input       = pending.Input,
         };
 
         return instance;
@@ -296,25 +306,26 @@ public class HitboxManager : RegisteredService, IServiceTick
         var owner       = evt.Payload.Owner;
         var definition  = evt.Payload.Definition;
         var hitboxId    = evt.Payload.HitboxId;
+        var input       = evt.Payload.Input;
 
         switch(evt.Action)
         {
             case Request.Create:
-                RequestCreateHitbox(evt.Id, owner, definition);
+                RequestCreateHitbox(evt.Id, owner, definition, input);
             break;
             case Request.Destroy:
-                RequestDestroyHitbox(hitboxId, owner, definition);
+                RequestDestroyHitbox(hitboxId);
             break;
         }
     }
 
 
-    void RequestCreateHitbox(Guid requestId, Actor owner, HitboxDefinition definition, WeaponAction weapon = null)
+    void RequestCreateHitbox(Guid requestId, Actor owner, HitboxDefinition definition, InputIntentSnapshot input)
     {
-        pending.Enqueue(new() { Owner = owner, Definition = definition, RequestId = requestId});
+        pending.Enqueue(new() { Owner = owner, Definition = definition, RequestId = requestId, Input = input});
     }
 
-    void RequestDestroyHitbox(Guid hitboxId, Actor owner, HitboxDefinition definition)
+    void RequestDestroyHitbox(Guid hitboxId)
     {
         if (ShouldProcessDestructionRequest(hitboxId))
             DestroyHitbox(hitboxId);
@@ -326,8 +337,18 @@ public class HitboxManager : RegisteredService, IServiceTick
     }
 
     // ============================================================================
-    // QUERIES & ACCESSORS
+    // HELPERS
     // ============================================================================
+
+    Vector2 GetIntentVector(PendingHitbox pending)
+    {
+        return pending.Definition.AvailableDirections switch
+        {
+            HitboxDirection.Cardinal        => Orientation.ToVector(pending.Input.CardinalAimDirection),
+            HitboxDirection.Intercardinal   => Orientation.ToVector(pending.Input.IntercardinalAimDirection),
+            _ => Orientation.ToVector(pending.Input.IntercardinalAimDirection)
+        };
+    }
 
 
     void DebugLog()
@@ -345,9 +366,11 @@ public class HitboxManager : RegisteredService, IServiceTick
 
 public readonly struct HitboxRequestPayload
 {
+    public readonly Guid HitboxId               { get; init; }   
     public readonly Actor Owner                 { get; init; }
     public readonly HitboxDefinition Definition { get; init; }
-    public readonly Guid HitboxId               { get; init; }   
+    public readonly InputIntentSnapshot Input   { get; init; }
+
 }
 
 public readonly struct HitboxRequest : ISystemEvent

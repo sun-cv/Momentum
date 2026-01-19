@@ -39,6 +39,10 @@ public static class Settings
         public const float FRICTION                 = 10f;
         public const float IMPULSE_DECAY            = 10f;
 
+        public static float FACING_SWITCH_DELAY     = 1f;
+        public static float FACING_CLOCKWISE        = 0.1f;
+        public static float FACING_COUNTER_CLOCKWISE= 0.8f; 
+
         public const bool NORMALIZE_VELOCITY        = false;
     }
 
@@ -64,6 +68,7 @@ public static class ServiceUpdatePriority
 
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
 
-    public static UpdatePriority CameraRig          = new(UpdatePhase.Render,   10);
+    public static UpdatePriority AnimationHandler   = new(UpdatePhase.Render,   10);
+    public static UpdatePriority CameraRig          = new(UpdatePhase.Render,   20);
 
 }

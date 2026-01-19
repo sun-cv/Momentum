@@ -30,6 +30,7 @@ public enum LogSystem
     Equipment,
     Hitboxes,
     Physics,
+    Animation,
     Camera,
 }
 

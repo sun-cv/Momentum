@@ -144,7 +144,7 @@ public class WeaponSystem : IServiceTick
     {
         return instance.Action.Termination switch
         {
-            WeaponTermination.OnRelease => instance.Action.Trigger.Any(trigger => !IsTriggerActive(trigger)),
+            WeaponTermination.OnRelease     => instance.Action.Trigger.Any(trigger => !IsTriggerActive(trigger)),
             WeaponTermination.OnRootRelease => instance.Action.RequiredHeldTriggers.Any(trigger => !IsTriggerActive(trigger)),
             _ => false,
         };
@@ -156,12 +156,12 @@ public class WeaponSystem : IServiceTick
 
         instance.State.Phase = newPhase;
 
-        // Clear movement from the phase we just left
         ClearMovementFromPhase(exitingPhase);
 
         PublishWeaponTransition();
         RequestMovementCommand();
         RequestHitboxes();
+        RequestAnimation();
         EnterHandler();
     }
 
@@ -179,7 +179,6 @@ public class WeaponSystem : IServiceTick
     {
         if (HasActiveWeapon())
         {
-            Debug.Log("active weapon");
             if (TryActivateFromAvailableControls())
                 return;
 
@@ -320,6 +319,7 @@ public class WeaponSystem : IServiceTick
     {
         ConsumeAllCommands(buffer, instance.Action.Trigger);
         StoreAllCommandIDs(active, instance.Action.Trigger);
+        StoreInputSnapshot(active, instance.Action.Trigger);
 
         if (instance.Action.LockTriggerAction)
             LockAllCommands(active, instance.Action.Trigger);
@@ -328,6 +328,7 @@ public class WeaponSystem : IServiceTick
     void ActivateHeldWeapon()
     {
         StoreAllCommandIDs(active, instance.Action.Trigger);
+        StoreInputSnapshot(active, instance.Action.Trigger);
     }
 
 
@@ -406,12 +407,11 @@ public class WeaponSystem : IServiceTick
 
     void RequestMovementCommand()
     {
-        foreach (var intent in instance.Action.MovementIntents)
+        foreach (var definition in instance.Action.MovementDefinitions)
         {
-            if (intent.Phase != instance.State.Phase)
+            if (definition.Phase != instance.State.Phase)
                 continue;
-
-            OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Scope = (int)instance.State.Phase, Command = MovementCommandFactory.Create(intent, owner)}));
+            OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Scope = (int)instance.State.Phase, Command = MovementCommandFactory.Create(owner, definition, instance.State.Intent)}));
         }
     }
 
@@ -424,7 +424,7 @@ public class WeaponSystem : IServiceTick
         foreach (var hitboxDefinition in instance.Action.Hitboxes)
         {
             if (instance.State.Phase == hitboxDefinition.Phase)
-                hitboxEvents.Send(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition }));
+                hitboxEvents.Send(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition, Input = instance.State.Intent }));
         }
     }
 
@@ -433,6 +433,34 @@ public class WeaponSystem : IServiceTick
         foreach (var (hitboxId, definition) in instance.State.OwnedHitboxes)
             OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Destroy, new() { Owner = owner, Definition = definition, HitboxId = hitboxId }));
     }
+
+    // ============================================================================
+    // Animation System
+    // ============================================================================
+
+    void RequestAnimation()
+    {
+        AnimatorRequest request = null;
+
+        switch(instance.State.Phase)
+        {
+            case WeaponPhase.Charging:
+                request = instance.Action.Animations.OnCharge;
+            break;
+            case WeaponPhase.Fire:
+                request = instance.Action.Animations.OnFire;
+            break;
+            case WeaponPhase.FireEnd:
+                request = instance.Action.Animations.OnFireEnd;
+            break;
+        }
+
+        if (request == null)
+            return;
+
+        OnEvent<AnimationRequest>(new(Guid.NewGuid(), Request.Start, new() { Owner = owner, Request = request}));
+    }
+
 
     // ============================================================================
     // CONTROL SYSTEM
@@ -512,6 +540,16 @@ public class WeaponSystem : IServiceTick
         }
     }
 
+
+
+    void StoreInputSnapshot(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
+    {
+        foreach (var action in actions)
+        {
+            if (commands.TryGetValue(action, out var command))
+                instance.State.Intent = command.Intent;
+        }
+    }
 
 
     void LockCommand(Command command)

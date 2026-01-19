@@ -230,12 +230,12 @@ public class GenericTimer : Timer
 
     void CalculatePercentage()
     {
-        float total = Unit == TimerUnit.Time ? InitialTime : InitialFrame;
-        float raw = CurrentTime / total;
+        float total     = Unit == TimerUnit.Time ? InitialTime : InitialFrame;
+        float current   = Unit == TimerUnit.Time ? CurrentTime : CurrentFrame;
+        float raw       = current / total;
 
         percent = mode == TimerMode.Down ? 1f - raw : raw;
     }
-
     public override bool IsFinished => !IsRunning;
     public float PercentComplete    => percent;
 }

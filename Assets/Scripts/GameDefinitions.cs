@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.ShaderGraph;
 using UnityEngine;
 
 //
@@ -82,66 +83,89 @@ public class EventHandler {}
 //  Actor
 //
 
-
-
-public interface IDamageable
+public interface IControllable
 {
-    bool Invulnerable                       { get; }
+    bool Inactive                           { get; set; }
+}
+public interface IDamageable            
+{           
+    bool Invulnerable                       { get; set; }
     float Health                            { get; set; }
     float MaxHealth                         { get; }
-}
+}           
 
-public interface ICaster
-{
+public interface ICaster            
+{           
     float Mana                              { get; set; }
     float MaxMana                           { get; }
-}
+}           
 
-public interface IAttacker : IHasAim
-{
+public interface IMovable           
+{           
+    bool CanMove                            { get; }
+    float Speed                             { get; }
+    float SpeedMultiplier                   { get; }
+    bool IsMoving                           { get; }
+    bool Disabled                           { get; }
+}           
+
+public interface IAttacker          
+{           
     bool CanAttack                          { get; }
     float Attack                            { get; }
     float AttackMultiplier                  { get; }
+}           
+
+public interface IDefender          
+{           
+    bool Parrying                           { get; }
+    bool Blocking                           { get; }
+}           
+
+public interface IDirectional           
+{   
+    Vector2 Direction                       { get; }
+    Vector2 LastDirection                   { get; }
+}           
+
+public interface IOrientable            
+{        
+    Vector2 Facing                          { get; }
+    Cardinal CardinalFacing                 { get; }
+    bool CanRotate                          { get; }
 }
 
-public interface IHasVelocity
+public interface IAimable
+{
+    Vector2 AimDirection                    { get; }
+    Intercardinal IntercardinalAimDirection { get; }
+}
+
+public interface IPhysical
 {
     Vector2 Velocity                        { get; }
     Vector2 Momentum                        { get; }
 }
 
-
-public interface IMovable
+public interface IAfflictable
 {
-    bool CanMove                            { get; }
-    float Speed                             { get; }
-    float SpeedMultiplier                   { get; }
+    bool Disabled                           { get; }
+    bool Stunned                            { get; set; }
+    bool Invulnerable                       { get; set; }
+    // Frozen, Poisoned, Slowed, Burning, etc.
 }
 
-public interface IHasDirection
+public interface IIdle
 {
-    Vector2 Direction                       { get; }
-    Vector2 LastDirection                   { get; }
-    CardinalDirection CardinalDirection     { get; }
+    TimePredicate IsIdle { get; }
 }
 
-public interface IHasAim
-{
-    Vector2 AimDirection                    { get; }
-    CardinalDirection CardinalAimDirection  { get; }
-}
+public interface IActor : IControllable {}
+public interface IMovableActor : IActor, IMovable, IPhysical, IDirectional, IOrientable, IControllable { }
 
-public interface IOrientable
-{
-    CardinalDirection CardinalDirection     { get; }
-    bool CanRotate                          { get; }
-}
-
-public interface IMovableActor  : IMovable, IHasVelocity, IHasDirection, IOrientable        {}
-
-public interface IHero          : IMovableActor, IAttacker, ICaster, IHasAim, IDamageable   {}
-public interface IEnemy         : IMovableActor, IAttacker, IDamageable                     {}
-
+public interface IHero  : IMovableActor, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
+public interface IEnemy : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
+public interface IBoss  : IEnemy {}
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
 //
@@ -237,7 +261,7 @@ public enum InputCondition
     ReleasedRecently,
 }
 
-public enum InputIntent
+public enum PlayerAction
 {
     None,
     Interact,

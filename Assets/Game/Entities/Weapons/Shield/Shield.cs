@@ -75,7 +75,7 @@ public class ShieldParry : DamagingWeapon
                 Prefab              = "HB_ShieldParry",
                 Offset              = new(){ x = 0, y = 0 },
                 FrameStart          = 1,
-                FrameEnd            = 30,
+                FrameEnd            = 10,
                 Lifetime            = HitboxLifetime.FrameBased,
                 Behavior            = HitboxBehavior.Attached,
                 Phase               = WeaponPhase.Fire,
@@ -163,7 +163,8 @@ public class ShieldBlock : DamagingWeapon
                 FrameStart          = 1,
                 Behavior            = HitboxBehavior.Attached,
                 Lifetime            = HitboxLifetime.Permanent,
-                Phase               = WeaponPhase.Charging,
+                Phase               = WeaponPhase.Fire,
+                AvailableDirections = HitboxDirection.Cardinal,
                 AllowMultiHit       = false,
             }
         };

@@ -32,24 +32,24 @@ public enum ControllerPriority
 
 public class MovementDirective
 {
-    public object Owner                     { get; init; }
-    public int Scope                        { get; init; }
-    public IMovementController Controller   { get; init; }
-    public MovementCommandIntent Intent     { get; init; }
+    public object Owner                             { get; init; }
+    public int Scope                                { get; init; }
+    public IMovementController Controller           { get; init; }
+    public MovementCommandDefinition Definition     { get; init; }
 }
 
 
-public class MovementCommandIntent  : Definition
+public class MovementCommandDefinition  : Definition
 {
-    public MovementAction Action        { get; init; }
-    
-    public float Speed                  { get; init; }
-    public AnimationCurve SpeedCurve    { get; init; }
-    public float Duration               { get; init; }
-    public bool PersistPastScope        { get; init; }
-    public bool PersistPastSource       { get; init; }
+    public MovementAction Action                    { get; init; }
 
-    public WeaponPhase Phase            { get; init; }
+    public float Speed                              { get; init; }
+    public AnimationCurve SpeedCurve                { get; init; }
+    public int DurationFrame                        { get; init; }
+    public bool PersistPastScope                    { get; init; }
+    public bool PersistPastSource                   { get; init; }
+
+    public WeaponPhase Phase                        { get; init; }
 }
 
 // ============================================================================
@@ -61,23 +61,23 @@ public class MovementCommandIntent  : Definition
 public abstract class MovementCommand
 {
     public abstract IMovementController CreateController();
-    public abstract MovementCommandIntent GetIntent();
+    public abstract MovementCommandDefinition GetDefinition();
 }
 
 public class DashMovementCommand : MovementCommand
 {
-    public IMovableActor Actor              { get; init; }
-    public MovementCommandIntent Intent     { get; init; }
-    public override IMovementController CreateController()  => new DashController(Actor.Direction, Intent.Speed, Intent.Duration);
-    public override MovementCommandIntent GetIntent()       => Intent;
+    public MovementCommandDefinition Definition     { get; init; }
+    public InputIntentSnapshot InputIntent          { get; init; }
+    public override IMovementController CreateController()      => new DashController(InputIntent.Direction, InputIntent.LastDirection, Definition.Speed, Definition.DurationFrame);
+    public override MovementCommandDefinition GetDefinition()   => Definition;
 } 
 
 public class LungeMovementCommand : MovementCommand
 {
-    public IHasAim Actor                    { get; init; }
-    public MovementCommandIntent Intent     { get; init; }
-    public override IMovementController CreateController()  => new LungeController(Actor.AimDirection, Intent.Speed, Intent.Duration, Intent.SpeedCurve);
-    public override MovementCommandIntent GetIntent()       => Intent;
+    public MovementCommandDefinition Definition     { get; init; }
+    public InputIntentSnapshot InputIntent          { get; init; }
+    public override IMovementController CreateController()     => new LungeController(InputIntent.AimDirection, Definition.Speed, Definition.DurationFrame, Definition.SpeedCurve);
+    public override MovementCommandDefinition GetDefinition()  => Definition;
 } 
 
 // public class ChargeCommand : MovementCommand
@@ -106,25 +106,35 @@ public class DashController : IMovementController
 {
     readonly Vector2 direction;
     readonly float speed;
-    readonly ClockTimer timer;
-    
-    public DashController(Vector2 direction, float speed, float duration)
+    readonly FrameTimer timer;
+
+    Vector2 traveledDistance;
+    bool latch = false;
+
+    public DashController(Vector2 direction, Vector2 lastDirection, float speed, int duration)
     {
-        this.direction = direction.normalized;
-        this.speed = speed;
-        this.timer = new ClockTimer(duration);
+        Debug.Log($"Creating controller {direction}, {speed}");
+        this.direction  = direction != Vector2.zero ? direction.normalized : lastDirection.normalized;
+        this.speed      = speed;
+        this.timer      = new FrameTimer(duration);
         timer.Start();
     }
 
     public Vector2 CalculateVelocity(Actor actor)
     {
+        if (!latch)
+            traveledDistance = actor.Bridge.View.transform.position;
+        
+        latch = true;
+
+        Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Controller.Dash.Distance",() => Vector2.Distance(traveledDistance, actor.Bridge.View.transform.position ));
         return direction * speed;
     }
 
     public bool IsActive                    => !timer.IsFinished;
     public ControllerInputMode InputMode    => ControllerInputMode.Ignore;
     public float Weight                     => 1f;
-    public ControllerPriority Priority      => ControllerPriority.Normal;
+    public ControllerPriority Priority      => ControllerPriority.Interrupt;
 }
 
 
@@ -133,21 +143,22 @@ public class LungeController : IMovementController
     readonly Vector2 direction;
     readonly float maxSpeed;
     readonly AnimationCurve speedCurve;
-    readonly ClockTimer timer;
+    readonly FrameTimer timer;
     
-    public LungeController(Vector2 direction, float maxSpeed, float duration, AnimationCurve curve = null)
+    public LungeController(Vector2 direction, float maxSpeed, int duration, AnimationCurve curve = null)
     {
-        this.direction = direction.normalized;
-        this.maxSpeed = maxSpeed;
+        this.direction  = direction.normalized;
+        this.maxSpeed   = maxSpeed;
         this.speedCurve = curve ?? AnimationCurve.EaseInOut(0, 1, 1, 0);
-        this.timer = new ClockTimer(duration);
+        this.timer      = new FrameTimer(duration);
+        
         timer.Start();
     }
     
     public Vector2 CalculateVelocity(Actor actor)
     {
         float speedMultiplier = speedCurve.Evaluate(timer.PercentComplete);
-        return direction * maxSpeed * speedMultiplier;
+        return maxSpeed * speedMultiplier * direction;
     }
 
     public bool IsActive                    => !timer.IsFinished;

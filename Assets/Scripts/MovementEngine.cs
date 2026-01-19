@@ -63,7 +63,7 @@ public class MovementEngine : IServiceTick
 
         ApplyFriction();
 
-        if (CanMove())
+        if (CanApplyVelocity())
             ApplyVelocity();
 
         DebugLog();
@@ -75,38 +75,43 @@ public class MovementEngine : IServiceTick
 
     void CalculateModifier() => modifier = modifierHandler.Calculate();
 
-void CalculateVelocity()
-{
-    Vector2 velocity = BaseMovementVelocity();
-    
-    var sortedDirectives = directives
-        .OrderByDescending(d => d.Controller.Priority)
-        .ToList();
-    
-    foreach(var directive in sortedDirectives)
+    void CalculateVelocity()
     {
-        Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
+        Vector2 velocity = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
 
-        switch(directive.Controller.InputMode)
+        if (actor.Disabled)
         {
-            case ControllerInputMode.Ignore:
-                velocity = controllerVelocity;
-                goto FinishedBlending;
-                
-            case ControllerInputMode.Blend:
-                velocity += controllerVelocity * directive.Controller.Weight;
-                break;
-                
-            case ControllerInputMode.AllowOverride:
-                velocity = Vector2.Lerp(velocity, controllerVelocity, directive.Controller.Weight);
-                break;
+            momentum = Vector2.zero;
+            velocity = Vector2.zero;
+            return;
         }
+
+        var sortedDirectives = directives.OrderByDescending(d => d.Controller.Priority).ToList();
+
+        foreach(var directive in sortedDirectives)
+        {
+            Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
+
+            switch(directive.Controller.InputMode)
+            {
+                case ControllerInputMode.Ignore:
+                    velocity = controllerVelocity;
+                    goto FinishedBlending;
+
+                case ControllerInputMode.Blend:
+                    velocity += controllerVelocity * directive.Controller.Weight;
+                    break;
+
+                case ControllerInputMode.AllowOverride:
+                    velocity = Vector2.Lerp(velocity, controllerVelocity, directive.Controller.Weight);
+                    break;
+            }
+        }
+
+        FinishedBlending:
+        this.momentum = velocity;
+        this.velocity = velocity;
     }
-    
-    FinishedBlending:
-    this.momentum = velocity;
-    this.velocity = velocity;
-}
 
     Vector2 BaseMovementVelocity()
     {
@@ -127,12 +132,12 @@ void CalculateVelocity()
 
     void RequestMovementDirective(object owner, int scope, MovementCommand command)
     {
-        directives.Add(new() { Owner = owner, Scope = scope, Intent = command.GetIntent(), Controller = command.CreateController()});
+        directives.Add(new() { Owner = owner, Scope = scope, Definition = command.GetDefinition(), Controller = command.CreateController()});
     }
 
     void ClearMovementDirective(object owner, int scope)
     {
-        directives.RemoveAll(directive => directive.Owner == owner && directive.Scope == scope &&!directive.Intent.PersistPastScope);
+        directives.RemoveAll(directive => directive.Owner == owner && directive.Scope == scope &&!directive.Definition.PersistPastScope);
     }
 
     void ClearAllOwnedDirectives(object owner)
@@ -171,8 +176,8 @@ void CalculateVelocity()
     public Vector2 Velocity => velocity;
     public Vector2 Momentum => momentum;
 
-    void SetSpeed() => speed = actor.Speed;
-    bool CanMove()  => owner is IMovable actor && actor.CanMove;
+    void SetSpeed()         => speed = actor.Speed;
+    bool CanApplyVelocity() => owner is IMovable actor && !actor.Disabled;
 
     void DebugLog()
     {
@@ -219,22 +224,22 @@ public readonly struct MovementRequest : ISystemEvent
 public static class MovementCommandFactory
 {
     
-    public static MovementCommand Create(MovementCommandIntent intent, Actor actor)
+    public static MovementCommand Create(Actor actor, MovementCommandDefinition definition, InputIntentSnapshot inputIntent)
     {
-        return (intent.Action, actor) switch
+        return (definition.Action, actor) switch
         {
             (MovementAction.Dash, IMovableActor movable) =>
                 new DashMovementCommand
                 {
-                    Actor  = movable,
-                    Intent = intent,
+                    Definition      = definition,
+                    InputIntent     = inputIntent,
                 },
 
-            (MovementAction.Lunge, IMovableActor movable and IHasAim aim) =>
+            (MovementAction.Lunge, IMovableActor movable and IAimable aim) =>
                 new LungeMovementCommand
                 {
-                    Actor  = aim,
-                    Intent = intent,
+                    Definition      = definition,
+                    InputIntent     = inputIntent,
                 },
 
             _ => null

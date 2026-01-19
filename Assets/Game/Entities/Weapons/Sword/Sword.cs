@@ -1,5 +1,8 @@
 
 
+
+
+
 public class Sword : Weapon
 {
     public Sword()
@@ -8,7 +11,6 @@ public class Sword : Weapon
         Definition                  = new SwordDefinition(); 
     }
 }
-
 
 
 public class SwordDefinition : WeaponDefinition
@@ -51,6 +53,7 @@ public class SwordStrike : DamagingWeapon
                 DurationFrames      = 20,
                 DisableAttack       = true,
                 DisableRotate       = true,
+                DisableMove         = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
@@ -62,10 +65,24 @@ public class SwordStrike : DamagingWeapon
                 DurationFrames      = 30,
                 DisableAttack       = true,
                 DisableRotate       = true,
+                DisableMove         = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
 
+        };
+
+        MovementDefinitions = new()
+        {
+            new()
+            {
+                Action              = MovementAction.Lunge,
+                Speed               = 4,
+                SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+                DurationFrame       = 25,
+                PersistPastScope    = true,
+                Phase               = WeaponPhase.Fire,
+            }
         };
 
         Hitboxes = new()
@@ -78,8 +95,14 @@ public class SwordStrike : DamagingWeapon
                 FrameEnd            = 20,
                 Behavior            = HitboxBehavior.Attached,
                 Phase               = WeaponPhase.Fire,
+                AvailableDirections = HitboxDirection.Intercardinal,
                 AllowMultiHit       = false,
             }
+        };
+        
+        Animations = new()
+        {
+            OnFire = HeroAnimation.SwordStrike,
         };
     }
 }
@@ -109,6 +132,7 @@ public class SwordCleave : DamagingWeapon
                 DurationFrames      = 20,
                 DisableAttack       = true,
                 DisableRotate       = true,
+                DisableMove         = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
@@ -119,9 +143,22 @@ public class SwordCleave : DamagingWeapon
                 Cancelable          = true,
                 DurationFrames      = 30,
                 DisableAttack       = true,
+                DisableMove         = true,
                 DisableRotate       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
+            }
+        };
+
+        MovementDefinitions = new()
+        {
+            new()
+            {
+                Action              = MovementAction.Lunge,
+                Speed               = 4,
+                DurationFrame       = 25,
+                PersistPastScope    = true,
+                Phase               = WeaponPhase.Fire,
             }
         };
 
@@ -134,7 +171,8 @@ public class SwordCleave : DamagingWeapon
                 FrameStart          = 1,
                 FrameEnd            = 20,
                 Behavior            = HitboxBehavior.Attached,
-                Phase               = WeaponPhase.Fire,                
+                Phase               = WeaponPhase.Fire,
+                AvailableDirections = HitboxDirection.Intercardinal,          
                 AllowMultiHit       = false,
             }
         };
@@ -167,6 +205,7 @@ public class SwordRend : DamagingWeapon
                 Cancelable          = false,
                 DurationFrames      = 20,
                 DisableAttack       = true,
+                DisableMove         = true,                
                 DisableRotate       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
@@ -178,6 +217,7 @@ public class SwordRend : DamagingWeapon
                 Cancelable          = true,
                 DurationFrames      = 30,
                 DisableAttack       = true,
+                DisableMove         = true,                
                 DisableRotate       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
@@ -185,6 +225,19 @@ public class SwordRend : DamagingWeapon
 
 
         };
+
+        MovementDefinitions = new()
+        {
+            new()
+            {
+                Action              = MovementAction.Lunge,
+                Speed               = 4,
+                DurationFrame       = 25,
+                PersistPastScope    = true,
+                Phase               = WeaponPhase.Fire,
+            }
+        };
+
         Hitboxes = new()
         {
             new()
@@ -194,7 +247,8 @@ public class SwordRend : DamagingWeapon
                 FrameStart          = 1,
                 FrameEnd            = 20,
                 Behavior            = HitboxBehavior.Attached,
-                Phase               = WeaponPhase.Fire,                
+                Phase               = WeaponPhase.Fire, 
+                AvailableDirections = HitboxDirection.Intercardinal,            
                 AllowMultiHit       = false,
             }
         };

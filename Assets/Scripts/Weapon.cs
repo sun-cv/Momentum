@@ -8,6 +8,7 @@ using System.Linq;
 
 public enum WeaponPhase
 {
+    None,
     Idle,
     Charging,
     Fire,
@@ -144,8 +145,8 @@ public class WeaponAction       : Definition
     /// MOVEMENT COMMANDS
     /// ============================================================================
 
-    public List<MovementCommandIntent> 
-                                    MovementIntents { get; init; } = new();
+    public List<MovementCommandDefinition> 
+                                MovementDefinitions { get; init; } = new();
 
     /// ============================================================================
     /// WEAPON CONFIGURATION
@@ -167,6 +168,21 @@ public class WeaponAction       : Definition
     /// ============================================================================
     
     public List<HitboxDefinition> Hitboxes          { get; init; } = new();
+
+    /// ============================================================================
+    /// Animations
+    /// ============================================================================
+
+    public WeaponAnimations Animations              { get; init; } = new();
+}
+
+
+public class WeaponAnimations
+{
+    public AnimatorRequest OnCharge                { get; init; }
+    public AnimatorRequest OnFire                  { get; init; }
+    public AnimatorRequest OnFireEnd               { get; init; }
+    public AnimatorRequest OnCancel                { get; init; }
 }
 
 public class WeaponTriggerCondition
@@ -250,6 +266,8 @@ public class WeaponState
 
     public bool HasFired                        { get; set; }
     public bool ReadyToRelease                  { get; set; }
+
+    public InputIntentSnapshot Intent           { get; set; }
 
     public Dictionary<Guid, HitboxDefinition> 
                                  OwnedHitboxes  { get; set; } = new();

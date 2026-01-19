@@ -1,6 +1,8 @@
 
 
 
+using UnityEngine;
+
 public class Dash : Weapon
 {
     public Dash()
@@ -78,6 +80,18 @@ public class BaseDash : MovementWeapon
                 DurationFrames      = 15,
                 Modifier            = 0.5f,
             },
+        };
+
+        MovementDefinitions = new()
+        {
+            new()
+            {
+                Action              = MovementAction.Dash,
+                Phase               = WeaponPhase.Fire,
+                Speed               = 13.65f,
+                DurationFrame       = 15,
+                PersistPastScope    = true,
+            }
         };
     }
 }
