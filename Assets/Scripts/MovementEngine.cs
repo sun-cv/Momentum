@@ -14,6 +14,8 @@ public class MovementEngine : IServiceTick
     readonly float maxSpeed     = Settings.Movement.MAX_SPEED;
     readonly float acceleration = Settings.Movement.ACCELERATION;
     readonly float friction     = Settings.Movement.FRICTION;
+    readonly float retention    = Settings.Movement.MOMENTUM_RETENTION;
+    readonly float inertia      = Settings.Movement.INERTIA;
 
     MovementModifierHandler modifierHandler = new();
 
@@ -58,6 +60,7 @@ public class MovementEngine : IServiceTick
     {
         RemoveInactiveControllers();
 
+
         CalculateModifier();
         CalculateVelocity();
 
@@ -77,45 +80,58 @@ public class MovementEngine : IServiceTick
 
     void CalculateVelocity()
     {
-        Vector2 velocity = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
-
         if (actor.Disabled)
         {
             momentum = Vector2.zero;
             velocity = Vector2.zero;
             return;
         }
-
+    
+        bool isReversing = actor.CanMove && 
+                           velocity.magnitude > 1f && 
+                           Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
+    
+        Vector2 targetVelocity = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
+    
+        // Handle controllers
         var sortedDirectives = directives.OrderByDescending(d => d.Controller.Priority).ToList();
-
+    
         foreach(var directive in sortedDirectives)
         {
             Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
-
+    
             switch(directive.Controller.InputMode)
             {
                 case ControllerInputMode.Ignore:
-                    velocity = controllerVelocity;
+                    targetVelocity = controllerVelocity;
                     goto FinishedBlending;
-
+    
                 case ControllerInputMode.Blend:
-                    velocity += controllerVelocity * directive.Controller.Weight;
+                    targetVelocity += controllerVelocity * directive.Controller.Weight;
                     break;
-
+    
                 case ControllerInputMode.AllowOverride:
-                    velocity = Vector2.Lerp(velocity, controllerVelocity, directive.Controller.Weight);
+                    targetVelocity = Vector2.Lerp(targetVelocity, controllerVelocity, directive.Controller.Weight);
                     break;
             }
         }
-
+    
         FinishedBlending:
-        this.momentum = velocity;
-        this.velocity = velocity;
+        
+        if (isReversing && directives.Count == 0)
+        {
+            velocity = Vector2.MoveTowards(velocity, Vector2.zero, acceleration * inertia * Clock.DeltaTime);
+        }
+        else
+        {
+            velocity = Vector2.Lerp(targetVelocity, velocity, retention);
+        }
+        
+        momentum = velocity;
     }
-
     Vector2 BaseMovementVelocity()
     {
-        return Vector2.MoveTowards(velocity, Mathf.Clamp(speed * modifier, 0, maxSpeed) * actor.Direction, acceleration * Clock.DeltaTime);
+        return Vector2.MoveTowards(velocity, Mathf.Clamp(speed * modifier, 0, maxSpeed) * actor.Direction.Vector, acceleration * Clock.DeltaTime);
     }
 
     void ApplyFriction() => velocity *= 1 - Mathf.Clamp01(friction * Clock.DeltaTime);

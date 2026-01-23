@@ -77,9 +77,9 @@ public class SwordStrike : DamagingWeapon
             new()
             {
                 Action              = MovementAction.Lunge,
-                Speed               = 4,
+                Speed               = 5,
                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrame       = 25,
+                DurationFrame       = 15,
                 PersistPastScope    = true,
                 Phase               = WeaponPhase.Fire,
             }
@@ -176,7 +176,10 @@ public class SwordCleave : DamagingWeapon
                 AllowMultiHit       = false,
             }
         };
-
+        Animations = new()
+        {
+            OnFire = HeroAnimation.SwordStrike,
+        };
     }
 }
 
@@ -251,6 +254,10 @@ public class SwordRend : DamagingWeapon
                 AvailableDirections = HitboxDirection.Intercardinal,            
                 AllowMultiHit       = false,
             }
+        };
+        Animations = new()
+        {
+            OnFire = HeroAnimation.SwordStrike,
         };
     }
 }

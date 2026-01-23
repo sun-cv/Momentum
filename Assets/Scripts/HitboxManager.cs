@@ -174,8 +174,6 @@ public class HitboxManager : RegisteredService, IServiceTick
         Quaternion intentRotation   = Orientation.ToRotation(intentVector);
         Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Offset);
 
-        Debug.Log(intentVector);
-
         var prefab      = Registry.Prefabs.Get(pending.Definition.Prefab);
         var hitbox      = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
         
@@ -344,9 +342,9 @@ public class HitboxManager : RegisteredService, IServiceTick
     {
         return pending.Definition.AvailableDirections switch
         {
-            HitboxDirection.Cardinal        => Orientation.ToVector(pending.Input.CardinalAimDirection),
-            HitboxDirection.Intercardinal   => Orientation.ToVector(pending.Input.IntercardinalAimDirection),
-            _ => Orientation.ToVector(pending.Input.IntercardinalAimDirection)
+            HitboxDirection.Cardinal        => pending.Input.Aim.Cardinal,
+            HitboxDirection.Intercardinal   => pending.Input.Aim.Intercardinal,
+            _ => pending.Input.Aim.Intercardinal
         };
     }
 

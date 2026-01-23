@@ -1,11 +1,8 @@
-
-
-
-
-
-
-
 using UnityEngine;
+
+
+
+
 
 public class IntentSystem : IServiceTick
 {
@@ -51,16 +48,16 @@ public class IntentSystem : IServiceTick
 
 public class InputIntent
 {
+    readonly bool normalizeVelocity = Settings.Movement.NORMALIZE_VELOCITY;
+
     IntentSystem intent;
 
-    Vector2 facing          = Vector2.down;
-    Vector2 direction       = Vector2.down;
-    Vector2 aimDirection    = Vector2.down;
-    Vector2 lastDirection   = Vector2.down;
+    Direction aim               = new(Vector2.down);
+    Direction facing            = new(Vector2.down);
+    Direction direction         = new(Vector2.down);
+    Direction lastDirection     = new(Vector2.down);
 
     TimePredicate facingDiagonal;
-
-    readonly bool normalizeVelocity = Settings.Movement.NORMALIZE_VELOCITY;
 
     public void Initialize(IntentSystem intent)
     {
@@ -75,11 +72,6 @@ public class InputIntent
         UpdateAim();
     } 
 
-    void UpdateAim()
-    {
-        aimDirection = intent.Position.MouseDirectionFrom(intent.Owner.Bridge.View.transform.position);
-    }
-
     void UpdateDirection()
     {
         var input = intent.InputRouter.RemoteMovementDirection;
@@ -90,75 +82,95 @@ public class InputIntent
         if (normalizeVelocity && input.Vector.sqrMagnitude > 1f)
             input.Vector = input.Vector.normalized;
 
-        direction = input;
+        direction = input.Vector;
     }
 
     void UpdateFacing()
     {
-        if (direction.sqrMagnitude < 0.0001f)
+        if (direction.Vector.sqrMagnitude < 0.0001f)
             return;
 
-        bool hasHorizontal  = Mathf.Abs(direction.x) > 0.01f;
-        bool hasVertical    = Mathf.Abs(direction.y) > 0.01f;
+        bool hasHorizontal  = Mathf.Abs(direction.X) > 0.01f;
+        bool hasVertical    = Mathf.Abs(direction.Y) > 0.01f;
 
         if (!hasHorizontal || !hasVertical)
         {
-            facing = Orientation.ToVector(CardinalFacing);
+            facing = direction.Cardinal;
             return;
         }
 
-        bool facingHorizontal = Mathf.Abs(facing.x) > Mathf.Abs(facing.y);
+        bool facingHorizontal = Mathf.Abs(facing.X) > Mathf.Abs(facing.Y);
 
         if (!facingHorizontal)
         {
             float requiredDelay = Orientation.GetTurnDelay(facing, direction);
 
             if (facingDiagonal.Duration >= requiredDelay)
-                facing = new Vector2(direction.x > 0 ? 1 : -1, 0);
+                facing = new Vector2(direction.X > 0 ? 1 : -1, 0);
         }
         else
-            facing = new Vector2(direction.x > 0 ? 1 : -1, 0);
+            facing = new Vector2(direction.X > 0 ? 1 : -1, 0);
     }
-
+    
+    void UpdateAim()
+    {
+        aim = intent.Position.MouseDirectionFrom(intent.Owner.Bridge.View.transform.position);
+    }
 
     bool IsMovingDiagonal()
     {
-        return Mathf.Abs(direction.x) > 0.01f && Mathf.Abs(direction.y) > 0.01f;
+        return Mathf.Abs(direction.X) > 0.01f && Mathf.Abs(direction.Y) > 0.01f;
     }
 
     public InputIntentSnapshot Snapshot()
     {
-
-        Debug.Log($"Snapshot {CardinalAimDirection}");
-    
         return new()
         {
-            Direction                   = Direction,
-            AimDirection                = AimDirection,
-            LastDirection               = LastDirection,
-            CardinalFacing              = CardinalFacing,
-            CardinalAimDirection        = CardinalAimDirection,
-            IntercardinalAimDirection   = IntercardinalAimDirection,
+            Aim                = Aim,
+            Facing             = Facing,
+            Direction          = Direction,
+            LastDirection      = LastDirection,
         };
     }
 
-    public Vector2 Facing                           => facing;
-    public Vector2 Direction                        => direction;
-    public Vector2 AimDirection                     => aimDirection;
-    public Vector2 LastDirection                    => lastDirection;
-    public Cardinal CardinalFacing                  => Orientation.Facing(direction);
-    public Cardinal CardinalAimDirection            => Orientation.CardinalFromIntent(aimDirection);
-    public Intercardinal IntercardinalAimDirection  => Orientation.IntercardinalFromIntent(aimDirection);
+    public Direction Aim                => aim;
+    public Direction Facing             => facing;
+    public Direction Direction          => direction;
+    public Direction LastDirection      => lastDirection;
 }
 
+
+public readonly struct Direction
+{
+    readonly Vector2 vector;
+
+    public Direction(Vector2 vector)
+    {
+        this.vector = vector.sqrMagnitude > 0.0001f ? vector.normalized : Vector2.zero;
+    }
+
+    public Vector2 Vector                   => vector;
+    public Vector2 Cardinal                 => Orientation.NormalizeVectorToCardinal(vector);
+    public Vector2 Intercardinal            => Orientation.NormalizeVectorToIntercardinal(vector);
+
+    public Cardinal AsCardinal              => Orientation.CardinalFrom(vector);
+    public Intercardinal AsIntercardinal    => Orientation.IntercardinalFrom(vector);
+
+    public bool IsZero                      => vector.sqrMagnitude < 0.0001f;
+    public float Angle                      => Mathf.Atan2(vector.y, vector.x) * Mathf.Rad2Deg;
+
+    public float X                          => vector.x;
+    public float Y                          => vector.y;
+
+    public static implicit operator Vector2(Direction direction)    => direction.vector;
+    public static implicit operator Direction(Vector2 vector)       => new(vector);
+}
 
 
 public readonly struct InputIntentSnapshot
 {
-    public Vector2 Direction                        { get; init; }
-    public Vector2 AimDirection                     { get; init; }
-    public Vector2 LastDirection                    { get; init; }
-    public Cardinal CardinalFacing                  { get; init; }
-    public Cardinal CardinalAimDirection            { get; init; }
-    public Intercardinal IntercardinalAimDirection  { get; init; }
+    public Direction Aim                { get; init; }
+    public Direction Facing             { get; init; }
+    public Direction Direction          { get; init; }
+    public Direction LastDirection      { get; init; }
 }

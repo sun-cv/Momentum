@@ -74,11 +74,13 @@ public class BaseDash : MovementWeapon
             {
                 Trigger             = WeaponPhase.FireEnd,
                 Name                = "DashMobilityDisable",
-                Type                = EffectType.Speed,
+                Type                = EffectType.Grip,
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 15,
-                Modifier            = 0.5f,
+                DurationFrames      = 20,
+                Modifier            = 1f,
+                ModifierTarget      = .1f,
+                ModifierSpeedFrames = 20,
             },
         };
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
@@ -25,6 +26,9 @@ public class AnimationHandler : IServiceTick
     Dictionary<string, float> clipDurations;
     ClockTimer transitionTimer;
 
+    const int LAYER_BASE    = 0;
+    const int LAYER_ACTION  = 1;
+
     public AnimationHandler(Actor actor)
     {
         if (actor.Bridge is not ActorBridge bridge)
@@ -44,6 +48,7 @@ public class AnimationHandler : IServiceTick
     public void Tick()
     {
         UpdateAnimatorParameters();
+        DebugLog();
     }
 
     void UpdateAnimatorParameters()
@@ -53,33 +58,41 @@ public class AnimationHandler : IServiceTick
             animator.SetBool("Inactive", movable.Inactive);
             animator.SetBool("Disabled", movable.Disabled);
             animator.SetBool("IsMoving", movable.IsMoving);
-            animator.SetFloat("FacingX", movable.Facing.x);
-            animator.SetFloat("FacingY", movable.Facing.y);
+
+            if (movable is IOrientable orientable && orientable.CanRotate)
+            {
+                animator.SetFloat("FacingX", movable.Facing.X);
+                animator.SetFloat("FacingY", movable.Facing.Y);
+            }
         }
 
         if (owner is IIdle idle)
         {
-            animator.SetBool("Idle", idle.IsIdle);
+            animator.SetBool ("Idle", idle.IsIdle);
             animator.SetFloat("IdleTime", idle.IsIdle.Duration);
         }
 
         if (owner is IAimable aimable)
         {
-            animator.SetFloat("AimingX", aimable.AimDirection.x);
-            animator.SetFloat("AimingY", aimable.AimDirection.y);
+            animator.SetFloat("AimX", aimable.Aim.X);
+            animator.SetFloat("AimY", aimable.Aim.Y);
+
+            animator.SetFloat("CardinalAimX", aimable.Aim.Cardinal.x);
+            animator.SetFloat("CardinalAimY", aimable.Aim.Cardinal.y);
         }
     }
 
     void PlayAnimation(AnimatorRequest request)
     {   
-        animator.Play(request.Hash);
+        transitionTimer?.Stop();
+
+        animator.SetLayerWeight(LAYER_ACTION, 1f);
+        animator.Play(request.Hash, LAYER_ACTION, 0f);
         
         if (clipDurations.TryGetValue(request.Name, out float duration))
         {
-            Debug.Log("name matches");
-            transitionTimer?.Stop();
             transitionTimer = new ClockTimer(duration);
-            transitionTimer.OnTimerStop += () => animator.Play("Idle");
+            transitionTimer.OnTimerStop += () => animator.SetLayerWeight(LAYER_ACTION, 0f);
             transitionTimer.Start();
         }
     }
@@ -107,6 +120,16 @@ public class AnimationHandler : IServiceTick
             if (!clipDurations.ContainsKey(key))
                 clipDurations[key] = clip.length;
         }
+    }
+
+    void DebugLog()
+    {
+        Log.Debug(LogSystem.Animation, LogCategory.State, "Animation", "Playing", () => 
+        { 
+            AnimatorClipInfo[] clipInfo = animator.GetCurrentAnimatorClipInfo(0); 
+
+            return string.Join(", ", clipInfo.Select(clip => clip.clip.name));
+        });
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.AnimationHandler;

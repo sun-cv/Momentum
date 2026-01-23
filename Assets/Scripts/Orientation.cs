@@ -1,4 +1,5 @@
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -112,7 +113,7 @@ public static class Orientation
         };
     }
     
-    public static Cardinal CardinalFromIntent(Vector2 position)
+    public static Cardinal CardinalFrom(Vector2 position)
     {
         float angle = Mathf.Atan2(position.y, position.x) * Mathf.Rad2Deg;
         if (angle < 0) angle += 360;
@@ -127,7 +128,7 @@ public static class Orientation
         };
     }
 
-    public static Intercardinal IntercardinalFromIntent(Vector2 position)
+    public static Intercardinal IntercardinalFrom(Vector2 position)
     {
         float angle = Mathf.Atan2(position.y, position.x) * Mathf.Rad2Deg;
         if (angle < 0) angle += 360;
@@ -149,6 +150,15 @@ public static class Orientation
     {
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         return Quaternion.Euler(0, 0, angle);
+    }
+
+    public static Vector2 NormalizeVectorToCardinal(Vector2 vector)
+    {
+        return ToVector(CardinalFrom(vector)); 
+    }
+    public static Vector2 NormalizeVectorToIntercardinal(Vector2 vector)
+    {
+        return ToVector(IntercardinalFrom(vector)); 
     }
 
     public static float GetTurnDelay(Vector2 currentFacing, Vector2 newDirection)

@@ -104,12 +104,12 @@ public class SpeedMovementModifier : IMovementModifier
 public class GripMovementModifier : IMovementModifier
 {
     readonly EffectInstance instance;
-    readonly ClockTimer timer;
+    readonly DualCountdown timer;
 
     public GripMovementModifier(EffectInstance effectInstance)
     {
         instance    = effectInstance;
-        timer       = new(((IModifiable)effectInstance.Effect).ModifierSpeed);
+        timer       = ((IModifiable)effectInstance.Effect).ModifierSpeed != -1 ? new(((IModifiable)effectInstance.Effect).ModifierSpeed) : new(((IModifiable)effectInstance.Effect).ModifierSpeedFrames);
         timer.Start();
     } 
 

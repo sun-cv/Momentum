@@ -34,12 +34,10 @@ public class HeroState : State
     public bool CanAttack                           => effects.Can<IDisableAttack>(effect => effect.DisableAttack, defaultValue: !Disabled); 
     public bool CanRotate                           => effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !Disabled); 
    
-    public Vector2 Facing                           => intent.Input.Facing;
-    public Vector2 Direction                        => intent.Input.Direction;
-    public Vector2 AimDirection                     => intent.Input.AimDirection;
-    public Vector2 LastDirection                    => intent.Input.LastDirection;
-    public Cardinal CardinalFacing                  => intent.Input.CardinalFacing;
-    public Intercardinal IntercardinalAimDirection  => intent.Input.IntercardinalAimDirection;
+    public Direction Aim                            => intent.Input.Aim;
+    public Direction Facing                         => intent.Input.Facing;
+    public Direction Direction                      => intent.Input.Direction;
+    public Direction LastDirection                  => intent.Input.LastDirection;
     
     public Vector2 Velocity                         => movement.Velocity;
     public Vector2 Momentum                         => movement.Momentum;

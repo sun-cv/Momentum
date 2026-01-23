@@ -35,7 +35,8 @@ public interface IActionLock                { public bool RequestActionLock     
 
 public interface IModifiable                { public float Modifier                 { get; init; } 
                                               public float ModifierTarget           { get; init; } 
-                                              public float ModifierSpeed            { get; init; }}
+                                              public float ModifierSpeed            { get; init; }
+                                              public int ModifierSpeedFrames        { get; init; }}
 
 public interface INoUnitCollision           { public bool NoUnitCollision           { get; init; }}
 public interface IImmuneToForce             { public bool ImmuneToForce             { get; init; }}
@@ -110,7 +111,8 @@ public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiab
 
     public float Modifier                       { get; init; }
     public float ModifierTarget                 { get; init; } = 0;
-    public float ModifierSpeed                  { get; init; } = 0;
+    public float ModifierSpeed                  { get; init; } = -1;
+    public int ModifierSpeedFrames              { get; init; } = -1;
 }
 
 public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, ICancelableOnRelease, IModifiable
@@ -122,7 +124,8 @@ public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, ICancela
     public bool CancelOnRelease                 { get; init; }
     public float Modifier                       { get; init; }
     public float ModifierTarget                 { get; init; } = 0;
-    public float ModifierSpeed                  { get; init; } = 0;
+    public float ModifierSpeed                  { get; init; } = -1;
+    public int ModifierSpeedFrames              { get; init; } = -1;
 }
 
 
@@ -147,5 +150,6 @@ public class WeaponMobility : Effect, IType, ITrigger, IDurationFrames, IModifia
 
     public float Modifier                       { get; init; }
     public float ModifierTarget                 { get; init; } = 0;
-    public float ModifierSpeed                  { get; init; } = 0;
+    public float ModifierSpeed                  { get; init; } = -1;
+    public int ModifierSpeedFrames              { get; init; } = -1;
 }

@@ -197,10 +197,10 @@ public class WeaponDefinition : Definition
     public Dictionary<string, WeaponAction> Actions => actions;
 }
 
-
 // ============================================================================
 // WEAPON INSTANCE & STATE
 // ============================================================================
+
 public class WeaponInstance : Instance
 {
     public WeaponAction Action          { get; init; }

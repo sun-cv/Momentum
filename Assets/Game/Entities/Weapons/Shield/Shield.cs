@@ -130,7 +130,7 @@ public class ShieldBlock : DamagingWeapon
 
             new ShieldBraceDisable()
             {   
-                Name                = "ShieldBlockDisable",
+                Name                = "ShieldBlockDisableHeld",
                 Trigger             = WeaponPhase.Fire,
                 Active              = true,
                 Cancelable          = true,

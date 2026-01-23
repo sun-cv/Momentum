@@ -76,7 +76,7 @@ public class LungeMovementCommand : MovementCommand
 {
     public MovementCommandDefinition Definition     { get; init; }
     public InputIntentSnapshot InputIntent          { get; init; }
-    public override IMovementController CreateController()     => new LungeController(InputIntent.AimDirection, Definition.Speed, Definition.DurationFrame, Definition.SpeedCurve);
+    public override IMovementController CreateController()     => new LungeController(InputIntent.Aim, Definition.Speed, Definition.DurationFrame, Definition.SpeedCurve);
     public override MovementCommandDefinition GetDefinition()  => Definition;
 } 
 
@@ -113,7 +113,6 @@ public class DashController : IMovementController
 
     public DashController(Vector2 direction, Vector2 lastDirection, float speed, int duration)
     {
-        Debug.Log($"Creating controller {direction}, {speed}");
         this.direction  = direction != Vector2.zero ? direction.normalized : lastDirection.normalized;
         this.speed      = speed;
         this.timer      = new FrameTimer(duration);

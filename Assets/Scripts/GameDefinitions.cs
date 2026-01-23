@@ -124,21 +124,19 @@ public interface IDefender
 
 public interface IDirectional           
 {   
-    Vector2 Direction                       { get; }
-    Vector2 LastDirection                   { get; }
+    Direction Direction                     { get; }
+    Direction LastDirection                 { get; }
 }           
 
 public interface IOrientable            
 {        
-    Vector2 Facing                          { get; }
-    Cardinal CardinalFacing                 { get; }
+    Direction Facing                        { get; }
     bool CanRotate                          { get; }
 }
 
 public interface IAimable
 {
-    Vector2 AimDirection                    { get; }
-    Intercardinal IntercardinalAimDirection { get; }
+    Direction Aim                           { get; }
 }
 
 public interface IPhysical

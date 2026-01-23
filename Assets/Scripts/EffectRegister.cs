@@ -43,7 +43,9 @@ public class EffectInstance : Instance
     {
         if (Effect is IDuration time)
             timer = new(time.Duration);
-            
+
+        else
+
         if (Effect is IDurationFrames frame)
             timer = new(frame.DurationFrames);
     }

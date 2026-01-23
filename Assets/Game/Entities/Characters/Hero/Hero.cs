@@ -50,12 +50,11 @@ public class Hero : Actor, IHero
     public bool CanAttack                           => State.CanAttack;
     public bool CanRotate                           => State.CanRotate; 
 
-    public Vector2 Facing                           => State.Facing;
-    public Vector2 Direction                        => State.Direction;
-    public Vector2 AimDirection                     => State.AimDirection;
-    public Vector2 LastDirection                    => State.LastDirection;
-    public Cardinal CardinalFacing                  => State.CardinalFacing;
-    public Intercardinal IntercardinalAimDirection  => State.IntercardinalAimDirection;
+    public Direction Aim                            => State.Aim;
+    public Direction Facing                         => State.Facing;
+    public Direction Direction                      => State.Direction;
+    public Direction LastDirection                  => State.LastDirection;
+
     public Vector2 Velocity                         => State.Velocity;
     public Vector2 Momentum                         => State.Momentum;
     
