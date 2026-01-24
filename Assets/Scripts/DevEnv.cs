@@ -14,15 +14,14 @@ public class DevEnv : RegisteredService, IServiceTick
     {
         Log.Configure((config) => config
         .Global(LogLevel.Error)
-        .System(LogSystem.Engine, LogLevel.Debug)
-        .System(LogSystem.Weapon, LogLevel.Trace)
-        .System(LogSystem.Movement, LogLevel.Debug)
-        .System(LogSystem.Physics, LogLevel.Debug)
-        .System(LogSystem.Equipment, LogLevel.Trace)
-        .System(LogSystem.Hitboxes, LogLevel.Trace)
-        .System(LogSystem.Input, LogLevel.Debug)
-        .System(LogSystem.Effects, LogLevel.Trace)
-        .System(LogSystem.Animation, LogLevel.Trace));
+        .System(LogSystem.Engine,       LogLevel.Debug)
+        .System(LogSystem.Weapon,       LogLevel.Trace)
+        .System(LogSystem.Movement,     LogLevel.Debug)
+        .System(LogSystem.Physics,      LogLevel.Debug)
+        .System(LogSystem.Equipment,    LogLevel.Trace)
+        .System(LogSystem.Hitboxes,     LogLevel.Trace)
+        .System(LogSystem.Input,        LogLevel.Debug)
+        .System(LogSystem.Animation,    LogLevel.Trace));
     }
 
 

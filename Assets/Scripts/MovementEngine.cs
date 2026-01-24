@@ -93,7 +93,6 @@ public class MovementEngine : IServiceTick
     
         Vector2 targetVelocity = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
     
-        // Handle controllers
         var sortedDirectives = directives.OrderByDescending(d => d.Controller.Priority).ToList();
     
         foreach(var directive in sortedDirectives)
@@ -153,12 +152,12 @@ public class MovementEngine : IServiceTick
 
     void ClearMovementDirective(object owner, int scope)
     {
-        directives.RemoveAll(directive => directive.Owner == owner && directive.Scope == scope &&!directive.Definition.PersistPastScope);
+        directives.RemoveAll(directive => directive.Owner == owner && directive.Scope == scope && !directive.Definition.PersistPastScope);
     }
 
     void ClearAllOwnedDirectives(object owner)
     {
-        directives.RemoveAll(directive => directive.Owner == owner);
+        directives.RemoveAll(directive => directive.Owner == owner && !directive.Definition.PersistPastSource);
     }
 
     // ============================================================================

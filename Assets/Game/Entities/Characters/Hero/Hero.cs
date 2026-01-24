@@ -7,15 +7,15 @@ public class Hero : Actor, IHero
     //========================================
     // Systems
     //========================================
-    public HeroDefinition   Definition              { get; private set; }
-    public IntentSystem     Intent                  { get; private set; }
-    public HeroState        State                   { get; private set; }
-    public HeroStats        Stats                   { get; private set; }
-    public EquipmentManager Equipment               { get; private set; }
-    public WeaponSystem     Weapons                 { get; private set; }
-    public MovementEngine   Movement                { get; private set; }
-    public EffectRegister   Effects                 { get; private set; }
-    public AnimationHandler Animation               { get; private set; }
+    public HeroDefinition       Definition          { get; private set; }
+    public IntentSystem         Intent              { get; private set; }
+    public HeroState            State               { get; private set; }
+    public HeroStats            Stats               { get; private set; }
+    public EquipmentManager     Equipment           { get; private set; }
+    public WeaponSystem         Weapons             { get; private set; }
+    public MovementEngine       Movement            { get; private set; }
+    public EffectRegister       Effects             { get; private set; }
+    public AnimationController  Animation           { get; private set; }
 
     //========================================
     // Properties
@@ -54,6 +54,11 @@ public class Hero : Actor, IHero
     public Direction Facing                         => State.Facing;
     public Direction Direction                      => State.Direction;
     public Direction LastDirection                  => State.LastDirection;
+
+    public Direction LockedAim                      => State.LockedAim;
+    public Direction LockedFacing                   => State.LockedFacing;
+    public Direction LockedDirection                => State.LockedDirection;
+
 
     public Vector2 Velocity                         => State.Velocity;
     public Vector2 Momentum                         => State.Momentum;

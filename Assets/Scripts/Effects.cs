@@ -87,7 +87,7 @@ public class ShieldBlockWindow : Effect, IDuration, ICancelableOnRelease
 
 public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDurationFrames, IDisableAttack, ICancelableOnRelease, IDisableRotate
 {
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
     public float Duration                       { get; init; }
     public int DurationFrames                   { get; init; }
 
@@ -99,14 +99,14 @@ public class ShieldBraceDisable : Effect, ITrigger, IDuration, IDurationFrames, 
 
 public class ShieldBraceAim : Effect, ITrigger, IDurationFrames
 {
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
     public int DurationFrames                   { get; init; }
 }
 
 public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
     public EffectType Type                      { get; init; }
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }
@@ -118,7 +118,7 @@ public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiab
 public class ShieldMobility : Effect, IType, ITrigger, IDurationFrames, ICancelableOnRelease, IModifiable
 {
     public EffectType Type                      { get; init; }
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
     public int DurationFrames                   { get; init; }
 
     public bool CancelOnRelease                 { get; init; }
@@ -145,7 +145,7 @@ public class DashDisable : Effect, IDurationFrames, IDisableRules, IActionLock
 public class WeaponMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
     public EffectType Type                      { get; init; }
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.Idle;
+    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }

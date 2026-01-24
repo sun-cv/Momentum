@@ -9,10 +9,11 @@ using System.Linq;
 public enum WeaponPhase
 {
     None,
-    Idle,
+    Enable,
     Charging,
     Fire,
     FireEnd,
+    Disable,
 }
 
 /// <summary>What causes this weapon to fire?</summary>
@@ -255,7 +256,7 @@ public class WeaponInstance : Instance
 
 public class WeaponState
 {
-    public WeaponPhase Phase                    { get; set; } = WeaponPhase.Idle;
+    public WeaponPhase Phase                    { get; set; } = WeaponPhase.Enable;
 
     public FrameWatch PhaseFrames               { get; set; } = new();
     public FrameWatch ActiveFrames              { get; set; } = new();
@@ -279,7 +280,7 @@ public class WeaponState
         ActiveFrames.Reset();
 
         ControlWindow   = null;
-        Phase           = WeaponPhase.Idle;
+        Phase           = WeaponPhase.None;
         HasFired        = false;
         ReadyToRelease  = false;
 

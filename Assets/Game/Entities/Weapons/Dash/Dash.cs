@@ -66,7 +66,7 @@ public class BaseDash : MovementWeapon
                 Active              = true,
                 Cancelable          = false,
                 DisableAttack       = true,
-                DurationFrames      = 15,
+                DurationFrames      = 30,
                 RequestActionLock   = true,
             },
 
@@ -90,8 +90,8 @@ public class BaseDash : MovementWeapon
             {
                 Action              = MovementAction.Dash,
                 Phase               = WeaponPhase.Fire,
-                Speed               = 13.65f,
-                DurationFrame       = 15,
+                Speed               = 15f,
+                DurationFrame       = 10,
                 PersistPastScope    = true,
             }
         };

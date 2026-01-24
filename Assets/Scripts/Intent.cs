@@ -46,7 +46,7 @@ public class IntentSystem : IServiceTick
 }
 
 
-public class InputIntent
+public class InputIntent : IDirectionSource
 {
     readonly bool normalizeVelocity = Settings.Movement.NORMALIZE_VELOCITY;
 
@@ -166,6 +166,14 @@ public readonly struct Direction
     public static implicit operator Direction(Vector2 vector)       => new(vector);
 }
 
+
+public interface IDirectionSource
+{
+    Direction Aim               { get; }
+    Direction Facing            { get; }
+    Direction Direction         { get; }
+    Direction LastDirection     { get; }
+}
 
 public readonly struct InputIntentSnapshot
 {

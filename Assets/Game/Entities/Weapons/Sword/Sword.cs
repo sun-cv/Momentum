@@ -40,7 +40,7 @@ public class SwordStrike : DamagingWeapon
         Availability                = WeaponAvailability.Default;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 20;
+        FireDurationFrames          = 30;
         ControlWindow               = 0.3f;
         AddControlOnFire            = new() { "SwordCleave"};
         Effects = new()
@@ -50,7 +50,7 @@ public class SwordStrike : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 20,
+                DurationFrames      = 30,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 DisableMove         = true,
@@ -62,7 +62,7 @@ public class SwordStrike : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 30,
+                DurationFrames      = 60,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 DisableMove         = true,
@@ -119,8 +119,9 @@ public class SwordCleave : DamagingWeapon
         LockTriggerAction           = true;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 20;
+        FireDurationFrames          = 30;
         ControlWindow               = 0.3f;
+        CanCancelDisables           = true;
         AddControlOnFire            = new() { "SwordRend"};
         Effects = new()
         {
@@ -129,7 +130,7 @@ public class SwordCleave : DamagingWeapon
                 Name                = "SwordSwingDisable",
                 Active              = true,
                 Cancelable          = false,
-                DurationFrames      = 20,
+                DurationFrames      = 30,
                 DisableAttack       = true,
                 DisableRotate       = true,
                 DisableMove         = true,
@@ -141,7 +142,7 @@ public class SwordCleave : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 30,
+                DurationFrames      = 60,
                 DisableAttack       = true,
                 DisableMove         = true,
                 DisableRotate       = true,
@@ -197,6 +198,7 @@ public class SwordRend : DamagingWeapon
         ChargeTimeFrames            = 3;
         FireDurationFrames          = 20;
         ControlWindow               = 0.3f;
+        CanCancelDisables           = true;
         SwapOnFire                  = "null";
         ForceReleaseOnSwap          = true;
         Effects = new()
@@ -218,14 +220,13 @@ public class SwordRend : DamagingWeapon
                 Name                = "SwordSwingDisableCancelable",
                 Active              = true,
                 Cancelable          = true,
-                DurationFrames      = 30,
+                DurationFrames      = 60,
                 DisableAttack       = true,
                 DisableMove         = true,                
                 DisableRotate       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             }
-
 
         };
 

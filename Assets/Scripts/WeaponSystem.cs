@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEngine;
 
 
@@ -16,6 +15,7 @@ public class WeaponSystem : IServiceTick
     Actor                                                   owner;
     WeaponLoadout                                           loadout;
     WeaponInstance                                          instance;
+    WeaponAction                                            previousAction;
 
     WeaponCooldown                                          cooldown;
     WeaponActivationValidator                               validator;
@@ -34,16 +34,15 @@ public class WeaponSystem : IServiceTick
     {
         GameTick.Register(this);
 
-        loadout     = new();
-        cooldown    = new();
-        validator   = new(this);
+        loadout         = new();
+        cooldown        = new();
+        validator       = new(this);
         
-        owner = actor;
+        owner           = actor;
+        hitboxEvents    = new(HandleHitboxResponse);
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
-
-        hitboxEvents = new(HandleHitboxResponse);
 
         EventBus<CommandPublish>        .Subscribe(HandleCommandPublish);
         EventBus<EffectPublish>         .Subscribe(HandleEffectNonCancelableLockCount);
@@ -56,9 +55,11 @@ public class WeaponSystem : IServiceTick
     {
         phaseHandlers = new()
         {
-            { WeaponPhase.Charging,         new ChargingPhaseHandler() },
-            { WeaponPhase.Fire,             new FirePhaseHandler() },
-            { WeaponPhase.FireEnd,          new FireEndPhaseHandler() }
+            { WeaponPhase.Enable,           new EnablePhaseHandler()            },
+            { WeaponPhase.Charging,         new ChargingPhaseHandler()          },
+            { WeaponPhase.Fire,             new FirePhaseHandler()              },
+            { WeaponPhase.FireEnd,          new FireEndPhaseHandler()           },
+            { WeaponPhase.Disable,          new DisablePhaseHandler()           }
         };
     }
 
@@ -66,10 +67,10 @@ public class WeaponSystem : IServiceTick
     {
         activationStrategies = new()
         {
-            { WeaponActivation.OnPress,     new OnPressActivationStrategy() },
-            { WeaponActivation.OnCharge,    new OnChargeActivationStrategy() },
-            { WeaponActivation.OnRelease,   new OnReleaseActivationStrategy() },
-            { WeaponActivation.WhileHeld,   new WhileHeldActivationStrategy() }
+            { WeaponActivation.OnPress,     new OnPressActivationStrategy()     },
+            { WeaponActivation.OnCharge,    new OnChargeActivationStrategy()    },
+            { WeaponActivation.OnRelease,   new OnReleaseActivationStrategy()   },
+            { WeaponActivation.WhileHeld,   new WhileHeldActivationStrategy()   }
         };
     }
 
@@ -91,9 +92,10 @@ public class WeaponSystem : IServiceTick
     {
         if (ShouldReleaseWeapon())
         {
+            TransitionTo(WeaponPhase.Disable);
             ReleaseWeapon();
             return;
-        }
+        }            
 
         var strategy = GetActivationStrategy(instance.Action);
 
@@ -109,59 +111,15 @@ public class WeaponSystem : IServiceTick
         }
 
         if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
-        {
-            handler.Update(instance, this);
-        }
+            handler.Tick(instance, this);
+    
     }
 
-    bool ShouldReleaseWeapon()
-    {
-
-        if (instance.Action.Activation == WeaponActivation.WhileHeld && instance.State.Phase == WeaponPhase.Fire)
-        {
-            return false;
-        }
-
-        if (instance.ShouldValidateActivationTriggers() && !HasAllRequiredTriggers(instance.Action))
-        {
-            Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Missing required actions");
-            return true;
-        }
-
-        if (ShouldTerminate())
-        {
-            Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Termination condition met");
-            return true;
-        }
-
-        if (instance.State.ReadyToRelease)
-            return true;
-
-        return false;
-    }
-
-    bool ShouldTerminate()
-    {
-        return instance.Action.Termination switch
-        {
-            WeaponTermination.OnRelease     => instance.Action.Trigger.Any(trigger => !IsTriggerActive(trigger)),
-            WeaponTermination.OnRootRelease => instance.Action.RequiredHeldTriggers.Any(trigger => !IsTriggerActive(trigger)),
-            _ => false,
-        };
-    }
 
     public void TransitionTo(WeaponPhase newPhase)
     {
-        WeaponPhase exitingPhase = instance.State.Phase;
-
-        instance.State.Phase = newPhase;
-
-        ClearMovementFromPhase(exitingPhase);
-
-        PublishWeaponTransition();
-        RequestMovementCommand();
-        RequestHitboxes();
-        RequestAnimation();
+        ExitHandler();
+        TransitionState(newPhase);
         EnterHandler();
     }
 
@@ -170,6 +128,19 @@ public class WeaponSystem : IServiceTick
         if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
             handler.Enter(instance, this);
     }
+
+    void TransitionState(WeaponPhase phase)
+    {
+        instance.State.Phase = phase;
+        PublishWeaponTransition();
+    }
+
+    void ExitHandler()
+    {
+        if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
+            handler.Exit(instance, this);
+    }
+
 
     // ============================================================================
     // WEAPON ACTIVATION
@@ -221,22 +192,13 @@ public class WeaponSystem : IServiceTick
                 continue;
 
             if (!newWeapon.CanInterrupt)
-            {
-                Log.Trace(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Activation.Interrupt", () => $"{newWeapon.Name} - not an interrupt weapon");
                 continue;
-            }
 
             if (!validator.CanInterrupt(newWeapon))
-            {
-                Log.Trace(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Activation.Interrupt", () => $"{newWeapon.Name} - cannot interrupt current weapon");
                 continue;
-            }
 
             if (!validator.CanActivate(newWeapon, skipContextCheck: true))
-            {
-                Log.Trace(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Activation.Interrupt", () => $"{newWeapon.Name} - cannot activate");
                 continue;
-            }
 
             Log.Debug(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Activation.Interrupt", () => $"SUCCESS - {newWeapon.Name}");
             ReplaceAndActivateWeapon(newWeapon);
@@ -259,8 +221,8 @@ public class WeaponSystem : IServiceTick
                 continue;
             }
 
-            bool isOnHeld = availableAction.Availability == WeaponAvailability.OnHeld;
-            bool isChained = weaponName == instance.Action.SwapOnFire;
+            bool isOnHeld  = availableAction.Availability   == WeaponAvailability.OnHeld;
+            bool isChained = weaponName                     == instance.Action.SwapOnFire;
 
             if (!HasAllRequiredTriggers(availableAction))
             {
@@ -285,6 +247,7 @@ public class WeaponSystem : IServiceTick
             }
 
             string mode = isChained ? "Chained" : "Control";
+
             ReplaceAndActivateWeapon(availableAction);
             return true;
         }
@@ -293,12 +256,13 @@ public class WeaponSystem : IServiceTick
     }
 
 
-
     void ReplaceAndActivateWeapon(WeaponAction weapon)
     {
         if (HasActiveWeapon())
+        {
+            TransitionTo(WeaponPhase.Disable);
             ReleaseWeapon();
-
+        }
         EquipWeapon(weapon);
 
         if (weapon.Availability == WeaponAvailability.OnHeld)
@@ -319,6 +283,7 @@ public class WeaponSystem : IServiceTick
     {
         ConsumeAllCommands(buffer, instance.Action.Trigger);
         StoreAllCommandIDs(active, instance.Action.Trigger);
+        
         StoreInputSnapshot(active, instance.Action.Trigger);
 
         if (instance.Action.LockTriggerAction)
@@ -331,51 +296,125 @@ public class WeaponSystem : IServiceTick
         StoreInputSnapshot(active, instance.Action.Trigger);
     }
 
-
-
     void EnableWeapon()
     {
-        Log.Trace(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.Status.Enable", () => $"{instance.Action.Name}");
-
-        PushEffects();
-
-        instance.State.PhaseFrames.Start();
-        instance.State.ActiveFrames.Start();
-
-        TransitionTo(WeaponPhase.Charging);
+        EnterHandler();
     }
+
 
     void ReleaseWeapon()
     {
-        Log.Trace(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.Status.Release", () => $"{instance.Action.Name}");
+        DisableWeapon();
+        DeactivateWeapon();
+        UnequipWeapon();
+    }
 
+
+    void DisableWeapon()
+    {
+        ExitHandler();
+    }
+
+    void DeactivateWeapon()
+    {
         UnlockAllCommands(active, instance.Action.Trigger);
-        CancelEffects();
-        DestroyHitboxes();
+        StorePreviousAction();
+        RegisterCooldown();
+    }
 
-        if (instance.Action.Cooldown > 0)
-            cooldown.RegisterWeapon(instance.Action);
-
+    void UnequipWeapon()
+    {
         OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Released, new() { Owner = owner, Instance = instance }));
+        ClearInstance();        
+    }
 
+    // ============================================================================
+    // STATE MANAGEMENT
+    // ============================================================================
+
+    void StorePreviousAction()
+    {
+        previousAction = instance.Action;
+    }
+
+    void ResetState()
+    {
         instance.State.Reset();
+    }
+
+    void ClearInstance()
+    {
         instance = null;
     }
+
+    // ============================================================================
+    //  Release Predicates
+    // ============================================================================
+    bool ShouldReleaseWeapon()
+    {
+
+        if (instance.Action.Activation == WeaponActivation.WhileHeld && instance.State.Phase == WeaponPhase.Fire)
+        {
+            return false;
+        }
+
+        if (instance.ShouldValidateActivationTriggers() && !HasAllRequiredTriggers(instance.Action))
+        {
+            Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Missing required actions");
+            return true;
+        }
+
+        if (ShouldTerminate())
+        {
+            Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Termination condition met");
+            return true;
+        }
+
+        if (instance.State.ReadyToRelease)
+            return true;
+
+        return false;
+    }
+
+    bool ShouldTerminate()
+    {
+        return instance.Action.Termination switch
+        {
+            WeaponTermination.OnRelease     => instance.Action.Trigger.Any(trigger => !IsTriggerActive(trigger)),
+            WeaponTermination.OnRootRelease => instance.Action.RequiredHeldTriggers.Any(trigger => !IsTriggerActive(trigger)),
+            _ => false,
+        };
+    }
+
 
     // ============================================================================
     // EFFECT MANAGEMENT
     // ============================================================================
 
-    public void PushEffects()
+    public void RequestEffects(WeaponAction action)
     {
-        int pushed = 0;
-        foreach (var effect in instance.Action.Effects)
+        foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-            {
                 OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Create, new() { Effect = effect }));
-                pushed++;
-            }
+        }
+    }
+
+    public void CancelEffects(WeaponAction action)
+    {
+        foreach (var effect in action?.Effects)
+        {
+            if (effect.Cancelable)
+                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
+        }
+    }
+
+    public void CancelOnReleaseEffects(WeaponAction action)
+    {
+        foreach (var effect in action.Effects)
+        {
+            if (effect.Cancelable && effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
+                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
         }
     }
 
@@ -384,51 +423,50 @@ public class WeaponSystem : IServiceTick
         if (effect is ITrigger trigger)
             return trigger.Trigger == instance.State.Phase;
 
-        return instance.State.Phase == WeaponPhase.Idle;
+        return instance.State.Phase == WeaponPhase.Enable;
     }
 
-    void CancelEffects()
-    {
-        foreach (var effect in instance.Action.Effects)
-        {
-            if (effect.Cancelable && effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
-        }
-    }
+
     
     // ============================================================================
     // MOVEMENT MANAGEMENT
     // ============================================================================
 
-    void ClearMovementFromPhase(WeaponPhase scopeToClear)
+    public void RequestMovement(WeaponAction action)
     {
-        OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = (int)scopeToClear }));
-    }
-
-    void RequestMovementCommand()
-    {
-        foreach (var definition in instance.Action.MovementDefinitions)
+        foreach (var definition in action.MovementDefinitions)
         {
             if (definition.Phase != instance.State.Phase)
                 continue;
+
             OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Scope = (int)instance.State.Phase, Command = MovementCommandFactory.Create(owner, definition, instance.State.Intent)}));
         }
+    }
+
+    public void ClearMovementFromPhase(WeaponPhase scopeToClear)
+    {
+        OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = (int)scopeToClear }));
+    }
+    
+    public void ClearMovementFromOwner()
+    {
+        OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = -1 }));
     }
 
     // ============================================================================
     // HITBOX MANAGEMENT
     // ============================================================================
 
-    void RequestHitboxes()
+    public void RequestHitboxes(WeaponAction action)
     {
-        foreach (var hitboxDefinition in instance.Action.Hitboxes)
+        foreach (var hitboxDefinition in action.Hitboxes)
         {
             if (instance.State.Phase == hitboxDefinition.Phase)
                 hitboxEvents.Send(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition, Input = instance.State.Intent }));
         }
     }
 
-    void DestroyHitboxes()
+    public void DestroyHitboxes(WeaponInstance instance)
     {
         foreach (var (hitboxId, definition) in instance.State.OwnedHitboxes)
             OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Destroy, new() { Owner = owner, Definition = definition, HitboxId = hitboxId }));
@@ -438,20 +476,20 @@ public class WeaponSystem : IServiceTick
     // Animation System
     // ============================================================================
 
-    void RequestAnimation()
+    public void RequestAnimation(WeaponAction action)
     {
         AnimatorRequest request = null;
 
         switch(instance.State.Phase)
         {
             case WeaponPhase.Charging:
-                request = instance.Action.Animations.OnCharge;
+                request = action.Animations.OnCharge;
             break;
             case WeaponPhase.Fire:
-                request = instance.Action.Animations.OnFire;
+                request = action.Animations.OnFire;
             break;
             case WeaponPhase.FireEnd:
-                request = instance.Action.Animations.OnFireEnd;
+                request = action.Animations.OnFireEnd;
             break;
         }
 
@@ -539,7 +577,6 @@ public class WeaponSystem : IServiceTick
                 StoreCommandID(command);
         }
     }
-
 
 
     void StoreInputSnapshot(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -676,6 +713,11 @@ public class WeaponSystem : IServiceTick
         OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
     }
 
+    void RegisterCooldown()
+    {
+        if (instance.Action.Cooldown > 0)
+            cooldown.RegisterWeapon(instance.Action);
+    }
     // ============================================================================
     // QUERIES & ACCESSORS
     // ============================================================================
@@ -700,6 +742,7 @@ public class WeaponSystem : IServiceTick
 
     public UpdatePriority Priority => ServiceUpdatePriority.WeaponLogic;
 
+    public WeaponAction PreviousAction => previousAction;
 
     void DebugLog()
     {
@@ -802,31 +845,67 @@ public class WeaponCooldown
 
 public interface IWeaponPhaseHandler
 {
-    void Enter(WeaponInstance weapon, WeaponSystem controller);
-    void Update(WeaponInstance weapon, WeaponSystem controller);
     WeaponPhase Phase { get; }
+
+    void Enter(WeaponInstance instance, WeaponSystem controller);
+    void Tick (WeaponInstance instance, WeaponSystem controller);
+    void Exit (WeaponInstance instance, WeaponSystem controller);
+}
+
+public class EnablePhaseHandler : IWeaponPhaseHandler
+{
+    public WeaponPhase Phase => WeaponPhase.Enable;
+
+    public void Enter(WeaponInstance instance, WeaponSystem controller)
+    {
+        instance.State.PhaseFrames.Start();
+
+        if (controller.PreviousAction == null)
+            return;
+
+        controller.CancelEffects(controller.PreviousAction);
+    }
+
+    public void Tick(WeaponInstance instance, WeaponSystem controller)
+    {
+        controller.TransitionTo(WeaponPhase.Charging);
+    }
+
+    public void Exit(WeaponInstance instance, WeaponSystem controller)
+    {
+        controller.ClearMovementFromPhase(Phase);
+        controller.RequestEffects(instance.Action);
+    }
 }
 
 public class ChargingPhaseHandler : IWeaponPhaseHandler
 {
     public WeaponPhase Phase => WeaponPhase.Charging;
 
-    public void Enter(WeaponInstance weapon, WeaponSystem controller)
+    public void Enter(WeaponInstance instance, WeaponSystem controller)
     {        
-        weapon.State.PhaseFrames.Reset();
-        weapon.State.PhaseFrames.Start();
-        weapon.State.ActiveFrames.Start();
+        instance.State.PhaseFrames .Restart();
+        instance.State.ActiveFrames.Start();
 
         controller.UpdateAvailableControls();
-        controller.PushEffects();
+
+        controller.RequestEffects(instance.Action);
+        controller.RequestMovement(instance.Action);
+        controller.RequestHitboxes(instance.Action);
+        controller.RequestAnimation(instance.Action);
     }
 
-    public void Update(WeaponInstance weapon, WeaponSystem controller)
+    public void Tick(WeaponInstance instance, WeaponSystem controller)
     {
-        var strategy = controller.GetActivationStrategy(weapon.Action);
+        var strategy = controller.GetActivationStrategy(instance.Action);
         
-        if (strategy.ShouldFireFromCharging(weapon))
+        if (strategy.ShouldFireFromCharging(instance))
             controller.TransitionTo(WeaponPhase.Fire);
+    }
+    
+    public void Exit(WeaponInstance instance, WeaponSystem controller)
+    {
+        
     }
 }
 
@@ -834,23 +913,32 @@ public class FirePhaseHandler : IWeaponPhaseHandler
 {
     public WeaponPhase Phase => WeaponPhase.Fire;
 
-    public void Enter(WeaponInstance weapon, WeaponSystem controller)
+    public void Enter(WeaponInstance instance, WeaponSystem controller)
     {        
-        weapon.State.HasFired = true;
-        weapon.State.PhaseFrames.Reset();
-        weapon.State.PhaseFrames.Start();
+        instance.State.HasFired = true;
+
+        instance.State.PhaseFrames .Restart();;
+        instance.State.ActiveFrames.Start();
 
         controller.UpdateAvailableControls();
-        controller.PushEffects();
+
+        controller.RequestEffects(instance.Action);
+        controller.RequestMovement(instance.Action);
+        controller.RequestHitboxes(instance.Action);
+        controller.RequestAnimation(instance.Action);
     }
 
-    public void Update(WeaponInstance weapon, WeaponSystem controller)
+    public void Tick(WeaponInstance instance, WeaponSystem controller)
     {
-        if (weapon.Action.Activation == WeaponActivation.WhileHeld)
+        if (instance.Action.Activation == WeaponActivation.WhileHeld)
             return;
 
-        if (weapon.IsFireComplete())
+        if (instance.IsFireComplete())
             controller.TransitionTo(WeaponPhase.FireEnd);
+    }
+    
+    public void Exit(WeaponInstance instance, WeaponSystem controller)
+    {
     }
 }
 
@@ -858,35 +946,70 @@ public class FireEndPhaseHandler : IWeaponPhaseHandler
 {
     public WeaponPhase Phase => WeaponPhase.FireEnd;
 
-    public void Enter(WeaponInstance weapon, WeaponSystem controller)
+    public void Enter(WeaponInstance instance, WeaponSystem controller)
     {        
-        weapon.State.PhaseFrames.Reset();
-        weapon.State.PhaseFrames.Start();
+        instance.State.PhaseFrames.Reset();
+        instance.State.PhaseFrames.Start();
 
-        if (weapon.Action.ControlWindow > 0)
+        if (instance.Action.ControlWindow > 0)
         {
-            weapon.State.ControlWindow = new ClockTimer(weapon.Action.ControlWindow);
-            weapon.State.ControlWindow.Start();
-            Log.Trace(LogSystem.Weapon, LogCategory.Control, "Weapon Trace", "Weapon.Window", () => $"Started {weapon.Action.ControlWindow}s window");
+            instance.State.ControlWindow = new ClockTimer(instance.Action.ControlWindow);
+            instance.State.ControlWindow.Start();
+            Log.Trace(LogSystem.Weapon, LogCategory.Control, "Weapon Trace", "Weapon.Window", () => $"Started {instance.Action.ControlWindow}s window");
         }
 
         controller.UpdateAvailableControls();
-        controller.PushEffects();
+
+        controller.RequestEffects(instance.Action);
+        controller.RequestMovement(instance.Action);
+        controller.RequestHitboxes(instance.Action);
+        controller.RequestAnimation(instance.Action);
     }
 
-    public void Update(WeaponInstance weapon, WeaponSystem controller)
+    public void Tick(WeaponInstance instance, WeaponSystem controller)
     {
-        if (IsComplete(weapon))
-            weapon.State.ReadyToRelease = true;
+        if (IsComplete(instance))
+            controller.TransitionTo(WeaponPhase.Disable);
     }
 
-    bool IsComplete(WeaponInstance weapon)
+    bool IsComplete(WeaponInstance instance)
     {
-        if (weapon.State.ControlWindow != null)
-            return weapon.State.ControlWindow.IsFinished;
+        if (instance.State.ControlWindow != null)
+            return instance.State.ControlWindow.IsFinished;
         return true;
     }
+    
+    public void Exit(WeaponInstance instance, WeaponSystem controller)
+    {
+        controller.ClearMovementFromPhase(Phase);
+    }
 }
+
+public class DisablePhaseHandler : IWeaponPhaseHandler
+{
+    public WeaponPhase Phase => WeaponPhase.Disable;
+
+    public void Enter(WeaponInstance instance, WeaponSystem controller)
+    {
+        instance.State.PhaseFrames.Reset();
+        instance.State.PhaseFrames.Start();
+        
+        controller.CancelOnReleaseEffects(instance.Action);
+        controller.DestroyHitboxes(instance);
+
+        controller.ClearMovementFromOwner();
+    }
+    public void Tick(WeaponInstance instance, WeaponSystem controller)
+    {
+        instance.State.ReadyToRelease = true;
+    }
+
+    public void Exit(WeaponInstance instance, WeaponSystem controller)
+    {
+
+    }
+}
+
 
 // ============================================================================
 // ACTIVATION STRATEGIES
@@ -1002,7 +1125,7 @@ public class WeaponActivationValidator
         if (!(result = CheckCooldown(weapon)).Success())              return result;
         if (!(result = CheckActivationCondition(weapon)).Success())   return result;
         if (!(result = CheckActionLocks(weapon)).Success())           return result;
-        if (!(result = CheckNonCancelableLocks()).Success())          return result;
+        if (!(result = CheckNonCancelableLocks(weapon)).Success())    return result;
         if (!skipContextCheck &&
             !(result = CheckContext(weapon)).Success())               return result;
 
@@ -1036,6 +1159,9 @@ public class WeaponActivationValidator
         if (!weapon.AcceptTriggerLockRequests)
             return WeaponValidation.Pass();
 
+        if (weapon.CanCancelDisables)
+            return WeaponValidation.Pass();
+
         foreach (var trigger in weapon.Trigger)
         {
             if (controller.Locks != null && controller.Locks.TryGetValue(trigger, out var lockList) && lockList.Count > 0)
@@ -1045,7 +1171,7 @@ public class WeaponActivationValidator
         return WeaponValidation.Pass();
     }
 
-    WeaponValidation CheckNonCancelableLocks()
+    WeaponValidation CheckNonCancelableLocks(WeaponAction incomingWeapon)
     {
         if (controller.HasActiveWeapon() && !controller.OnlyCancelableLocksRemain())
             return WeaponValidation.Fail($"{controller.NonCancelableAttackLocks} non-cancelable lock(s) active");

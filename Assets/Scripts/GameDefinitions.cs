@@ -126,17 +126,20 @@ public interface IDirectional
 {   
     Direction Direction                     { get; }
     Direction LastDirection                 { get; }
+    Direction LockedDirection               { get; }
 }           
 
 public interface IOrientable            
 {        
     Direction Facing                        { get; }
+    Direction LockedFacing                  { get; }
     bool CanRotate                          { get; }
 }
 
 public interface IAimable
 {
     Direction Aim                           { get; }
+    Direction LockedAim                     { get; }
 }
 
 public interface IPhysical

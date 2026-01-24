@@ -19,7 +19,7 @@ public class AnimatorRequest
 }
 
 
-public class AnimationHandler : IServiceTick
+public class AnimationController : IServiceTick
 {
     Actor owner; 
     Animator animator;
@@ -29,7 +29,7 @@ public class AnimationHandler : IServiceTick
     const int LAYER_BASE    = 0;
     const int LAYER_ACTION  = 1;
 
-    public AnimationHandler(Actor actor)
+    public AnimationController(Actor actor)
     {
         if (actor.Bridge is not ActorBridge bridge)
         {
@@ -37,6 +37,7 @@ public class AnimationHandler : IServiceTick
             return;
         }
         
+
         owner       = actor;
         animator    = bridge.Animator;
 
@@ -53,6 +54,8 @@ public class AnimationHandler : IServiceTick
 
     void UpdateAnimatorParameters()
     {
+
+        
         if (owner is IMovableActor movable)
         {
             animator.SetBool("Inactive", movable.Inactive);
@@ -61,8 +64,8 @@ public class AnimationHandler : IServiceTick
 
             if (movable is IOrientable orientable && orientable.CanRotate)
             {
-                animator.SetFloat("FacingX", movable.Facing.X);
-                animator.SetFloat("FacingY", movable.Facing.Y);
+                animator.SetFloat("LockedFacingX", movable.LockedFacing.X);
+                animator.SetFloat("LockedFacingY", movable.LockedFacing.Y);
             }
         }
 
@@ -74,11 +77,11 @@ public class AnimationHandler : IServiceTick
 
         if (owner is IAimable aimable)
         {
-            animator.SetFloat("AimX", aimable.Aim.X);
-            animator.SetFloat("AimY", aimable.Aim.Y);
+            animator.SetFloat("LockedAimX", aimable.LockedAim.X);
+            animator.SetFloat("LockedAimY", aimable.LockedAim.Y);
 
-            animator.SetFloat("CardinalAimX", aimable.Aim.Cardinal.x);
-            animator.SetFloat("CardinalAimY", aimable.Aim.Cardinal.y);
+            animator.SetFloat("LockedCardinalAimX", aimable.LockedAim.Cardinal.x);
+            animator.SetFloat("LockedCardinalAimY", aimable.LockedAim.Cardinal.y);
         }
     }
 

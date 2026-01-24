@@ -2,6 +2,8 @@
 
 
 
+using Unity.VisualScripting;
+
 public static class Config
 {
     public static class Timing
@@ -65,7 +67,8 @@ public static class ServiceUpdatePriority
     public static UpdatePriority CommandSystem      = new(UpdatePhase.Logic,    30);
     public static UpdatePriority WeaponLogic        = new(UpdatePhase.Logic,    40);
     public static UpdatePriority EffectManager      = new(UpdatePhase.Logic,    50);
-    public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    60);
+    public static UpdatePriority DirectionHandler   = new(UpdatePhase.Logic,    60);
+    public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    70);
 
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
 

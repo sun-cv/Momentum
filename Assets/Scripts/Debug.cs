@@ -8,11 +8,11 @@ using System.Collections.Generic;
 public enum LogLevel
 {
     None,
-    Error,
     Trace,
     Debug,
     Event,
     Admin,
+    Error,
 }
 
 public enum LogSystem
@@ -27,6 +27,7 @@ public enum LogSystem
     Weapon,
     Effects,
     Movement,
+    Direction,
     Equipment,
     Hitboxes,
     Physics,
