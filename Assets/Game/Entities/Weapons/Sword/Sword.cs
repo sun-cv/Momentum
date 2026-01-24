@@ -85,6 +85,7 @@ public class SwordStrike : DamagingWeapon
             }
         };
 
+
         Hitboxes = new()
         {
             new()
@@ -156,8 +157,9 @@ public class SwordCleave : DamagingWeapon
             new()
             {
                 Action              = MovementAction.Lunge,
-                Speed               = 4,
-                DurationFrame       = 25,
+                Speed               = 5,
+                SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+                DurationFrame       = 15,
                 PersistPastScope    = true,
                 Phase               = WeaponPhase.Fire,
             }
@@ -235,8 +237,9 @@ public class SwordRend : DamagingWeapon
             new()
             {
                 Action              = MovementAction.Lunge,
-                Speed               = 4,
-                DurationFrame       = 25,
+                Speed               = 5,
+                SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+                DurationFrame       = 15,
                 PersistPastScope    = true,
                 Phase               = WeaponPhase.Fire,
             }

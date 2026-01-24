@@ -23,7 +23,7 @@ public static class Config
     public static class Input
     {
         public const float RELEASE_THRESHOLD        = 300f;
-        public const float BUFFER_WINDOW_FRAMES     = 10f;
+        public const float BUFFER_WINDOW_FRAMES     = 15f;
 
         public const float INTENT_DEFAULT           = 45f;
         public const float INTENT_HORIZONTAL        = 50f;

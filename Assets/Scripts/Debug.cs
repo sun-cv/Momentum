@@ -33,6 +33,8 @@ public enum LogSystem
     Physics,
     Animation,
     Camera,
+
+    Hero,
 }
 
 public enum LogCategory

@@ -199,8 +199,9 @@ public class MovementEngine : IServiceTick
         Log.Debug(LogSystem.Movement, LogCategory.Control,"Movement", "Movement.Speed",     () => speed);  
         Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Movement.Velocity",  () => velocity);
         Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Movement.Modifier",  () => modifier);
+        Log.Trace(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Effects.Select(effect => effect.Effect.Name))}");
         Log.Trace(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Cache",       () => modifierHandler.Cache.Effects.Count);
-        Log.Debug(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Effects.Select(effect => effect.Effect.Name))}");
+        Log.Trace(LogSystem.Movement, LogCategory.State,  "Movement", "Directive.Count",    () => directives.Count);
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;

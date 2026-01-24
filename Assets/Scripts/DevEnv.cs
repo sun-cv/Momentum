@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 
@@ -17,11 +18,9 @@ public class DevEnv : RegisteredService, IServiceTick
         .System(LogSystem.Engine,       LogLevel.Debug)
         .System(LogSystem.Weapon,       LogLevel.Trace)
         .System(LogSystem.Movement,     LogLevel.Debug)
-        .System(LogSystem.Physics,      LogLevel.Debug)
-        .System(LogSystem.Equipment,    LogLevel.Trace)
-        .System(LogSystem.Hitboxes,     LogLevel.Trace)
-        .System(LogSystem.Input,        LogLevel.Debug)
-        .System(LogSystem.Animation,    LogLevel.Trace));
+        .System(LogSystem.Equipment,    LogLevel.Debug)
+        .System(LogSystem.Animation,    LogLevel.Trace)
+        .System(LogSystem.Hero,         LogLevel.Debug));
     }
 
 
@@ -45,8 +44,8 @@ public class DevEnv : RegisteredService, IServiceTick
         }
 
 
-        Log.Trace(LogSystem.Weapon, LogCategory.Effect, "Weapon Trace", "Parry", () => hero.Parrying);
-        Log.Trace(LogSystem.Weapon, LogCategory.Effect, "Weapon Trace", "block", () => hero.Blocking);
+        Log.Debug(LogSystem.Hero, LogCategory.State, "Hero State", "Parry", () => hero.Parrying);
+        Log.Debug(LogSystem.Hero, LogCategory.State, "Hero State", "block", () => hero.Blocking);
 
     }
 

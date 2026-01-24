@@ -91,8 +91,7 @@ public class WeaponSystem : IServiceTick
     void AdvanceWeaponState()
     {
         if (ShouldReleaseWeapon())
-        {
-            TransitionTo(WeaponPhase.Disable);
+        {            
             ReleaseWeapon();
             return;
         }            
@@ -163,21 +162,16 @@ public class WeaponSystem : IServiceTick
 
     bool TryActivateDefaultWeapon()
     {
-
         foreach (var command in buffer.Values)
         {
-            var newWeapon = GetDefaultWeapon(command);
+            var weapon = GetDefaultWeapon(command);
 
-            if (newWeapon == null)
-                continue;
-
-            if (!validator.CanActivate(newWeapon))
-                continue;
-
-            ReplaceAndActivateWeapon(newWeapon);
-            return true;
+            if (CanActivateFromDefaultControls(weapon))
+            {
+                ReplaceAndActivateWeapon(weapon);
+                return true;
+            }
         }
-
         return false;
     }
 
@@ -186,23 +180,13 @@ public class WeaponSystem : IServiceTick
 
         foreach (var command in buffer.Values)
         {
-            var newWeapon = GetDefaultWeapon(command);
+            var weapon = GetDefaultWeapon(command);
 
-            if (newWeapon == null)
-                continue;
-
-            if (!newWeapon.CanInterrupt)
-                continue;
-
-            if (!validator.CanInterrupt(newWeapon))
-                continue;
-
-            if (!validator.CanActivate(newWeapon, skipContextCheck: true))
-                continue;
-
-            Log.Debug(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Activation.Interrupt", () => $"SUCCESS - {newWeapon.Name}");
-            ReplaceAndActivateWeapon(newWeapon);
-            return true;
+            if (CanActivateInterruptionControls(weapon))
+            {
+                ReplaceAndActivateWeapon(weapon);
+                return true;
+            }
         }
 
         return false;
@@ -215,61 +199,26 @@ public class WeaponSystem : IServiceTick
 
         foreach (var weaponName in instance.State.AvailableControls)
         {
-            if (!loadout.TryGetAction(weaponName, out var availableAction))
-            {
-                Log.Trace(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Weapon.controls", () => $"{weaponName} - not found in weapon loadout");
-                continue;
-            }
-
-            bool isOnHeld  = availableAction.Availability   == WeaponAvailability.OnHeld;
-            bool isChained = weaponName                     == instance.Action.SwapOnFire;
-
-            if (!HasAllRequiredTriggers(availableAction))
-            {
-                Log.Trace(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Weapon.controls", () => $"{weaponName} - missing required inputs");
-                continue;
-            }
-
-            if (!validator.CanActivate(availableAction))
+            if (!loadout.TryGetAction(weaponName, out var weapon))
                 continue;
 
-            if (isOnHeld)
+            if (CanActivateFromAvailableControls(weapon))
             {
-                Log.Debug(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Weapon.controls", () => $"SUCCESS - {weaponName} (OnHeld)");
-                ReplaceAndActivateWeapon(availableAction);
+                ReplaceAndActivateWeapon(weapon);
                 return true;
             }
-
-            if (!HasNewCommandForWeapon(availableAction))
-            {
-                Log.Trace(LogSystem.Weapon, LogCategory.Activation, "Weapon Trace", "Weapon.controls", () => $"{weaponName} - no new press");
-                continue;
-            }
-
-            string mode = isChained ? "Chained" : "Control";
-
-            ReplaceAndActivateWeapon(availableAction);
-            return true;
         }
 
         return false;
     }
 
-
     void ReplaceAndActivateWeapon(WeaponAction weapon)
     {
         if (HasActiveWeapon())
-        {
-            TransitionTo(WeaponPhase.Disable);
             ReleaseWeapon();
-        }
+
         EquipWeapon(weapon);
-
-        if (weapon.Availability == WeaponAvailability.OnHeld)
-            ActivateHeldWeapon();
-        else
-            ActivateWeapon();
-
+        ActivateWeapon();
         EnableWeapon();
     }
 
@@ -281,20 +230,25 @@ public class WeaponSystem : IServiceTick
 
     void ActivateWeapon()
     {
-        ConsumeAllCommands(buffer, instance.Action.Trigger);
-        StoreAllCommandIDs(active, instance.Action.Trigger);
+        switch (instance.Action.Availability)
+        {
+            case WeaponAvailability.Default:
+                ConsumeAllCommands(buffer, instance.Action.Trigger);
+                break;
+            case WeaponAvailability.OnPhase:
+                ConsumeAllCommands(buffer, instance.Action.Trigger);
+                break;
+            case WeaponAvailability.OnHeld:
+                break;  
+        }
         
+        StoreAllCommandIDs(active, instance.Action.Trigger);
         StoreInputSnapshot(active, instance.Action.Trigger);
 
         if (instance.Action.LockTriggerAction)
             LockAllCommands(active, instance.Action.Trigger);
     }
 
-    void ActivateHeldWeapon()
-    {
-        StoreAllCommandIDs(active, instance.Action.Trigger);
-        StoreInputSnapshot(active, instance.Action.Trigger);
-    }
 
     void EnableWeapon()
     {
@@ -304,6 +258,8 @@ public class WeaponSystem : IServiceTick
 
     void ReleaseWeapon()
     {
+        TransitionTo(WeaponPhase.Disable);
+            
         DisableWeapon();
         DeactivateWeapon();
         UnequipWeapon();
@@ -329,6 +285,55 @@ public class WeaponSystem : IServiceTick
     }
 
     // ============================================================================
+    // ACTIVATION PREDICATES
+    // ============================================================================
+
+    bool CanActivateFromDefaultControls(WeaponAction weapon)
+    {
+        if (weapon == null)
+            return false;
+
+        if (!validator.CanActivate(weapon))
+            return false;
+
+        return true;
+    } 
+
+    bool CanActivateFromAvailableControls(WeaponAction weapon)
+    {
+        if (!HasAllRequiredTriggers(weapon))
+            return false;
+
+        if (!validator.CanActivate(weapon))
+            return false;
+
+        if (weapon.Availability == WeaponAvailability.OnHeld)
+            return true;
+
+        if (!HasNewCommandForWeapon(weapon))
+            return false;
+
+        return true;
+    }
+
+    bool CanActivateInterruptionControls(WeaponAction weapon)
+    {
+        if (weapon == null)
+            return false;
+
+        if (!weapon.CanInterrupt)
+            return false;
+
+        if (!validator.CanInterrupt(weapon))
+            return false;
+
+        if (!validator.CanActivate(weapon, skipContextCheck: true))
+            return false;
+
+        return true;
+    }
+
+    // ============================================================================
     // STATE MANAGEMENT
     // ============================================================================
 
@@ -350,25 +355,18 @@ public class WeaponSystem : IServiceTick
     // ============================================================================
     //  Release Predicates
     // ============================================================================
+
     bool ShouldReleaseWeapon()
     {
 
         if (instance.Action.Activation == WeaponActivation.WhileHeld && instance.State.Phase == WeaponPhase.Fire)
-        {
             return false;
-        }
 
         if (instance.ShouldValidateActivationTriggers() && !HasAllRequiredTriggers(instance.Action))
-        {
-            Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Missing required actions");
             return true;
-        }
 
         if (ShouldTerminate())
-        {
-            Log.Debug(LogSystem.Weapon, LogCategory.State, "Weapon Trace", "Weapon.State.Release", () => "Termination condition met");
             return true;
-        }
 
         if (instance.State.ReadyToRelease)
             return true;
@@ -478,27 +476,19 @@ public class WeaponSystem : IServiceTick
 
     public void RequestAnimation(WeaponAction action)
     {
-        AnimatorRequest request = null;
-
-        switch(instance.State.Phase)
+        AnimatorRequest request = instance.State.Phase switch
         {
-            case WeaponPhase.Charging:
-                request = action.Animations.OnCharge;
-            break;
-            case WeaponPhase.Fire:
-                request = action.Animations.OnFire;
-            break;
-            case WeaponPhase.FireEnd:
-                request = action.Animations.OnFireEnd;
-            break;
-        }
+            WeaponPhase.Charging    => action.Animations.OnCharge,
+            WeaponPhase.Fire        => action.Animations.OnFire,
+            WeaponPhase.FireEnd     => action.Animations.OnFireEnd,
+            _ => null
+        };
 
         if (request == null)
             return;
 
-        OnEvent<AnimationRequest>(new(Guid.NewGuid(), Request.Start, new() { Owner = owner, Request = request}));
+        OnEvent<AnimationRequest>(new(Guid.NewGuid(), Request.Start, new() { Owner = owner, Request = request }));
     }
-
 
     // ============================================================================
     // CONTROL SYSTEM
@@ -705,7 +695,7 @@ public class WeaponSystem : IServiceTick
     
     void HandleHitboxResponse(HitboxRequest request, HitboxResponse response)
     {
-        instance.State.OwnedHitboxes.Add(response.Payload.HitboxId, response.Payload.Definition);
+        instance?.State.OwnedHitboxes.Add(response.Payload.HitboxId, response.Payload.Definition);
     }
 
     void PublishWeaponTransition()
@@ -747,16 +737,12 @@ public class WeaponSystem : IServiceTick
     void DebugLog()
     {
         Log.Debug(LogSystem.Weapon, LogCategory.State,          "Weapon Debug", "Weapon.Active",        () => instance?.Action.Name ?? "none" );
-        Log.Trace(LogSystem.Weapon, LogCategory.State,          "Weapon Debug", "Weapon.Phase",         () => instance?.State.Phase.ToString() ?? "none" );
+        Log.Debug(LogSystem.Weapon, LogCategory.State,          "Weapon Debug", "Weapon.Phase",         () => instance?.State.Phase.ToString() ?? "none" );
         Log.Trace(LogSystem.Weapon, LogCategory.Input,          "Weapon Trace", "Commands.Active",      () => active?.Count > 0 ? string.Join(", ", active?.Keys) : "");
-        Log.Trace(LogSystem.Weapon, LogCategory.Input,          "Weapon Trace", "Commands.stuck",       () => active?.Count > 0 ? string.Join(", ", active?.First().Value.Button.Condition) : "");
-        Log.Trace(LogSystem.Weapon, LogCategory.Input,          "Weapon Trace", "Commands.stucklock",   () => active?.Count > 0 ? string.Join(", ", active?.First().Value.Locked) : "");
         Log.Trace(LogSystem.Weapon, LogCategory.Input,          "Weapon Trace", "Commands.Buffered",    () => buffer?.Count > 0 ? string.Join(", ", buffer?.Keys) : "");
-        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.NonCancelable",  () => NonCancelableAttackLocks );
         Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.Active",         () => locks == null ? "<none>" : string.Join(", ", locks.Select(kvp => $"{kvp.Key}({kvp.Value.Count})")) ); 
-        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance.Action.Name)}" : "Ready");
-        Log.Trace(LogSystem.Weapon, LogCategory.State,          "Weapon Trace", "hitbox ids",           () => instance?.State.OwnedHitboxes.Count());
-        Log.Trace(LogSystem.Weapon, LogCategory.State,          "Weapon Trace", "pending requests",     () => hitboxEvents.PendingCount);
+        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.NonCancelable",  () => NonCancelableAttackLocks );
+        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance?.Action.Name)}" : "Ready");
     }
 }
 
@@ -905,7 +891,7 @@ public class ChargingPhaseHandler : IWeaponPhaseHandler
     
     public void Exit(WeaponInstance instance, WeaponSystem controller)
     {
-        
+        controller.ClearMovementFromPhase(Phase);
     }
 }
 
@@ -939,6 +925,7 @@ public class FirePhaseHandler : IWeaponPhaseHandler
     
     public void Exit(WeaponInstance instance, WeaponSystem controller)
     {
+        controller.ClearMovementFromPhase(Phase);
     }
 }
 
@@ -1194,7 +1181,7 @@ public class WeaponActivationValidator
         var result = ValidateInterrupt(incomingWeapon);
 
         if (!result.Success())
-            Log.Debug(LogSystem.Weapon, LogCategory.Validation, "Weapon Trace", "Weapon.Interrupt", () => result.Reason);
+            Log.Trace(LogSystem.Weapon, LogCategory.Validation, "Weapon Trace", "Weapon.Interrupt", () => result.Reason);
 
         return result.Success();
     }

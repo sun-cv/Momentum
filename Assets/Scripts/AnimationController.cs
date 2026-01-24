@@ -127,11 +127,19 @@ public class AnimationController : IServiceTick
 
     void DebugLog()
     {
-        Log.Debug(LogSystem.Animation, LogCategory.State, "Animation", "Playing", () => 
+        Log.Trace(LogSystem.Animation, LogCategory.State, "Animation", "Playing Action", () => 
         { 
-            AnimatorClipInfo[] clipInfo = animator.GetCurrentAnimatorClipInfo(0); 
+            if (animator.GetLayerWeight(LAYER_ACTION) < 1)
+                return "None";
 
+            AnimatorClipInfo[] clipInfo = animator.GetCurrentAnimatorClipInfo(LAYER_ACTION);
             return string.Join(", ", clipInfo.Select(clip => clip.clip.name));
+        });
+        
+        Log.Trace(LogSystem.Animation, LogCategory.State, "Animation", "Playing Base", () => 
+        { 
+            AnimatorClipInfo[] baseClipInfo = animator.GetCurrentAnimatorClipInfo(LAYER_BASE);
+            return string.Join(", ", baseClipInfo.Select(clip => clip.clip.name));
         });
     }
 
