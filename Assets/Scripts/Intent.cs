@@ -7,6 +7,7 @@ using UnityEngine;
 public class IntentSystem : IServiceTick
 {
     Actor           owner;
+
     InputRouter     inputRouter;
     WorldPosition   worldPosition;
 
@@ -18,7 +19,7 @@ public class IntentSystem : IServiceTick
 
     public IntentSystem(Actor owner)
     {
-        this.owner = owner;
+        this.owner      = owner;
     
         inputRouter     = Services.Get<InputRouter>();
         worldPosition   = Services.Get<WorldPosition>();
@@ -42,7 +43,7 @@ public class IntentSystem : IServiceTick
     public InputRouter   InputRouter    => inputRouter;
     public WorldPosition Position       => worldPosition;
 
-    public UpdatePriority Priority  => ServiceUpdatePriority.IntentSystem;
+    public UpdatePriority Priority      => ServiceUpdatePriority.IntentSystem;
 }
 
 

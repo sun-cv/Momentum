@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 
@@ -90,7 +89,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     public override void Initialize()
     {
-        EventBus<HitboxRequest>.Subscribe(HandleHitboxRequest);
+        Link<HitboxRequest>(HandleHitboxRequest);
     }
 
 
@@ -331,7 +330,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void PublishHitbox(Guid id, HitboxInstance instance)
     {
-        OnEvent<HitboxResponse>(new(id, Response.Success, new() { Owner = instance.Owner, Definition = instance.Definition, HitboxId = instance.HitboxId }));
+        Emit<HitboxResponse>(new(id, Response.Success, new() { Owner = instance.Owner, Definition = instance.Definition, HitboxId = instance.HitboxId }));
     }
 
     // ============================================================================
@@ -353,8 +352,8 @@ public class HitboxManager : RegisteredService, IServiceTick
     {
         Log.Trace(LogSystem.Hitboxes, LogCategory.State, "Hitboxes", "Active",() => activeHitboxes.Count);
     }
-
-    public void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
+    void Link<T>(Action<T> handler) where T : IEvent    => EventBus<T>.Subscribe(handler);
+    void Emit<T>(T evt) where T : IEvent                => EventBus<T>.Raise(evt);
 
     public UpdatePriority Priority => ServiceUpdatePriority.HitboxManager;
 }

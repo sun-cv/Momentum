@@ -71,6 +71,8 @@ public class Hero : Actor, IHero
     {
         Definition  = definition;
 
+        Bus         = new();
+
         Intent      = new(this);
         Stats       = new(this);
         Equipment   = new(this);

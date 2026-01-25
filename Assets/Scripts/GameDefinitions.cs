@@ -50,7 +50,8 @@ public class Definition
 public class Runtime                        { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
 public class Instance           : Runtime   {}
 public class Entity             : Runtime   {}
-public class Actor              : Entity    { public Bridge Bridge                  { get; set; }}
+public class Actor              : Entity    { public Bridge Bridge                  { get; set;  }
+                                              public LocalEventbus Bus              { get; set;  }}
 public class Enemy              : Actor     { }
 public class Item               : Entity    { }
 
@@ -161,10 +162,15 @@ public interface IIdle
     TimePredicate IsIdle { get; }
 }
 
+public interface IEventTarget
+{
+    LocalEventbus Bus                       { get; }   
+}
+
 public interface IActor : IControllable {}
 public interface IMovableActor : IActor, IMovable, IPhysical, IDirectional, IOrientable, IControllable { }
 
-public interface IHero  : IMovableActor, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
+public interface IHero  : IEventTarget, IMovableActor, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
 public interface IEnemy : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
 public interface IBoss  : IEnemy {}
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 
 
 
@@ -33,6 +31,7 @@ public class Command : Instance
 
 public class CommandSystem
 {
+    Actor owner;
     IntentSystem intent;
 
     Dictionary<Capability, Command> active = new();
@@ -42,8 +41,10 @@ public class CommandSystem
     public void Initialize(IntentSystem intent)
     {
         this.intent = intent;
-        EventBus<CommandRequest>.Subscribe(HandleCommandRequest);
-        PublishUpdate();
+        this.owner  = intent.Owner;
+
+        LinkLocal<CommandRequest>(HandleCommandRequest);
+        Broadcast();
     }
 
     public void Tick()
@@ -55,13 +56,13 @@ public class CommandSystem
     void MonitorEdgePress()
     {
         if (CreatePressedCommands())
-            PublishUpdate();
+            Broadcast();
     }
 
     void MonitorEdgeRelease()
     {
         if (RemoveExpiredBufferCommands() || RemoveReleasedActiveCommands())
-            PublishUpdate();
+            Broadcast();
     }
 
     bool CreatePressedCommands()
@@ -126,7 +127,7 @@ public class CommandSystem
                 break;
         }
 
-        PublishUpdate();
+        Broadcast();
     }
 
     void ConsumeCommand(Command command)
@@ -139,13 +140,11 @@ public class CommandSystem
     void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Lock();
     void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
 
-    void PublishUpdate() => OnEvent<CommandPublish>(new(Guid.NewGuid(), Publish.Changed, new(){ Active = Snapshot.ReadOnly(active), Buffer = Snapshot.ReadOnly(buffer) }));
+    void Broadcast() => EmitLocal<CommandPublish>(new(Guid.NewGuid(), Publish.Changed, new(){ Active = Snapshot.ReadOnly(active), Buffer = Snapshot.ReadOnly(buffer) }));
 
-    void OnEvent<T>(T evt) where T : IEvent     => EventBus<T>.Raise(evt);
+    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
+    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
 }
-
-
-
 
 public readonly struct CommandRequestPayload
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using UnityEngine.UIElements;
 
 
 
@@ -61,7 +61,7 @@ public class EffectRegister
     public EffectRegister(Actor actor)
     {
         owner = actor;
-        EventBus<EffectRequest>.Subscribe(HandleEffectRequest);
+        LinkLocal<EffectRequest>(HandleEffectRequest);
     } 
 
     void HandleEffectRequest(EffectRequest evt)
@@ -81,9 +81,9 @@ public class EffectRegister
     {
         var instance = new EffectInstance(actor, effect);
 
-        instance.OnApply   += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Activated,   new() { Owner = owner, Instance = instance}));
-        instance.OnClear   += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Deactivated, new() { Owner = owner, Instance = instance}));
-        instance.OnCancel  += () => OnEvent<EffectPublish>(new(Guid.NewGuid(), Publish.Canceled,    new() { Owner = owner, Instance = instance}));
+        instance.OnApply   += () => EmitLocal<EffectPublish>(new(Guid.NewGuid(), Publish.Activated,   new() { Owner = owner, Instance = instance}));
+        instance.OnClear   += () => EmitLocal<EffectPublish>(new(Guid.NewGuid(), Publish.Deactivated, new() { Owner = owner, Instance = instance}));
+        instance.OnCancel  += () => EmitLocal<EffectPublish>(new(Guid.NewGuid(), Publish.Canceled,    new() { Owner = owner, Instance = instance}));
         
         RegisterTriggerLock(instance);
         RegisterDebugLog(instance);
@@ -109,9 +109,9 @@ public class EffectRegister
             
         foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => OnEvent<LockRequest>(new(Guid.NewGuid(), LockTrigger.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
-            instance.OnClear   += () => OnEvent<LockRequest>(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
-            instance.OnCancel  += () => OnEvent<LockRequest>(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnApply   += () => EmitLocal<LockRequest>(new(Guid.NewGuid(), LockTrigger.Lock,   new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnClear   += () => EmitLocal<LockRequest>(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
+            instance.OnCancel  += () => EmitLocal<LockRequest>(new(Guid.NewGuid(), LockTrigger.Unlock, new() { Action = action, Origin = instance.Effect.Name }));
         }
     }
 
@@ -155,10 +155,12 @@ public class EffectRegister
         return defaultValue;
     }
 
-    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
+    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
+    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
+
+
     public List<EffectInstance> Effects => effects;
 }
-
 
 public enum EffectAction
 {
@@ -213,6 +215,7 @@ public readonly struct EffectPublish : ISystemEvent
 
 public class EffectCache : IDisposable
 {
+    readonly LocalEventbus bus;
     readonly EventBinding<EffectPublish> binding;
     readonly List<EffectInstance> activeEffects = new();
 
@@ -222,13 +225,15 @@ public class EffectCache : IDisposable
     public Action<EffectInstance> OnClear;
     public Action<EffectInstance> OnCancel;
 
-    public EffectCache(Func<EffectInstance, bool> filter = null)
+    public EffectCache(LocalEventbus bus, Func<EffectInstance, bool> filter = null)
     {
+        this.bus    = bus;
         this.filter = filter;
-        binding     = EventBus<EffectPublish>.Subscribe(HandleEffectPublish);
+
+        this.bus.Subscribe<EffectPublish>(HandleEffectPublish);
     }
 
-    void HandleEffectPublish(EffectPublish evt)
+    public void HandleEffectPublish(EffectPublish evt)
     {
         var instance = evt.Payload.Instance;
 
@@ -252,7 +257,12 @@ public class EffectCache : IDisposable
         }
     }
 
+    public void Bind(LocalEventbus eventbus)
+    {
+        eventbus.Subscribe<EffectPublish>(HandleEffectPublish);
+    }
+
     public IReadOnlyList<EffectInstance> Effects => activeEffects;
-    public void Dispose() => EventBus<EffectPublish>.Unsubscribe(binding);
+    public void Dispose() => bus.Unsubscribe<EffectPublish>(binding);
 }
 

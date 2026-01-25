@@ -1,6 +1,3 @@
-using Unity.Mathematics;
-using UnityEngine;
-
 
 
 
@@ -20,6 +17,7 @@ public class DevEnv : RegisteredService, IServiceTick
         .System(LogSystem.Movement,     LogLevel.Debug)
         .System(LogSystem.Equipment,    LogLevel.Debug)
         .System(LogSystem.Animation,    LogLevel.Trace)
+        // .System(LogSystem.Effects,      LogLevel.Trace)
         .System(LogSystem.Hero,         LogLevel.Debug));
     }
 

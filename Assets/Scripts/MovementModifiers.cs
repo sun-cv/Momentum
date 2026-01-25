@@ -15,9 +15,9 @@ public class MovementModifierHandler
 
     float value = 1.0f;
 
-    public MovementModifierHandler()
+    public MovementModifierHandler(LocalEventbus bus)
     {
-        cache = new((effectInstance) => effectInstance.Effect is IType instance && acceptedModifiers.Contains(instance.Type));
+        cache = new(bus, (effectInstance) => effectInstance.Effect is IType instance && acceptedModifiers.Contains(instance.Type));
 
         cache.OnApply   += CreateModifier;
         cache.OnCancel  += ClearModifier;

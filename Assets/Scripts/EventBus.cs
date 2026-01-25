@@ -278,3 +278,46 @@ public class EventHandler<TRequest, TResponse> where TRequest : ISystemEvent whe
 
     public int PendingCount => pending.Count;
 }
+
+public class LocalEventHandler<TRequest, TResponse> where TRequest : ISystemEvent where TResponse : ISystemEvent
+{
+    LocalEventbus bus;
+
+    private readonly Dictionary<Guid, TRequest> pending = new();
+    private readonly Action<TRequest, TResponse> onResponse;
+
+    public LocalEventHandler(LocalEventbus bus, Action<TRequest, TResponse> onResponse)
+    {
+        this.bus        = bus;
+        this.onResponse = onResponse;
+        
+        Link<TResponse>(Receive);
+    }
+
+
+    public void Send(TRequest request)
+    {
+        pending[request.Id] = request;
+        Emit(request);
+    }
+
+    void Receive(TResponse response)
+    {
+        if (!pending.TryGetValue(response.Id, out var request))
+            return;
+
+        onResponse(request, response);
+        pending.Remove(response.Id);
+    }
+
+
+    public void Clear()
+    {
+        pending.Clear();
+    }
+
+    void Link<T>(Action<T> handler) where T : IEvent    => bus.Subscribe(handler);
+    void Emit<T>(T evt) where T : IEvent                => bus.Raise(evt);
+    
+    public int PendingCount => pending.Count;
+}

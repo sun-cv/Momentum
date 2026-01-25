@@ -44,10 +44,10 @@ public class WeaponSystem : IServiceTick
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        EventBus<CommandPublish>        .Subscribe(HandleCommandPublish);
-        EventBus<EffectPublish>         .Subscribe(HandleEffectNonCancelableLockCount);
-        EventBus<LockPublish>           .Subscribe(HandleLockPublish);
-        EventBus<EquipmentPublish>      .Subscribe(HandleEquipmentPublish);
+        LinkLocal<CommandPublish>     (HandleCommandPublish);
+        LinkLocal<EffectPublish>      (HandleEffectNonCancelableLockCount);
+        LinkLocal<LockPublish>        (HandleLockPublish);
+        LinkLocal<EquipmentPublish>   (HandleEquipmentPublish);
     }
 
 
@@ -131,7 +131,7 @@ public class WeaponSystem : IServiceTick
     void TransitionState(WeaponPhase phase)
     {
         instance.State.Phase = phase;
-        PublishWeaponTransition();
+        PublishTransition();
     }
 
     void ExitHandler()
@@ -225,7 +225,7 @@ public class WeaponSystem : IServiceTick
     void EquipWeapon(WeaponAction Action)
     {
         instance = new WeaponInstance(Action);
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Instance = instance }));
+        EmitLocal<WeaponPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Instance = instance }));
     }
 
     void ActivateWeapon()
@@ -280,7 +280,7 @@ public class WeaponSystem : IServiceTick
 
     void UnequipWeapon()
     {
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.Released, new() { Owner = owner, Instance = instance }));
+        EmitLocal<WeaponPublish>(new(Guid.NewGuid(), Publish.Released, new() { Owner = owner, Instance = instance }));
         ClearInstance();        
     }
 
@@ -394,7 +394,7 @@ public class WeaponSystem : IServiceTick
         foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Create, new() { Effect = effect }));
+                EmitLocal<EffectRequest>(new(Guid.NewGuid(), Request.Create, new() { Effect = effect }));
         }
     }
 
@@ -403,7 +403,7 @@ public class WeaponSystem : IServiceTick
         foreach (var effect in action?.Effects)
         {
             if (effect.Cancelable)
-                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
+                EmitLocal<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
         }
     }
 
@@ -412,7 +412,7 @@ public class WeaponSystem : IServiceTick
         foreach (var effect in action.Effects)
         {
             if (effect.Cancelable && effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                OnEvent<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
+                EmitLocal<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
         }
     }
 
@@ -437,18 +437,18 @@ public class WeaponSystem : IServiceTick
             if (definition.Phase != instance.State.Phase)
                 continue;
 
-            OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Scope = (int)instance.State.Phase, Command = MovementCommandFactory.Create(owner, definition, instance.State.Intent)}));
+            EmitLocal<MovementRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Scope = (int)instance.State.Phase, Command = MovementCommandFactory.Create(owner, definition, instance.State.Intent)}));
         }
     }
 
     public void ClearMovementFromPhase(WeaponPhase scopeToClear)
     {
-        OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = (int)scopeToClear }));
+        EmitLocal<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = (int)scopeToClear }));
     }
     
     public void ClearMovementFromOwner()
     {
-        OnEvent<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = -1 }));
+        EmitLocal<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = -1 }));
     }
 
     // ============================================================================
@@ -467,7 +467,7 @@ public class WeaponSystem : IServiceTick
     public void DestroyHitboxes(WeaponInstance instance)
     {
         foreach (var (hitboxId, definition) in instance.State.OwnedHitboxes)
-            OnEvent<HitboxRequest>(new(Guid.NewGuid(), Request.Destroy, new() { Owner = owner, Definition = definition, HitboxId = hitboxId }));
+            EmitGlobal<HitboxRequest>(new(Guid.NewGuid(), Request.Destroy, new() { Owner = owner, Definition = definition, HitboxId = hitboxId }));
     }
 
     // ============================================================================
@@ -487,7 +487,7 @@ public class WeaponSystem : IServiceTick
         if (request == null)
             return;
 
-        OnEvent<AnimationRequest>(new(Guid.NewGuid(), Request.Start, new() { Owner = owner, Request = request }));
+        EmitLocal<AnimationRequest>(new(Guid.NewGuid(), Request.Start, new() { Owner = owner, Request = request }));
     }
 
     // ============================================================================
@@ -542,7 +542,7 @@ public class WeaponSystem : IServiceTick
 
     void ConsumeCommand(Command command)
     {
-        OnEvent<CommandRequest>(new(Guid.NewGuid(), Request.Consume, new() { Command = command }));
+        EmitLocal<CommandRequest>(new(Guid.NewGuid(), Request.Consume, new() { Command = command }));
     }
 
     void ConsumeAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -581,7 +581,7 @@ public class WeaponSystem : IServiceTick
 
     void LockCommand(Command command)
     {
-        OnEvent<CommandRequest>(new(Guid.NewGuid(), Request.Lock, new() { Command = command }));
+        EmitLocal<CommandRequest>(new(Guid.NewGuid(), Request.Lock, new() { Command = command }));
     }
 
     void LockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -595,7 +595,7 @@ public class WeaponSystem : IServiceTick
 
     void UnlockCommand(Command command)
     {
-        OnEvent<CommandRequest>(new(Guid.NewGuid(), Request.Unlock, new() { Command = command }));
+        EmitLocal<CommandRequest>(new(Guid.NewGuid(), Request.Unlock, new() { Command = command }));
     }
 
     void UnlockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -698,9 +698,9 @@ public class WeaponSystem : IServiceTick
         instance?.State.OwnedHitboxes.Add(response.Payload.HitboxId, response.Payload.Definition);
     }
 
-    void PublishWeaponTransition()
+    void PublishTransition()
     {
-        OnEvent<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
+        EmitLocal<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
     }
 
     void RegisterCooldown()
@@ -723,7 +723,10 @@ public class WeaponSystem : IServiceTick
     bool HasActiveCommands()        => active?.Count > 0;
     bool HasBufferCommands()        => buffer?.Count > 0;
 
-    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
+    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
+    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
+    void LinkGlobal<T>(Action<T> handler) where T : IEvent  => EventBus<T>.Subscribe(handler);
+    void EmitGlobal<T>(T evt) where T : IEvent              => EventBus<T>.Raise(evt);
 
     public Actor Owner                                                  => owner;
     public WeaponInstance CurrentWeapon                                 => instance;

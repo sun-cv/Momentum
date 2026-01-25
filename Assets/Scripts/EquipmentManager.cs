@@ -76,7 +76,7 @@ public class EquipmentManager
         if (!slot.Equip(item))
             return false;
 
-        OnEvent<EquipmentPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
+        EmitLocal<EquipmentPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
         
         DebugLog();
         return true;
@@ -90,7 +90,7 @@ public class EquipmentManager
         var item = slot.Unequip();
 
         if (item != null)
-            OnEvent<EquipmentPublish>(new(Guid.NewGuid(), Publish.Unequipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
+            EmitLocal<EquipmentPublish>(new(Guid.NewGuid(), Publish.Unequipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
         
         DebugLog();
         return item;
@@ -125,7 +125,8 @@ public class EquipmentManager
         Log.Debug(LogSystem.Equipment, LogCategory.State, "Equipped Gear", "Dash",      () => slots[EquipmentSlotType.Dash]?.Equipped       );
     }
 
-    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
+    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
+
 }
 
 

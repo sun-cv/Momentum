@@ -37,12 +37,12 @@ public class AnimationController : IServiceTick
             return;
         }
         
-
         owner       = actor;
         animator    = bridge.Animator;
 
         CacheClipDurations();
-        EventBus<AnimationRequest>.Subscribe(HandleAnimationRequest);
+
+        LinkLocal<AnimationRequest>(HandleAnimationRequest);
         GameTick.Register(this);
     }
 
@@ -143,11 +143,15 @@ public class AnimationController : IServiceTick
         });
     }
 
+    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
+
+
     public UpdatePriority Priority => ServiceUpdatePriority.AnimationHandler;
 }
 // ============================================================================
 // EVENTS
 // ============================================================================
+
 
 public readonly struct AnimationRequestPayload
 {

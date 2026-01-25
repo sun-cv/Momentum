@@ -17,7 +17,7 @@ public class MovementEngine : IServiceTick
     readonly float retention    = Settings.Movement.MOMENTUM_RETENTION;
     readonly float inertia      = Settings.Movement.INERTIA;
 
-    MovementModifierHandler modifierHandler = new();
+    MovementModifierHandler modifierHandler;
 
     Actor           owner;
     IMovableActor   actor;
@@ -50,7 +50,9 @@ public class MovementEngine : IServiceTick
         body.gravityScale   = 0;
         body.interpolation  = RigidbodyInterpolation2D.Interpolate; 
 
-        EventBus<MovementRequest>.Subscribe(HandleMovementRequest);
+        modifierHandler     = new(actor.Bus);
+
+        LinkLocal<MovementRequest>(HandleMovementRequest);
 
         SetSpeed();
     }
@@ -59,7 +61,6 @@ public class MovementEngine : IServiceTick
     public void Tick()
     {
         RemoveInactiveControllers();
-
 
         CalculateModifier();
         CalculateVelocity();
@@ -87,13 +88,9 @@ public class MovementEngine : IServiceTick
             return;
         }
     
-        bool isReversing = actor.CanMove && 
-                           velocity.magnitude > 1f && 
-                           Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
-    
-        Vector2 targetVelocity = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
-    
-        var sortedDirectives = directives.OrderByDescending(d => d.Controller.Priority).ToList();
+        bool isReversing        = actor.CanMove && velocity.magnitude > 1f && Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
+        Vector2 targetVelocity  = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
+        var sortedDirectives    = directives.OrderByDescending(d => d.Controller.Priority).ToList();
     
         foreach(var directive in sortedDirectives)
         {
@@ -118,13 +115,10 @@ public class MovementEngine : IServiceTick
         FinishedBlending:
         
         if (isReversing && directives.Count == 0)
-        {
             velocity = Vector2.MoveTowards(velocity, Vector2.zero, acceleration * inertia * Clock.DeltaTime);
-        }
+        
         else
-        {
             velocity = Vector2.Lerp(targetVelocity, velocity, retention);
-        }
         
         momentum = velocity;
     }
@@ -203,6 +197,8 @@ public class MovementEngine : IServiceTick
         Log.Trace(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Cache",       () => modifierHandler.Cache.Effects.Count);
         Log.Trace(LogSystem.Movement, LogCategory.State,  "Movement", "Directive.Count",    () => directives.Count);
     }
+
+    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
 
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;
 }
