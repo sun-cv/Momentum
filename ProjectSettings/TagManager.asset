@@ -18,20 +18,20 @@ TagManager:
   - Player
   - Enemy
   - NPC
-  - 
   - Environment
   - Prop
-  - 
-  - 
-  - 
-  - 
-  - HB_Player
-  - HB_Enemy
-  - HB_NPC
-  - 
-  - HB_Environment
-  - HB_Prop
-  - 
+  - Hitbox_Player
+  - Hitbox_Enemy
+  - Hitbox_NPC
+  - Hitbox_Environment
+  - Hitbox_Prop
+  - Hurtbox_Player
+  - Hurtbox_Enemy
+  - Hurtbox_NPC
+  - Hurtbox_Environment
+  - Hurtbox_Prop
+  - Deflect_Player
+  - Deflect_Enemy
   - 
   - 
   - 

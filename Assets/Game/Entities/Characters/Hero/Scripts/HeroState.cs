@@ -70,14 +70,3 @@ public class HeroState : State
         intent      = hero.Intent;
     }
 }
-
-public struct testing
-{
-    bool canRotate;
-
-    public testing Update(bool rotate)
-    {
-        canRotate = rotate;
-        return this;
-    }
-}

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5969583498397400133}
   - component: {fileID: 4479180939411690600}
-  m_Layer: 20
+  m_Layer: 25
   m_Name: HB_ShieldParry
   m_TagString: Untagged
   m_Icon: {fileID: 0}

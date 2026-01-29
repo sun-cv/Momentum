@@ -19,32 +19,26 @@ public class DevEnv : RegisteredService, IServiceTick
         .System(LogSystem.Animation,    LogLevel.Trace)
         // .System(LogSystem.Effects,      LogLevel.Trace)
         .System(LogSystem.Hero,         LogLevel.Debug));
+
+        hero        = HeroFactory.Create();
+
+        hero.Equipment.Equip(new Sword());
+        hero.Equipment.Equip(new Shield());
+        hero.Equipment.Equip(new Dash());
+
+        Services.Get<CameraRig>().SetCameraTarget(new HeroCameraTarget(){ Hero = hero });
+        Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
+        Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
+        
+        triggered   = true;
+
     }
 
 
     public void Tick()
     {
-
-
-        if (!triggered)
-        {
-            hero        = HeroFactory.Create();
-
-            hero.Equipment.Equip(new Sword());
-            hero.Equipment.Equip(new Shield());
-            hero.Equipment.Equip(new Dash());
-
-            Services.Get<CameraRig>().SetCameraTarget(new HeroCameraTarget(){ Hero = hero });
-            Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
-            Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
-            
-            triggered   = true;
-        }
-
-
         Log.Debug(LogSystem.Hero, LogCategory.State, "Hero State", "Parry", () => hero.Parrying);
         Log.Debug(LogSystem.Hero, LogCategory.State, "Hero State", "block", () => hero.Blocking);
-
     }
 
     public void Loop()

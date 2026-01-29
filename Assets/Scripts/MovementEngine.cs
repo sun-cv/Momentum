@@ -34,16 +34,11 @@ public class MovementEngine : IServiceTick
 
     public MovementEngine(Actor actor)
     {
-        if (actor.Bridge is not ActorBridge bridge)
-        {
-            Log.Error(LogSystem.Movement, LogCategory.Activation, () => $"Movement Engine activation requires Actor Bridge (actor {actor.RuntimeID} failed)");
-            return;
-        }
 
         GameTick.Register(this);
         
         this.owner          = actor;
-        this.body           = bridge.Body;
+        this.body           = actor.Bridge.Body;
         this.actor          = actor as IMovableActor;
 
         body.freezeRotation = true;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -13,12 +12,19 @@ public class HitboxController : Controller
     
     readonly Color gizmoColor        = Color.red;
 
-    private void OnTriggerEnter(Collider trigger)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (!trigger.TryGetComponent<BridgeController>(out var target))
+        // var components = collision.gameObject.GetComponentsInParent<Component>();
+        // Debug.Log($"Components on {collision.name}: {string.Join(", ", components.Select(c => c.GetType().Name))}");
+
+        var controller = collision.GetComponentInParent<BridgeController>();
+
+        if (controller == null)
             return;
 
-        Manager.DetectHit(new(){ HitboxId = HitboxId, Owner = Owner, Target = target.Bridge.Owner });
+        Debug.Log("Bridge Trigger");
+
+        Manager.DetectHit(new(){ HitboxId = HitboxId, Owner = Owner, Target = controller.Bridge.Owner });
     }
 
     public void Configure(Guid Id, Actor owner, HitboxManager manager)
@@ -33,7 +39,6 @@ public class HitboxController : Controller
     
     private void OnDrawGizmos()
     {
-
         if (!HitboxManager.ShowDebugGizmos) return;
         
         Gizmos.color = gizmoColor;
@@ -42,6 +47,8 @@ public class HitboxController : Controller
     
     private void OnDrawGizmosSelected()
     {
+        if (!HitboxManager.ShowDebugGizmos) return;
+
         Gizmos.color = Color.yellow;
         DrawColliders();
     }
@@ -51,10 +58,15 @@ public class HitboxController : Controller
         var colliders = GetComponentsInChildren<Collider2D>();
 
         foreach (var collider in colliders)
-            DrawCollider(collider);
+            HitboxTools.DrawCollider(collider);
     }
-    
-    void DrawCollider(Collider2D collider)
+}
+
+
+
+public static class HitboxTools
+{
+    public static void DrawCollider(Collider2D collider)
     {
         switch (collider)
         {
@@ -76,7 +88,7 @@ public class HitboxController : Controller
         }
     }
 
-    void DrawBox2D(BoxCollider2D box)
+    static void DrawBox2D(BoxCollider2D box)
     {
         Vector3 center      = box.transform.TransformPoint(box.offset);
         Vector2 size        = box.size;
@@ -102,7 +114,7 @@ public class HitboxController : Controller
         Gizmos.DrawLine(worldCorners[3], worldCorners[0]);
     }
 
-    void DrawCircle2D(CircleCollider2D circle)
+    static void DrawCircle2D(CircleCollider2D circle)
     {
         Vector3 center      = circle.transform.TransformPoint(circle.offset);
         float radius        = circle.radius * Mathf.Max(circle.transform.lossyScale.x, circle.transform.lossyScale.y);
@@ -119,7 +131,7 @@ public class HitboxController : Controller
         }
     }
 
-    void DrawCapsule2D(CapsuleCollider2D capsule)
+    static void DrawCapsule2D(CapsuleCollider2D capsule)
     {
         Vector3 center  = capsule.transform.TransformPoint(capsule.offset);
         Vector2 size    = capsule.size * capsule.transform.lossyScale;
@@ -148,7 +160,7 @@ public class HitboxController : Controller
         Gizmos.DrawLine(center + direction * halfLength - offset, center - direction * halfLength - offset);
     }
 
-    void DrawComposite2D(CompositeCollider2D composite)
+    static void DrawComposite2D(CompositeCollider2D composite)
     {
         for (int i = 0; i < composite.pathCount; i++)
         {

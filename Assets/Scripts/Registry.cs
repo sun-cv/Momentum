@@ -29,9 +29,10 @@ public static class Registry
 
     public static void Initialize()
     {
-        Registry.Prefabs.Initialize();
-        Registry.Services.Initialize();
-        Registry.Functions.Initialize();
+        Registry.Prefabs    .Initialize();
+        Registry.Services   .Initialize();
+        Registry.Functions  .Initialize();
+        Registry.Entities   .Initialize();
     }
 
 
@@ -53,7 +54,7 @@ public static class Registry
 
             var prefabNames = new HashSet<string>();
 
-            var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => { cache[prefab.name] = prefab; prefabNames.Add(prefab.name); });
+            var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => { Debug.Log($"{prefab.name}");cache[prefab.name] = prefab; prefabNames.Add(prefab.name); });
             
             handle.WaitForCompletion();
             
@@ -238,6 +239,65 @@ public static class Registry
     
                 method.Invoke(null, paramValues);
             };
+        }
+    }
+
+    public static class Entities
+    {
+        private static readonly List<Bridge> all = new();
+        private static readonly Dictionary<Type, List<Bridge>> byInterface = new();
+
+        public static void Initialize()
+        {
+            byInterface[typeof(IDepthSorted)] = new();
+            byInterface[typeof(IDepthColliding)] = new();
+        }
+
+        public static void Register(Bridge bridge)
+        {
+            all.Add(bridge);
+
+            if (bridge.Owner is IDepthSorted)
+            {
+                if (!byInterface.ContainsKey(typeof(IDepthSorted)))
+                    byInterface[typeof(IDepthSorted)] = new();
+                byInterface[typeof(IDepthSorted)].Add(bridge);
+            }
+
+            if (bridge.Owner is IDepthColliding)
+            {
+                if (!byInterface.ContainsKey(typeof(IDepthColliding)))
+                    byInterface[typeof(IDepthColliding)] = new();
+                byInterface[typeof(IDepthColliding)].Add(bridge);
+            }
+
+            Log.Debug(LogSystem.System, LogCategory.Admin, () => $"Registered entity: {bridge.Owner.GetType().Name}");
+        }
+
+        public static void Deregister(Bridge bridge)
+        {
+            all.Remove(bridge);
+
+            foreach (var list in byInterface.Values)
+                list.Remove(bridge);
+
+            Log.Debug(LogSystem.System, LogCategory.Admin, () => $"Deregistered entity: {bridge.Owner.GetType().Name}");
+        }
+
+        public static IEnumerable<Bridge> GetAll() => all;
+
+        public static IEnumerable<Bridge> GetByInterface<T>() where T : class
+        {
+            if (byInterface.TryGetValue(typeof(T), out var list))
+                return list;
+            return Enumerable.Empty<Bridge>();
+        }
+
+        public static void Clear()
+        {
+            all.Clear();
+            foreach (var list in byInterface.Values)
+                list.Clear();
         }
     }
 

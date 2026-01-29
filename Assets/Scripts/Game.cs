@@ -93,7 +93,7 @@ public class Clock
     static int frameCount;
     
     public static int FrameCount    => frameCount;
-    public static float DeltaTime   => Time.deltaTime;
+    public static float DeltaTime   => Time.fixedDeltaTime;
 
     public void Tick()
     {

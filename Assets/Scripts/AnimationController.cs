@@ -31,14 +31,9 @@ public class AnimationController : IServiceTick
 
     public AnimationController(Actor actor)
     {
-        if (actor.Bridge is not ActorBridge bridge)
-        {
-            Log.Error(LogSystem.Animation, LogCategory.Activation, () => $"Animation Handler activation requires Actor Bridge (actor {actor.RuntimeID} failed)");
-            return;
-        }
-        
+
         owner       = actor;
-        animator    = bridge.Animator;
+        animator    = actor.Bridge.Animator;
 
         CacheClipDurations();
 

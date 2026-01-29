@@ -84,6 +84,15 @@ public class EventHandler {}
 //  Actor
 //
 
+
+public interface IDepthSorted       {}
+public interface IDepthColliding    {}
+
+public interface IDefined
+{
+    EntityDefinition Definition             { get; }
+}
+
 public interface IControllable
 {
     bool Inactive                           { get; set; }
@@ -168,13 +177,15 @@ public interface IEventTarget
 }
 
 public interface IActor : IControllable {}
-public interface IMovableActor : IActor, IMovable, IPhysical, IDirectional, IOrientable, IControllable { }
+public interface IMovableActor : IActor, IDepthSorted, IDepthColliding, IMovable, IPhysical, IDirectional, IOrientable, IControllable { }
 
-public interface IHero  : IEventTarget, IMovableActor, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
+public interface IHero  : IEventTarget, IMovableActor, IDefined, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
 public interface IEnemy : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
 public interface IBoss  : IEnemy {}
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
+
+public interface IDummyEntity : IControllable, IDamageable, IAfflictable {}
 //
 //  Items
 //

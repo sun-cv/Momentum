@@ -72,7 +72,8 @@ public static class ServiceUpdatePriority
 
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
 
-    public static UpdatePriority AnimationHandler   = new(UpdatePhase.Render,   10);
-    public static UpdatePriority CameraRig          = new(UpdatePhase.Render,   20);
+    public static UpdatePriority SpriteLayering     = new(UpdatePhase.Render,   10);
+    public static UpdatePriority AnimationHandler   = new(UpdatePhase.Render,   20);
+    public static UpdatePriority CameraRig          = new(UpdatePhase.Render,   30);
 
 }

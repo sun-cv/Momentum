@@ -7,7 +7,7 @@ public class Hero : Actor, IHero
     //========================================
     // Systems
     //========================================
-    public HeroDefinition       Definition          { get; private set; }
+    public EntityDefinition     Definition          { get; private set; }
     public IntentSystem         Intent              { get; private set; }
     public HeroState            State               { get; private set; }
     public HeroStats            Stats               { get; private set; }

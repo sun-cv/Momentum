@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4093391013310443883}
   - component: {fileID: 6971756159742798928}
-  m_Layer: 20
+  m_Layer: 25
   m_Name: HB_ShieldBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}

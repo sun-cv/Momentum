@@ -8,7 +8,7 @@
 
 > ## **To be fixed**
 >
->> 
+>> HeroDefinition -> EntityDefinition? No separation needed.
 
 > ## **Rework Required**
 >

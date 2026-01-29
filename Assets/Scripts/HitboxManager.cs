@@ -273,6 +273,8 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void ProcessHit(HitEvent hitEvent)
     {
+        Debug.Log("Hitbox event processed");
+
         if (!activeHitboxes.TryGetValue(hitEvent.HitboxId, out var hitbox))
             return;
 

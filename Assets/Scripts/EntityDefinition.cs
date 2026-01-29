@@ -1,17 +1,14 @@
 
 
-public class HeroDefinition : Definition
+public class EntityDefinition : Definition
 {
-    public new string Name              = "Hero";
-    
     public float Health                 = 0;
     public float MaxHealth              = 0;
 
     public float Mana                   = 0;
     public float MaxMana                = 0;
 
-    public float Speed                  = 5;
+    public float Speed                  = 0;
 
     public float Attack                 = 0;
-
 };
