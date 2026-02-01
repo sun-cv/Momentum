@@ -5,6 +5,9 @@
 
 public class DirectionHandler: IServiceTick
 {
+    readonly Logger Log = Logging.For(LogSystem.Direction);
+
+
     Actor           owner;
     IOrientable     actor;
     IntentSystem    intent;
@@ -19,7 +22,7 @@ public class DirectionHandler: IServiceTick
     {
         if (owner is not IOrientable orientable)
         {
-            Log.Error(LogSystem.Direction, LogCategory.Activation, () => $"Direction Handler activation requires IOrientable actor (actor {actor.RuntimeID} failed)");
+            Log.Error($"Direction Handler activation requires IOrientable actor (actor {actor.RuntimeID} failed)");
             return;
         }
 

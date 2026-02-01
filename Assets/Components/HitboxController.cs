@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-
-
 public class HitboxController : Controller
 {
     public Guid HitboxId            { get; set; }
@@ -14,15 +12,11 @@ public class HitboxController : Controller
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // var components = collision.gameObject.GetComponentsInParent<Component>();
-        // Debug.Log($"Components on {collision.name}: {string.Join(", ", components.Select(c => c.GetType().Name))}");
 
         var controller = collision.GetComponentInParent<BridgeController>();
 
         if (controller == null)
             return;
-
-        Debug.Log("Bridge Trigger");
 
         Manager.DetectHit(new(){ HitboxId = HitboxId, Owner = Owner, Target = controller.Bridge.Owner });
     }

@@ -4,7 +4,7 @@ public static class DummyFactory
 {
     public static Dummy Create()
     {
-        var prefab      = Registry.Prefabs.Get("Dummy");
+        var prefab      = Assets.Get("Dummy");
         var instance    = Object.Instantiate(prefab);
 
         Dummy dummy     = new();

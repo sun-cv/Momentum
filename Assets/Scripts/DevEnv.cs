@@ -4,21 +4,23 @@
 
 public class DevEnv : RegisteredService, IServiceTick
 {
-    
+    readonly Logger Log = Logging.For(LogSystem.System);
+
     public Hero hero;
     public bool triggered = false;
     
     public override void Initialize()
     {
-        Log.Configure((config) => config
-        .Global(LogLevel.Error)
-        .System(LogSystem.Engine,       LogLevel.Debug)
-        .System(LogSystem.Weapon,       LogLevel.Trace)
-        .System(LogSystem.Movement,     LogLevel.Debug)
-        .System(LogSystem.Equipment,    LogLevel.Debug)
-        .System(LogSystem.Animation,    LogLevel.Trace)
-        // .System(LogSystem.Effects,      LogLevel.Trace)
-        .System(LogSystem.Hero,         LogLevel.Debug));
+        Logging.For(LogSystem.Engine)           .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
+
+
 
         hero        = HeroFactory.Create();
 
@@ -37,8 +39,8 @@ public class DevEnv : RegisteredService, IServiceTick
 
     public void Tick()
     {
-        Log.Debug(LogSystem.Hero, LogCategory.State, "Hero State", "Parry", () => hero.Parrying);
-        Log.Debug(LogSystem.Hero, LogCategory.State, "Hero State", "block", () => hero.Blocking);
+        Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
+        Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
     }
 
     public void Loop()

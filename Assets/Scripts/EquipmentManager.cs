@@ -51,6 +51,8 @@ public class EquipmentSlot
 
 public class EquipmentManager
 {
+    readonly Logger Log = Logging.For(LogSystem.Equipment);
+
     readonly Actor owner;
     readonly Dictionary<EquipmentSlotType, EquipmentSlot> slots = new();
     
@@ -118,15 +120,14 @@ public class EquipmentManager
 
     void DebugLog()
     {
-        Log.Debug(LogSystem.Equipment, LogCategory.State, "Equipped Gear", "Head",      () => slots[EquipmentSlotType.Head]?.Equipped       );
-        Log.Debug(LogSystem.Equipment, LogCategory.State, "Equipped Gear", "Cloak",     () => slots[EquipmentSlotType.Cloak]?.Equipped      );
-        Log.Debug(LogSystem.Equipment, LogCategory.State, "Equipped Gear", "MainHand",  () => slots[EquipmentSlotType.MainHand]?.Equipped   );
-        Log.Debug(LogSystem.Equipment, LogCategory.State, "Equipped Gear", "Offhand",   () => slots[EquipmentSlotType.OffHand]?.Equipped    );
-        Log.Debug(LogSystem.Equipment, LogCategory.State, "Equipped Gear", "Dash",      () => slots[EquipmentSlotType.Dash]?.Equipped       );
+        Log.Debug("Head",      () => slots[EquipmentSlotType.Head]?.Equipped       );
+        Log.Debug("Cloak",     () => slots[EquipmentSlotType.Cloak]?.Equipped      );
+        Log.Debug("MainHand",  () => slots[EquipmentSlotType.MainHand]?.Equipped   );
+        Log.Debug("Offhand",   () => slots[EquipmentSlotType.OffHand]?.Equipped    );
+        Log.Debug("Dash",      () => slots[EquipmentSlotType.Dash]?.Equipped       );
     }
 
     void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
-
 }
 
 

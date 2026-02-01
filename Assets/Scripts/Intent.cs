@@ -19,6 +19,8 @@ public class IntentSystem : IServiceTick
 
     public IntentSystem(Actor owner)
     {
+        Services.Lane.Register(this);
+
         this.owner      = owner;
     
         inputRouter     = Services.Get<InputRouter>();
@@ -27,7 +29,6 @@ public class IntentSystem : IServiceTick
         command .Initialize(this);
         input   .Initialize(this);
 
-        GameTick.Register(this);
     }
 
 

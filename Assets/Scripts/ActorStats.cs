@@ -1,23 +1,31 @@
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 
 
 
 
-public class HeroStats : Stats
+public class ActorStats : Stats
 {
-    Hero owner;
+    Actor owner;
     
-    public HeroStats(Hero hero)
+    public ActorStats(Actor actor)
     {
-        owner = hero;
+        if (actor is not IDefined instance)
+            return;
+
+        owner = actor;
         
-        stats.Add(nameof(MaxHealth)         , hero.Definition.MaxHealth);
-        stats.Add(nameof(MaxMana)           , hero.Definition.MaxMana);
-        stats.Add(nameof(Speed)             , hero.Definition.Speed);
-        stats.Add(nameof(SpeedMultiplier)   , hero.Definition.Speed);
-        stats.Add(nameof(Attack)            , hero.Definition.Attack);
-        stats.Add(nameof(AttackMultiplier)  , hero.Definition.Attack);
+        foreach (var stat in StatProperties)
+        {
+            var value = (float)stat.GetValue(instance.Definition.Stats);
+
+            if (value < 0)
+                continue;
+
+            stats.Add(stat.Name, value);
+        }
     }
 
     float health; 
@@ -39,5 +47,7 @@ public class HeroStats : Stats
     public float SpeedMultiplier    => this[nameof(SpeedMultiplier)];
     public float Attack             => this[nameof(Attack)];
     public float AttackMultiplier   => this[nameof(AttackMultiplier)];
+
+    static readonly PropertyInfo[] StatProperties = typeof(StatsDefinition).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(prop => prop.PropertyType == typeof(float)).ToArray();
 }
 

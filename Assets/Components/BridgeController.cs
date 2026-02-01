@@ -13,7 +13,7 @@ public class BridgeController : Controller
 
         Bridge = bridge;
 
-        Entities.Register(Bridge);
+        Actors.Register(Bridge);
     }
 
     public void OnDestroy()
@@ -21,6 +21,6 @@ public class BridgeController : Controller
         if (Bridge == null) 
             return;
 
-        Entities.Deregister(Bridge);
+        Actors.Deregister(Bridge);
     }
 }

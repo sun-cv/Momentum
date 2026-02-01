@@ -13,9 +13,10 @@ public class LivePredicate : IServiceLoop
 
     public LivePredicate(Func<bool> evaluator)
     {
-        this.evaluator = evaluator;
-        value = evaluator();
-        Services.RegisterTick(this);
+        Services.Lane.Register(this);
+
+        this.evaluator  = evaluator;
+        value           = evaluator();
     }
 
     public void Loop()
@@ -92,11 +93,11 @@ public class TimePredicate : IServiceLoop
 
     public TimePredicate(Func<bool> condition, bool resetOnFalse = true)
     {
+        Services.Lane.Register(this);
+
         this.condition      = condition;
         this.resetOnFalse   = resetOnFalse;
         this.timer          = new ClockWatch();
-        
-        Services.RegisterTick(this);
     }
 
     public void Loop()

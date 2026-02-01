@@ -7,10 +7,10 @@ public class Hero : Actor, IHero
     //========================================
     // Systems
     //========================================
-    public EntityDefinition     Definition          { get; private set; }
+    public ActorDefinition      Definition          { get; private set; }
     public IntentSystem         Intent              { get; private set; }
     public HeroState            State               { get; private set; }
-    public HeroStats            Stats               { get; private set; }
+    public ActorStats           Stats               { get; private set; }
     public EquipmentManager     Equipment           { get; private set; }
     public WeaponSystem         Weapons             { get; private set; }
     public MovementEngine       Movement            { get; private set; }
@@ -21,30 +21,32 @@ public class Hero : Actor, IHero
     // Properties
     //========================================
 
-    public float MaxHealth                          { get => Stats.MaxHealth;           }
+    public float MaxHealth                          { get => Stats.MaxHealth;               }
     public float Health                             { get => Stats.Health;  
-                                                      set => Stats.Health       = value;}
-    public float MaxMana                            { get => Stats.MaxMana;             }
+                                                      set => Stats.Health           = value;}
+    public float MaxMana                            { get => Stats.MaxMana;                 }
     public float Mana                               { get => Stats.Mana;    
-                                                      set => Stats.Mana         = value;}
-    public float Speed                              { get => Stats.Speed;               }
-    public float SpeedMultiplier                    { get => Stats.SpeedMultiplier;     }
-    public float Attack                             { get => Stats.Attack;              }
-    public float AttackMultiplier                   { get => Stats.AttackMultiplier;    }
+                                                      set => Stats.Mana             = value;}
+    public float Speed                              { get => Stats.Speed;                   }
+    public float SpeedMultiplier                    { get => Stats.SpeedMultiplier;         }
+    public float Attack                             { get => Stats.Attack;                  }
+    public float AttackMultiplier                   { get => Stats.AttackMultiplier;        }
 
     //========================================
     // State
     //========================================
 
-    public bool Inactive                            { get => State.Inactive;        set => State.Inactive        = value; }
+    public bool Inactive                            { get => State.Inactive;        
+                                                      set => State.Inactive         = value;}
+    public bool Invulnerable                        { get => State.Invulnerable;    
+                                                      set => State.Invulnerable     = value;}
+
+    public bool Disabled                            => State.Disabled;
+    public bool Stunned                             { get => State.Stunned;         
+                                                      set => State.Stunned          = value;}
 
     public bool Parrying                            => State.Parrying;
     public bool Blocking                            => State.Blocking;
-
-    public bool Disabled                            => State.Disabled;
-    public bool Stunned                             { get => State.Stunned;         set => State.Stunned        = value; }
-
-    public bool Invulnerable                        { get => State.Invulnerable;    set => State.Invulnerable   = value; }
 
     public bool CanMove                             => State.CanMove;
     public bool CanAttack                           => State.CanAttack;

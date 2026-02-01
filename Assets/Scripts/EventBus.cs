@@ -6,7 +6,7 @@ using System.Linq;
 
 
 public interface IEvent {};
-public interface ISystemEvent : IEvent { public Guid Id { get; } }
+public interface ISystemEvent : IEvent { public Guid Id { get; }}
 
 public interface IEventBinding<T> 
 {

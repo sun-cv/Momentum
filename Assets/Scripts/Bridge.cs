@@ -53,7 +53,7 @@ public static class BridgeFactory
 
     static Bridge Instantiate(Actor actor, string prefabName)
     {
-        var prefab      = Registry.Prefabs.Get(prefabName);
+        var prefab      = Assets.Get(prefabName);
         var instance    = UnityEngine.Object.Instantiate(prefab);
 
         return new Bridge(actor, instance);

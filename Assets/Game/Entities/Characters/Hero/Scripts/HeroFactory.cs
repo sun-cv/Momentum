@@ -6,7 +6,7 @@ public static class HeroFactory
     {
         definition ??= new HeroDefinition();
 
-        var prefab      = Registry.Prefabs.Get(definition.Name);
+        var prefab      = Assets.Get(definition.Name);
         var instance    = Object.Instantiate(prefab);
 
         var hero    = new Hero();

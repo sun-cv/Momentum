@@ -42,7 +42,15 @@ public class GameEngine
 
     public void Startup()
     {
-        Registry.Initialize();
+        Services.Start();
+
+        Initialize();
+    }
+
+    public void Initialize()
+    {
+        Assets  .Initialize();
+
         Services.Initialize();
         Services.Bind();
 
@@ -139,9 +147,14 @@ public class GameLoop
 {
     private Clock clock;
 
+    static int   tickHerz;
+    static float timeHerz;
+
     public void Initialize(Clock clock)
     {
         this.clock = clock;
+
+        this.clock.OnTick += MeasureTickRate;
 
         this.clock.OnTick += Tick;
         this.clock.OnLoop += Loop;
@@ -149,194 +162,44 @@ public class GameLoop
         this.clock.OnUtil += Util;
         this.clock.OnLate += Late;
 
-        Time.fixedDeltaTime  = Clock.TickDelta;
+        Time.fixedDeltaTime = Clock.TickDelta;
     }
 
     public void Tick()
     {
-        GameTick.Tick();
+        Services.Lane.Tick();
     }
     public void Loop()
     {
-        GameTick.Loop();
+        Services.Lane.Loop();
     }
     public void Step()
     {
-        GameTick.Step();
+        Services.Lane.Step();
     }
     public void Util()
     {
-        GameTick.Util();
+        Services.Lane.Util();
     }
     public void Late()
     {
-        GameTick.Late();
-    }
-}
-
-
-
-
-public static class GameTick
-{
-    private static readonly List<IServiceTick> tickServices         = new();
-    private static readonly List<IServiceLoop> loopServices         = new();
-    private static readonly List<IServiceStep> stepServices         = new();
-    private static readonly List<IServiceUtil> utilServices         = new();
-    private static readonly List<IServiceLate> lateServices         = new();
-
-    private static readonly List<IService> pendingRegistrations     = new();
-    private static readonly List<IService> pendingDeregistrations   = new();
-
-    static int   tickHerz;
-    static float timeHerz;
-
-    public static void Tick()
-    {
-        ProcessPending();
-        MeasureTickRate();
-        
-        foreach(var service in tickServices)
-            service.Tick();
-    }
-    
-    public static void Loop()
-    {        
-        foreach(var service in loopServices)
-            service.Loop();
-    }
-    
-    public static void Step()
-    {        
-        foreach(var service in stepServices)
-            service.Step();
-    }
-    
-    public static void Util()
-    {        
-        foreach(var service in utilServices)
-            service.Util();
-    }
-
-    public static void Late()
-    {
-        foreach(var service in lateServices)
-            service.Late();  
-    }
-
-    private static void ProcessPending()
-    {
-        foreach (var service in pendingDeregistrations)
-        {
-            if (service is IServiceTick ServiceTick) tickServices.Remove(ServiceTick);
-            if (service is IServiceLoop ServiceLoop) loopServices.Remove(ServiceLoop);
-            if (service is IServiceStep ServiceStep) stepServices.Remove(ServiceStep);
-            if (service is IServiceUtil ServiceUtil) utilServices.Remove(ServiceUtil);
-        }
-
-        pendingDeregistrations.Clear();
-
-        foreach (var service in pendingRegistrations)
-        {
-            if (service is IServiceTick tickService)
-            {
-                tickServices.Add(tickService);
-                tickServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            }
-
-            if (service is IServiceLoop loopService)
-            {
-                loopServices.Add(loopService);
-                loopServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            }
-
-            if (service is IServiceStep stepService)
-            {
-                stepServices.Add(stepService);
-                stepServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            }
-
-            if (service is IServiceUtil utilService)
-            {
-                utilServices.Add(utilService);
-                utilServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            }
-
-            if (service is IServiceLate lateService)
-            {
-                lateServices.Add(lateService);
-                lateServices.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-            }
-
-        }
-        pendingRegistrations.Clear();
+        Services.Lane.Late();
     }
 
     private static void MeasureTickRate()
     {
         timeHerz += Clock.DeltaTime;
         tickHerz++;
-
         if (timeHerz >= 1f)
         {
-            Log.Debug(LogSystem.Engine, LogCategory.State, "Engine", "Tick Rate", () => tickHerz / timeHerz);
-
+            Logging.For(LogSystem.Engine).Debug("Tick Rate", () => tickHerz / timeHerz);
             timeHerz = 0f;
             tickHerz = 0;
         }
     }
 
-    public static void Register(IService service)
-    {
-        pendingRegistrations.Add(service);
-    }
-
-    public static void Deregister(IService service)
-    {
-        pendingDeregistrations.Add(service);
-    }
 }
 
-
-public static class Services
-{
-    public static void Initialize()
-    {
-        var services = Registry.Services.RegisteredServices.Values;
-
-        foreach (var service in services)
-        {
-            if (service is IInitialize instance)
-                instance.Initialize();
-        }
-    }
-
-    public static void Bind()
-    {
-        var services = Registry.Services.RegisteredServices.Values;
-
-        foreach (var service in services)
-        {
-            if (service is IBind instance)
-                instance.Bind();
-        }
-    }
-
-    public static void Dispose()
-    {
-        var services = Registry.Services.RegisteredServices;
-
-        foreach (var service in services.Values)
-        {
-            if (service is IDisposable instance)
-                instance.Dispose();
-        }
-    }
-
-    public static T Get<T>() => Registry.Services.Get<T>();
-    public static void Register<T>(T service) => Registry.Services.Register<T>(service);
-    public static void RegisterTick(IService service) => GameTick.Register(service);
-}
 
 
 public enum UpdatePhase

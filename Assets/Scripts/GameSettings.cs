@@ -2,7 +2,6 @@
 
 
 
-using Unity.VisualScripting;
 
 public static class Config
 {
@@ -28,6 +27,11 @@ public static class Config
         public const float INTENT_DEFAULT           = 45f;
         public const float INTENT_HORIZONTAL        = 50f;
         public const float INTENT_VERTICAL          = 40f;
+    }
+
+    public static class Rendering
+    {
+        public const float SPRITE_OVERLAP_LOOKAHEAD = 0.1f;
     }
 }
 
@@ -69,8 +73,10 @@ public static class ServiceUpdatePriority
     public static UpdatePriority EffectManager      = new(UpdatePhase.Logic,    50);
     public static UpdatePriority DirectionHandler   = new(UpdatePhase.Logic,    60);
     public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    70);
+    public static UpdatePriority Lifecycle          = new(UpdatePhase.Logic,    80);
 
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
+    public static UpdatePriority SpriteDepthSorting = new(UpdatePhase.Physics,  90);
 
     public static UpdatePriority SpriteLayering     = new(UpdatePhase.Render,   10);
     public static UpdatePriority AnimationHandler   = new(UpdatePhase.Render,   20);

@@ -1,28 +1,20 @@
+using System;
 using UnityEngine;
 
 
 
-
-public class Combat
+public enum DamageType
 {
+    
+}
 
-    [Function]
-    public static void CalculateDamage(Actor victim, Actor attacker, object args)
-    {
 
-    }   
+public class CombatLogic
+{
+    
 
-    [Function]
-    public static void ApplyDamage(Actor victim, int damage)
-    {
-        if (victim is IDamageable damageable)
-        {
-            if (damageable.Invulnerable)
-                return;
 
-            damageable.Health -= damage;
-        }
-    }
+
 
 
 }
@@ -31,3 +23,49 @@ public class Combat
 
 
 
+
+public readonly struct CombatRequestPayload
+{
+    public Actor Target                     { get; init; }
+    public Actor Source                     { get; init; }
+
+    public DamageType DamageType            { get; init; }
+    public float Force                      { get; init; }
+    public Vector2 Direction                { get; init; }
+}
+
+
+public readonly struct CombatRequest : ISystemEvent
+{
+    public Guid Id                          { get; }
+    public Publish Action                   { get; }
+    public CombatRequestPayload Payload { get; }
+
+    public CombatRequest(Guid id, Publish action, CombatRequestPayload payload)
+    {
+        Id      = id;
+        Action  = action;
+        Payload = payload;
+    }
+}
+
+
+
+
+
+
+
+
+public readonly struct KillingBlowPublish : ISystemEvent
+{
+    public Guid Id                          { get; }
+    public Publish Action                   { get; }
+    public CombatRequest Payload            { get; }
+
+    public KillingBlowPublish(Guid id, Publish action, CombatRequest payload)
+    {
+        Id      = id;
+        Action  = action;
+        Payload = payload;
+    }
+}

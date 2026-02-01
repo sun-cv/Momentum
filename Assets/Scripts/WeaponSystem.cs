@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 
 
@@ -12,6 +11,8 @@ using UnityEngine;
 
 public class WeaponSystem : IServiceTick
 {
+    readonly Logger Log = Logging.For(LogSystem.Weapons);
+
     Actor                                                   owner;
     WeaponLoadout                                           loadout;
     WeaponInstance                                          instance;
@@ -32,7 +33,7 @@ public class WeaponSystem : IServiceTick
 
     public WeaponSystem(Actor actor)
     {
-        GameTick.Register(this);
+        Services.Lane.Register(this);
 
         loadout         = new();
         cooldown        = new();
@@ -519,7 +520,7 @@ public class WeaponSystem : IServiceTick
         }
 
         if (instance.State.AvailableControls.Count > 0)
-            Log.Trace(LogSystem.Weapon, LogCategory.Control,"Weapon Trace", "Control.Available", () => $"{string.Join(", ", instance.State.AvailableControls)}");
+            Log.Trace("Control.Available", () => $"{string.Join(", ", instance.State.AvailableControls)}");
     }
 
     void AddControls(List<string> controls)
@@ -739,13 +740,13 @@ public class WeaponSystem : IServiceTick
 
     void DebugLog()
     {
-        Log.Debug(LogSystem.Weapon, LogCategory.State,          "Weapon Debug", "Weapon.Active",        () => instance?.Action.Name ?? "none" );
-        Log.Debug(LogSystem.Weapon, LogCategory.State,          "Weapon Debug", "Weapon.Phase",         () => instance?.State.Phase.ToString() ?? "none" );
-        Log.Trace(LogSystem.Weapon, LogCategory.Input,          "Weapon Trace", "Commands.Active",      () => active?.Count > 0 ? string.Join(", ", active?.Keys) : "");
-        Log.Trace(LogSystem.Weapon, LogCategory.Input,          "Weapon Trace", "Commands.Buffered",    () => buffer?.Count > 0 ? string.Join(", ", buffer?.Keys) : "");
-        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.Active",         () => locks == null ? "<none>" : string.Join(", ", locks.Select(kvp => $"{kvp.Key}({kvp.Value.Count})")) ); 
-        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Locks.NonCancelable",  () => NonCancelableAttackLocks );
-        Log.Trace(LogSystem.Weapon, LogCategory.Validation,     "Weapon Trace", "Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance?.Action.Name)}" : "Ready");
+        Log.Debug("Weapon.Active",        () => instance?.Action.Name ?? "none" );
+        Log.Debug("Weapon.Phase",         () => instance?.State.Phase.ToString() ?? "none" );
+        Log.Trace("Commands.Active",      () => active?.Count > 0 ? string.Join(", ", active?.Keys) : "");
+        Log.Trace("Commands.Buffered",    () => buffer?.Count > 0 ? string.Join(", ", buffer?.Keys) : "");
+        Log.Trace("Locks.Active",         () => locks == null ? "<none>" : string.Join(", ", locks.Select(kvp => $"{kvp.Key}({kvp.Value.Count})")) ); 
+        Log.Trace("Locks.NonCancelable",  () => NonCancelableAttackLocks );
+        Log.Trace("Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance?.Action.Name)}" : "Ready");
     }
 }
 
@@ -761,9 +762,9 @@ public readonly struct WeaponStatePayload
 
 public readonly struct WeaponPublish : ISystemEvent
 {
-    public Guid Id                      { get; }
-    public Publish Action               { get; }
-    public WeaponStatePayload Payload   { get; }
+    public Guid Id                          { get; }
+    public Publish Action                   { get; }
+    public WeaponStatePayload Payload       { get; }
 
     public WeaponPublish(Guid id, Publish action, WeaponStatePayload payload)
     {
@@ -797,7 +798,7 @@ public class WeaponCooldownInstance
     public void Initialize()
     {
         timer.OnTimerStart += OnApply;
-        timer.OnTimerStop += OnClear;
+        timer.OnTimerStop  += OnClear;
         timer.Start();
     }
 
@@ -816,7 +817,7 @@ public class WeaponCooldown
     {
         var instance = new WeaponCooldownInstance(weapon);
 
-        instance.OnClear += () => cooldowns.Remove(instance);
+        instance.OnClear  += () => cooldowns.Remove(instance);
         instance.OnCancel += () => cooldowns.Remove(instance);
 
         cooldowns.Add(instance);
@@ -945,7 +946,6 @@ public class FireEndPhaseHandler : IWeaponPhaseHandler
         {
             instance.State.ControlWindow = new ClockTimer(instance.Action.ControlWindow);
             instance.State.ControlWindow.Start();
-            Log.Trace(LogSystem.Weapon, LogCategory.Control, "Weapon Trace", "Weapon.Window", () => $"Started {instance.Action.ControlWindow}s window");
         }
 
         controller.UpdateAvailableControls();
@@ -1090,6 +1090,8 @@ public readonly struct WeaponValidation
 
 public class WeaponActivationValidator
 {
+    readonly Logger Log = Logging.For(LogSystem.Weapons);
+
     readonly WeaponSystem controller;
 
     public WeaponActivationValidator(WeaponSystem controller)
@@ -1102,7 +1104,7 @@ public class WeaponActivationValidator
         var result = ValidateActivation(weapon, skipContextCheck);
 
         if (!result.Success())
-            Log.Debug(LogSystem.Weapon, LogCategory.Validation, "Weapon Debug", "Weapon.Validator.Failed", () => $"{weapon.Name} - {result.Reason}");
+            Log.Debug("Validator.Failed", () => $"{weapon.Name} - {result.Reason}");
 
         return result.Success();
     }
@@ -1184,7 +1186,7 @@ public class WeaponActivationValidator
         var result = ValidateInterrupt(incomingWeapon);
 
         if (!result.Success())
-            Log.Trace(LogSystem.Weapon, LogCategory.Validation, "Weapon Trace", "Weapon.Interrupt", () => result.Reason);
+            Log.Trace("Weapon.Interrupt", () => result.Reason);
 
         return result.Success();
     }

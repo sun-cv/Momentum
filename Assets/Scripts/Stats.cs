@@ -9,7 +9,10 @@ public class Stats : Service, IServiceTick
     protected readonly Dictionary<string, float> stats  = new();
     protected readonly StatsMediator mediator           = new();
     
-    public void Initialize() => Services.RegisterTick(this);
+    public void Initialize()
+    {
+        Services.Lane.Register(this);
+    }
 
     public void Tick()
     {

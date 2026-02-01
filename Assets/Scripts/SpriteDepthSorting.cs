@@ -6,8 +6,10 @@ using UnityEngine;
 
 
 [Service]
-public class SpriteLayeringSystem : IServiceLoop, IBind
+public class SpriteLayeringSystem : IServiceStep, IBind
 {
+    readonly Logger Log = Logging.For(LogSystem.SpriteLayering);
+
     class TrackedSprite
     {
         public Transform transform;
@@ -36,7 +38,7 @@ public class SpriteLayeringSystem : IServiceLoop, IBind
     }
 
 
-    public void Loop()
+    public void Step()
     {
         RefreshRegistrations();
         SortLayers();
@@ -44,12 +46,12 @@ public class SpriteLayeringSystem : IServiceLoop, IBind
     
     public void RefreshRegistrations()
     {
-        if (Entities.GetByInterface<IDepthSorted>().Count() == trackedSprites.Count)
+        if (Actors.GetInterface<IDepthSorted>().Count() == trackedSprites.Count)
             return;
 
         trackedSprites.Clear();
         
-        foreach (var bridge in Entities.GetByInterface<IDepthSorted>())
+        foreach (var bridge in Actors.GetInterface<IDepthSorted>())
         {
             Register(bridge);
         }
@@ -61,16 +63,20 @@ public class SpriteLayeringSystem : IServiceLoop, IBind
         {
             for (int j = i + 1; j < trackedSprites.Count; j++)
             {
-                var sprite1 = trackedSprites[i];
-                var sprite2 = trackedSprites[j];
+                var sprite1     = trackedSprites[i];
+                var sprite2     = trackedSprites[j];
 
+                var original    = sprite1;
+                var expanded    = sprite1;
 
-                bool overlapping = sprite1.sortbox.bounds.Intersects(sprite2.sortbox.bounds);
-                bool approaching = sprite1.sortbox.bounds.Intersects(sprite2.sortbox.bounds);
+                expanded.sortbox.bounds.Expand(Config.Rendering.SPRITE_OVERLAP_LOOKAHEAD);
+
+                bool overlapping = original.sortbox.bounds.Intersects(sprite2.sortbox.bounds);
+                bool approaching = expanded.sortbox.bounds.Intersects(sprite2.sortbox.bounds);
 
                 if (overlapping || approaching)
                 {
-                    Log.Debug(LogSystem.DepthSorting, LogCategory.Deactivation, () => $"Overlap detected! overlapping={overlapping}, approaching={approaching}");
+                    Log.Trace($"Overlap detected! overlapping={overlapping}, approaching={approaching}");
                 }
 
                 if (overlapping || approaching)
@@ -96,7 +102,7 @@ public class SpriteLayeringSystem : IServiceLoop, IBind
                 {
                     if (sprite1.orderOverrides.ContainsKey(sprite2))
                     {
-                        Log.Debug(LogSystem.DepthSorting, LogCategory.Deactivation, () => $"CLEARING override");
+                        Log.Trace($"CLEARING override");
                     }
 
                     sprite1.orderOverrides.Remove(sprite2);
@@ -138,8 +144,10 @@ public class SpriteLayeringSystem : IServiceLoop, IBind
 
 
 [Service]
-public class DepthCollisionSystem : IServiceLoop, IBind
+public class DepthCollisionSystem : IServiceStep, IBind
 {
+    readonly Logger Log = Logging.For(LogSystem.DepthSorting);
+
     class EntityCollision
     {
         public Actor actor;
@@ -161,7 +169,7 @@ public class DepthCollisionSystem : IServiceLoop, IBind
         });
     }
     
-    public void Loop()
+    public void Step()
     {
         RefreshRegistrations();
         SortDepth();
@@ -169,12 +177,12 @@ public class DepthCollisionSystem : IServiceLoop, IBind
     
     public void RefreshRegistrations()
     {
-        if (Entities.GetByInterface<IDepthColliding>().Count() == trackedSprites.Count)
+        if (Actors.GetInterface<IDepthColliding>().Count() == trackedSprites.Count)
             return;
 
         trackedSprites.Clear();
         
-        foreach (var bridge in Entities.GetByInterface<IDepthColliding>())
+        foreach (var bridge in Actors.GetInterface<IDepthColliding>())
         {
             Register(bridge);
         }

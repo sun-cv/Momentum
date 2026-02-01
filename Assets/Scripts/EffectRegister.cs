@@ -55,6 +55,8 @@ public class EffectInstance : Instance
 
 public class EffectRegister
 {
+    readonly Logger Log = Logging.For(LogSystem.Effects);
+
     readonly Actor owner;
     readonly List<EffectInstance> effects = new();
 
@@ -117,9 +119,9 @@ public class EffectRegister
 
     void RegisterDebugLog(EffectInstance instance)
     {
-        instance.OnApply   += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Activating Effect {instance.Effect.Name}");
-        instance.OnClear   += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Clearing Effect {instance.Effect.Name}");
-        instance.OnCancel  += () => Log.Trace(LogSystem.Effects, LogCategory.State, () => $"Canceling Effect {instance.Effect.Name}");
+        instance.OnApply   += () => Log.Trace("Effects", () => $"Activating Effect {instance.Effect.Name}");
+        instance.OnClear   += () => Log.Trace("Effects", () => $"Clearing Effect {instance.Effect.Name}");
+        instance.OnCancel  += () => Log.Trace("Effects", () => $"Canceling Effect {instance.Effect.Name}");
     }
 
     public void CancelEffect(Effect effect) => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();

@@ -125,7 +125,6 @@ public class DashController : IMovementController
         
         latch = true;
 
-        Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Controller.Dash.Distance",() => Vector2.Distance(traveledDistance, actor.Bridge.View.transform.position ));
         return direction * speed;
     }
 

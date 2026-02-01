@@ -21,6 +21,8 @@ public class AnimatorRequest
 
 public class AnimationController : IServiceTick
 {
+    readonly Logger Log = Logging.For(LogSystem.Animation);
+
     Actor owner; 
     Animator animator;
     Dictionary<string, float> clipDurations;
@@ -31,6 +33,7 @@ public class AnimationController : IServiceTick
 
     public AnimationController(Actor actor)
     {
+        Services.Lane.Register(this);
 
         owner       = actor;
         animator    = actor.Bridge.Animator;
@@ -38,7 +41,6 @@ public class AnimationController : IServiceTick
         CacheClipDurations();
 
         LinkLocal<AnimationRequest>(HandleAnimationRequest);
-        GameTick.Register(this);
     }
 
     public void Tick()
@@ -122,7 +124,7 @@ public class AnimationController : IServiceTick
 
     void DebugLog()
     {
-        Log.Trace(LogSystem.Animation, LogCategory.State, "Animation", "Playing Action", () => 
+        Log.Trace("Playing Action", () => 
         { 
             if (animator.GetLayerWeight(LAYER_ACTION) < 1)
                 return "None";
@@ -131,7 +133,7 @@ public class AnimationController : IServiceTick
             return string.Join(", ", clipInfo.Select(clip => clip.clip.name));
         });
         
-        Log.Trace(LogSystem.Animation, LogCategory.State, "Animation", "Playing Base", () => 
+        Log.Trace("Playing Base", () => 
         { 
             AnimatorClipInfo[] baseClipInfo = animator.GetCurrentAnimatorClipInfo(LAYER_BASE);
             return string.Join(", ", baseClipInfo.Select(clip => clip.clip.name));

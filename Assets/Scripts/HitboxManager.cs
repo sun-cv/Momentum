@@ -80,6 +80,8 @@ public struct HitEvent
 
 public class HitboxManager : RegisteredService, IServiceTick
 {
+    readonly Logger Log = Logging.For(LogSystem.Hitboxes);
+
     public static bool ShowDebugGizmos                          = true;
 
     readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
@@ -173,7 +175,7 @@ public class HitboxManager : RegisteredService, IServiceTick
         Quaternion intentRotation   = Orientation.ToRotation(intentVector);
         Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Offset);
 
-        var prefab      = Registry.Prefabs.Get(pending.Definition.Prefab);
+        var prefab      = Assets.Get(pending.Definition.Prefab);
         var hitbox      = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
         
         var instance    = CreateInstance(pending);
@@ -273,8 +275,6 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void ProcessHit(HitEvent hitEvent)
     {
-        Debug.Log("Hitbox event processed");
-
         if (!activeHitboxes.TryGetValue(hitEvent.HitboxId, out var hitbox))
             return;
 
@@ -352,7 +352,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void DebugLog()
     {
-        Log.Trace(LogSystem.Hitboxes, LogCategory.State, "Hitboxes", "Active",() => activeHitboxes.Count);
+        Log.Trace("Active", () => activeHitboxes.Count);
     }
     void Link<T>(Action<T> handler) where T : IEvent    => EventBus<T>.Subscribe(handler);
     void Emit<T>(T evt) where T : IEvent                => EventBus<T>.Raise(evt);

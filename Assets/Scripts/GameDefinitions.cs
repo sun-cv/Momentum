@@ -1,5 +1,4 @@
 using System;
-using UnityEditor.ShaderGraph;
 using UnityEngine;
 
 //
@@ -26,6 +25,7 @@ public abstract class Service
 public abstract class RegisteredService : Service, IInitialize
 {
     public abstract void Initialize();
+
 }
 
 
@@ -90,7 +90,7 @@ public interface IDepthColliding    {}
 
 public interface IDefined
 {
-    EntityDefinition Definition             { get; }
+    ActorDefinition Definition             { get; }
 }
 
 public interface IControllable
@@ -254,6 +254,7 @@ public enum Publish
     Unequipped,
     Released,
     PhaseChange,
+    StateChange,
 }
 
 public enum Status

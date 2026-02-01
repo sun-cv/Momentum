@@ -1,19 +1,17 @@
 
 
-public class HeroDefinition : EntityDefinition
+public class HeroDefinition : ActorDefinition
 {
     public HeroDefinition()
     {
-        Name                            = "Hero";
+        Name                        = "Hero";
 
-        Health                          = 0;
-        MaxHealth                       = 100;
-
-        Mana                            = 100;
-        MaxMana                         = 0;
-
-        Speed                           = 5;
-
-        Attack                          = 15;
+        Stats                       = new()
+        {
+            MaxHealth               = 100,
+            MaxMana                 = 100,
+            Speed                   = 5,
+            Attack                  = 15,
+        };
     }
 }

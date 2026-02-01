@@ -10,6 +10,7 @@ using UnityEngine;
 
 public class MovementEngine : IServiceTick
 {
+    readonly Logger Log = Logging.For(LogSystem.Movement);
 
     readonly float maxSpeed     = Settings.Movement.MAX_SPEED;
     readonly float acceleration = Settings.Movement.ACCELERATION;
@@ -33,10 +34,9 @@ public class MovementEngine : IServiceTick
 
 
     public MovementEngine(Actor actor)
-    {
+    {        
+        Services.Lane.Register(this);
 
-        GameTick.Register(this);
-        
         this.owner          = actor;
         this.body           = actor.Bridge.Body;
         this.actor          = actor as IMovableActor;
@@ -185,12 +185,12 @@ public class MovementEngine : IServiceTick
 
     void DebugLog()
     {
-        Log.Debug(LogSystem.Movement, LogCategory.Control,"Movement", "Movement.Speed",     () => speed);  
-        Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Movement.Velocity",  () => velocity);
-        Log.Debug(LogSystem.Movement, LogCategory.State,  "Movement", "Movement.Modifier",  () => modifier);
-        Log.Trace(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Effects.Select(effect => effect.Effect.Name))}");
-        Log.Trace(LogSystem.Movement, LogCategory.Effect, "Movement", "Effect.Cache",       () => modifierHandler.Cache.Effects.Count);
-        Log.Trace(LogSystem.Movement, LogCategory.State,  "Movement", "Directive.Count",    () => directives.Count);
+        Log.Debug("Movement.Speed",     () => speed);  
+        Log.Debug("Movement.Velocity",  () => velocity);
+        Log.Debug("Movement.Modifier",  () => modifier);
+        Log.Trace("Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Effects.Select(effect => effect.Effect.Name))}");
+        Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Effects.Count);
+        Log.Trace("Directive.Count",    () => directives.Count);
     }
 
     void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
