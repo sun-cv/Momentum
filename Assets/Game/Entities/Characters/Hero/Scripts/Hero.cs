@@ -40,6 +40,8 @@ public class Hero : Actor, IHero
                                                       set => State.Inactive         = value;}
     public bool Invulnerable                        { get => State.Invulnerable;    
                                                       set => State.Invulnerable     = value;}
+    public bool Impervious                          { get => State.Impervious;    
+                                                      set => State.Impervious       = value;}
 
     public bool Disabled                            => State.Disabled;
     public bool Stunned                             { get => State.Stunned;         
@@ -73,7 +75,7 @@ public class Hero : Actor, IHero
     {
         Definition  = definition;
 
-        Bus         = new();
+        Emit        = new();
 
         Intent      = new(this);
         Stats       = new(this);

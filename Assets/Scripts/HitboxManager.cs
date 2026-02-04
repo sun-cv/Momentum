@@ -91,7 +91,8 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     public override void Initialize()
     {
-        Link<HitboxRequest>(HandleHitboxRequest);
+        Link.Global<Message<Request, MHitboxDeclaration>>(HandleHitboxCreateRequest);
+        Link.Global<Message<Request, MHitboxIdentifier >>(HandleHitboxDestroyRequest);
     }
 
 
@@ -188,7 +189,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
         activeHitboxes.Add(instance.HitboxId, instance);
 
-        PublishHitbox(pending.RequestId, instance);
+        PublishHitbox(pending.RequestId, instance.HitboxId);
     }
 
     HitboxInstance CreateInstance(PendingHitbox pending)
@@ -300,39 +301,27 @@ public class HitboxManager : RegisteredService, IServiceTick
     // EVENT HANDLERS
     // ============================================================================
 
-    void HandleHitboxRequest(HitboxRequest evt)
-    {
-        var owner       = evt.Payload.Owner;
-        var definition  = evt.Payload.Definition;
-        var hitboxId    = evt.Payload.HitboxId;
-        var input       = evt.Payload.Input;
 
-        switch(evt.Action)
-        {
-            case Request.Create:
-                RequestCreateHitbox(evt.Id, owner, definition, input);
-            break;
-            case Request.Destroy:
-                RequestDestroyHitbox(hitboxId);
-            break;
-        }
+    void HandleHitboxCreateRequest(Message<Request, MHitboxDeclaration> message)
+    {
+        var owner       = message.Payload.Owner;
+        var definition  = message.Payload.Definition;
+        var input       = message.Payload.Input;
+
+        pending.Enqueue(new() { Owner = owner, Definition = definition, RequestId = message.Id, Input = input});
     }
 
-
-    void RequestCreateHitbox(Guid requestId, Actor owner, HitboxDefinition definition, InputIntentSnapshot input)
+    void HandleHitboxDestroyRequest(Message<Request, MHitboxIdentifier> message)
     {
-        pending.Enqueue(new() { Owner = owner, Definition = definition, RequestId = requestId, Input = input});
-    }
+        var hitboxId = message.Payload.HitboxId;
 
-    void RequestDestroyHitbox(Guid hitboxId)
-    {
         if (ShouldProcessDestructionRequest(hitboxId))
             DestroyHitbox(hitboxId);
     }
 
-    void PublishHitbox(Guid id, HitboxInstance instance)
+    void PublishHitbox(Guid requestId, Guid instanceId)
     {
-        Emit<HitboxResponse>(new(id, Response.Success, new() { Owner = instance.Owner, Definition = instance.Definition, HitboxId = instance.HitboxId }));
+        Emit.Global(requestId, Response.Success, new MHitboxIdentifier(instanceId));
     }
 
     // ============================================================================
@@ -354,53 +343,34 @@ public class HitboxManager : RegisteredService, IServiceTick
     {
         Log.Trace("Active", () => activeHitboxes.Count);
     }
-    void Link<T>(Action<T> handler) where T : IEvent    => EventBus<T>.Subscribe(handler);
-    void Emit<T>(T evt) where T : IEvent                => EventBus<T>.Raise(evt);
+    // void Link<T>(Action<T> handler) where T : IEvent    => EventBus<T>.Subscribe(handler);
+    // void Emit<T>(T evt) where T : IEvent                => EventBus<T>.Raise(evt);
 
     public UpdatePriority Priority => ServiceUpdatePriority.HitboxManager;
 }
 
 
-
-
-public readonly struct HitboxRequestPayload
+public readonly struct MHitboxDeclaration
 {
-    public readonly Guid HitboxId               { get; init; }   
     public readonly Actor Owner                 { get; init; }
     public readonly HitboxDefinition Definition { get; init; }
     public readonly InputIntentSnapshot Input   { get; init; }
 
-}
-
-public readonly struct HitboxRequest : ISystemEvent
-{
-    public Guid Id                              { get; }
-    public Request Action                       { get; }
-    public HitboxRequestPayload Payload         { get; }
-
-    public HitboxRequest(Guid id, Request action, HitboxRequestPayload payload)
+    public MHitboxDeclaration(Actor owner, HitboxDefinition definition, InputIntentSnapshot input)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        Owner       = owner;
+        Definition  = definition;
+        Input       = input;
     }
+
 }
 
-public readonly struct HitboxResponsePayload
+public readonly struct MHitboxIdentifier
 {
-    Guid HitboxId                               { get; init; }
-}
+    public readonly Guid HitboxId               { get; init; }
 
-public readonly struct HitboxResponse : ISystemEvent
-{
-    public Guid Id                              { get; }
-    public Response Action                      { get; }
-    public HitboxRequestPayload Payload         { get; }
-
-    public HitboxResponse(Guid id, Response action, HitboxRequestPayload payload)
+    public MHitboxIdentifier(Guid hitboxId)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        HitboxId = hitboxId;
     }
 }

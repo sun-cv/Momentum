@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -16,7 +17,7 @@ public class WeaponSystem : IServiceTick
     Actor                                                   owner;
     WeaponLoadout                                           loadout;
     WeaponInstance                                          instance;
-    WeaponAction                                            previousAction;
+    WeaponInstance                                          previousInstance;
 
     WeaponCooldown                                          cooldown;
     WeaponActivationValidator                               validator;
@@ -29,7 +30,7 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
-    EventHandler<HitboxRequest, HitboxResponse>             hitboxEvents;
+    GlobalEventHandler<Message<Response, MHitboxIdentifier>> hitboxEvents;
 
     public WeaponSystem(Actor actor)
     {
@@ -45,10 +46,10 @@ public class WeaponSystem : IServiceTick
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        LinkLocal<CommandPublish>     (HandleCommandPublish);
-        LinkLocal<EffectPublish>      (HandleEffectNonCancelableLockCount);
-        LinkLocal<LockPublish>        (HandleLockPublish);
-        LinkLocal<EquipmentPublish>   (HandleEquipmentPublish);
+        owner.Emit.Link.Local<Publish, MCommandPipelines>   (HandleCommandPipelineUpdates);
+        owner.Emit.Link.Local<Publish, MEffectInstance>     (HandleEffectNonCancelableLockCount);
+        owner.Emit.Link.Local<Publish, MLocks>              (HandleLocksUpdate);
+        owner.Emit.Link.Local<Publish, MEquipmentChange>    (HandleEquipmentChange);
     }
 
 
@@ -225,8 +226,8 @@ public class WeaponSystem : IServiceTick
 
     void EquipWeapon(WeaponAction Action)
     {
-        instance = new WeaponInstance(Action);
-        EmitLocal<WeaponPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Instance = instance }));
+        instance = new WeaponInstance(owner, Action);
+        owner.Emit.Local(Publish.Equipped, new MWeaponInstance(owner, instance));
     }
 
     void ActivateWeapon()
@@ -275,13 +276,13 @@ public class WeaponSystem : IServiceTick
     void DeactivateWeapon()
     {
         UnlockAllCommands(active, instance.Action.Trigger);
-        StorePreviousAction();
+        StorePreviousInstance();
         RegisterCooldown();
     }
 
     void UnequipWeapon()
     {
-        EmitLocal<WeaponPublish>(new(Guid.NewGuid(), Publish.Released, new() { Owner = owner, Instance = instance }));
+        owner.Emit.Local(Publish.Unequipped, new MWeaponInstance(owner, instance));
         ClearInstance();        
     }
 
@@ -338,9 +339,10 @@ public class WeaponSystem : IServiceTick
     // STATE MANAGEMENT
     // ============================================================================
 
-    void StorePreviousAction()
+    void StorePreviousInstance()
     {
-        previousAction = instance.Action;
+        instance.State.Store();
+        previousInstance = instance;
     }
 
     void ResetState()
@@ -354,7 +356,7 @@ public class WeaponSystem : IServiceTick
     }
 
     // ============================================================================
-    //  Release Predicates
+    //  RELEASE PREDICATEs
     // ============================================================================
 
     bool ShouldReleaseWeapon()
@@ -395,25 +397,25 @@ public class WeaponSystem : IServiceTick
         foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-                EmitLocal<EffectRequest>(new(Guid.NewGuid(), Request.Create, new() { Effect = effect }));
+                owner.Emit.Local(Request.Create, new MEffectDeclaration(instance, effect));
         }
     }
 
-    public void CancelEffects(WeaponAction action)
+    public void CancelEffects(WeaponInstance weaponInstance)
     {
-        foreach (var effect in action?.Effects)
+        foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
-            if (effect.Cancelable)
-                EmitLocal<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
+            if (instance.Effect.Cancelable)
+                owner.Emit.Local(Request.Cancel, new MEffectInstance(instance));
         }
     }
 
-    public void CancelOnReleaseEffects(WeaponAction action)
+    public void CancelOnReleaseEffects(WeaponInstance weaponInstance)
     {
-        foreach (var effect in action.Effects)
+        foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
-            if (effect.Cancelable && effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                EmitLocal<EffectRequest>(new(Guid.NewGuid(), Request.Cancel, new() { Instance = instance, Effect = effect }));
+            if (instance.Effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
+                owner.Emit.Local(Request.Cancel, new MEffectInstance(instance));
         }
     }
 
@@ -438,18 +440,18 @@ public class WeaponSystem : IServiceTick
             if (definition.Phase != instance.State.Phase)
                 continue;
 
-            EmitLocal<MovementRequest>(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Scope = (int)instance.State.Phase, Command = MovementCommandFactory.Create(owner, definition, instance.State.Intent)}));
+            owner.Emit.Local(Request.Clear, new MMovementDirective(owner, (int)instance.State.Phase, MovementCommandFactory.Create(owner, definition, instance.State.Intent)));
         }
     }
 
     public void ClearMovementFromPhase(WeaponPhase scopeToClear)
     {
-        EmitLocal<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = (int)scopeToClear }));
+        owner.Emit.Local(Request.Clear, new MClearMovement(owner, (int)scopeToClear));
     }
     
     public void ClearMovementFromOwner()
     {
-        EmitLocal<MovementRequest>(new(Guid.NewGuid(), Request.Clear, new() { Owner = owner, Scope = -1 }));
+        owner.Emit.Local(Request.Clear, new MClearMovement(owner, -1));
     }
 
     // ============================================================================
@@ -461,14 +463,14 @@ public class WeaponSystem : IServiceTick
         foreach (var hitboxDefinition in action.Hitboxes)
         {
             if (instance.State.Phase == hitboxDefinition.Phase)
-                hitboxEvents.Send(new(Guid.NewGuid(), Request.Create, new() { Owner = owner, Definition = hitboxDefinition, Input = instance.State.Intent }));
+                hitboxEvents.Send(Request.Create, new MHitboxDeclaration(owner, hitboxDefinition, instance.State.Intent));
         }
     }
 
     public void DestroyHitboxes(WeaponInstance instance)
     {
-        foreach (var (hitboxId, definition) in instance.State.OwnedHitboxes)
-            EmitGlobal<HitboxRequest>(new(Guid.NewGuid(), Request.Destroy, new() { Owner = owner, Definition = definition, HitboxId = hitboxId }));
+        foreach (var hitboxId in instance.State.OwnedHitboxes)
+            Emit.Global(Request.Destroy, new MHitboxIdentifier(hitboxId));
     }
 
     // ============================================================================
@@ -488,7 +490,7 @@ public class WeaponSystem : IServiceTick
         if (request == null)
             return;
 
-        EmitLocal<AnimationRequest>(new(Guid.NewGuid(), Request.Start, new() { Owner = owner, Request = request }));
+        owner.Emit.Local(Request.Start, new MAnimation(owner, request));
     }
 
     // ============================================================================
@@ -543,7 +545,7 @@ public class WeaponSystem : IServiceTick
 
     void ConsumeCommand(Command command)
     {
-        EmitLocal<CommandRequest>(new(Guid.NewGuid(), Request.Consume, new() { Command = command }));
+        owner.Emit.Local(Request.Consume, new MCommand(command));
     }
 
     void ConsumeAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -582,7 +584,7 @@ public class WeaponSystem : IServiceTick
 
     void LockCommand(Command command)
     {
-        EmitLocal<CommandRequest>(new(Guid.NewGuid(), Request.Lock, new() { Command = command }));
+        owner.Emit.Local(Request.Lock, new MCommand(command));
     }
 
     void LockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -596,7 +598,7 @@ public class WeaponSystem : IServiceTick
 
     void UnlockCommand(Command command)
     {
-        EmitLocal<CommandRequest>(new(Guid.NewGuid(), Request.Unlock, new() { Command = command }));
+        owner.Emit.Local(Request.Unlock, new MCommand(command));
     }
 
     void UnlockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -639,15 +641,15 @@ public class WeaponSystem : IServiceTick
     // EVENT HANDLERS
     // ============================================================================
 
-    void HandleCommandPublish(CommandPublish evt)
+    void HandleCommandPipelineUpdates(Message<Publish, MCommandPipelines> message)
     {
-        active = evt.Payload.Active;
-        buffer = evt.Payload.Buffer;
+        active = message.Payload.Active;
+        buffer = message.Payload.Buffer;
     }
 
-    void HandleEffectNonCancelableLockCount(EffectPublish evt)
+    void HandleEffectNonCancelableLockCount(Message<Publish, MEffectInstance> message)
     {
-        var effect = evt.Payload.Instance.Effect;
+        var effect = message.Payload.Instance.Effect;
 
         if (effect is not IDisableAttack disable)
             return;
@@ -657,7 +659,7 @@ public class WeaponSystem : IServiceTick
         if (!isDefinitive || !disable.DisableAttack)
             return;
 
-        switch (evt.Action)
+        switch (message.Action)
         {
             case Publish.Activated:
                 NonCancelableAttackLocks++;
@@ -670,17 +672,17 @@ public class WeaponSystem : IServiceTick
         }
     }
 
-    void HandleLockPublish(LockPublish evt)
+    void HandleLocksUpdate(Message<Publish, MLocks> message)
     {
-        locks = evt.Payload.Locks;
+        locks = message.Payload.Locks;
     }
 
-    void HandleEquipmentPublish(EquipmentPublish evt)
+    void HandleEquipmentChange(Message<Publish, MEquipmentChange> message)
     {
-        if (evt.Payload.Equipment is not Weapon weapon)
+        if (message.Payload.Equipment is not Weapon weapon)
             return;
 
-        switch(evt.Action)
+        switch(message.Action)
         {
             case Publish.Equipped:
                 foreach (var action in weapon.Definition.Actions)
@@ -694,14 +696,15 @@ public class WeaponSystem : IServiceTick
         }
     }
     
-    void HandleHitboxResponse(HitboxRequest request, HitboxResponse response)
+    void HandleHitboxResponse(Message<Response, MHitboxIdentifier> response)
     {
-        instance?.State.OwnedHitboxes.Add(response.Payload.HitboxId, response.Payload.Definition);
+        instance?.State.OwnedHitboxes.Add(response.Payload.HitboxId);
     }
 
     void PublishTransition()
     {
-        EmitLocal<WeaponPublish>(new(Guid.NewGuid(), Publish.PhaseChange, new() { Owner = owner, Instance = instance }));
+        owner.Emit.Local(Publish.PhaseChange, new MWeaponInstance(owner, instance));
+        owner.Emit.Local(Publish.PhaseChange, new MWeaponInstance(owner, instance));
     }
 
     void RegisterCooldown()
@@ -724,10 +727,6 @@ public class WeaponSystem : IServiceTick
     bool HasActiveCommands()        => active?.Count > 0;
     bool HasBufferCommands()        => buffer?.Count > 0;
 
-    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
-    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
-    void LinkGlobal<T>(Action<T> handler) where T : IEvent  => EventBus<T>.Subscribe(handler);
-    void EmitGlobal<T>(T evt) where T : IEvent              => EventBus<T>.Raise(evt);
 
     public Actor Owner                                                  => owner;
     public WeaponInstance CurrentWeapon                                 => instance;
@@ -736,7 +735,7 @@ public class WeaponSystem : IServiceTick
 
     public UpdatePriority Priority => ServiceUpdatePriority.WeaponLogic;
 
-    public WeaponAction PreviousAction => previousAction;
+    public WeaponInstance PreviousInstance => previousInstance;
 
     void DebugLog()
     {
@@ -754,25 +753,18 @@ public class WeaponSystem : IServiceTick
 // SUPPORTING TYPES
 // ============================================================================
 
-public readonly struct WeaponStatePayload
+public readonly struct MWeaponInstance
 {
     public readonly Actor Owner             { get; init; }
     public readonly WeaponInstance Instance { get; init; }
-}
 
-public readonly struct WeaponPublish : ISystemEvent
-{
-    public Guid Id                          { get; }
-    public Publish Action                   { get; }
-    public WeaponStatePayload Payload       { get; }
-
-    public WeaponPublish(Guid id, Publish action, WeaponStatePayload payload)
+    public MWeaponInstance(Actor owner, WeaponInstance instance)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        Owner       = owner;
+        Instance    = instance;
     }
 }
+
 
 // ============================================================================
 // COOLDOWN SYSTEM
@@ -850,10 +842,10 @@ public class EnablePhaseHandler : IWeaponPhaseHandler
     {
         instance.State.PhaseFrames.Start();
 
-        if (controller.PreviousAction == null)
+        if (controller.PreviousInstance == null)
             return;
 
-        controller.CancelEffects(controller.PreviousAction);
+        controller.CancelEffects(controller.PreviousInstance);
     }
 
     public void Tick(WeaponInstance instance, WeaponSystem controller)
@@ -984,7 +976,7 @@ public class DisablePhaseHandler : IWeaponPhaseHandler
         instance.State.PhaseFrames.Reset();
         instance.State.PhaseFrames.Start();
         
-        controller.CancelOnReleaseEffects(instance.Action);
+        controller.CancelOnReleaseEffects(instance);
         controller.DestroyHitboxes(instance);
 
         controller.ClearMovementFromOwner();

@@ -30,6 +30,9 @@ public class MovementEngine : IServiceTick
     Vector2 momentum;
     Vector2 velocity;
 
+    bool wasInterruptActive = false;
+
+
     List<MovementDirective> directives = new();
 
 
@@ -45,9 +48,10 @@ public class MovementEngine : IServiceTick
         body.gravityScale   = 0;
         body.interpolation  = RigidbodyInterpolation2D.Interpolate; 
 
-        modifierHandler     = new(actor.Bus);
+        modifierHandler     = new(actor);
 
-        LinkLocal<MovementRequest>(HandleMovementRequest);
+        owner.Emit.Link.Local<Message<Request, MMovementDirective>> (HandleMovementDirective);
+        owner.Emit.Link.Local<Message<Request, MClearMovement>>     (HandleMovementClear);
 
         SetSpeed();
     }
@@ -56,7 +60,7 @@ public class MovementEngine : IServiceTick
     public void Tick()
     {
         RemoveInactiveControllers();
-
+    
         CalculateModifier();
         CalculateVelocity();
 
@@ -74,6 +78,7 @@ public class MovementEngine : IServiceTick
 
     void CalculateModifier() => modifier = modifierHandler.Calculate();
 
+
     void CalculateVelocity()
     {
         if (actor.Disabled)
@@ -82,39 +87,39 @@ public class MovementEngine : IServiceTick
             velocity = Vector2.zero;
             return;
         }
-    
-        bool isReversing        = actor.CanMove && velocity.magnitude > 1f && Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
+
         Vector2 targetVelocity  = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
         var sortedDirectives    = directives.OrderByDescending(d => d.Controller.Priority).ToList();
-    
+        bool isReversing        = actor.CanMove && velocity.magnitude > 1f && Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
+
         foreach(var directive in sortedDirectives)
         {
             Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
-    
+
             switch(directive.Controller.InputMode)
             {
                 case ControllerInputMode.Ignore:
                     targetVelocity = controllerVelocity;
                     goto FinishedBlending;
-    
+
                 case ControllerInputMode.Blend:
                     targetVelocity += controllerVelocity * directive.Controller.Weight;
                     break;
-    
+
                 case ControllerInputMode.AllowOverride:
                     targetVelocity = Vector2.Lerp(targetVelocity, controllerVelocity, directive.Controller.Weight);
                     break;
             }
         }
-    
+
         FinishedBlending:
-        
+
+
         if (isReversing && directives.Count == 0)
             velocity = Vector2.MoveTowards(velocity, Vector2.zero, acceleration * inertia * Clock.DeltaTime);
-        
         else
             velocity = Vector2.Lerp(targetVelocity, velocity, retention);
-        
+
         momentum = velocity;
     }
     Vector2 BaseMovementVelocity()
@@ -153,16 +158,22 @@ public class MovementEngine : IServiceTick
     // EVENTS
     // =====================================================a=======================
     
-    void HandleMovementRequest(MovementRequest evt)
+    void HandleMovementDirective(Message<Request, MMovementDirective> message)
     {
-        var payload = evt.Payload;
+        var owner   = message.Payload.Owner;
+        var scope   = message.Payload.Scope;
+        var command = message.Payload.Command;
 
-        switch (evt.Action, payload)
+        RequestMovementDirective(owner, scope, command);
+    }
+
+
+    void HandleMovementClear(Message<Request, MClearMovement> message)
+    {
+        var payload = message.Payload;
+
+        switch (message.Action, payload)
         {
-            case (Request.Create, { Owner: not null, Command: not null }):
-                RequestMovementDirective(payload.Owner, payload.Scope, payload.Command);
-                break;
-
             case (Request.Clear, { Owner: not null, Scope: not -1 }):
                 ClearMovementDirective(payload.Owner, payload.Scope);
                 break;
@@ -188,12 +199,11 @@ public class MovementEngine : IServiceTick
         Log.Debug("Movement.Speed",     () => speed);  
         Log.Debug("Movement.Velocity",  () => velocity);
         Log.Debug("Movement.Modifier",  () => modifier);
-        Log.Trace("Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Effects.Select(effect => effect.Effect.Name))}");
-        Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Effects.Count);
+        Log.Trace("Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Instances.Select(instance => instance.Effect.Name))}");
+        Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Instances.Count);
         Log.Trace("Directive.Count",    () => directives.Count);
+        Log.Trace("Actor.CanMove",      () => actor.CanMove);
     }
-
-    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
 
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;
 }
@@ -203,26 +213,32 @@ public class MovementEngine : IServiceTick
 // EVENTS
 // ============================================================================
 
-public readonly struct MovementRequestPayload
+public readonly struct MMovementDirective
 {
     public readonly object Owner                { get; init; }
     public readonly int Scope                   { get; init; }
     public readonly MovementCommand Command     { get; init; }
-}
 
-public readonly struct MovementRequest : ISystemEvent
-{
-    public Guid Id                              { get; }
-    public Request Action                       { get; }
-    public MovementRequestPayload Payload       { get; }
-
-    public MovementRequest(Guid id, Request action, MovementRequestPayload payload)
+    public MMovementDirective(object owner, int scope, MovementCommand command)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        Owner   = owner;
+        Scope   = scope;
+        Command = command;
     }
 }
+
+public readonly struct MClearMovement
+{
+    public readonly object Owner                { get; init; }
+    public readonly int Scope                   { get; init; }
+
+    public MClearMovement(object owner, int scope)
+    {
+        Owner   = owner;
+        Scope   = scope;
+    }
+}
+
 
 // ============================================================================
 // MOVEMENT COMMAND FACTORY

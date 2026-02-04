@@ -51,7 +51,7 @@ public class Runtime                        { public Guid RuntimeID             
 public class Instance           : Runtime   {}
 public class Entity             : Runtime   {}
 public class Actor              : Entity    { public Bridge Bridge                  { get; set;  }
-                                              public LocalEventbus Bus              { get; set;  }}
+                                              public Emit Emit                      { get; set;  }}
 public class Enemy              : Actor     { }
 public class Item               : Entity    { }
 
@@ -76,7 +76,7 @@ public class Controller : MonoBehaviour {}
 //  Events 
 //
 
-public class EventHandler {}
+
 
 
 
@@ -100,6 +100,7 @@ public interface IControllable
 public interface IDamageable            
 {           
     bool Invulnerable                       { get; set; }
+    bool Impervious                         { get; set; }
     float Health                            { get; set; }
     float MaxHealth                         { get; }
 }           
@@ -173,7 +174,7 @@ public interface IIdle
 
 public interface IEventTarget
 {
-    LocalEventbus Bus                       { get; }   
+    Emit Emit                               { get; }   
 }
 
 public interface IActor : IControllable {}
@@ -221,6 +222,8 @@ public enum Request
     Cancel,
     Consume,
     Clear,
+    Enable,
+    Disable
 }
 
 public enum Response

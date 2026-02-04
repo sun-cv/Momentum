@@ -19,6 +19,7 @@ public class HeroState : State
     bool inactive               = false;
     bool stunned                = false;
     bool invulnerable           = false;
+    bool impervious             = false;
 
     bool hasLockedAim           = false;
     bool hasLockedFacing        = false;
@@ -33,6 +34,7 @@ public class HeroState : State
     public bool Stunned                             { get => effects.Has<IStunned>(effect => effect.Stunned,        defaultValue: stunned); set => stunned = value; }
     
     public bool Invulnerable                        { get => invulnerable;      set => invulnerable     = value; }
+    public bool Impervious                          { get => impervious;        set => impervious       = value; }
 
     public bool CanMove                             => effects.Can<IDisableMove>  (effect => effect.DisableMove,   defaultValue: !Disabled); 
     public bool CanAttack                           => effects.Can<IDisableAttack>(effect => effect.DisableAttack, defaultValue: !Disabled); 

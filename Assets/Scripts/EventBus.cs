@@ -1,12 +1,118 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
 
 public interface IEvent {};
-public interface ISystemEvent : IEvent { public Guid Id { get; }}
+public interface ISystemEvent : IEvent { public Guid Id { get; } }
+
+
+
+public struct Message<TAction, TPayload> : ISystemEvent
+{
+    public Guid Id              { get; }
+    public TPayload Payload     { get; }
+    public TAction Action       { get; }
+
+    public Message(Guid id, TAction action, TPayload payload)
+    {
+        Id          = id;
+        Action      = action;
+        Payload     = payload;
+    }
+}
+
+public readonly struct MEmpty { }
+
+
+public class Emit
+{
+    public LocalEventbus Bus    { get; }
+    public Link Link            { get; }
+
+    public Emit()
+    {
+        Bus     = new ();
+        Link    = new (Bus);
+    }
+
+    public void Local<TAction, TPayload>(TAction action, TPayload payload) 
+    {
+        Bus.Raise(new Message<TAction, TPayload>(Guid.NewGuid(), action, payload));
+    }
+
+    public void Local<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
+    {
+        Bus.Raise(new Message<TAction, TPayload>(id, action, payload));
+    }
+
+    public void Local<TMessage>(TMessage message) where TMessage : IEvent
+    {
+        Bus.Raise(message);
+    }
+
+    public void Local<TAction>(Guid id, TAction action) 
+    {
+        Bus.Raise(new Message<TAction, MEmpty>(id, action, default));
+    }    
+    public static void Global<TAction, TPayload>(TAction action, TPayload payload) 
+    {
+        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(Guid.NewGuid(), action, payload));
+    }
+
+    public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
+    {
+        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(id, action, payload));
+    }
+
+    public static void Global<TMessage>(TMessage message) where TMessage : IEvent
+    {
+        EventBus<TMessage>.Raise(message);
+    }
+
+}
+
+public class Link
+{
+    LocalEventbus Bus { get; }
+
+    public Link(LocalEventbus bus) => Bus = bus;
+
+    public void Local<T>(Action<T> handler) where T : IEvent
+    {
+        Bus.Subscribe(handler);
+    }
+
+    public static void Global<T>(Action<T> handler) where T : IEvent
+    {
+        EventBus<T>.Subscribe(handler);
+    }
+
+    public void Local<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
+    {
+        Bus.Subscribe(handler);
+    }
+
+    public static void Global<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
+    {
+        EventBus<Message<TAction, TPayload>>.Subscribe(handler);
+    }
+
+    public void UnsubscribeLocal<T>(EventBinding<T> binding) where T : IEvent
+    {
+        Bus.Unsubscribe(binding);
+    }
+
+    public void UnsubscribeGlobal<T>(EventBinding<T> binding) where T : IEvent
+    {
+        EventBus<T>.Unsubscribe(binding);
+    }
+}
+
+
 
 public interface IEventBinding<T> 
 {
@@ -242,82 +348,68 @@ public class EventBus
 
 
 
-public class EventHandler<TRequest, TResponse> where TRequest : ISystemEvent where TResponse : ISystemEvent
-{
-    private readonly Dictionary<Guid, TRequest> pending = new();
-    private readonly Action<TRequest, TResponse> onResponse;
 
-    public EventHandler(Action<TRequest, TResponse> onResponse)
+
+public class GlobalEventHandler<TResponse> where TResponse : ISystemEvent
+{
+    readonly HashSet<Guid> pendingIds = new();
+    readonly Action<TResponse> onResponse;
+
+    public GlobalEventHandler(Action<TResponse> onResponse)
     {
         this.onResponse = onResponse;
         EventBus<TResponse>.Subscribe(Receive);
     }
 
-    public void Send(TRequest request)
+    public void Send<TAction, TPayload>(TAction action, TPayload payload)
     {
-        pending[request.Id] = request;
-        OnEvent(request);
+        var message = new Message<TAction, TPayload>(Guid.NewGuid(), action, payload);
+        pendingIds.Add(message.Id);
+        EventBus<Message<TAction, TPayload>>.Raise(message);
     }
 
     void Receive(TResponse response)
     {
-        if (!pending.TryGetValue(response.Id, out var request))
+        if (!pendingIds.Remove(response.Id))
             return;
 
-        onResponse(request, response);
-        pending.Remove(response.Id);
+        onResponse(response);
     }
 
-
-    public void Clear()
-    {
-        pending.Clear();
-    }
-
-    void OnEvent<T>(T evt) where T : IEvent => EventBus<T>.Raise(evt);
-
-    public int PendingCount => pending.Count;
+    public void Clear() => pendingIds.Clear();
+    public int PendingCount => pendingIds.Count;
 }
-
-public class LocalEventHandler<TRequest, TResponse> where TRequest : ISystemEvent where TResponse : ISystemEvent
+public class LocalEventHandler<TResponse> where TResponse : ISystemEvent
 {
-    LocalEventbus bus;
+    readonly Emit emit;
+    readonly HashSet<Guid> pendingIds = new();
+    readonly Action<TResponse> onResponse;
 
-    private readonly Dictionary<Guid, TRequest> pending = new();
-    private readonly Action<TRequest, TResponse> onResponse;
-
-    public LocalEventHandler(LocalEventbus bus, Action<TRequest, TResponse> onResponse)
+    public LocalEventHandler(Emit emit, Action<TResponse> onResponse)
     {
-        this.bus        = bus;
+        this.emit = emit;
         this.onResponse = onResponse;
         
-        Link<TResponse>(Receive);
+        emit.Link.Local<TResponse>(Receive);
     }
 
-
-    public void Send(TRequest request)
+    public void Send<TAction, TPayload>(TAction action, TPayload payload)
     {
-        pending[request.Id] = request;
-        Emit(request);
+        var message = new Message<TAction, TPayload>(Guid.NewGuid(), action, payload);
+        pendingIds.Add(message.Id);
+        emit.Local(message);
     }
 
     void Receive(TResponse response)
     {
-        if (!pending.TryGetValue(response.Id, out var request))
+        Debug.Log("Receive");
+        if (!pendingIds.Remove(response.Id))
             return;
+        Debug.Log("Response");
 
-        onResponse(request, response);
-        pending.Remove(response.Id);
+        onResponse(response);
     }
 
-
-    public void Clear()
-    {
-        pending.Clear();
-    }
-
-    void Link<T>(Action<T> handler) where T : IEvent    => bus.Subscribe(handler);
-    void Emit<T>(T evt) where T : IEvent                => bus.Raise(evt);
-    
-    public int PendingCount => pending.Count;
+    public void Clear() => pendingIds.Clear();
+    public int PendingCount => pendingIds.Count;
 }

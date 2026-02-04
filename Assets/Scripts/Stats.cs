@@ -135,3 +135,23 @@ public class BasicStatModifier : StatModifier
         query.value = operation(query.value);
     }
 }
+
+public class TemporaryHitPointsModifier : StatModifier
+{
+    readonly string stat;
+    private float tempHitPoints;
+    
+    public TemporaryHitPointsModifier(string stat, float amount, float duration) : base(duration)
+    {
+        this.stat     = stat;
+        tempHitPoints = amount;
+    }
+    
+    public override void Handle(object sender, Query query)
+    {
+        if (query.stat != stat)
+            return;
+            
+        query.value += tempHitPoints;
+    }
+}

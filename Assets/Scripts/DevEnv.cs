@@ -16,9 +16,9 @@ public class DevEnv : RegisteredService, IServiceTick
         Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Effects)          .SetLevel(LogLevel.Trace);
 
 
 

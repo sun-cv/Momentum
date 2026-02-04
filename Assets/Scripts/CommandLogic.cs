@@ -43,7 +43,7 @@ public class CommandSystem
         this.intent = intent;
         this.owner  = intent.Owner;
 
-        LinkLocal<CommandRequest>(HandleCommandRequest);
+        owner.Emit.Link.Local<Request, MCommand>(HandleCommandRequest);
         Broadcast();
     }
 
@@ -112,18 +112,18 @@ public class CommandSystem
         return toRemove.Count > 0;
     }
 
-    void HandleCommandRequest(CommandRequest evt)
+    void HandleCommandRequest(Message<Request, MCommand> message)
     {
-        switch (evt.Action)
+        switch (message.Action)
         {
             case Request.Consume:
-                ConsumeCommand(evt.Payload.Command);
+                ConsumeCommand(message.Payload.Command);
                 break;
             case Request.Lock:
-                LockCommand(evt.Payload.Command);
+                LockCommand(message.Payload.Command);
                 break;
             case Request.Unlock:
-                UnlockCommand(evt.Payload.Command);
+                UnlockCommand(message.Payload.Command);
                 break;
         }
 
@@ -140,62 +140,37 @@ public class CommandSystem
     void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Lock();
     void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
 
-    void Broadcast() => EmitLocal<CommandPublish>(new(Guid.NewGuid(), Publish.Changed, new(){ Active = Snapshot.ReadOnly(active), Buffer = Snapshot.ReadOnly(buffer) }));
-
-    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
-    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
+    void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new MCommandPipelines(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
 }
 
-public readonly struct CommandRequestPayload
+
+
+
+public readonly struct MCommand
 {
     public Command Command { get; init; }
+
+    public MCommand(Command command)
+    {
+        Command = command;
+    }
 }
 
-public readonly struct CommandStatePayload
+
+public readonly struct MCommandPipelines
 {
     public IReadOnlyDictionary<Capability, Command> Active { get; init; }
     public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }
-}
 
-public readonly struct CommandRequest : ISystemEvent
-{
-    public Guid Id                          { get; }
-    public Request Action                   { get; }
-    public CommandRequestPayload Payload    { get; }
-
-    public CommandRequest(Guid id, Request action, CommandRequestPayload payload)
+    public MCommandPipelines(IReadOnlyDictionary<Capability, Command> active, IReadOnlyDictionary<Capability, Command> buffer)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        Active = active;
+        Buffer = buffer;
     }
 }
 
-public readonly struct CommandResponse : ISystemEvent
-{
-    public Guid Id                          { get; }
-    public Response Response                { get; }
 
-    public CommandResponse(Guid id, Response response)
-    {
-        Id       = id;
-        Response = response;
-    }
-}
 
-public readonly struct CommandPublish : ISystemEvent
-{
-    public Guid Id                          { get; }
-    public Publish Event                    { get; }
-    public CommandStatePayload Payload      { get; }
-
-    public CommandPublish(Guid id, Publish evt, CommandStatePayload payload)
-    {
-        Id      = id;
-        Event   = evt;
-        Payload = payload;
-    }
-}
 
 public static class IntentMap
 {

@@ -93,7 +93,7 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IBind
 
     void UpdateCameraTargetPosition()
     {
-        if (target == null || !target.IsValid)
+        if (target is null || !target.IsValid)
             target = new DefaultTargetProvider();
 
         context.cameraTarget.position = target.GetPosition();

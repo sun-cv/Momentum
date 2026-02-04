@@ -204,12 +204,17 @@ public class WeaponDefinition : Definition
 
 public class WeaponInstance : Instance
 {
+    public Actor Owner                  { get; init; }
     public WeaponAction Action          { get; init; }
     public WeaponState  State           { get; init; }
-    public WeaponInstance(WeaponAction action)
+    public WeaponInstance(Actor owner, WeaponAction action)
     {
+        Owner   = owner;
         Action  = action;
-        State   = new();
+        State   = new()
+        {
+            OwnedEffects = new(owner.Emit, (effect) => effect.Owner == this)
+        };
     }
 
     public int GetChargeFrames()
@@ -262,7 +267,6 @@ public class WeaponState
     public FrameWatch ActiveFrames              { get; set; } = new();
     public ClockTimer ControlWindow             { get; set; }
 
-    public HashSet<Guid> OwnedCommands          { get; set; } = new();
     public HashSet<string> AvailableControls    { get; set; } = new();
 
     public bool HasFired                        { get; set; }
@@ -270,9 +274,10 @@ public class WeaponState
 
     public InputIntentSnapshot Intent           { get; set; }
 
-    public Dictionary<Guid, HitboxDefinition> 
-                                 OwnedHitboxes  { get; set; } = new();
+    public HashSet<Guid> OwnedCommands          { get; set; } = new();
+    public HashSet<Guid> OwnedHitboxes          { get; set; } = new();
 
+    public EffectCache   OwnedEffects           { get; set; }
 
     public void Reset()
     {
@@ -286,6 +291,13 @@ public class WeaponState
 
         OwnedCommands    .Clear();
         AvailableControls.Clear();
+    }
+
+    public void Store()
+    {
+        PhaseFrames?.Stop();
+        ActiveFrames?.Stop();
+        ControlWindow?.Stop();
     }
 }
 
@@ -325,9 +337,11 @@ public class WeaponLoadout
     }
 
     public WeaponAction DefaultWeapon(Capability capability)
-        => actions.Values
-            .Select(t => t.action)
-            .FirstOrDefault(a => 
-                a.Trigger.SequenceEqual(new List<Capability>() { capability }) && 
-                a.Availability == WeaponAvailability.Default);
+    {
+        return actions.Values
+            .Select(weapon => weapon.action)
+            .FirstOrDefault(action => 
+                action.Trigger.SequenceEqual(new List<Capability>() { capability }) && 
+                action.Availability == WeaponAvailability.Default);
+    }
 }

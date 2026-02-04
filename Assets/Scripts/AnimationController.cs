@@ -8,13 +8,15 @@ using UnityEngine;
 
 public class AnimatorRequest
 {
-    public string Name      { get; init; }
-    public int Hash         { get; init; }
+    public string Name          { get; init; }
+    public int Hash             { get; init; }
+    public bool AllowInterrupt  { get; init; }
 
     public AnimatorRequest(string name)
     {
-        Name = name;
-        Hash = Animator.StringToHash(Name);
+        Name            = name;
+        Hash            = Animator.StringToHash(Name);
+        AllowInterrupt  = true;
     }
 }
 
@@ -40,7 +42,8 @@ public class AnimationController : IServiceTick
 
         CacheClipDurations();
 
-        LinkLocal<AnimationRequest>(HandleAnimationRequest);
+        owner.Emit.Link.Local<Message<Request, MAnimation>>(HandleAnimationRequest);
+        owner.Emit.Link.Local<Message<Request, MAnimationDuration>>(HandleAnimationDurationRequest);
     }
 
     public void Tick()
@@ -98,7 +101,7 @@ public class AnimationController : IServiceTick
     }
 
     // REWORK REQUIRED CANCEL ANIMATION
-    void HandleAnimationRequest(AnimationRequest evt)
+    void HandleAnimationRequest(Message<Request, MAnimation> evt)
     {
         switch(evt.Action)
         {
@@ -108,6 +111,12 @@ public class AnimationController : IServiceTick
             case Request.Cancel:
                 break;
         }
+    }
+
+    void HandleAnimationDurationRequest(Message<Request, MAnimationDuration> message)
+    {
+        var duration = clipDurations[message.Payload.Request.Name];
+        owner.Emit.Local(message.Id, Response.Completed, new MAnimationDuration(message.Payload.Request, duration));
     }
 
     void CacheClipDurations()
@@ -140,7 +149,7 @@ public class AnimationController : IServiceTick
         });
     }
 
-    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Bus.Subscribe(handler);
+    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Emit.Link.Local(handler);
 
 
     public UpdatePriority Priority => ServiceUpdatePriority.AnimationHandler;
@@ -150,22 +159,31 @@ public class AnimationController : IServiceTick
 // ============================================================================
 
 
-public readonly struct AnimationRequestPayload
+public readonly struct MAnimation
 {
     public readonly object Owner                { get; init; }
     public readonly AnimatorRequest Request     { get; init; }
+
+    public MAnimation(object owner, AnimatorRequest request)
+    {
+        Owner   = owner;
+        Request = request;   
+    }
 }
 
-public readonly struct AnimationRequest : ISystemEvent
+public readonly struct MDisableAnimation
 {
-    public Guid Id                              { get; }
-    public Request Action                       { get; }
-    public AnimationRequestPayload Payload      { get; }
+    
+}
 
-    public AnimationRequest(Guid id, Request action, AnimationRequestPayload payload)
+public readonly struct MAnimationDuration
+{
+    public readonly AnimatorRequest Request     { get; init; }
+    public readonly float Duration              { get; init; } 
+
+    public MAnimationDuration(AnimatorRequest request, float duration = 0)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        Request     = request;   
+        Duration    = duration;
     }
 }

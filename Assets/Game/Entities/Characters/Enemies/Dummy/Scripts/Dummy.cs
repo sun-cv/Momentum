@@ -20,7 +20,8 @@ public class Dummy : Actor, IDummyEntity, IDepthSorted, IDepthColliding
     public bool Inactive                            { get; set; }
     public bool Disabled                            { get; set; }
     public bool Stunned                             { get; set; }
-    public bool Invulnerable                        { get; set; } 
+    public bool Invulnerable                        { get; set; }
+    public bool Impervious                          { get; set; }
 
 
     public void Initialize()

@@ -107,9 +107,6 @@ public class DashController : IMovementController
     readonly float speed;
     readonly FrameTimer timer;
 
-    Vector2 traveledDistance;
-    bool latch = false;
-
     public DashController(Vector2 direction, Vector2 lastDirection, float speed, int duration)
     {
         this.direction  = direction != Vector2.zero ? direction.normalized : lastDirection.normalized;
@@ -120,11 +117,6 @@ public class DashController : IMovementController
 
     public Vector2 CalculateVelocity(Actor actor)
     {
-        if (!latch)
-            traveledDistance = actor.Bridge.View.transform.position;
-        
-        latch = true;
-
         return direction * speed;
     }
 

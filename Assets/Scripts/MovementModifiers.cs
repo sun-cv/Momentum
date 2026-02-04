@@ -7,17 +7,17 @@ public class MovementModifierHandler
     readonly EffectCache cache;    
     readonly List<EffectType> acceptedModifiers                           = new() 
     { 
-        EffectType.Speed, 
-        EffectType.Grip 
+        EffectType.Speed,
+        EffectType.Grip
     };
 
     readonly Dictionary<EffectType, List<IMovementModifier>> modifiers  = new();
 
     float value = 1.0f;
 
-    public MovementModifierHandler(LocalEventbus bus)
+    public MovementModifierHandler(Actor actor)
     {
-        cache = new(bus, (effectInstance) => effectInstance.Effect is IType instance && acceptedModifiers.Contains(instance.Type));
+        cache = new(actor.Emit, (effectInstance) => effectInstance.Effect is IType instance && acceptedModifiers.Contains(instance.Type));
 
         cache.OnApply   += CreateModifier;
         cache.OnCancel  += ClearModifier;

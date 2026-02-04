@@ -13,40 +13,40 @@ public class TriggerLocks : RegisteredService
 
     public override void Initialize()
     {
-        EventBus<LockRequest>.Subscribe(HandleLockRequest);
+        Link.Global<Message<Request, MLock>>(HandleLockRequest);
     }
 
-    void HandleLockRequest(LockRequest evt)
+    void HandleLockRequest(Message<Request, MLock> message)
     {
         Response response = Response.Declined;       
 
-        switch(evt.Trigger)
+        switch(message.Action)
         {
-            case LockTrigger.Lock:                
+            case Request.Lock:                
                     if (!acceptingLocks)
                         break;
-                    AddLock(evt.Payload.Action, evt.Payload.Origin);
+                    AddLock(message.Payload.Action, message.Payload.Origin);
                     response = Response.Accepted;
                 break;
 
-            case LockTrigger.Unlock:
-                    RemoveLock(evt.Payload.Action, evt.Payload.Origin);
+            case Request.Unlock:
+                    RemoveLock(message.Payload.Action, message.Payload.Origin);
                     response = Response.Accepted;
                 break;
             
-            case LockTrigger.EnableRequests:
+            case Request.Enable:
                     SetAcceptingLocks(true);
                     response = Response.Accepted;
                 break;
             
-            case LockTrigger.DisableRequests:
+            case Request.Disable:
                     SetAcceptingLocks(false);
                     response = Response.Accepted;
                 break;
         }
 
-        OnEvent<LockResponse>(new(evt.Id, response));
-        OnEvent<LockPublish>(new(Guid.NewGuid(), Publish.Changed, new(){ Locks = Snapshot.ReadOnly(locks) }));
+        Emit.Global<MLockResponse>(new(message.Id, response));
+        Emit.Global(Publish.Changed, new MLocks(Snapshot.ReadOnly(locks)));
     }
 
 
@@ -71,65 +71,42 @@ public class TriggerLocks : RegisteredService
 
     public bool IsLocked(Capability action)     => locks.TryGetValue(action, out var list) && list.Count > 0;
     public void SetAcceptingLocks(bool value)   => acceptingLocks = value;
-    void OnEvent<T>(T evt) where T : IEvent     => EventBus<T>.Raise(evt);
+    void OnEvent<T>(T message) where T : IEvent     => EventBus<T>.Raise(message);
 
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
 } 
 
-public enum LockTrigger
-{
-    Lock,
-    Unlock,
-    EnableRequests,
-    DisableRequests,
-}
 
-public readonly struct LockRequestPayload
+public readonly struct MLock
 {
     public Capability Action { get; init; }
     public string Origin     { get; init; }
-}
 
-public readonly struct LockStatePayload
-{
-    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get; init; }
-}
-
-public readonly struct LockRequest  : ISystemEvent
-{ 
-    public Guid Id                      { get; }
-    public LockTrigger Trigger          { get; }
-    public LockRequestPayload Payload   { get; }
-
-    public LockRequest(Guid id, LockTrigger trigger, LockRequestPayload payload) 
-    { 
-        Id      = id;
-        Trigger = trigger; 
-        Payload = payload;
-    }
-}
-public readonly struct LockResponse : ISystemEvent
-{ 
-    public Guid Id                      { get; }
-    public Response Action              { get; }
-
-    public LockResponse(Guid id, Response action) 
-    { 
-        Id       = id;
-        Action   = action; 
+    public MLock(Capability action, string origin)
+    {
+        Action  = action;
+        Origin  = origin;
     }
 }
 
-public readonly struct LockPublish  : ISystemEvent
+public readonly struct MLocks
 {
-    public Guid Id                      { get; }
-    public Publish Action               { get; }
-    public LockStatePayload Payload     { get; }
+    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get;}
 
-    public LockPublish(Guid id, Publish action, LockStatePayload payload) 
-    { 
-        Id      = id;
-        Action  = action; 
-        Payload = payload;
+    public MLocks(IReadOnlyDictionary<Capability, IReadOnlyList<string>> locks)
+    {
+        Locks   = locks;
+    }
+}
+
+public readonly struct MLockResponse: ISystemEvent
+{
+    public readonly Guid Id             { get; }
+    public readonly Response Response   { get; }
+
+    public MLockResponse(Guid id, Response response)
+    {
+        Id          = id;
+        Response    = response;
     }
 }

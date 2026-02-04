@@ -76,10 +76,10 @@ public class EquipmentManager
             Unequip(item.SlotType);
         
         if (!slot.Equip(item))
-            return false;
+            return false;        
 
-        EmitLocal<EquipmentPublish>(new(Guid.NewGuid(), Publish.Equipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
-        
+        owner.Emit.Local(Publish.Equipped, new MEquipmentChange(owner, item, item.SlotType));
+
         DebugLog();
         return true;
     }
@@ -92,7 +92,7 @@ public class EquipmentManager
         var item = slot.Unequip();
 
         if (item != null)
-            EmitLocal<EquipmentPublish>(new(Guid.NewGuid(), Publish.Unequipped, new() { Owner = owner, Equipment = item, Slot = item.SlotType } ));
+            owner.Emit.Local(Publish.Unequipped, new MEquipmentChange(owner, item, item.SlotType));
         
         DebugLog();
         return item;
@@ -127,28 +127,19 @@ public class EquipmentManager
         Log.Debug("Dash",      () => slots[EquipmentSlotType.Dash]?.Equipped       );
     }
 
-    void EmitLocal <T>(T evt) where T : IEvent              => owner.Bus.Raise(evt);
 }
 
 
-public readonly struct EquipmentPayload
+public readonly struct MEquipmentChange
 {
     public readonly Actor Owner              { get; init; }
     public readonly Equipment Equipment      { get; init; }
     public readonly EquipmentSlotType Slot   { get; init; }
-}
 
-public readonly struct EquipmentPublish : ISystemEvent
-{
-    public Guid Id                  { get; }
-    public Publish Action           { get; }
-    public EquipmentPayload Payload { get; }
-    
-    public EquipmentPublish(Guid id, Publish action, EquipmentPayload payload)
+    public MEquipmentChange(Actor owner, Equipment equipment, EquipmentSlotType slot)
     {
-        Id      = id;
-        Action  = action;
-        Payload = payload;
+        Owner       = owner;
+        Equipment   = equipment;
+        Slot        = slot;
     }
 }
-
