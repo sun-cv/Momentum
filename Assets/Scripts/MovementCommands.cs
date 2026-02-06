@@ -21,6 +21,7 @@ public enum ControllerInputMode
 public enum ControllerPriority
 {
     Normal      = 0,
+    High        = 25,
     Interrupt   = 50,
     Forced      = 100
 }
@@ -156,6 +157,46 @@ public class LungeController : IMovementController
     public ControllerPriority Priority      => ControllerPriority.Normal;
 
 }
+
+public class ImpulseController : IMovementController
+{
+
+    Vector2 currentVelocity;    
+
+    readonly float friction = Settings.Movement.FRICTION;
+    readonly float mass;
+
+    bool hasAppliedImpulse;
+
+
+    public ImpulseController(Vector2 impulse, float mass)
+    {
+        this.mass               = mass;
+        this.currentVelocity    = impulse / mass;
+        this.hasAppliedImpulse  = false;
+    }
+
+    public Vector2 CalculateVelocity(Actor actor)
+    {
+        if (!hasAppliedImpulse)
+        {
+            hasAppliedImpulse = true;
+            return currentVelocity;
+        }
+
+        currentVelocity *= Mathf.Pow(1 - friction, Clock.DeltaTime);
+
+        return currentVelocity;
+    }
+
+
+
+    public bool IsActive                    => currentVelocity.magnitude > 0.01f;
+    public ControllerInputMode InputMode    => ControllerInputMode.Ignore;
+    public float Weight                     => 1f;
+    public ControllerPriority Priority      => ControllerPriority.High;
+}
+
 
 // REWORK REQUIRED WHEN TARGETING IMPLEMENTED
 

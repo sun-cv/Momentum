@@ -16,7 +16,7 @@ public interface IServiceUtil : IService { public void Util(); UpdatePriority Pr
 public interface IServiceLate : IService { public void Late(); UpdatePriority Priority { get; } };
 
 
-public abstract class Service
+public abstract class Service : IService
 {
     public Guid RuntimeID               = Guid.NewGuid();
 }
@@ -25,7 +25,6 @@ public abstract class Service
 public abstract class RegisteredService : Service, IInitialize
 {
     public abstract void Initialize();
-
 }
 
 
@@ -128,9 +127,9 @@ public interface IAttacker
 }           
 
 public interface IDefender          
-{           
-    bool Parrying                           { get; }
+{               bool Parrying                           { get; }
     bool Blocking                           { get; }
+
 }           
 
 public interface IDirectional           
@@ -157,6 +156,7 @@ public interface IPhysical
 {
     Vector2 Velocity                        { get; }
     Vector2 Momentum                        { get; }
+    float Mass                              { get; }
 }
 
 public interface IAfflictable

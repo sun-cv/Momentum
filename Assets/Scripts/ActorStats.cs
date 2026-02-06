@@ -48,6 +48,8 @@ public class ActorStats : Stats
     public float Attack             => this[nameof(Attack)];
     public float AttackMultiplier   => this[nameof(AttackMultiplier)];
 
+    public float Mass               => this[nameof(Mass)];
+
     static readonly PropertyInfo[] StatProperties = typeof(StatsDefinition).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(prop => prop.PropertyType == typeof(float)).ToArray();
 }
 

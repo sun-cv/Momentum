@@ -52,7 +52,6 @@ public class BaseDash : MovementWeapon
             new DashDisable()
             {   
                 Name                = "DashDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 30,
                 DisableRotate       = true,
@@ -63,7 +62,6 @@ public class BaseDash : MovementWeapon
             new DashDisable()
             {
                 Name                = "DashDisableAttack",
-                Active              = true,
                 Cancelable          = false,
                 DisableAttack       = true,
                 DurationFrames      = 30,
@@ -75,12 +73,11 @@ public class BaseDash : MovementWeapon
                 Trigger             = WeaponPhase.FireEnd,
                 Name                = "DashMobilityDisable",
                 Type                = EffectType.Grip,
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 20,
                 Modifier            = 1f,
-                ModifierTarget      = .1f,
-                ModifierSpeedFrames = 20,
+                ModifyTarget        = .1f,
+                ModifyTimespan      = 20,
             },
         };
 

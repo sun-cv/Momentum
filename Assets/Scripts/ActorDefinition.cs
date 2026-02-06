@@ -23,6 +23,8 @@ public class StatsDefinition : Definition
     public float Speed                                  { get; init; } = -1;
 
     public float Attack                                 { get; init; } = -1;
+
+    public float Mass                                   { get; init; } = -1;
 }
 
 public class LifecycleDefinition : Definition
@@ -45,5 +47,5 @@ public class DeathAnimationSet : Definition
     public string   Default                             { get; init; }
     public string[] Random                              { get; init; }
     
-    public Dictionary<DamageType, string> ByDamageType  { get; init; }
+    // public Dictionary<DamageType, string> ByDamageType  { get; init; }
 }

@@ -10,7 +10,7 @@ public class Dummy : Actor, IDummyEntity, IDepthSorted, IDepthColliding
     // Properties
     //========================================
 
-    public float MaxHealth                          { get; set; } = 1000;
+    public float MaxHealth                          { get; set; } = 100;
     public float Health                             { get; set; }
 
     //========================================

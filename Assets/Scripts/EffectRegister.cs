@@ -8,8 +8,8 @@ using System.Linq;
 
 public class EffectInstance : Instance
 {
-    public Effect   Effect;
     public Runtime  Owner;
+    public Effect   Effect;
 
     public Action OnApply;
     public Action OnClear;
@@ -121,7 +121,11 @@ public class EffectRegister
         instance.OnCancel  += () => Log.Trace($"Canceling Effect {instance.Effect.Name}");
     }
 
-    public void CancelEffect(Effect effect) => effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
+    public void CancelEffect(Effect effect)
+    {
+        if (effect is ICancelable instance && instance.Cancelable)
+            effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
+    }
 
     public bool Is<T>() where T : class
     {

@@ -1,5 +1,3 @@
-using NUnit.Framework.Internal;
-using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -9,12 +7,10 @@ using UnityEngine;
 public class HeroState : State
 {
     Hero            owner;
-    IntentSystem    intent;
 
+    IntentSystem    intent;
     EffectRegister  effects;
     MovementEngine  movement;
-
-    TimePredicate   idle;
 
     bool inactive               = false;
     bool stunned                = false;
@@ -25,16 +21,19 @@ public class HeroState : State
     bool hasLockedFacing        = false;
     bool hasLockedDirection     = false;
 
-    public bool Inactive                            { get => inactive;          set => inactive    = value; }
+    TimePredicate   idle;
+
+
+    public bool Inactive                            { get => inactive;          set => inactive         = value; }
+
+    public bool Invulnerable                        { get => invulnerable;      set => invulnerable     = value; }
+    public bool Impervious                          { get => impervious;        set => impervious       = value; }
 
     public bool Parrying                            => effects.Has<ShieldParryWindow>((effect) => effect is not null);
     public bool Blocking                            => effects.Has<ShieldBlockWindow>((effect) => effect is not null);
 
     public bool Disabled                            => Inactive || Stunned; // || other cc 
     public bool Stunned                             { get => effects.Has<IStunned>(effect => effect.Stunned,        defaultValue: stunned); set => stunned = value; }
-    
-    public bool Invulnerable                        { get => invulnerable;      set => invulnerable     = value; }
-    public bool Impervious                          { get => impervious;        set => impervious       = value; }
 
     public bool CanMove                             => effects.Can<IDisableMove>  (effect => effect.DisableMove,   defaultValue: !Disabled); 
     public bool CanAttack                           => effects.Can<IDisableAttack>(effect => effect.DisableAttack, defaultValue: !Disabled); 

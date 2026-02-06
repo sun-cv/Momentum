@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,23 +17,24 @@ public class MovementEngine : IServiceTick
     readonly float retention    = Settings.Movement.MOMENTUM_RETENTION;
     readonly float inertia      = Settings.Movement.INERTIA;
 
+    readonly bool applyFriction = true;
+
     MovementModifierHandler modifierHandler;
 
     Actor           owner;
     IMovableActor   actor;
     Rigidbody2D     body;
 
-    float speed;
+
     float modifier;
 
-    Vector2 momentum;
-    Vector2 velocity;
+    float speed;
+    float mass;
 
-    bool wasInterruptActive = false;
-
+    Vector2 momentum    = Vector2.zero;
+    Vector2 velocity    = Vector2.zero;
 
     List<MovementDirective> directives = new();
-
 
     public MovementEngine(Actor actor)
     {        
@@ -54,6 +54,7 @@ public class MovementEngine : IServiceTick
         owner.Emit.Link.Local<Message<Request, MClearMovement>>     (HandleMovementClear);
 
         SetSpeed();
+        SetMass();
     }
 
 
@@ -68,6 +69,8 @@ public class MovementEngine : IServiceTick
 
         if (CanApplyVelocity())
             ApplyVelocity();
+
+        CalculateMomentum();
 
         DebugLog();
     }
@@ -122,13 +125,34 @@ public class MovementEngine : IServiceTick
 
         momentum = velocity;
     }
+
+    void CalculateMomentum()
+    {
+        momentum = mass * velocity;
+    }
+
     Vector2 BaseMovementVelocity()
     {
         return Vector2.MoveTowards(velocity, Mathf.Clamp(speed * modifier, 0, maxSpeed) * actor.Direction.Vector, acceleration * Clock.DeltaTime);
     }
 
-    void ApplyFriction() => velocity *= 1 - Mathf.Clamp01(friction * Clock.DeltaTime);
-    void ApplyVelocity() => body.MovePosition(body.position + velocity * Time.fixedDeltaTime);
+    void ApplyFriction()
+    {   
+        if (actor.Disabled || velocity.magnitude < 0.001f)
+            return;
+        
+        if (applyFriction || (directives.Count == 0 && actor.CanMove))
+        {
+            velocity *= Mathf.Exp(-friction * Clock.DeltaTime);
+        }
+    }
+
+    void ApplyVelocity()
+    {
+        body.MovePosition(body.position + velocity * Clock.DeltaTime);
+    }
+
+
 
     // ============================================================================
     // MOVEMENT CONTROLLER
@@ -192,6 +216,7 @@ public class MovementEngine : IServiceTick
     public Vector2 Momentum => momentum;
 
     void SetSpeed()         => speed = actor.Speed;
+    void SetMass()          => mass  = actor.Mass;
     bool CanApplyVelocity() => owner is IMovable actor && !actor.Disabled;
 
     void DebugLog()

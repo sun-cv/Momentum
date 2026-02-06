@@ -50,6 +50,13 @@ public enum DirectionSource
     Facing,
 }
 
+public enum KineticForceCalculation
+{
+    Fixed,              // Just use BaseForce
+    VelocityScaled,     // BaseForce * actor velocity magnitude
+    MomentumBased,      // BaseForce * actor mass * velocity
+}
+
 
 public class DamagingWeapon     : WeaponAction { }
 public class MovementWeapon     : WeaponAction { }
@@ -153,16 +160,29 @@ public class WeaponAction       : Definition
     /// WEAPON CONFIGURATION
     /// ============================================================================
 
-    /// <summary>Number of times weapon can be fired</summary>
-    public int ClipSize                             { get; init; } = 0;
-    /// <summary>Duration in seconds regen of clip</summary>
-    public float ClipRegenInterval                  { get; init; } = 0;
-    /// <summary>Regen full clip size?</summary>
-    public bool FullClipRegen                       { get; init; } = false;
+    ///  REWORK REQUIED? Currently not in use.
+    // /// <summary>Number of times weapon can be fired</summary>
+    // public int ClipSize                             { get; init; } = 0;
+    // /// <summary>Duration in seconds regen of clip</summary>
+    // public float ClipRegenInterval                  { get; init; } = 0;
+    // /// <summary>Regen full clip size?</summary>
+    // public bool FullClipRegen                       { get; init; } = false;
+
     /// <summary>Custom predicates - intended for player context</summary>
     public WeaponTriggerCondition Condition         { get; init; } = new();
     /// <summary>List of effects applied by weapon</summary>
     public List<Effect> Effects                     { get; init; } = new();
+
+    /// ============================================================================
+    /// KINETIC DAMAGE
+    /// ============================================================================
+
+    /// <summary>Does this weapon apply kinetic force on impact?</summary>
+    public bool AppliesKineticForce                 { get; init; } = false;
+    /// <summary>How to calculate kinetic force (uses source actor velocity, stats, etc.)</summary>
+    public KineticForceCalculation ForceCalculation { get; init; } = KineticForceCalculation.Fixed;
+    /// <summary>Base force value (meaning depends on ForceCalculation)</summary>
+    public float BaseForce                          { get; init; } = 0f;
 
     /// ============================================================================
     /// Hitboxes

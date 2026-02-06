@@ -92,6 +92,7 @@ public class WeaponSystem : IServiceTick
 
     void AdvanceWeaponState()
     {
+
         if (ShouldReleaseWeapon())
         {            
             ReleaseWeapon();
@@ -149,6 +150,7 @@ public class WeaponSystem : IServiceTick
 
     void ProcessWeaponActivation()
     {
+        
         if (HasActiveWeapon())
         {
             if (TryActivateFromAvailableControls())
@@ -405,7 +407,7 @@ public class WeaponSystem : IServiceTick
     {
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
-            if (instance.Effect.Cancelable)
+            if (instance.Effect is ICancelable effect && effect.Cancelable)
                 owner.Emit.Local(Request.Cancel, new MEffectInstance(instance));
         }
     }
@@ -414,7 +416,7 @@ public class WeaponSystem : IServiceTick
     {
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
-            if (instance.Effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
+            if (instance.Effect is ICancelable effect && effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
                 owner.Emit.Local(Request.Cancel, new MEffectInstance(instance));
         }
     }
@@ -571,7 +573,6 @@ public class WeaponSystem : IServiceTick
         }
     }
 
-
     void StoreInputSnapshot(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
     {
         foreach (var action in actions)
@@ -650,27 +651,24 @@ public class WeaponSystem : IServiceTick
     void HandleEffectNonCancelableLockCount(Message<Publish, MEffectInstance> message)
     {
         var effect = message.Payload.Instance.Effect;
-
-        if (effect is not IDisableAttack disable)
+    
+        if (!IsDefinitiveAttackDisable(effect))
             return;
-
-        bool isDefinitive = !effect.Cancelable;
-
-        if (!isDefinitive || !disable.DisableAttack)
-            return;
-
+    
         switch (message.Action)
         {
             case Publish.Activated:
                 NonCancelableAttackLocks++;
                 break;
-
+    
             case Publish.Canceled:
             case Publish.Deactivated:
                 NonCancelableAttackLocks--;
                 break;
         }
     }
+
+    
 
     void HandleLocksUpdate(Message<Publish, MLocks> message)
     {
@@ -715,6 +713,20 @@ public class WeaponSystem : IServiceTick
     // ============================================================================
     // QUERIES & ACCESSORS
     // ============================================================================
+
+    private bool IsDefinitiveAttackDisable(Effect effect)
+    {
+        if (effect is not IDisableAttack disable)
+            return false;
+
+        if (!disable.DisableAttack)
+            return false;
+
+        if (effect is ICancelable cancelable && cancelable.Cancelable)
+            return false;
+
+        return true;
+    }
 
     public IActivationStrategy GetActivationStrategy(WeaponAction weapon) => activationStrategies[weapon.Activation];
 

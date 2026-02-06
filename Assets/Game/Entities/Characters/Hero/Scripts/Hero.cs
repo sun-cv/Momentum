@@ -32,6 +32,8 @@ public class Hero : Actor, IHero
     public float Attack                             { get => Stats.Attack;                  }
     public float AttackMultiplier                   { get => Stats.AttackMultiplier;        }
 
+    public float Mass                               { get => Stats.Mass;                    }
+
     //========================================
     // State
     //========================================
@@ -62,7 +64,6 @@ public class Hero : Actor, IHero
     public Direction LockedAim                      => State.LockedAim;
     public Direction LockedFacing                   => State.LockedFacing;
     public Direction LockedDirection                => State.LockedDirection;
-
 
     public Vector2 Velocity                         => State.Velocity;
     public Vector2 Momentum                         => State.Momentum;

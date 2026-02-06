@@ -149,9 +149,6 @@ public class AnimationController : IServiceTick
         });
     }
 
-    void LinkLocal <T>(Action<T> handler) where T : IEvent  => owner.Emit.Link.Local(handler);
-
-
     public UpdatePriority Priority => ServiceUpdatePriority.AnimationHandler;
 }
 // ============================================================================

@@ -48,7 +48,6 @@ public class SwordStrike : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "SwordSwingDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 30,
                 DisableAttack       = true,
@@ -57,10 +56,10 @@ public class SwordStrike : DamagingWeapon
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
+            
             new SwordSwingDisable()
             {
                 Name                = "SwordSwingDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 60,
                 DisableAttack       = true,
@@ -129,7 +128,6 @@ public class SwordCleave : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "SwordSwingDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 30,
                 DisableAttack       = true,
@@ -141,7 +139,6 @@ public class SwordCleave : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "SwordSwingDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 60,
                 DisableAttack       = true,
@@ -208,7 +205,6 @@ public class SwordRend : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "SwordSwingDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 20,
                 DisableAttack       = true,
@@ -220,7 +216,6 @@ public class SwordRend : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "SwordSwingDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 60,
                 DisableAttack       = true,

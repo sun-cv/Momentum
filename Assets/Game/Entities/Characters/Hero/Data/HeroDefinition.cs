@@ -12,6 +12,7 @@ public class HeroDefinition : ActorDefinition
             MaxMana                 = 100,
             Speed                   = 5,
             Attack                  = 15,
+            Mass                    = 10,
         };
     }
 }

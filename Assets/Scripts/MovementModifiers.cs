@@ -109,14 +109,14 @@ public class GripMovementModifier : IMovementModifier
     public GripMovementModifier(EffectInstance effectInstance)
     {
         instance    = effectInstance;
-        timer       = ((IModifiable)effectInstance.Effect).ModifierSpeed != -1 ? new(((IModifiable)effectInstance.Effect).ModifierSpeed) : new(((IModifiable)effectInstance.Effect).ModifierSpeedFrames);
+        timer       = ((IModifiable)effectInstance.Effect).ModifyTimespan != -1 ? new(((IModifiable)effectInstance.Effect).ModifyTimespan) : new(((IModifiable)effectInstance.Effect).ModifyDurationFrames);
         timer.Start();
     } 
 
     public float Resolve()
     {
         var effect = instance.Effect as IModifiable;
-        return Mathf.Lerp(effect.Modifier, effect.ModifierTarget, timer.PercentComplete);
+        return Mathf.Lerp(effect.Modifier, effect.ModifyTarget, timer.PercentComplete);
     }
 
     public EffectInstance Instance => instance;

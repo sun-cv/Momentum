@@ -52,8 +52,6 @@ public class ShieldParry : DamagingWeapon
             new ShieldParryWindow()
             {   
                 Name                = "ShieldParryWindow",
-                Active              = true,
-                Cancelable          = false,
                 DurationFrames      = 60,
             },
 
@@ -62,8 +60,6 @@ public class ShieldParry : DamagingWeapon
                 Name                = "ShieldParrySlow",
                 Type                = EffectType.Speed,
                 Trigger             = WeaponPhase.Fire,
-                Active              = true,
-                Cancelable          = false,
                 DurationFrames      = 5,
                 Modifier            = .50f,
             },
@@ -111,7 +107,6 @@ public class ShieldBlock : DamagingWeapon
             {
                 Name                = "ShieldBlockWindow",
                 Duration            = 9999,
-                Active              = true,
                 Cancelable          = true,
                 CancelOnRelease     = true,
 
@@ -121,7 +116,6 @@ public class ShieldBlock : DamagingWeapon
             {   
                 Name                = "ShieldBlockDisable",
                 Trigger             = WeaponPhase.Fire,
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 20,
                 DisableAttack       = true,
@@ -132,7 +126,6 @@ public class ShieldBlock : DamagingWeapon
             {   
                 Name                = "ShieldBlockDisableHeld",
                 Trigger             = WeaponPhase.Fire,
-                Active              = true,
                 Cancelable          = true,
                 CancelOnRelease     = true,
                 Duration            = 9999,
@@ -145,13 +138,12 @@ public class ShieldBlock : DamagingWeapon
                 Name                = "ShieldBlockSlow",
                 Type                = EffectType.Grip,
                 Trigger             = WeaponPhase.Fire,
-                Active              = true,
                 Cancelable          = true,
                 CancelOnRelease     = true,
                 DurationFrames      = 9999,
                 Modifier            = .50f,
-                ModifierTarget      = .25f,
-                ModifierSpeed       = 2,
+                ModifyTarget        = .25f,
+                ModifyTimespan      = 2,
             }
         };
         Hitboxes = new()
@@ -192,14 +184,12 @@ public class ShieldAim : DamagingWeapon
             {
                 Trigger             = WeaponPhase.Fire,
                 Name                = "ShieldAiming",
-                Active              = true,
-                DurationFrames      = 9999,
                 Cancelable          = true,
+                DurationFrames      = 9999,
             },
             new SwordSwingDisable()
             {   
                 Name                = "ShieldAimDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 5,
                 DisableAttack       = true,
@@ -209,7 +199,6 @@ public class ShieldAim : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "ShieldAimDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 9999,
                 DisableRotate       = true,
@@ -238,7 +227,6 @@ public class ShieldFire : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "ShieldFireDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 18,
                 DisableAttack       = true,
@@ -249,7 +237,6 @@ public class ShieldFire : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "ShieldFireDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 30,
                 DisableAttack       = true,
@@ -277,7 +264,6 @@ public class ShieldBash : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "ShieldBashDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 15,
                 DisableAttack       = true,
@@ -288,7 +274,6 @@ public class ShieldBash : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "ShieldBashDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 25,
                 DisableAttack       = true,
@@ -322,14 +307,12 @@ public class ShieldCharge : DamagingWeapon
             {
                 Trigger             = WeaponPhase.Fire,
                 Name                = "ShieldChargeMovement",
-                Active              = true,
                 DurationFrames      = 30,
                 Cancelable          = true,
             },
             new SwordSwingDisable()
             {   
                 Name                = "ShieldChargeDisable",
-                Active              = true,
                 Cancelable          = false,
                 DurationFrames      = 20,
                 DisableAttack       = true,
@@ -339,7 +322,6 @@ public class ShieldCharge : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "ShieldChargeDisableCancelable",
-                Active              = true,
                 Cancelable          = true,
                 DurationFrames      = 35,
                 DisableAttack       = true,
