@@ -43,7 +43,6 @@ public static class BridgeFactory
     public static Bridge Create(Actor actor, string prefabName)
     {
         return Instantiate(actor, prefabName);
-
     }
 
     public static Bridge Create(IDefined actor)

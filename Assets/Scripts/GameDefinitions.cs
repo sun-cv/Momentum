@@ -46,17 +46,34 @@ public class Definition
 //  Runtime
 //
 
-public class Runtime                        { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
-public class Instance           : Runtime   {}
-public class Entity             : Runtime   {}
-public class Actor              : Entity    { public Bridge Bridge                  { get; set;  }
-                                              public Emit Emit                      { get; set;  }}
-public class Enemy              : Actor     { }
-public class Item               : Entity    { }
+public class Runtime                            { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
+public class Instance           : Runtime       {}
+public class Entity             : Runtime       {}
+public class Actor              : Entity        { public Bridge Bridge                  { get; set;  }
+                                                  public Emit Emit                      { get; set;  }}
 
-public abstract class Equipment : Entity    { public EquipmentSlotType SlotType     { get; init; }}
-public class Weapon             : Equipment { public WeaponDefinition Definition    { get; init; }}
-public class Armor              : Equipment { public ArmorDefinition Definition     { get; init; }}
+
+public class Agent              : Actor         {}
+
+public class Player             : Agent         {}
+public class Enemy              : Agent         {}
+public class NPC                : Agent         {}
+
+public class Prop               : Actor         {}
+public class Explosion          : Prop {}
+public class Trap               : Prop {}
+public class Destructible       : Prop {}
+public class Projectile         : Prop {}
+
+public class Environmental      : Actor         {}
+public class Hazard             : Environmental {}
+
+
+public class Item               : Entity        {}
+
+public class Equipment          : Item          { public EquipmentSlotType SlotType     { get; init; }}
+public class Weapon             : Equipment     { public WeaponDefinition Definition    { get; init; }}
+public class Armor              : Equipment     { public ArmorDefinition Definition     { get; init; }}
 
 
 
@@ -127,9 +144,9 @@ public interface IAttacker
 }           
 
 public interface IDefender          
-{               bool Parrying                           { get; }
+{               
+    bool Parrying                           { get; }
     bool Blocking                           { get; }
-
 }           
 
 public interface IDirectional           
@@ -152,10 +169,9 @@ public interface IAimable
     Direction LockedAim                     { get; }
 }
 
-public interface IPhysical
+public interface IDynamic
 {
     Vector2 Velocity                        { get; }
-    Vector2 Momentum                        { get; }
     float Mass                              { get; }
 }
 
@@ -177,8 +193,9 @@ public interface IEventTarget
     Emit Emit                               { get; }   
 }
 
-public interface IActor : IControllable {}
-public interface IMovableActor : IActor, IDepthSorted, IDepthColliding, IMovable, IPhysical, IDirectional, IOrientable, IControllable { }
+public interface IActor {}
+public interface IAgent : IControllable {}
+public interface IMovableActor : IAgent, IDepthSorted, IDepthColliding, IMovable, IDynamic, IDirectional, IOrientable, IControllable { }
 
 public interface IHero  : IEventTarget, IMovableActor, IDefined, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
 public interface IEnemy : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }

@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
 
 
 
@@ -11,11 +11,12 @@ public class MovementEngine : IServiceTick
 {
     readonly Logger Log = Logging.For(LogSystem.Movement);
 
-    readonly float maxSpeed     = Settings.Movement.MAX_SPEED;
-    readonly float acceleration = Settings.Movement.ACCELERATION;
-    readonly float friction     = Settings.Movement.FRICTION;
-    readonly float retention    = Settings.Movement.MOMENTUM_RETENTION;
-    readonly float inertia      = Settings.Movement.INERTIA;
+    readonly float maxSpeed         = Settings.Movement.MAX_SPEED;
+    readonly float acceleration     = Settings.Movement.ACCELERATION;
+    readonly float friction         = Settings.Movement.FRICTION;
+    readonly float retention        = Settings.Movement.MOMENTUM_RETENTION;
+    readonly float inertia          = Settings.Movement.INERTIA;
+    readonly float forceThreshold   = Settings.Movement.FORCE_THRESHOLD;
 
     readonly bool applyFriction = true;
 
@@ -64,13 +65,12 @@ public class MovementEngine : IServiceTick
     
         CalculateModifier();
         CalculateVelocity();
+        CalculateMomentum();
 
         ApplyFriction();
 
         if (CanApplyVelocity())
             ApplyVelocity();
-
-        CalculateMomentum();
 
         DebugLog();
     }
@@ -84,47 +84,90 @@ public class MovementEngine : IServiceTick
 
     void CalculateVelocity()
     {
-        if (actor.Disabled)
+        if (ActorIsDisabled())
         {
-            momentum = Vector2.zero;
-            velocity = Vector2.zero;
+            ClearMovement();
             return;
         }
 
-        Vector2 targetVelocity  = actor.CanMove ? BaseMovementVelocity() : Vector2.zero;
-        var sortedDirectives    = directives.OrderByDescending(d => d.Controller.Priority).ToList();
-        bool isReversing        = actor.CanMove && velocity.magnitude > 1f && Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
+        Vector2 kinematicVelocity   = CalculateKinematicForces();
+        Vector2 dynamicVelocity     = CalculateDynamicForces();
 
-        foreach(var directive in sortedDirectives)
+        velocity                    = ApplyVelocityTransition(CombineMovementForces(kinematicVelocity, dynamicVelocity));
+    }
+
+
+    Vector2 CalculateKinematicForces()
+    {
+        Vector2 targetVelocity = Vector2.zero;
+
+        if (ActorCanMove())
+        {
+            targetVelocity = BaseMovementVelocity();
+        }
+
+        foreach(var directive in FilterAndSortDescendingDirectives(IsKinematic))
         {
             Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
 
-            switch(directive.Controller.InputMode)
+            switch(directive.Controller.Mode)
             {
-                case ControllerInputMode.Ignore:
-                    targetVelocity = controllerVelocity;
+                case ControllerMode.Ignore:
+                    targetVelocity  = controllerVelocity;
                     goto FinishedBlending;
 
-                case ControllerInputMode.Blend:
+                case ControllerMode.Blend:
                     targetVelocity += controllerVelocity * directive.Controller.Weight;
                     break;
 
-                case ControllerInputMode.AllowOverride:
-                    targetVelocity = Vector2.Lerp(targetVelocity, controllerVelocity, directive.Controller.Weight);
+                case ControllerMode.AllowOverride:
+                    targetVelocity  = Vector2.Lerp(targetVelocity, controllerVelocity, directive.Controller.Weight);
                     break;
             }
         }
 
         FinishedBlending:
-
-
-        if (isReversing && directives.Count == 0)
-            velocity = Vector2.MoveTowards(velocity, Vector2.zero, acceleration * inertia * Clock.DeltaTime);
-        else
-            velocity = Vector2.Lerp(targetVelocity, velocity, retention);
-
-        momentum = velocity;
+        return targetVelocity;
     }
+
+
+    Vector2 CalculateDynamicForces()
+    {
+        Vector2 forceVelocity = Vector2.zero;
+
+        foreach(var directive in FilterAndSortDescendingDirectives(IsDynamic))
+        {
+            if (directive.Controller.Mode == ControllerMode.Additive)
+            {
+                forceVelocity += directive.Controller.CalculateVelocity(owner);
+            }
+        }
+
+        return forceVelocity;
+    }
+
+    Vector2 CombineMovementForces(Vector2 directed, Vector2 external)
+    {
+        if (external.magnitude > forceThreshold)
+        {
+            return external + directed * 0.2f;
+        }
+
+        return directed;
+    }
+
+    Vector2 ApplyVelocityTransition(Vector2 targetVelocity)
+    {
+        bool isReversing = actor.CanMove && directives.Count == 0 && velocity.magnitude > 1f && Vector2.Dot(velocity.normalized, actor.Direction) < -0.3f;
+
+        if (isReversing)
+        {
+            return Vector2.MoveTowards(velocity, Vector2.zero, acceleration * inertia * Clock.DeltaTime);
+        }
+
+        return Vector2.Lerp(targetVelocity, velocity, retention);
+    }
+
 
     void CalculateMomentum()
     {
@@ -152,25 +195,23 @@ public class MovementEngine : IServiceTick
         body.MovePosition(body.position + velocity * Clock.DeltaTime);
     }
 
-
-
     // ============================================================================
     // MOVEMENT CONTROLLER
     // ============================================================================
 
     void RemoveInactiveControllers()
     {   
-        directives.RemoveAll(directive => !directive.Controller.IsActive);
+        directives.RemoveAll(directive => !directive.Controller.Active);
     }
 
-    void RequestMovementDirective(object owner, int scope, MovementCommand command)
+    void RequestMovementDirective(object owner, MovementDefinition definition)
     {
-        directives.Add(new() { Owner = owner, Scope = scope, Definition = command.GetDefinition(), Controller = command.CreateController()});
+        directives.Add(new() { Owner = owner, Definition = definition, Controller = CreateController(definition)});
     }
 
     void ClearMovementDirective(object owner, int scope)
     {
-        directives.RemoveAll(directive => directive.Owner == owner && directive.Scope == scope && !directive.Definition.PersistPastScope);
+        directives.RemoveAll(directive => directive.Owner == owner && directive.Definition.Scope == scope && !directive.Definition.PersistPastScope);
     }
 
     void ClearAllOwnedDirectives(object owner)
@@ -184,11 +225,10 @@ public class MovementEngine : IServiceTick
     
     void HandleMovementDirective(Message<Request, MMovementDirective> message)
     {
-        var owner   = message.Payload.Owner;
-        var scope   = message.Payload.Scope;
-        var command = message.Payload.Command;
+        var owner       = message.Payload.Owner;
+        var Definition  = message.Payload.Definition;
 
-        RequestMovementDirective(owner, scope, command);
+        RequestMovementDirective(owner, Definition);
     }
 
 
@@ -212,12 +252,43 @@ public class MovementEngine : IServiceTick
     // HELPER METHODS
     // ============================================================================
 
-    public Vector2 Velocity => velocity;
-    public Vector2 Momentum => momentum;
+    IMovementController CreateController(MovementDefinition definition)
+    {
+        return definition.MovementForce switch
+        {
+            MovementForce.Dynamic   => MovementControllerFactory.CreateDynamic  (owner, definition),
+            MovementForce.Kinematic => MovementControllerFactory.CreateKinematic(owner, definition),
+            _ => default,
+        };
+    }
+
+    bool IsDynamic  (MovementDirective directive) => directive.Definition.MovementForce is MovementForce.Dynamic;
+    bool IsKinematic(MovementDirective directive) => directive.Definition.MovementForce is MovementForce.Kinematic;
+
+    bool CanApplyVelocity() => owner is IMovable actor && !actor.Disabled;
+
+    bool ActorIsDisabled()  => actor.Disabled;
+    bool ActorCanMove()     => actor.CanMove;
 
     void SetSpeed()         => speed = actor.Speed;
     void SetMass()          => mass  = actor.Mass;
-    bool CanApplyVelocity() => owner is IMovable actor && !actor.Disabled;
+
+    void ClearMovement()
+    {
+        ClearMomentum();
+        ClearVelocity();
+    }
+
+    void ClearMomentum() => momentum = Vector2.zero;
+    void ClearVelocity() => velocity = Vector2.zero;
+
+    List<MovementDirective> FilterAndSortDescendingDirectives(Func<MovementDirective, bool> filter)
+    {
+        return directives.Where(directive => filter(directive)).OrderByDescending(directive => directive.Controller.Priority).ToList();
+    }
+
+    public Vector2 Velocity => velocity;
+    public Vector2 Momentum => momentum;
 
     void DebugLog()
     {
@@ -240,15 +311,13 @@ public class MovementEngine : IServiceTick
 
 public readonly struct MMovementDirective
 {
-    public readonly object Owner                { get; init; }
-    public readonly int Scope                   { get; init; }
-    public readonly MovementCommand Command     { get; init; }
+    public readonly object Owner                    { get; init; }
+    public readonly MovementDefinition Definition   { get; init; }
 
-    public MMovementDirective(object owner, int scope, MovementCommand command)
+    public MMovementDirective(object owner, MovementDefinition definition)
     {
-        Owner   = owner;
-        Scope   = scope;
-        Command = command;
+        Owner       = owner;
+        Definition  = definition;
     }
 }
 
@@ -269,28 +338,31 @@ public readonly struct MClearMovement
 // MOVEMENT COMMAND FACTORY
 // ============================================================================
 
-public static class MovementCommandFactory
+public static class MovementControllerFactory
 {
     
-    public static MovementCommand Create(Actor actor, MovementCommandDefinition definition, InputIntentSnapshot inputIntent)
+    public static IMovementController CreateKinematic(Actor actor, MovementDefinition definition)
     {
-        return (definition.Action, actor) switch
+        return (definition.MovementForce, definition.KinematicAction, actor)switch
         {
-            (MovementAction.Dash, IMovableActor movable) =>
-                new DashMovementCommand
-                {
-                    Definition      = definition,
-                    InputIntent     = inputIntent,
-                },
+            (MovementForce.Kinematic, KinematicAction.Dash, IMovableActor movable) =>
+                new DashController(definition.InputIntent.Direction, definition.InputIntent.LastDirection, definition.Speed, definition.DurationFrames),
 
-            (MovementAction.Lunge, IMovableActor movable and IAimable aim) =>
-                new LungeMovementCommand
-                {
-                    Definition      = definition,
-                    InputIntent     = inputIntent,
-                },
+            (MovementForce.Kinematic, KinematicAction.Lunge, IMovableActor movable) => 
+                new LungeController(definition.InputIntent.Direction, definition.Speed, definition.DurationFrames, definition.SpeedCurve),
 
             _ => null
         };
     }
+
+    public static IMovementController CreateDynamic(Actor actor, MovementDefinition definition)
+    {
+        return (definition.MovementForce, definition.DynamicSource, actor)switch
+        {
+            (MovementForce.Kinematic, DynamicSource.Collision, IMovableActor movable) =>
+                new DynamicForceController(definition.Force, definition.Mass),
+            _ => null
+        };
+    }
+
 }

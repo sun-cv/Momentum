@@ -50,13 +50,6 @@ public enum DirectionSource
     Facing,
 }
 
-public enum KineticForceCalculation
-{
-    Fixed,              // Just use BaseForce
-    VelocityScaled,     // BaseForce * actor velocity magnitude
-    MomentumBased,      // BaseForce * actor mass * velocity
-}
-
 
 public class DamagingWeapon     : WeaponAction { }
 public class MovementWeapon     : WeaponAction { }
@@ -153,7 +146,7 @@ public class WeaponAction       : Definition
     /// MOVEMENT COMMANDS
     /// ============================================================================
 
-    public List<MovementCommandDefinition> 
+    public List<MovementDefinition> 
                                 MovementDefinitions { get; init; } = new();
 
     /// ============================================================================
@@ -178,11 +171,9 @@ public class WeaponAction       : Definition
     /// ============================================================================
 
     /// <summary>Does this weapon apply kinetic force on impact?</summary>
-    public bool AppliesKineticForce                 { get; init; } = false;
-    /// <summary>How to calculate kinetic force (uses source actor velocity, stats, etc.)</summary>
-    public KineticForceCalculation ForceCalculation { get; init; } = KineticForceCalculation.Fixed;
+    public bool AppliesDynamicForce                 { get; init; } = false;
     /// <summary>Base force value (meaning depends on ForceCalculation)</summary>
-    public float BaseForce                          { get; init; } = 0f;
+    public float Force                              { get; init; } = 0f;
 
     /// ============================================================================
     /// Hitboxes

@@ -45,6 +45,7 @@ public static class Settings
         public const float FRICTION                 = 5f;
         public const float MOMENTUM_RETENTION       = 0f;
         public const float INERTIA                  = .2f;
+        public const float FORCE_THRESHOLD          = 2f;
 
         public static float FACING_SWITCH_DELAY     = 1f;
         public static float FACING_CLOCKWISE        = 0.1f;

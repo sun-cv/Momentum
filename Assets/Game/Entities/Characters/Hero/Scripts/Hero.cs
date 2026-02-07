@@ -2,7 +2,7 @@ using UnityEngine;
 
 
 
-public class Hero : Actor, IHero
+public class Hero : Player, IHero
 {
     //========================================
     // Systems

@@ -75,12 +75,13 @@ public class SwordStrike : DamagingWeapon
         {
             new()
             {
-                Action              = MovementAction.Lunge,
+                KinematicAction     = KinematicAction.Lunge,
                 Speed               = 5,
                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrame       = 15,
+                DurationFrames      = 15,
                 PersistPastScope    = true,
                 Phase               = WeaponPhase.Fire,
+                Scope               = (int)WeaponPhase.Fire,
             }
         };
 
@@ -153,12 +154,13 @@ public class SwordCleave : DamagingWeapon
         {
             new()
             {
-                Action              = MovementAction.Lunge,
+                KinematicAction     = KinematicAction.Lunge,
                 Speed               = 5,
                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrame       = 15,
+                DurationFrames      = 15,
                 PersistPastScope    = true,
                 Phase               = WeaponPhase.Fire,
+                Scope               = (int)WeaponPhase.Fire,
             }
         };
 
@@ -231,12 +233,13 @@ public class SwordRend : DamagingWeapon
         {
             new()
             {
-                Action              = MovementAction.Lunge,
+                KinematicAction     = KinematicAction.Lunge,
                 Speed               = 5,
                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrame       = 15,
+                DurationFrames      = 15,
                 PersistPastScope    = true,
                 Phase               = WeaponPhase.Fire,
+                Scope               = (int)WeaponPhase.Fire,
             }
         };
 

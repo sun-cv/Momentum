@@ -439,10 +439,12 @@ public class WeaponSystem : IServiceTick
     {
         foreach (var definition in action.MovementDefinitions)
         {
-            if (definition.Phase != instance.State.Phase)
+            if (definition.Phase  != instance.State.Phase)
                 continue;
 
-            owner.Emit.Local(Request.Clear, new MMovementDirective(owner, (int)instance.State.Phase, MovementCommandFactory.Create(owner, definition, instance.State.Intent)));
+            definition.InputIntent = instance.State.Intent;
+
+            owner.Emit.Local(Request.Create, new MMovementDirective(owner, definition));
         }
     }
 

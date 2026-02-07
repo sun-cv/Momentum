@@ -1,16 +1,14 @@
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
 
 
 
 
 
-public class CombatLogic : RegisteredService, IServiceStep
+public class CombatDamage : RegisteredService, IServiceStep
 {
     
     List<CombatEvent> pending = new();
-
 
     public override void Initialize()
     {
@@ -19,36 +17,34 @@ public class CombatLogic : RegisteredService, IServiceStep
 
     public void Step()
     {
-        ProcessPendingCombatEvents();
+        ProcessPendingEvents();
     }
 
-    void ProcessPendingCombatEvents()
-    {
-        var ToRemove = new List<CombatEvent>(); 
 
+    void ProcessPendingEvents()
+    {
         foreach (var combat in pending)
         {
-            ProcessCombatEvent(combat);
-            ToRemove.Add(combat);
+            ProcessEvent(combat);
         }
 
-        ToRemove.ForEach(combat => pending.Remove(combat));
+        pending.Clear();
     }
 
 
-    void ProcessCombatEvent(CombatEvent combat)
+    void ProcessEvent(CombatEvent combat)
     {
-        var source  = combat.Source;
-        var target  = combat.Target;
-        var package = combat.Package;
+        var source      = combat.Source;
+        var target      = combat.Target;
+        var components  = combat.Package.Components;
 
-        var actor   = target as IDamageable;
-
-        int damage  = ProcessComponents(source, target, package.Components);
+        int damage      = ProcessComponents(source, target, components);
         
-        ApplyDamage(actor, damage);
+        ApplyDamage(target, damage);
 
         // Under consideration killing blow effect for lifecycle? 
+        // if (HasKilled(target))
+            // SendKillingBlow();
         // target.Emit.Local(Request.Create, new KillingBlow());
     }
 
@@ -58,8 +54,12 @@ public class CombatLogic : RegisteredService, IServiceStep
 
         foreach (var component in components)
         {            
-            RequestEffects(target, component.Effects);
-            ResolveDamageSource(source, target, component);
+            ApplyEffects(target, component.Effects);
+
+            if (HasDynamicForce(component))
+            {
+                ResolveDynamicForce(source, target, component);
+            }
 
             damage += component.Amount;
         }
@@ -67,28 +67,36 @@ public class CombatLogic : RegisteredService, IServiceStep
         return damage;
     }
 
-    void ResolveDamageSource(Actor source, Actor target, DamageComponent component)
+
+    void ResolveDynamicForce(Actor source, Actor target, DamageComponent component)
     {
-        if (IsPhysicalSource(source) && IsKineticWeapon(component.Source))
+        var direction   = CalculateDirection(source, target);
+        var force       = direction * component.ForceMagnitude;
+
+        ApplyDynamicForce(target, force);
+    }
+
+
+    void ApplyDynamicForce(Actor target, Vector2 force)
+    {
+
+        if (target is not IDynamic dynamic)
+            return;
+
+        var definition = new MovementDefinition()
         {
-            ResolveKineticSource(source, target, component);
-        }
+            MovementForce   = MovementForce.Dynamic,
+            DynamicSource   = DynamicSource.Collision,
 
-    }
+            Force           = force,
+            Mass            = dynamic.Mass,
+        };
 
-    void ResolveKineticSource(Actor source, Actor target, DamageComponent component)
-    {
-
-    }
-
-    void ApplyKineticForce(Actor target, Vector2 direction, float force)
-    {
-        // target.Emit.Local(Request.Create, )
+        target.Emit.Local(Request.Create, definition);
     }
 
 
-
-    public void RequestEffects(Actor actor, List<Effect> effects)
+    public void ApplyEffects(Actor actor, List<Effect> effects)
     {
         foreach (var effect in effects)
         {
@@ -97,59 +105,61 @@ public class CombatLogic : RegisteredService, IServiceStep
     }
 
 
-    void ApplyDamage(IDamageable target, int damage)
+    void ApplyDamage(Actor target, int damage)
     {
-        if (target.Invulnerable)
+        if (!CanTakeDamage(target, out var actor))
             return;
-        
-        target.Health -= damage;
+
+        actor.Health -= damage;
     }
 
     public void HandleCombatEvent(Message<Request, CombatEvent> message)
     {
         pending.Add(message.Payload);
     }
+
+
     // ============================================================================
     // QUERIES AND HELPERS
     // ============================================================================
 
-    Vector2 CalculateKineticDirection(Actor source, Actor target)
+    Vector2 CalculateDirection(Actor source, Actor target)
     {
         return (target.Bridge.View.transform.position - source.Bridge.View.transform.position).normalized;
     }
 
-    float CalculateKineticForce(IPhysical source, WeaponAction weapon)
+    bool HasKilled(Actor target)
     {
-        return weapon.ForceCalculation switch
-        {
-            KineticForceCalculation.Fixed           => weapon.BaseForce,
-            KineticForceCalculation.VelocityScaled  => weapon.BaseForce * source.Velocity.magnitude,
-            KineticForceCalculation.MomentumBased   => weapon.BaseForce * source.Velocity.magnitude * source.Mass,
-            _ => weapon.BaseForce,
-        };
+        if (!CanTakeDamage(target, out var actor))
+            return false;
+
+        return actor.Health <= 0;
     }
 
+    bool CanTakeDamage(Actor target, out IDamageable actor)
+    {
+        if (target is IDamageable damageable && !damageable.Invulnerable)
+        {
+            actor = damageable;
+            return true;
+        }
+
+        actor = null;
+        return false;
+    }
 
 
     // ============================================================================
     // PREDICATEs
     // ============================================================================
 
-    bool IsPhysicalSource(Actor source)
+    bool HasDynamicForce(DamageComponent component)
     {
-        return source is IPhysical;
+        return component.ForceMagnitude > 0;
     }
-
-    bool IsKineticWeapon(object source)
-    {
-        return source is WeaponAction instance && instance.AppliesKineticForce;
-    }
-
-
 
 
     public UpdatePriority Priority => ServiceUpdatePriority.Combat;
-
 }
 
 
@@ -159,11 +169,16 @@ public struct DamageComponent
     public int Amount                       { get; init; }
     public List<Effect> Effects             { get; init; }
 
-    public DamageComponent(object source, int amount)
+    /// <summary> force * velocity.magnitude * mass </summary>
+    public float ForceMagnitude             { get; init;}
+
+    public DamageComponent(object source, int amount, float forceMagnitude = 0)
     {
-        Source  = source;
-        Amount  = amount;
-        Effects = new();
+        Source          = source;
+        Amount          = amount;
+        ForceMagnitude  = forceMagnitude;
+
+        Effects         = new();
     }
 }
 

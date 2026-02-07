@@ -2,110 +2,108 @@ using UnityEngine;
 
 
 
+public enum MovementForce
+{
+    Kinematic,
+    Dynamic
+}
 
-public enum MovementAction
+public enum KinematicAction
 {
     Lunge,
     Charge,
     Dash,
-    // etc,
 }
 
-public enum ControllerInputMode
+public enum DynamicSource
+{
+    Collision
+}
+
+public enum ControllerMode
 {
     Ignore,
     Blend,
     AllowOverride,
+    Additive
 }
 
 public enum ControllerPriority
 {
-    Normal      = 0,
-    High        = 25,
-    Interrupt   = 50,
+    Low         = 0,
+    Normal      = 25,
+    High        = 50,
+    Interrupt   = 75,
     Forced      = 100
 }
 
 // ============================================================================
-// MOVEMENT DIRECTIVE
+// BASE TYPES
+// ============================================================================
+
+public class MovementDefinition : Definition
+{
+    public MovementForce   MovementForce    { get; init; }
+    public DynamicSource   DynamicSource    { get; init; }
+    public KinematicAction KinematicAction  { get; init; }
+
+    // DYNAMIC
+    public Vector2 Force                    { get; init; }
+    public float Mass                       { get; init; }
+    
+    // KINEMATIC
+    public float Speed                      { get; init; }
+    public AnimationCurve SpeedCurve        { get; init; }
+    public int DurationFrames               { get; init; }
+
+    // Source
+    public WeaponPhase Phase                { get; init; }
+
+    // Input
+    public InputIntentSnapshot InputIntent  { get; set;  }
+
+    // Config
+    public int  Scope                       { get; set;  }
+    public bool PersistPastScope            { get; init; }
+    public bool PersistPastSource           { get; init; }
+
+    public ControllerPriority Priority      { get; init; }
+}
+
+// ============================================================================
+// DIRECTIVE
 // ============================================================================
 
 public class MovementDirective
 {
-    public object Owner                             { get; init; }
-    public int Scope                                { get; init; }
-    public IMovementController Controller           { get; init; }
-    public MovementCommandDefinition Definition     { get; init; }
+    public object Owner                     { get; init; }
+    public MovementDefinition Definition    { get; init; }
+    public IMovementController Controller   { get; init; }
 }
 
 
-public class MovementCommandDefinition  : Definition
-{
-    public MovementAction Action                    { get; init; }
-
-    public float Speed                              { get; init; }
-    public AnimationCurve SpeedCurve                { get; init; }
-    public int DurationFrame                        { get; init; }
-    public bool PersistPastScope                    { get; init; }
-    public bool PersistPastSource                   { get; init; }
-
-    public WeaponPhase Phase                        { get; init; }
-}
-
 // ============================================================================
-// MOVEMENT COMMANDS
+// CONTROLLERS
 // ============================================================================
 
-
-
-public abstract class MovementCommand
-{
-    public abstract IMovementController CreateController();
-    public abstract MovementCommandDefinition GetDefinition();
-}
-
-public class DashMovementCommand : MovementCommand
-{
-    public MovementCommandDefinition Definition     { get; init; }
-    public InputIntentSnapshot InputIntent          { get; init; }
-    public override IMovementController CreateController()      => new DashController(InputIntent.Direction, InputIntent.LastDirection, Definition.Speed, Definition.DurationFrame);
-    public override MovementCommandDefinition GetDefinition()   => Definition;
-} 
-
-public class LungeMovementCommand : MovementCommand
-{
-    public MovementCommandDefinition Definition     { get; init; }
-    public InputIntentSnapshot InputIntent          { get; init; }
-    public override IMovementController CreateController()     => new LungeController(InputIntent.Aim, Definition.Speed, Definition.DurationFrame, Definition.SpeedCurve);
-    public override MovementCommandDefinition GetDefinition()  => Definition;
-} 
-
-// public class ChargeCommand : MovementCommand
-// {
-//     readonly IHasAim actor;
-//     readonly MovementActionIntent intent;
-//     public override IMovementController CreateController() => new ChargeController(actor.AimDirection, intent.Speed, intent.Duration, intent.SpeedCurve);
-// } 
-
-// ============================================================================
-// MOVEMENT CONTROLLERS
-// ============================================================================
 
 public interface IMovementController
 {
-    bool IsActive                   { get; }
-    ControllerInputMode InputMode   { get; }
-    ControllerPriority  Priority    { get; }
-    float Weight                    { get; }
-
     Vector2 CalculateVelocity(Actor actor);
+
+    float Weight                            { get; }
+    bool  Active                            { get; }
+
+    ControllerMode Mode                     { get; }
+    ControllerPriority Priority             { get; }
 }
 
+    // KINEMATIC
 
 public class DashController : IMovementController
 {
-    readonly Vector2 direction;
     readonly float speed;
+    readonly Vector2 direction;
     readonly FrameTimer timer;
 
     public DashController(Vector2 direction, Vector2 lastDirection, float speed, int duration)
@@ -116,14 +114,11 @@ public class DashController : IMovementController
         timer.Start();
     }
 
-    public Vector2 CalculateVelocity(Actor actor)
-    {
-        return direction * speed;
-    }
+    public Vector2 CalculateVelocity(Actor actor) => direction * speed;
 
-    public bool IsActive                    => !timer.IsFinished;
-    public ControllerInputMode InputMode    => ControllerInputMode.Ignore;
     public float Weight                     => 1f;
+    public bool  Active                     => !timer.IsFinished;
+    public ControllerMode Mode              => ControllerMode.Ignore;
     public ControllerPriority Priority      => ControllerPriority.Interrupt;
 }
 
@@ -151,51 +146,37 @@ public class LungeController : IMovementController
         return maxSpeed * speedMultiplier * direction;
     }
 
-    public bool IsActive                    => !timer.IsFinished;
-    public ControllerInputMode InputMode    => ControllerInputMode.Ignore;
     public float Weight                     => 1f;
+    public bool  Active                     => !timer.IsFinished;
+    public ControllerMode Mode              => ControllerMode.Ignore;
     public ControllerPriority Priority      => ControllerPriority.Normal;
 
 }
 
-public class ImpulseController : IMovementController
+    // DYNAMIC
+
+public class DynamicForceController : IMovementController
 {
-
-    Vector2 currentVelocity;    
-
+    Vector2 currentVelocity;
     readonly float friction = Settings.Movement.FRICTION;
-    readonly float mass;
 
-    bool hasAppliedImpulse;
-
-
-    public ImpulseController(Vector2 impulse, float mass)
+    public DynamicForceController(Vector2 force, float mass)
     {
-        this.mass               = mass;
-        this.currentVelocity    = impulse / mass;
-        this.hasAppliedImpulse  = false;
+        currentVelocity = force / mass;
     }
 
     public Vector2 CalculateVelocity(Actor actor)
     {
-        if (!hasAppliedImpulse)
-        {
-            hasAppliedImpulse = true;
-            return currentVelocity;
-        }
-
-        currentVelocity *= Mathf.Pow(1 - friction, Clock.DeltaTime);
-
+        currentVelocity *= Mathf.Exp(-friction * Clock.DeltaTime);
         return currentVelocity;
     }
 
-
-
-    public bool IsActive                    => currentVelocity.magnitude > 0.01f;
-    public ControllerInputMode InputMode    => ControllerInputMode.Ignore;
     public float Weight                     => 1f;
-    public ControllerPriority Priority      => ControllerPriority.High;
+    public bool  Active                     => currentVelocity.magnitude > 0.01f;
+    public ControllerMode Mode              => ControllerMode.Additive;
+    public ControllerPriority Priority      => ControllerPriority.Forced;
 }
+
 
 
 // REWORK REQUIRED WHEN TARGETING IMPLEMENTED

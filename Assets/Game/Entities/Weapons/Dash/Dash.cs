@@ -71,13 +71,13 @@ public class BaseDash : MovementWeapon
             new WeaponMobility()
             {
                 Trigger             = WeaponPhase.FireEnd,
-                Name                = "DashMobilityDisable",
+                Name                = "DashMobilityEndModifier",
                 Type                = EffectType.Grip,
                 Cancelable          = false,
-                DurationFrames      = 20,
+                DurationFrames      = 15,
                 Modifier            = 1f,
                 ModifyTarget        = .1f,
-                ModifyTimespan      = 20,
+                ModifyTimespan      = .2f,
             },
         };
 
@@ -85,10 +85,11 @@ public class BaseDash : MovementWeapon
         {
             new()
             {
-                Action              = MovementAction.Dash,
+                KinematicAction     = KinematicAction.Dash,
                 Phase               = WeaponPhase.Fire,
+                Scope               = (int)WeaponPhase.Fire,
                 Speed               = 15f,
-                DurationFrame       = 10,
+                DurationFrames      = 10,
                 PersistPastScope    = true,
             }
         };
