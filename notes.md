@@ -19,7 +19,6 @@
 
 >> Dash is weapon? -> Rephrase. Dash should be weapon, dash is equippable weapon?
 
->> replace Debug.LogError
 
 # **Concepts**
 

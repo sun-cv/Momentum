@@ -68,16 +68,30 @@ public class ShieldParry : DamagingWeapon
         {
             new()
             {
-                Prefab              = "HB_ShieldParry",
-                Offset              = new(){ x = 0, y = 0 },
-                FrameStart          = 1,
-                FrameEnd            = 10,
-                Lifetime            = HitboxLifetime.FrameBased,
-                Behavior            = HitboxBehavior.Attached,
-                Phase               = WeaponPhase.Fire,
-                PersistPastSource   = true,
-                AllowMultiHit       = false,
-            }
+                Form                    = new()
+                {
+                    Prefab              = "HB_ShieldParry",
+                    Offset              = new(){ x = 0, y = 0 },
+
+                },
+                Behavior                = new()
+                {
+                    Type                = HitboxBehavior.Attached,
+                    AllowMultiHit       = false,
+                },
+                Direction               = new()
+                {
+                    Scope               = HitboxDirectionScope.Cardinal
+                },
+                Lifetime                = new()
+                {
+                    Type                = HitboxLifetime.FrameBased, 
+                    FrameStart          = 1,
+                    FrameEnd            = 10,
+                    Phase               = WeaponPhase.Fire,
+                    PersistPastSource   = true,
+                },
+            },
         };
     }
 }
@@ -150,15 +164,27 @@ public class ShieldBlock : DamagingWeapon
         {
             new()
             {
-                Prefab              = "HB_ShieldBlock",
-                Offset              = new(){ x = 0, y = 0 },
-                FrameStart          = 1,
-                Behavior            = HitboxBehavior.Attached,
-                Lifetime            = HitboxLifetime.Permanent,
-                Phase               = WeaponPhase.Fire,
-                AvailableDirections = HitboxDirection.Cardinal,
-                AllowMultiHit       = false,
-            }
+                Form                = new()
+                {
+                    Prefab          = "HB_ShieldBlock",
+                    Offset          = new(){ x = 0, y = 0 },
+
+                },
+                Behavior            = new()
+                {
+                    Type            = HitboxBehavior.Attached,
+                    AllowMultiHit   = false,
+                },
+                Direction           = new()
+                {
+                    Scope           = HitboxDirectionScope.Cardinal
+                },
+                Lifetime            = new()
+                {
+                    FrameStart      = 1,
+                    Phase           = WeaponPhase.Fire,
+                },
+            },
         };
     }
 }

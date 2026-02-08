@@ -85,20 +85,42 @@ public class SwordStrike : DamagingWeapon
             }
         };
 
+        DamageComponents    = new()
+        {
+            new()
+            {
+                Amount              = 10,
+                ForceMagnitude      = 1,
+                Effects             = new(),
+            }
+        };
 
         Hitboxes = new()
         {
             new()
             {
-                Prefab              = "HB_SwordSwing",
-                Offset              = new(){ x = 0, y = 0 },
-                FrameStart          = 1,
-                FrameEnd            = 20,
-                Behavior            = HitboxBehavior.Attached,
-                Phase               = WeaponPhase.Fire,
-                AvailableDirections = HitboxDirection.Intercardinal,
-                AllowMultiHit       = false,
-            }
+                Form                = new()
+                {
+                    Prefab          = "HB_SwordSwing",
+                    Offset          = new(){ x = 0, y = 0 },
+
+                },
+                Behavior            = new()
+                {
+                    Type            = HitboxBehavior.Attached,
+                    AllowMultiHit   = false,
+                },
+                Direction           = new()
+                {
+                    Scope           = HitboxDirectionScope.Intercardinal
+                },
+                Lifetime            = new()
+                {
+                    FrameStart      = 1,
+                    FrameEnd        = 20,
+                    Phase           = WeaponPhase.Fire,
+                },
+            },
         };
         
         Animations = new()
@@ -164,19 +186,42 @@ public class SwordCleave : DamagingWeapon
             }
         };
 
+        DamageComponents    = new()
+        {
+            new()
+            {
+                Amount              = 10,
+                ForceMagnitude      = 1,
+                Effects             = new(),
+            }
+        };
+
         Hitboxes = new()
         {
             new()
             {
-                Prefab              = "HB_SwordSwing",
-                Offset              = new(){ x = 0, y = 0 },
-                FrameStart          = 1,
-                FrameEnd            = 20,
-                Behavior            = HitboxBehavior.Attached,
-                Phase               = WeaponPhase.Fire,
-                AvailableDirections = HitboxDirection.Intercardinal,          
-                AllowMultiHit       = false,
-            }
+                Form                = new()
+                {
+                    Prefab          = "HB_SwordSwing",
+                    Offset          = new(){ x = 0, y = 0 },
+
+                },
+                Behavior            = new()
+                {
+                    Type            = HitboxBehavior.Attached,
+                    AllowMultiHit   = false,
+                },
+                Direction           = new()
+                {
+                    Scope           = HitboxDirectionScope.Intercardinal
+                },
+                Lifetime            = new()
+                {
+                    FrameStart      = 1,
+                    FrameEnd        = 20,
+                    Phase           = WeaponPhase.Fire,
+                },
+            },
         };
         Animations = new()
         {
@@ -243,19 +288,42 @@ public class SwordRend : DamagingWeapon
             }
         };
 
+        DamageComponents    = new()
+        {
+            new()
+            {
+                Amount              = 10,
+                ForceMagnitude      = 1,
+                Effects             = new(),
+            }
+        };
+
         Hitboxes = new()
         {
             new()
             {
-                Prefab              = "HB_SwordSwing",
-                Offset              = new(){ x = 0, y = 0 },
-                FrameStart          = 1,
-                FrameEnd            = 20,
-                Behavior            = HitboxBehavior.Attached,
-                Phase               = WeaponPhase.Fire, 
-                AvailableDirections = HitboxDirection.Intercardinal,            
-                AllowMultiHit       = false,
-            }
+                Form                = new()
+                {
+                    Prefab          = "HB_SwordSwing",
+                    Offset          = new(){ x = 0, y = 0 },
+
+                },
+                Behavior            = new()
+                {
+                    Type            = HitboxBehavior.Attached,
+                    AllowMultiHit   = false,
+                },
+                Direction           = new()
+                {
+                    Scope           = HitboxDirectionScope.Intercardinal
+                },
+                Lifetime            = new()
+                {
+                    FrameStart      = 1,
+                    FrameEnd        = 20,
+                    Phase           = WeaponPhase.Fire,
+                },
+            },
         };
         Animations = new()
         {

@@ -18,7 +18,7 @@ public class DevEnv : RegisteredService, IServiceTick
         Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Effects)          .SetLevel(LogLevel.Trace);
+        Logging.For(LogSystem.Combat)           .SetLevel(LogLevel.Debug);
 
 
 
@@ -39,6 +39,7 @@ public class DevEnv : RegisteredService, IServiceTick
 
     public void Tick()
     {
+        Logging.For(LogSystem.Hero).Debug("Health", () => hero.Health);
         Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
         Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
     }

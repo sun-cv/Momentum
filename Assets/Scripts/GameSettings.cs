@@ -3,6 +3,8 @@
 
 
 
+using UnityEngine;
+
 public static class Config
 {
     public static class Timing
@@ -33,6 +35,7 @@ public static class Config
     {
         public const float SPRITE_OVERLAP_LOOKAHEAD = 0.1f;
     }
+
 }
 
 public static class Settings
@@ -40,18 +43,24 @@ public static class Settings
 
     public static class Movement
     {
-        public const float MAX_SPEED                = 25f;
-        public const float ACCELERATION             = 25f;
-        public const float FRICTION                 = 5f;
-        public const float MOMENTUM_RETENTION       = 0f;
-        public const float INERTIA                  = .2f;
-        public const float FORCE_THRESHOLD          = 2f;
+        public const float MAX_SPEED                    = 25f;
+        public const float ACCELERATION                 = 25f;
+        public const float FRICTION                     = 5f;
+        public const float MOMENTUM_RETENTION           = 0f;
+        public const float INERTIA                      = .2f;
+        public const float FORCE_THRESHOLD              = 2f;
 
-        public static float FACING_SWITCH_DELAY     = 1f;
-        public static float FACING_CLOCKWISE        = 0.1f;
-        public static float FACING_COUNTER_CLOCKWISE= 0.8f; 
+        public static float FACING_SWITCH_DELAY         = 1f;
+        public static float FACING_CLOCKWISE            = 0.1f;
+        public static float FACING_COUNTER_CLOCKWISE    = 0.8f; 
 
-        public const bool NORMALIZE_VELOCITY        = false;
+        public static bool NORMALIZE_VELOCITY           = false;
+    }
+
+    public static class Debug
+    {
+        public static bool SHOW_HITBOXES                = true;
+        public static Color GIZMO_COLOR                 = Color.red;
     }
 
 }
@@ -79,7 +88,8 @@ public static class ServiceUpdatePriority
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
     public static UpdatePriority SpriteDepthSorting = new(UpdatePhase.Physics,  90);
 
-    public static UpdatePriority Combat             = new(UpdatePhase.Resolve,  10);
+    public static UpdatePriority TriggerCoordinator = new(UpdatePhase.Resolve,  10);  
+    public static UpdatePriority Combat             = new(UpdatePhase.Resolve,  20);
 
     public static UpdatePriority SpriteLayering     = new(UpdatePhase.Render,   10);
     public static UpdatePriority AnimationHandler   = new(UpdatePhase.Render,   20);

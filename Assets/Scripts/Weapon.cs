@@ -57,6 +57,12 @@ public class MovementWeapon     : WeaponAction { }
 public class WeaponAction       : Definition
 {
     // ============================================================================
+    // DAMAGE
+    // ============================================================================
+    public int Damage                               { get; init; } = 0;
+    public List<DamageComponent> DamageComponents   { get; init; } = new();
+
+    // ============================================================================
     // IDENTITY
     // ============================================================================
     
@@ -172,8 +178,8 @@ public class WeaponAction       : Definition
 
     /// <summary>Does this weapon apply kinetic force on impact?</summary>
     public bool AppliesDynamicForce                 { get; init; } = false;
-    /// <summary>Base force value (meaning depends on ForceCalculation)</summary>
-    public float Force                              { get; init; } = 0f;
+    /// <summary>Force value multiplier</summary>
+    public float ForceMagnitude                     { get; init; } = 0f;
 
     /// ============================================================================
     /// Hitboxes

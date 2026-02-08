@@ -45,6 +45,7 @@ public enum LogSystem
     Weapons,
     Hitboxes,
     Equipment,
+    Combat,
     
     // Player & Input
     Hero,
@@ -116,6 +117,9 @@ public class Logger
 
     private bool IsEnabled(LogLevel logLevel)
     {
+        if (level == LogLevel.None)
+            return false;
+
         return logLevel >= level || logLevel >= Logging.GlobalLevel;
     }
 

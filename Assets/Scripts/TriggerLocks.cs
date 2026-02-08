@@ -13,10 +13,10 @@ public class TriggerLocks : RegisteredService
 
     public override void Initialize()
     {
-        Link.Global<Message<Request, MLock>>(HandleLockRequest);
+        Link.Global<Message<Request, LockEvent>>(HandleLockRequest);
     }
 
-    void HandleLockRequest(Message<Request, MLock> message)
+    void HandleLockRequest(Message<Request, LockEvent> message)
     {
         Response response = Response.Declined;       
 
@@ -45,8 +45,8 @@ public class TriggerLocks : RegisteredService
                 break;
         }
 
-        Emit.Global<MLockResponse>(new(message.Id, response));
-        Emit.Global(Publish.Changed, new MLocks(Snapshot.ReadOnly(locks)));
+        Emit.Global<LockEventResponse>(new(message.Id, response));
+        Emit.Global(Publish.Changed, new LockPublishEvent(Snapshot.ReadOnly(locks)));
     }
 
 
@@ -77,34 +77,34 @@ public class TriggerLocks : RegisteredService
 } 
 
 
-public readonly struct MLock
+public readonly struct LockEvent
 {
     public Capability Action { get; init; }
     public string Origin     { get; init; }
 
-    public MLock(Capability action, string origin)
+    public LockEvent(Capability action, string origin)
     {
         Action  = action;
         Origin  = origin;
     }
 }
 
-public readonly struct MLocks
+public readonly struct LockPublishEvent
 {
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get;}
 
-    public MLocks(IReadOnlyDictionary<Capability, IReadOnlyList<string>> locks)
+    public LockPublishEvent(IReadOnlyDictionary<Capability, IReadOnlyList<string>> locks)
     {
         Locks   = locks;
     }
 }
 
-public readonly struct MLockResponse: ISystemEvent
+public readonly struct LockEventResponse: ISystemEvent
 {
     public readonly Guid Id             { get; }
     public readonly Response Response   { get; }
 
-    public MLockResponse(Guid id, Response response)
+    public LockEventResponse(Guid id, Response response)
     {
         Id          = id;
         Response    = response;

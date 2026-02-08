@@ -18,60 +18,85 @@ public enum HitboxLifetime
     Permanent
 }
 
-public enum HitboxDirection
+public enum HitboxDirectionScope
 {
     Cardinal,
     Intercardinal,
 }
 
+public enum HitboxDirectionSource
+{
+    Input,
+    Explicit,
+    OwnerFacing
+}
+
 public class HitboxDefinition : Definition
+{
+    public HitboxFormDefinition      Form       { get; init; }
+    public HitboxBehaviorDefinition  Behavior   { get; init; }
+    public HitboxDirectionDefinition Direction  { get; init; }
+    public HitboxLifetimeDefinition  Lifetime   { get; init; }
+}
+
+public class HitboxDirectionDefinition : Definition
+{
+    public HitboxDirectionSource Type           { get; init; }
+    public HitboxDirectionScope Scope           { get; init; }
+    public Vector2 Explicit                     { get; set;  }
+    public InputIntentSnapshot Input            { get; set;  }
+}
+
+
+public class HitboxFormDefinition : Definition
 {
     public string Prefab                        { get; init; }
     public Vector3 Offset                       { get; init; }
+}
+
+public class HitboxBehaviorDefinition : Definition
+{
+    public HitboxBehavior Type                  { get; init; }
+
+    public bool AllowMultiHit                   { get; init; }
+    public float MultiHitInterval               { get; init; }
+    // Projectile
+    public float ProjectileSpeed                { get; init; }
+    public Vector3 ProjectileDirection          { get; init; }
+}
+
+public class HitboxLifetimeDefinition : Definition
+{
+    public HitboxLifetime Type                  { get; init; }
     public int FrameStart                       { get; init; }
     public int FrameEnd                         { get; init; }
     public bool PersistPastSource               { get; init; }
-    public bool AllowMultiHit                   { get; init; }
-    public HitboxBehavior Behavior              { get; init; }
-    public HitboxLifetime Lifetime              { get; init; }
-    public HitboxDirection AvailableDirections  { get; init; }
-    public float ProjectileSpeed                { get; init; }
-    public Vector3 ProjectileDirection          { get; init; }
 
-    public WeaponAction Activation              { get; init; }
     public WeaponPhase Phase                    { get; init; }
 
-
-
-    public Func<Actor, bool> ConditionalRelease { get; init; }
+    public Func<Actor, bool> ConditionalRelease { get; init; } 
 }
+
+
 
 public class PendingHitbox      
 {       
     public Guid RequestId                       { get; init; }
     public Actor Owner                          { get; init; }
     public HitboxDefinition Definition          { get; init; }
-    public InputIntentSnapshot Input            { get; init; }
+    public object Package                       { get; init; }
 }       
 
 public class HitboxInstance : Instance      
-{       
-    public Guid HitboxId                        { get; init; }
+{           
     public Actor Owner                          { get; init; }
-    public WeaponAction Weapon                  { get; set;  }
+    public GameObject Hitbox                    { get; set;  }
     public HitboxDefinition Definition          { get; init; }
-    public InputIntentSnapshot Input            { get; init; }
 
     public int CurrentFrame                     { get; set;  }
-    public GameObject Hitbox                    { get; set;  }
+    public object Package                       { get; init; }
 }       
 
-public struct HitEvent      
-{       
-    public Guid HitboxId                        { get; init; }
-    public Actor Owner                          { get; set;  }
-    public Actor Target                         { get; init; }
-};
 
 // ============================================================================
 // HITBOX MANAGER
@@ -82,24 +107,21 @@ public class HitboxManager : RegisteredService, IServiceTick
 {
     readonly Logger Log = Logging.For(LogSystem.Hitboxes);
 
-    public static bool ShowDebugGizmos                          = true;
+    public static bool ShowDebugGizmos                          = Settings.Debug.SHOW_HITBOXES;
 
     readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
 
     readonly Queue<PendingHitbox>   pending                     = new();
-    readonly Queue<HitEvent>        hitEvents                   = new();
 
     public override void Initialize()
     {
-        Link.Global<Message<Request, MHitboxDeclaration>>(HandleHitboxCreateRequest);
-        Link.Global<Message<Request, MHitboxIdentifier >>(HandleHitboxDestroyRequest);
+        Link.Global<Message<Request, HitboxDeclarationEvent>>(HandleHitboxCreateRequest);
+        Link.Global<Message<Request, HitboxIdEvent >>(HandleHitboxDestroyRequest);
     }
-
 
     public void Tick()
     {
         ProcessPending();
-        ProcessHitEvents();
         ProcessActive();
 
         DebugLog();
@@ -121,23 +143,25 @@ public class HitboxManager : RegisteredService, IServiceTick
     {
         var toRemove = new List<Guid>();
 
-        foreach (var (id, hitbox) in activeHitboxes)
+        foreach (var (id, instance) in activeHitboxes)
         {
-            hitbox.CurrentFrame++;
+            var hitbox = instance.Definition;
 
-            if (hitbox.CurrentFrame == hitbox.Definition.FrameStart)
-                ActivateHitbox(hitbox);
+            instance.CurrentFrame++;
+
+            if (instance.CurrentFrame == hitbox.Lifetime.FrameStart)
+                ActivateHitbox(instance);
 
 
-            if (hitbox.Definition.Lifetime == HitboxLifetime.Conditional)
+            if (hitbox.Lifetime.Type == HitboxLifetime.Conditional)
             {
-                if (!CheckConditionalHitbox(hitbox))
+                if (!CheckConditionalHitbox(instance))
                     continue;
             }
 
-            if (hitbox.CurrentFrame == hitbox.Definition.FrameEnd)
+            if (instance.CurrentFrame == hitbox.Lifetime.FrameEnd)
             {
-                DeactivateHitbox(hitbox);
+                DeactivateHitbox(instance);
                 toRemove.Add(id);
             }
         }
@@ -154,7 +178,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     bool CheckConditionalHitbox(HitboxInstance hitbox)
     {
-        return hitbox.Definition.ConditionalRelease(hitbox.Owner);
+        return hitbox.Definition.Lifetime.ConditionalRelease(hitbox.Owner);
     }
 
     void DeactivateHitbox(HitboxInstance hitbox)
@@ -172,34 +196,33 @@ public class HitboxManager : RegisteredService, IServiceTick
     {
         pending.Owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 
-        Vector2 intentVector        = GetIntentVector(pending);
+        Vector2 intentVector        = GetSpawnDirection(pending);
         Quaternion intentRotation   = Orientation.ToRotation(intentVector);
-        Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Offset);
+        Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Form.Offset);
 
-        var prefab      = Assets.Get(pending.Definition.Prefab);
+        var prefab      = Assets.Get(pending.Definition.Form.Prefab);
         var hitbox      = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
         
         var instance    = CreateInstance(pending);
         instance.Hitbox = hitbox;
 
         var controller  = hitbox.AddComponent<HitboxController>();
-        controller.Configure(instance.HitboxId, instance.Owner, this);
+        controller.Bind(this, instance.Owner, instance.RuntimeID, instance.Definition, instance.Package);
 
         ApplyHitboxBehavior(hitbox, instance);
 
-        activeHitboxes.Add(instance.HitboxId, instance);
+        activeHitboxes.Add(instance.RuntimeID, instance);
 
-        PublishHitbox(pending.RequestId, instance.HitboxId);
+        PublishHitbox(pending.RequestId, instance.RuntimeID);
     }
 
     HitboxInstance CreateInstance(PendingHitbox pending)
     {
         HitboxInstance instance = new()
         {
-            HitboxId    = Guid.NewGuid(),
             Owner       = pending.Owner,
             Definition  = pending.Definition,
-            Input       = pending.Input,
+            Package     = pending.Package,
         };
 
         return instance;
@@ -208,7 +231,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void ApplyHitboxBehavior(GameObject hitbox, HitboxInstance instance)
     {
-        switch (instance.Definition.Behavior)
+        switch (instance.Definition.Behavior.Type)
         {
             case HitboxBehavior.Attached:
                 hitbox.transform.SetParent(instance.Owner.Bridge.View.transform);
@@ -257,61 +280,28 @@ public class HitboxManager : RegisteredService, IServiceTick
         if (!activeHitboxes.TryGetValue(hitboxId, out var instance))
             return false;
 
-        if (instance.Definition.PersistPastSource && instance.Definition.Lifetime == HitboxLifetime.FrameBased)
+        if (instance.Definition.Lifetime.PersistPastSource && instance.Definition.Lifetime.Type == HitboxLifetime.FrameBased)
             return false;
 
         return true;
     }
 
-// ============================================================================
-// HIT HANDLERS    - REWORK REQUIRED
-// ============================================================================
-
-    void ProcessHitEvents()
-    {
-        while (hitEvents.TryDequeue(out var hitEvent))
-            ProcessHit(hitEvent);
-    }
-
-
-    void ProcessHit(HitEvent hitEvent)
-    {
-        if (!activeHitboxes.TryGetValue(hitEvent.HitboxId, out var hitbox))
-            return;
-
-        if (!ShouldProcessHit(hitbox, hitEvent.Target))
-            return;
-    }
-
-
-    bool ShouldProcessHit(HitboxInstance hitbox, Actor target)
-    {
-        if (hitbox.Owner == target)
-            return false;
-
-        return true;
-    }
-
-    public void DetectHit(HitEvent hitEvent)
-    {
-        hitEvents.Enqueue(hitEvent);
-    }
 
     // ============================================================================
     // EVENT HANDLERS
     // ============================================================================
 
 
-    void HandleHitboxCreateRequest(Message<Request, MHitboxDeclaration> message)
+    void HandleHitboxCreateRequest(Message<Request, HitboxDeclarationEvent> message)
     {
         var owner       = message.Payload.Owner;
         var definition  = message.Payload.Definition;
-        var input       = message.Payload.Input;
+        var package     = message.Payload.Package;
 
-        pending.Enqueue(new() { Owner = owner, Definition = definition, RequestId = message.Id, Input = input});
+        pending.Enqueue(new() { RequestId = message.Id, Owner = owner, Definition = definition, Package = package });
     }
 
-    void HandleHitboxDestroyRequest(Message<Request, MHitboxIdentifier> message)
+    void HandleHitboxDestroyRequest(Message<Request, HitboxIdEvent> message)
     {
         var hitboxId = message.Payload.HitboxId;
 
@@ -321,20 +311,26 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     void PublishHitbox(Guid requestId, Guid instanceId)
     {
-        Emit.Global(requestId, Response.Success, new MHitboxIdentifier(instanceId));
+        Emit.Global(requestId, Response.Success, new HitboxIdEvent(instanceId));
     }
 
     // ============================================================================
     // HELPERS
     // ============================================================================
 
-    Vector2 GetIntentVector(PendingHitbox pending)
+    Vector2 GetSpawnDirection(PendingHitbox pending)
     {
-        return pending.Definition.AvailableDirections switch
+        return pending.Definition.Direction.Type switch
         {
-            HitboxDirection.Cardinal        => pending.Input.Aim.Cardinal,
-            HitboxDirection.Intercardinal   => pending.Input.Aim.Intercardinal,
-            _ => pending.Input.Aim.Intercardinal
+            HitboxDirectionSource.Input => pending.Definition.Direction.Scope switch
+            {
+                HitboxDirectionScope.Cardinal       => pending.Definition.Direction.Input.Aim.Cardinal,
+                HitboxDirectionScope.Intercardinal  => pending.Definition.Direction.Input.Aim.Intercardinal,
+                _ => pending.Definition.Direction.Input.Aim.Intercardinal
+            },
+            HitboxDirectionSource.Explicit          => pending.Definition.Direction.Explicit,
+            HitboxDirectionSource.OwnerFacing       => pending.Owner is IOrientable instance ? instance.Facing : Vector2.right,
+            _ => Vector2.right
         };
     }
 
@@ -343,33 +339,31 @@ public class HitboxManager : RegisteredService, IServiceTick
     {
         Log.Trace("Active", () => activeHitboxes.Count);
     }
-    // void Link<T>(Action<T> handler) where T : IEvent    => EventBus<T>.Subscribe(handler);
-    // void Emit<T>(T evt) where T : IEvent                => EventBus<T>.Raise(evt);
 
     public UpdatePriority Priority => ServiceUpdatePriority.HitboxManager;
 }
 
 
-public readonly struct MHitboxDeclaration
+public readonly struct HitboxDeclarationEvent
 {
     public readonly Actor Owner                 { get; init; }
     public readonly HitboxDefinition Definition { get; init; }
-    public readonly InputIntentSnapshot Input   { get; init; }
+    public readonly object Package              { get; init; }
 
-    public MHitboxDeclaration(Actor owner, HitboxDefinition definition, InputIntentSnapshot input)
+    public HitboxDeclarationEvent(Actor owner, HitboxDefinition definition, object package)
     {
         Owner       = owner;
         Definition  = definition;
-        Input       = input;
+        Package     = package;
     }
 
 }
 
-public readonly struct MHitboxIdentifier
+public readonly struct HitboxIdEvent
 {
     public readonly Guid HitboxId               { get; init; }
 
-    public MHitboxIdentifier(Guid hitboxId)
+    public HitboxIdEvent(Guid hitboxId)
     {
         HitboxId = hitboxId;
     }

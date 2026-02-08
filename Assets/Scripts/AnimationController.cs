@@ -42,8 +42,8 @@ public class AnimationController : IServiceTick
 
         CacheClipDurations();
 
-        owner.Emit.Link.Local<Message<Request, MAnimation>>(HandleAnimationRequest);
-        owner.Emit.Link.Local<Message<Request, MAnimationDuration>>(HandleAnimationDurationRequest);
+        owner.Emit.Link.Local<Message<Request, AnimationEvent>>(HandleAnimationRequest);
+        owner.Emit.Link.Local<Message<Request, AnimationDuration>>(HandleAnimationDurationRequest);
     }
 
     public void Tick()
@@ -101,7 +101,7 @@ public class AnimationController : IServiceTick
     }
 
     // REWORK REQUIRED CANCEL ANIMATION
-    void HandleAnimationRequest(Message<Request, MAnimation> evt)
+    void HandleAnimationRequest(Message<Request, AnimationEvent> evt)
     {
         switch(evt.Action)
         {
@@ -113,10 +113,10 @@ public class AnimationController : IServiceTick
         }
     }
 
-    void HandleAnimationDurationRequest(Message<Request, MAnimationDuration> message)
+    void HandleAnimationDurationRequest(Message<Request, AnimationDuration> message)
     {
         var duration = clipDurations[message.Payload.Request.Name];
-        owner.Emit.Local(message.Id, Response.Completed, new MAnimationDuration(message.Payload.Request, duration));
+        owner.Emit.Local(message.Id, Response.Completed, new AnimationDuration(message.Payload.Request, duration));
     }
 
     void CacheClipDurations()
@@ -156,29 +156,29 @@ public class AnimationController : IServiceTick
 // ============================================================================
 
 
-public readonly struct MAnimation
+public readonly struct AnimationEvent
 {
     public readonly object Owner                { get; init; }
     public readonly AnimatorRequest Request     { get; init; }
 
-    public MAnimation(object owner, AnimatorRequest request)
+    public AnimationEvent(object owner, AnimatorRequest request)
     {
         Owner   = owner;
         Request = request;   
     }
 }
 
-public readonly struct MDisableAnimation
+public readonly struct DisableAnimation
 {
     
 }
 
-public readonly struct MAnimationDuration
+public readonly struct AnimationDuration
 {
     public readonly AnimatorRequest Request     { get; init; }
     public readonly float Duration              { get; init; } 
 
-    public MAnimationDuration(AnimatorRequest request, float duration = 0)
+    public AnimationDuration(AnimatorRequest request, float duration = 0)
     {
         Request     = request;   
         Duration    = duration;

@@ -379,6 +379,7 @@ public class GlobalEventHandler<TResponse> where TResponse : ISystemEvent
     public void Clear() => pendingIds.Clear();
     public int PendingCount => pendingIds.Count;
 }
+
 public class LocalEventHandler<TResponse> where TResponse : ISystemEvent
 {
     readonly Emit emit;
@@ -402,10 +403,8 @@ public class LocalEventHandler<TResponse> where TResponse : ISystemEvent
 
     void Receive(TResponse response)
     {
-        Debug.Log("Receive");
         if (!pendingIds.Remove(response.Id))
             return;
-        Debug.Log("Response");
 
         onResponse(response);
     }

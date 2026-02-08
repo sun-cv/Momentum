@@ -51,8 +51,8 @@ public class MovementEngine : IServiceTick
 
         modifierHandler     = new(actor);
 
-        owner.Emit.Link.Local<Message<Request, MMovementDirective>> (HandleMovementDirective);
-        owner.Emit.Link.Local<Message<Request, MClearMovement>>     (HandleMovementClear);
+        owner.Emit.Link.Local<Message<Request, MovementEvent>> (HandleMovementDirective);
+        owner.Emit.Link.Local<Message<Request, ClearMovementScopeEvent>>     (HandleMovementClear);
 
         SetSpeed();
         SetMass();
@@ -223,7 +223,7 @@ public class MovementEngine : IServiceTick
     // EVENTS
     // =====================================================a=======================
     
-    void HandleMovementDirective(Message<Request, MMovementDirective> message)
+    void HandleMovementDirective(Message<Request, MovementEvent> message)
     {
         var owner       = message.Payload.Owner;
         var Definition  = message.Payload.Definition;
@@ -232,7 +232,7 @@ public class MovementEngine : IServiceTick
     }
 
 
-    void HandleMovementClear(Message<Request, MClearMovement> message)
+    void HandleMovementClear(Message<Request, ClearMovementScopeEvent> message)
     {
         var payload = message.Payload;
 
@@ -309,24 +309,24 @@ public class MovementEngine : IServiceTick
 // EVENTS
 // ============================================================================
 
-public readonly struct MMovementDirective
+public readonly struct MovementEvent
 {
     public readonly object Owner                    { get; init; }
     public readonly MovementDefinition Definition   { get; init; }
 
-    public MMovementDirective(object owner, MovementDefinition definition)
+    public MovementEvent(object owner, MovementDefinition definition)
     {
         Owner       = owner;
         Definition  = definition;
     }
 }
 
-public readonly struct MClearMovement
+public readonly struct ClearMovementScopeEvent
 {
     public readonly object Owner                { get; init; }
     public readonly int Scope                   { get; init; }
 
-    public MClearMovement(object owner, int scope)
+    public ClearMovementScopeEvent(object owner, int scope)
     {
         Owner   = owner;
         Scope   = scope;
@@ -349,7 +349,7 @@ public static class MovementControllerFactory
                 new DashController(definition.InputIntent.Direction, definition.InputIntent.LastDirection, definition.Speed, definition.DurationFrames),
 
             (MovementForce.Kinematic, KinematicAction.Lunge, IMovableActor movable) => 
-                new LungeController(definition.InputIntent.Direction, definition.Speed, definition.DurationFrames, definition.SpeedCurve),
+                new LungeController(definition.InputIntent.Aim, definition.Speed, definition.DurationFrames, definition.SpeedCurve),
 
             _ => null
         };

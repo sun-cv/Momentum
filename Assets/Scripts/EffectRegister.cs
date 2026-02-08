@@ -62,16 +62,16 @@ public class EffectRegister
     public EffectRegister(Actor actor)
     {
         owner = actor;
-        owner.Emit.Link.Local<Request, MEffectDeclaration>(HandleEffectRequest);
-        owner.Emit.Link.Local<Request, MEffectInstance>   (HandleEffectCancellation);
+        owner.Emit.Link.Local<Request, EffectDeclarationEvent>(HandleEffectRequest);
+        owner.Emit.Link.Local<Request, EffectInstanceEvent>   (HandleEffectCancellation);
     } 
 
-    void HandleEffectRequest(Message<Request, MEffectDeclaration> message)
+    void HandleEffectRequest(Message<Request, EffectDeclarationEvent> message)
     {                    
         RegisterEffect(message.Payload.Runtime, message.Payload.Effect);
     }
 
-    void HandleEffectCancellation(Message<Request, MEffectInstance> message)
+    void HandleEffectCancellation(Message<Request, EffectInstanceEvent> message)
     {
         CancelEffect(message.Payload.Instance.Effect);
     }
@@ -80,9 +80,9 @@ public class EffectRegister
     {
         var instance = new EffectInstance(runtime, effect);
 
-        instance.OnApply   += () => owner.Emit.Local(Guid.NewGuid(), Publish.Activated,   new MEffectInstance(instance));
-        instance.OnClear   += () => owner.Emit.Local(Guid.NewGuid(), Publish.Deactivated, new MEffectInstance(instance));
-        instance.OnCancel  += () => owner.Emit.Local(Guid.NewGuid(), Publish.Canceled,    new MEffectInstance(instance));
+        instance.OnApply   += () => owner.Emit.Local(Guid.NewGuid(), Publish.Activated,   new EffectInstanceEvent(instance));
+        instance.OnClear   += () => owner.Emit.Local(Guid.NewGuid(), Publish.Deactivated, new EffectInstanceEvent(instance));
+        instance.OnCancel  += () => owner.Emit.Local(Guid.NewGuid(), Publish.Canceled,    new EffectInstanceEvent(instance));
         
         RegisterTriggerLock(instance);
         RegisterDebugLog(instance);
@@ -108,9 +108,9 @@ public class EffectRegister
             
         foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => owner.Emit.Local(Request.Lock,   new MLock(action, instance.Effect.Name));
-            instance.OnClear   += () => owner.Emit.Local(Request.Unlock, new MLock(action, instance.Effect.Name));
-            instance.OnCancel  += () => owner.Emit.Local(Request.Unlock, new MLock(action, instance.Effect.Name));
+            instance.OnApply   += () => owner.Emit.Local(Request.Lock,   new LockEvent(action, instance.Effect.Name));
+            instance.OnClear   += () => owner.Emit.Local(Request.Unlock, new LockEvent(action, instance.Effect.Name));
+            instance.OnCancel  += () => owner.Emit.Local(Request.Unlock, new LockEvent(action, instance.Effect.Name));
         }
     }
 
@@ -164,23 +164,23 @@ public class EffectRegister
 
 
 
-public readonly struct MEffectDeclaration
+public readonly struct EffectDeclarationEvent
 {
     public Effect Effect                    { get; init; }
     public Runtime Runtime                  { get; init; }
 
-    public MEffectDeclaration(Runtime runtime, Effect effect)
+    public EffectDeclarationEvent(Runtime runtime, Effect effect)
     {
         Effect  = effect;
         Runtime = runtime;
     }
 }
 
-public readonly struct MEffectInstance
+public readonly struct EffectInstanceEvent
 {
     public EffectInstance Instance          { get; init; }
 
-    public MEffectInstance(EffectInstance instance)
+    public EffectInstanceEvent(EffectInstance instance)
     {
         Instance    = instance;
     }
@@ -190,7 +190,7 @@ public readonly struct MEffectInstance
 public class EffectCache : IDisposable
 {
     readonly Emit emit;
-    readonly EventBinding<Message<Publish, MEffectInstance>> binding;
+    readonly EventBinding<Message<Publish, EffectInstanceEvent>> binding;
     readonly List<EffectInstance> activeEffects = new();
 
     readonly Func<EffectInstance, bool> filter;
@@ -204,10 +204,10 @@ public class EffectCache : IDisposable
         this.emit   = emit;
         this.filter = filter;
 
-        this.emit.Link.Local<Message<Publish, MEffectInstance>>(HandleEffectPublish);
+        this.emit.Link.Local<Message<Publish, EffectInstanceEvent>>(HandleEffectPublish);
     }
 
-    public void HandleEffectPublish(Message<Publish, MEffectInstance> message)
+    public void HandleEffectPublish(Message<Publish, EffectInstanceEvent> message)
     {
         var instance = message.Payload.Instance;
 
@@ -233,7 +233,7 @@ public class EffectCache : IDisposable
 
     public void Bind(LocalEventbus eventbus)
     {
-        eventbus.Subscribe<Message<Publish, MEffectInstance> >(HandleEffectPublish);
+        eventbus.Subscribe<Message<Publish, EffectInstanceEvent> >(HandleEffectPublish);
     }
 
     public IReadOnlyList<EffectInstance> Instances => activeEffects.ToList();

@@ -78,7 +78,7 @@ public class EquipmentManager
         if (!slot.Equip(item))
             return false;        
 
-        owner.Emit.Local(Publish.Equipped, new MEquipmentChange(owner, item, item.SlotType));
+        owner.Emit.Local(Publish.Equipped, new EquipmentChangeEvent(owner, item, item.SlotType));
 
         DebugLog();
         return true;
@@ -92,7 +92,7 @@ public class EquipmentManager
         var item = slot.Unequip();
 
         if (item != null)
-            owner.Emit.Local(Publish.Unequipped, new MEquipmentChange(owner, item, item.SlotType));
+            owner.Emit.Local(Publish.Unequipped, new EquipmentChangeEvent(owner, item, item.SlotType));
         
         DebugLog();
         return item;
@@ -130,13 +130,13 @@ public class EquipmentManager
 }
 
 
-public readonly struct MEquipmentChange
+public readonly struct EquipmentChangeEvent
 {
     public readonly Actor Owner              { get; init; }
     public readonly Equipment Equipment      { get; init; }
     public readonly EquipmentSlotType Slot   { get; init; }
 
-    public MEquipmentChange(Actor owner, Equipment equipment, EquipmentSlotType slot)
+    public EquipmentChangeEvent(Actor owner, Equipment equipment, EquipmentSlotType slot)
     {
         Owner       = owner;
         Equipment   = equipment;

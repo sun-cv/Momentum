@@ -89,7 +89,7 @@ public class Lifecycle : IServiceStep
 
     void PublishState()
     {
-        owner.Emit.Local(Publish.StateChange, new MLifecycleChange(owner, state)) ;
+        owner.Emit.Local(Publish.StateChange, new LifecycleEvent(owner, state)) ;
     }
 
     public bool IsAlive => state == State.Alive;
@@ -202,7 +202,7 @@ public class AliveStateHandler : ILifecycleStateHandler
     void TriggerThreshold(HealthThreshold threshold)
     {
         foreach (var effect in threshold.Effects)
-            owner.Emit.Local(Request.Create, new MEffectDeclaration(owner,effect));
+            owner.Emit.Local(Request.Create, new EffectDeclarationEvent(owner,effect));
     }
     
     void ProcessHealthChangeAlerts()
@@ -211,7 +211,7 @@ public class AliveStateHandler : ILifecycleStateHandler
 
         if (Mathf.Abs(currentPercent - lastHealthPercent) > 0.01f)
         {
-            owner.Emit.Local( Publish.Changed, new MHealth(owner, actor.Health, actor.MaxHealth, lastHealthPercent, currentPercent));
+            owner.Emit.Local( Publish.Changed, new HealthEvent(owner, actor.Health, actor.MaxHealth, lastHealthPercent, currentPercent));
             lastHealthPercent = currentPercent;
         }
     }
@@ -254,7 +254,7 @@ public class DyingStateHandler : ILifecycleStateHandler
     string deathAnimation;
     float  deathAnimationDuration;
     
-    LocalEventHandler<Message<Response, MAnimationDuration>> animationDurationHandler;
+    LocalEventHandler<Message<Response, AnimationDuration>> animationDurationHandler;
 
     public DyingStateHandler(Actor owner, IDamageable actor, LifecycleDefinition def)
     {
@@ -323,13 +323,13 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void AlertDeath()
     {
-        owner.Emit.Local( Publish.Triggered, new MActorDeathEvent(owner));
+        owner.Emit.Local( Publish.Triggered, new ActorDeathEvent(owner));
     }
 
     void PlayDeathAnimation()
     {
         deathAnimation = SelectDeathAnimation();
-        owner.Emit.Local(Request.Start, new MAnimation(owner, new AnimatorRequest(deathAnimation) { AllowInterrupt = false }));
+        owner.Emit.Local(Request.Start, new AnimationEvent(owner, new AnimatorRequest(deathAnimation) { AllowInterrupt = false }));
     }
 
         // Rework required further Damage type animations?
@@ -345,10 +345,10 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void GetDeathAnimationDuration()
     {
-        animationDurationHandler.Send(Request.Get, new MAnimationDuration(new AnimatorRequest(deathAnimation)));  
+        animationDurationHandler.Send(Request.Get, new AnimationDuration(new AnimatorRequest(deathAnimation)));  
     }
 
-    void HandleAnimationDuration(Message<Response, MAnimationDuration> response)
+    void HandleAnimationDuration(Message<Response, AnimationDuration> response)
     {
         deathAnimationDuration = response.Payload.Duration;
     }
@@ -357,7 +357,7 @@ public class DyingStateHandler : ILifecycleStateHandler
     {
         foreach (var effect in definition.OnDeathEffects)
         {
-            owner.Emit.Local(Request.Create, new MEffectDeclaration(owner, effect));
+            owner.Emit.Local(Request.Create, new EffectDeclarationEvent(owner, effect));
         }
     }
 
@@ -474,7 +474,7 @@ public class HealthThreshold
 
 
 
-public readonly struct MHealth
+public readonly struct HealthEvent
 {
     public readonly Actor Owner             { get; init; }
     public readonly float Health            { get; init; }
@@ -482,7 +482,7 @@ public readonly struct MHealth
     public readonly float CurrentPercent    { get; init; }
     public readonly float LastPercent       { get; init; }
 
-    public MHealth(Actor owner, float health, float maxHealth, float current, float last)
+    public HealthEvent(Actor owner, float health, float maxHealth, float current, float last)
     {
         Owner           = owner;
         Health          = health;
@@ -493,23 +493,23 @@ public readonly struct MHealth
 }
 
 
-public readonly struct MLifecycleChange
+public readonly struct LifecycleEvent
 {
     public readonly Actor Owner             { get; init; }
     public readonly Lifecycle.State State   { get; init; }
 
-    public MLifecycleChange(Actor owner, Lifecycle.State state)
+    public LifecycleEvent(Actor owner, Lifecycle.State state)
     {
         Owner   = owner;
         State   = state;
     }
 }
 
-public readonly struct MActorDeathEvent
+public readonly struct ActorDeathEvent
 {
     public readonly Actor Owner             { get; init; }
 
-    public MActorDeathEvent(Actor owner)
+    public ActorDeathEvent(Actor owner)
     {
         Owner   = owner;
     }

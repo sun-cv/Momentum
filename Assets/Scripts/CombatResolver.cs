@@ -5,9 +5,10 @@ using UnityEngine;
 
 
 
-public class CombatDamage : RegisteredService, IServiceStep
+public class CombatResolver : RegisteredService, IServiceStep
 {
-    
+    readonly Logger Log = Logging.For(LogSystem.Combat);
+
     List<CombatEvent> pending = new();
 
     public override void Initialize()
@@ -25,6 +26,7 @@ public class CombatDamage : RegisteredService, IServiceStep
     {
         foreach (var combat in pending)
         {
+            Debug.Log("Processing event");
             ProcessEvent(combat);
         }
 
@@ -38,25 +40,25 @@ public class CombatDamage : RegisteredService, IServiceStep
         var target      = combat.Target;
         var components  = combat.Package.Components;
 
-        int damage      = ProcessComponents(source, target, components);
+        float damage      = ProcessComponents(source, target, components);
         
         ApplyDamage(target, damage);
 
         // Under consideration killing blow effect for lifecycle? 
         // if (HasKilled(target))
             // SendKillingBlow();
-        // target.Emit.Local(Request.Create, new KillingBlow());
+        // target.Emit.Local(Request.Creaate, new KillingBlow());
     }
 
-    int ProcessComponents(Actor source, Actor target, List<DamageComponent> components)
+    float ProcessComponents(Actor source, Actor target, List<DamageComponent> components)
     {
-        int damage = 0;
+        float damage = 0;
 
         foreach (var component in components)
         {            
             ApplyEffects(target, component.Effects);
 
-            if (HasDynamicForce(component))
+            if (IsDynamicForce(component))
             {
                 ResolveDynamicForce(source, target, component);
             }
@@ -105,16 +107,20 @@ public class CombatDamage : RegisteredService, IServiceStep
     }
 
 
-    void ApplyDamage(Actor target, int damage)
+    void ApplyDamage(Actor target, float damage)
     {
+        Debug.Log("Call to apply damage");
         if (!CanTakeDamage(target, out var actor))
             return;
 
         actor.Health -= damage;
+
+        Log.Debug($"{actor.GetType().Name} has taken {damage} damage. Health: {actor.Health}");
     }
 
     public void HandleCombatEvent(Message<Request, CombatEvent> message)
     {
+        Log.Debug("Adding combat event");
         pending.Add(message.Payload);
     }
 
@@ -131,8 +137,9 @@ public class CombatDamage : RegisteredService, IServiceStep
     bool HasKilled(Actor target)
     {
         if (!CanTakeDamage(target, out var actor))
+        {
             return false;
-
+        }
         return actor.Health <= 0;
     }
 
@@ -140,9 +147,11 @@ public class CombatDamage : RegisteredService, IServiceStep
     {
         if (target is IDamageable damageable && !damageable.Invulnerable)
         {
+            Debug.Log("Can take damage?");
             actor = damageable;
             return true;
         }
+            Debug.Log("Can't take damage?");
 
         actor = null;
         return false;
@@ -153,11 +162,10 @@ public class CombatDamage : RegisteredService, IServiceStep
     // PREDICATEs
     // ============================================================================
 
-    bool HasDynamicForce(DamageComponent component)
+    bool IsDynamicForce(DamageComponent component)
     {
         return component.ForceMagnitude > 0;
     }
-
 
     public UpdatePriority Priority => ServiceUpdatePriority.Combat;
 }
@@ -166,13 +174,13 @@ public class CombatDamage : RegisteredService, IServiceStep
 public struct DamageComponent
 {
     public object Source                    { get; init; }
-    public int Amount                       { get; init; }
+    public float Amount                     { get; init; }
     public List<Effect> Effects             { get; init; }
 
     /// <summary> force * velocity.magnitude * mass </summary>
     public float ForceMagnitude             { get; init;}
 
-    public DamageComponent(object source, int amount, float forceMagnitude = 0)
+    public DamageComponent(object source, float amount, float forceMagnitude = 0)
     {
         Source          = source;
         Amount          = amount;
@@ -182,10 +190,9 @@ public struct DamageComponent
     }
 }
 
-
 public readonly struct DamagePackage
 {
-    public List<DamageComponent> Components                 { get; init; }
+    public List<DamageComponent> Components { get; init; }
 
     public DamagePackage(List<DamageComponent> components = null)
     {

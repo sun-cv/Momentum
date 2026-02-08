@@ -14,7 +14,7 @@ public class WeaponSystem : IServiceTick
 {
     readonly Logger Log = Logging.For(LogSystem.Weapons);
 
-    Actor                                                   owner;
+    Agent                                                   owner;
     WeaponLoadout                                           loadout;
     WeaponInstance                                          instance;
     WeaponInstance                                          previousInstance;
@@ -30,9 +30,9 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
-    GlobalEventHandler<Message<Response, MHitboxIdentifier>> hitboxEvents;
+    GlobalEventHandler<Message<Response, HitboxIdEvent>> hitboxEvents;
 
-    public WeaponSystem(Actor actor)
+    public WeaponSystem(Agent agent)
     {
         Services.Lane.Register(this);
 
@@ -40,16 +40,16 @@ public class WeaponSystem : IServiceTick
         cooldown        = new();
         validator       = new(this);
         
-        owner           = actor;
+        owner           = agent;
         hitboxEvents    = new(HandleHitboxResponse);
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        owner.Emit.Link.Local<Publish, MCommandPipelines>   (HandleCommandPipelineUpdates);
-        owner.Emit.Link.Local<Publish, MEffectInstance>     (HandleEffectNonCancelableLockCount);
-        owner.Emit.Link.Local<Publish, MLocks>              (HandleLocksUpdate);
-        owner.Emit.Link.Local<Publish, MEquipmentChange>    (HandleEquipmentChange);
+        owner.Emit.Link.Local<Publish, CommandPipelinesEvent>   (HandleCommandPipelineUpdates);
+        owner.Emit.Link.Local<Publish, EffectInstanceEvent>     (HandleEffectNonCancelableLockCount);
+        owner.Emit.Link.Local<Publish, LockPublishEvent>              (HandleLocksUpdate);
+        owner.Emit.Link.Local<Publish, EquipmentChangeEvent>    (HandleEquipmentChange);
     }
 
 
@@ -229,7 +229,7 @@ public class WeaponSystem : IServiceTick
     void EquipWeapon(WeaponAction Action)
     {
         instance = new WeaponInstance(owner, Action);
-        owner.Emit.Local(Publish.Equipped, new MWeaponInstance(owner, instance));
+        owner.Emit.Local(Publish.Equipped, new WeaponInstanceEvent(owner, instance));
     }
 
     void ActivateWeapon()
@@ -284,7 +284,7 @@ public class WeaponSystem : IServiceTick
 
     void UnequipWeapon()
     {
-        owner.Emit.Local(Publish.Unequipped, new MWeaponInstance(owner, instance));
+        owner.Emit.Local(Publish.Unequipped, new WeaponInstanceEvent(owner, instance));
         ClearInstance();        
     }
 
@@ -399,7 +399,7 @@ public class WeaponSystem : IServiceTick
         foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-                owner.Emit.Local(Request.Create, new MEffectDeclaration(instance, effect));
+                owner.Emit.Local(Request.Create, new EffectDeclarationEvent(instance, effect));
         }
     }
 
@@ -408,7 +408,7 @@ public class WeaponSystem : IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable)
-                owner.Emit.Local(Request.Cancel, new MEffectInstance(instance));
+                owner.Emit.Local(Request.Cancel, new EffectInstanceEvent(instance));
         }
     }
 
@@ -417,7 +417,7 @@ public class WeaponSystem : IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                owner.Emit.Local(Request.Cancel, new MEffectInstance(instance));
+                owner.Emit.Local(Request.Cancel, new EffectInstanceEvent(instance));
         }
     }
 
@@ -444,18 +444,18 @@ public class WeaponSystem : IServiceTick
 
             definition.InputIntent = instance.State.Intent;
 
-            owner.Emit.Local(Request.Create, new MMovementDirective(owner, definition));
+            owner.Emit.Local(Request.Create, new MovementEvent(owner, definition));
         }
     }
 
     public void ClearMovementFromPhase(WeaponPhase scopeToClear)
     {
-        owner.Emit.Local(Request.Clear, new MClearMovement(owner, (int)scopeToClear));
+        owner.Emit.Local(Request.Clear, new ClearMovementScopeEvent(owner, (int)scopeToClear));
     }
     
     public void ClearMovementFromOwner()
     {
-        owner.Emit.Local(Request.Clear, new MClearMovement(owner, -1));
+        owner.Emit.Local(Request.Clear, new ClearMovementScopeEvent(owner, -1));
     }
 
     // ============================================================================
@@ -465,16 +465,38 @@ public class WeaponSystem : IServiceTick
     public void RequestHitboxes(WeaponAction action)
     {
         foreach (var hitboxDefinition in action.Hitboxes)
-        {
-            if (instance.State.Phase == hitboxDefinition.Phase)
-                hitboxEvents.Send(Request.Create, new MHitboxDeclaration(owner, hitboxDefinition, instance.State.Intent));
+        {            
+            if (instance.State.Phase == hitboxDefinition.Lifetime.Phase)
+            {
+                hitboxDefinition.Direction.Input = instance.State.Intent;
+
+                hitboxEvents.Send(Request.Create, new HitboxDeclarationEvent(owner, hitboxDefinition, CreateDamagePackage()));
+            }
         }
     }
 
     public void DestroyHitboxes(WeaponInstance instance)
     {
         foreach (var hitboxId in instance.State.OwnedHitboxes)
-            Emit.Global(Request.Destroy, new MHitboxIdentifier(hitboxId));
+            Emit.Global(Request.Destroy, new HitboxIdEvent(hitboxId));
+    }
+
+    // ============================================================================
+    // Damage Package
+    // ============================================================================
+
+    DamagePackage CreateDamagePackage()
+    {
+        var components = instance.Action.DamageComponents.ToList();
+
+        components.Add(new DamageComponent(source: owner,amount: ((IAttacker)Owner).Attack,forceMagnitude: 0));
+
+        var package = new DamagePackage()
+        {
+            Components = components,
+        };
+
+        return package;
     }
 
     // ============================================================================
@@ -494,7 +516,7 @@ public class WeaponSystem : IServiceTick
         if (request == null)
             return;
 
-        owner.Emit.Local(Request.Start, new MAnimation(owner, request));
+        owner.Emit.Local(Request.Start, new AnimationEvent(owner, request));
     }
 
     // ============================================================================
@@ -549,7 +571,7 @@ public class WeaponSystem : IServiceTick
 
     void ConsumeCommand(Command command)
     {
-        owner.Emit.Local(Request.Consume, new MCommand(command));
+        owner.Emit.Local(Request.Consume, new CommandEvent(command));
     }
 
     void ConsumeAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -587,7 +609,7 @@ public class WeaponSystem : IServiceTick
 
     void LockCommand(Command command)
     {
-        owner.Emit.Local(Request.Lock, new MCommand(command));
+        owner.Emit.Local(Request.Lock, new CommandEvent(command));
     }
 
     void LockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -601,7 +623,7 @@ public class WeaponSystem : IServiceTick
 
     void UnlockCommand(Command command)
     {
-        owner.Emit.Local(Request.Unlock, new MCommand(command));
+        owner.Emit.Local(Request.Unlock, new CommandEvent(command));
     }
 
     void UnlockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -644,13 +666,13 @@ public class WeaponSystem : IServiceTick
     // EVENT HANDLERS
     // ============================================================================
 
-    void HandleCommandPipelineUpdates(Message<Publish, MCommandPipelines> message)
+    void HandleCommandPipelineUpdates(Message<Publish, CommandPipelinesEvent> message)
     {
         active = message.Payload.Active;
         buffer = message.Payload.Buffer;
     }
 
-    void HandleEffectNonCancelableLockCount(Message<Publish, MEffectInstance> message)
+    void HandleEffectNonCancelableLockCount(Message<Publish, EffectInstanceEvent> message)
     {
         var effect = message.Payload.Instance.Effect;
     
@@ -672,12 +694,12 @@ public class WeaponSystem : IServiceTick
 
     
 
-    void HandleLocksUpdate(Message<Publish, MLocks> message)
+    void HandleLocksUpdate(Message<Publish, LockPublishEvent> message)
     {
         locks = message.Payload.Locks;
     }
 
-    void HandleEquipmentChange(Message<Publish, MEquipmentChange> message)
+    void HandleEquipmentChange(Message<Publish, EquipmentChangeEvent> message)
     {
         if (message.Payload.Equipment is not Weapon weapon)
             return;
@@ -696,15 +718,15 @@ public class WeaponSystem : IServiceTick
         }
     }
     
-    void HandleHitboxResponse(Message<Response, MHitboxIdentifier> response)
+    void HandleHitboxResponse(Message<Response, HitboxIdEvent> response)
     {
         instance?.State.OwnedHitboxes.Add(response.Payload.HitboxId);
     }
 
     void PublishTransition()
     {
-        owner.Emit.Local(Publish.PhaseChange, new MWeaponInstance(owner, instance));
-        owner.Emit.Local(Publish.PhaseChange, new MWeaponInstance(owner, instance));
+        owner.Emit.Local(Publish.PhaseChange, new WeaponInstanceEvent(owner, instance));
+        owner.Emit.Local(Publish.PhaseChange, new WeaponInstanceEvent(owner, instance));
     }
 
     void RegisterCooldown()
@@ -742,7 +764,7 @@ public class WeaponSystem : IServiceTick
     bool HasBufferCommands()        => buffer?.Count > 0;
 
 
-    public Actor Owner                                                  => owner;
+    public Agent Owner                                                  => owner;
     public WeaponInstance CurrentWeapon                                 => instance;
     public WeaponCooldown Cooldown                                      => cooldown;
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks => locks;
@@ -767,12 +789,12 @@ public class WeaponSystem : IServiceTick
 // SUPPORTING TYPES
 // ============================================================================
 
-public readonly struct MWeaponInstance
+public readonly struct WeaponInstanceEvent
 {
-    public readonly Actor Owner             { get; init; }
+    public readonly Agent Owner             { get; init; }
     public readonly WeaponInstance Instance { get; init; }
 
-    public MWeaponInstance(Actor owner, WeaponInstance instance)
+    public WeaponInstanceEvent(Agent owner, WeaponInstance instance)
     {
         Owner       = owner;
         Instance    = instance;
@@ -1180,7 +1202,7 @@ public class WeaponActivationValidator
 
     WeaponValidation CheckContext(WeaponAction weapon)
     {
-        if (!weapon.CanCancelDisables &&  controller.Owner is IAttacker actor && !actor.CanAttack)
+        if (!weapon.CanCancelDisables &&  controller.Owner is IAttacker agent && !agent.CanAttack)
             return WeaponValidation.Fail($"Context disallows attack (CanCancelDisables={weapon.CanCancelDisables})");
 
         return WeaponValidation.Pass();

@@ -203,7 +203,7 @@ public interface IBoss  : IEnemy {}
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
 
-public interface IDummyEntity : IControllable, IDamageable, IAfflictable {}
+public interface IDummy : IControllable, IDamageable, IAfflictable, IDepthSorted, IDepthColliding {}
 //
 //  Items
 //

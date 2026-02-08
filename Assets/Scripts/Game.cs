@@ -101,7 +101,8 @@ public class Clock
     static int frameCount;
     
     public static int FrameCount    => frameCount;
-    public static float DeltaTime   => Time.fixedDeltaTime;
+    public static float DeltaTime   => UnityEngine.Time.fixedDeltaTime;
+    public static float Time        => UnityEngine.Time.time;
 
     public void Tick()
     {
@@ -186,7 +187,7 @@ public class GameLoop
         Services.Lane.Late();
     }
 
-    private static void MeasureTickRate()
+    static void MeasureTickRate()
     {
         timeHerz += Clock.DeltaTime;
         tickHerz++;
@@ -198,6 +199,7 @@ public class GameLoop
         }
     }
 
+    
 }
 
 

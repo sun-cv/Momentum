@@ -43,7 +43,7 @@ public class CommandSystem
         this.intent = intent;
         this.owner  = intent.Owner;
 
-        owner.Emit.Link.Local<Request, MCommand>(HandleCommandRequest);
+        owner.Emit.Link.Local<Request, CommandEvent>(HandleCommandRequest);
         Broadcast();
     }
 
@@ -112,7 +112,7 @@ public class CommandSystem
         return toRemove.Count > 0;
     }
 
-    void HandleCommandRequest(Message<Request, MCommand> message)
+    void HandleCommandRequest(Message<Request, CommandEvent> message)
     {
         switch (message.Action)
         {
@@ -140,29 +140,29 @@ public class CommandSystem
     void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Lock();
     void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
 
-    void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new MCommandPipelines(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+    void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
 }
 
 
 
 
-public readonly struct MCommand
+public readonly struct CommandEvent
 {
     public Command Command { get; init; }
 
-    public MCommand(Command command)
+    public CommandEvent(Command command)
     {
         Command = command;
     }
 }
 
 
-public readonly struct MCommandPipelines
+public readonly struct CommandPipelinesEvent
 {
     public IReadOnlyDictionary<Capability, Command> Active { get; init; }
     public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }
 
-    public MCommandPipelines(IReadOnlyDictionary<Capability, Command> active, IReadOnlyDictionary<Capability, Command> buffer)
+    public CommandPipelinesEvent(IReadOnlyDictionary<Capability, Command> active, IReadOnlyDictionary<Capability, Command> buffer)
     {
         Active = active;
         Buffer = buffer;
