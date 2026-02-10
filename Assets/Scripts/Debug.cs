@@ -27,6 +27,7 @@ public enum LogSystem
     Services,
     Assets,
     Actors,
+    Factories,
     
     // Rendering & Visual
     Animation,

@@ -72,7 +72,7 @@ public class Hero : Player, IHero
     public TimePredicate IsIdle                     => State.IsIdle;
 
 
-    public void Initialize(HeroDefinition definition)
+    public void Initialize(ActorDefinition definition)
     {
         Definition  = definition;
 

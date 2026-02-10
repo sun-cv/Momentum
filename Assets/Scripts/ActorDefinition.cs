@@ -1,10 +1,11 @@
-
-
 using System.Collections.Generic;
+
+
+
+
 
 public class ActorDefinition : Definition
 {
-
     public StatsDefinition Stats                        { get; init; }
     public LifecycleDefinition Lifecycle                { get; init; }
 };  
@@ -29,18 +30,26 @@ public class StatsDefinition : Definition
 
 public class LifecycleDefinition : Definition
 {
-    public bool EnableDeathDetection                    { get; init; } = true;
+    public bool EnableDeathDetection                    { get; init; } = false;
     public bool EnableHealthThresholds                  { get; init; } = false;
     public bool AlertOnHealthChange                     { get; init; } = false;
-    public bool AlertOnDeath                            { get; init; } = true;
+    public bool AlertOnDeath                            { get; init; } = false;
 
     public List<HealthThreshold> HealthThresholds       { get; init; } = new();
     public DeathAnimationSet DeathAnimations            { get; init; }
     public List<Effect> OnDeathEffects                  { get; init; } = new();
-    // public RespawnBehavior RespawnBehavior              { get; init; }
 
+    public RespawnBehavior RespawnBehavior              { get; init; }
 }
 
+
+public class RespawnBehavior
+{
+    public bool Enabled                                 { get; init; }
+    public float RespawnDelay                           { get; init; }
+
+    public bool RestoreFullHealth                       { get; init; }
+}
 
 public class DeathAnimationSet : Definition
 {

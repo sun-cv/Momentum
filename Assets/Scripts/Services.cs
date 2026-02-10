@@ -105,8 +105,6 @@ public static class Services
 
         public static void Tick()
         {
-            ServiceProcesses();
-
             foreach(var service in Registry.TickServices)
                 service.Tick();
         }
@@ -125,6 +123,8 @@ public static class Services
 
         public static void Util()
         {        
+            ServiceProcesses();
+    
             foreach(var service in Registry.UtilServices)
                 service.Util();
         }
@@ -180,8 +180,8 @@ public static class Services
 
         public static void DeregisterService(Type type)
         {
-            if (services.ContainsKey(type))
-                throw new InvalidOperationException($"Type {type.Name} is already registered.");
+            if (!services.ContainsKey(type))
+                throw new InvalidOperationException($"Type {type.Name} is not registered.");
 
             services.Remove(type);
         }

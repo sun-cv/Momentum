@@ -10,7 +10,7 @@ public static class DummyFactory
         Dummy dummy     = new();
         dummy.Bridge    = new(dummy, instance);
 
-        dummy.Initialize();
+        dummy.Initialize(new DummyDefinition());
         
         return dummy;
     }
@@ -20,7 +20,7 @@ public static class DummyFactory
         Dummy dummy  = new();
         dummy.Bridge = new(dummy, view);
 
-        dummy.Initialize();
+        dummy.Initialize(new DummyDefinition());
         return dummy;
     }
 }

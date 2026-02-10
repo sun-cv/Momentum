@@ -49,8 +49,9 @@ public class Definition
 public class Runtime                            { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
 public class Instance           : Runtime       {}
 public class Entity             : Runtime       {}
-public class Actor              : Entity        { public Bridge Bridge                  { get; set;  }
-                                                  public Emit Emit                      { get; set;  }}
+public class Actor              : Entity        { 
+                                                  public Emit Emit                      { get; set;  }
+                                                  public Bridge Bridge                  { get; set;  }}
 
 
 public class Agent              : Actor         {}
@@ -203,7 +204,7 @@ public interface IBoss  : IEnemy {}
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
 
-public interface IDummy : IControllable, IDamageable, IAfflictable, IDepthSorted, IDepthColliding {}
+public interface IDummy : IControllable, IDamageable, IDefined, IAfflictable, IDepthSorted, IDepthColliding {}
 //
 //  Items
 //

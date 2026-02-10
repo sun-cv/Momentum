@@ -26,7 +26,6 @@ public class CombatResolver : RegisteredService, IServiceStep
     {
         foreach (var combat in pending)
         {
-            Debug.Log("Processing event");
             ProcessEvent(combat);
         }
 
@@ -109,7 +108,6 @@ public class CombatResolver : RegisteredService, IServiceStep
 
     void ApplyDamage(Actor target, float damage)
     {
-        Debug.Log("Call to apply damage");
         if (!CanTakeDamage(target, out var actor))
             return;
 
@@ -120,7 +118,6 @@ public class CombatResolver : RegisteredService, IServiceStep
 
     public void HandleCombatEvent(Message<Request, CombatEvent> message)
     {
-        Log.Debug("Adding combat event");
         pending.Add(message.Payload);
     }
 
@@ -133,6 +130,10 @@ public class CombatResolver : RegisteredService, IServiceStep
     {
         return (target.Bridge.View.transform.position - source.Bridge.View.transform.position).normalized;
     }
+
+    // ============================================================================
+    // PREDICATEs
+    // ============================================================================
 
     bool HasKilled(Actor target)
     {
@@ -147,20 +148,13 @@ public class CombatResolver : RegisteredService, IServiceStep
     {
         if (target is IDamageable damageable && !damageable.Invulnerable)
         {
-            Debug.Log("Can take damage?");
             actor = damageable;
             return true;
         }
-            Debug.Log("Can't take damage?");
 
         actor = null;
         return false;
     }
-
-
-    // ============================================================================
-    // PREDICATEs
-    // ============================================================================
 
     bool IsDynamicForce(DamageComponent component)
     {

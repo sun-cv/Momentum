@@ -7,21 +7,9 @@ public class DevEnv : RegisteredService, IServiceTick
     readonly Logger Log = Logging.For(LogSystem.System);
 
     public Hero hero;
-    public bool triggered = false;
     
     public override void Initialize()
     {
-        Logging.For(LogSystem.Engine)           .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
-        Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Combat)           .SetLevel(LogLevel.Debug);
-
-
-
         hero        = HeroFactory.Create();
 
         hero.Equipment.Equip(new Sword());
@@ -32,16 +20,13 @@ public class DevEnv : RegisteredService, IServiceTick
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
         
-        triggered   = true;
-
+        DebugLogSetup();
     }
 
 
     public void Tick()
     {
-        Logging.For(LogSystem.Hero).Debug("Health", () => hero.Health);
-        Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
-        Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
+        DebugLog();
     }
 
     public void Loop()
@@ -49,6 +34,25 @@ public class DevEnv : RegisteredService, IServiceTick
         
     }
 
+    public void DebugLogSetup()
+    {
+        Logging.For(LogSystem.Engine)           .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
+        Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Combat)           .SetLevel(LogLevel.Debug);
+
+    }
+
+    public void DebugLog()
+    {
+        Logging.For(LogSystem.Hero).Debug("Health", () => hero.Health);
+        Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
+        Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
+    }
 
     public UpdatePriority Priority => ServiceUpdatePriority.DevEnv;
 }

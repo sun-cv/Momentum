@@ -5,6 +5,9 @@
 
 public class Dummy : Agent, IDummy
 {
+    public ActorDefinition      Definition          { get; private set; }
+    public Lifecycle            Lifecycle           { get; private set; }
+
     //========================================
     // Properties
     //========================================
@@ -23,9 +26,13 @@ public class Dummy : Agent, IDummy
     public bool Impervious                          { get; set; } = false;
 
 
-    public void Initialize()
+    public void Initialize(ActorDefinition definition)
     {
-        Health  = MaxHealth;
+        Definition  = definition;
+
+        Emit        = new();
+
+        Lifecycle   = new(this);
     }
 
 }
