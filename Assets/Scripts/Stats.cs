@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 
 
-public class Stats : Service, IServiceTick
+public abstract class Stats : Service, IServiceTick
 {
     protected readonly Dictionary<string, float> stats  = new();
     protected readonly StatsMediator mediator           = new();

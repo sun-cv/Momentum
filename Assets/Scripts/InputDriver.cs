@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 
 
 
-public class InputDriver : RegisteredService, IServiceTick, IDisposable
+public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDisposable
 {
     private InputActions input;
 
@@ -31,7 +31,7 @@ public class InputDriver : RegisteredService, IServiceTick, IDisposable
     void OnDodgeRelease    (InputAction.CallbackContext context) => EventBus<DashRelease>       .Raise(new());
 
 
-    public override void Initialize()
+    public void Initialize()
     {
         input = new();
         input.Enable();
@@ -70,7 +70,7 @@ public class InputDriver : RegisteredService, IServiceTick, IDisposable
     void PollMousePosition()    => EventBus<MousePosition> .Raise(new MousePosition(input.Player.Mouse.ReadValue<Vector2>()));
     void PollMovementVector()   => EventBus<MovementVector>.Raise(new MovementVector(input.Player.Move.ReadValue<Vector2>()));
 
-    public void Dispose()
+    public override void Dispose()
     {
         input?.Player.Disable();
         input?.Disable();
@@ -88,7 +88,7 @@ public struct PendingInputEvent
 }
 
 
-public class InputRouter : RegisteredService, IServiceTick, IDisposable
+public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDisposable
 {
 
     Dictionary<PlayerAction, InputButton> buttonMap  = new();
@@ -113,7 +113,7 @@ public class InputRouter : RegisteredService, IServiceTick, IDisposable
     EventBinding<MovementVector>        movementVector;
     EventBinding<MousePosition>         mousePosition;
 
-    public override void Initialize()
+    public void Initialize()
     {
         mousePosition   = EventBus<MousePosition> .Subscribe(UpdateMousePosition);
         movementVector  = EventBus<MovementVector>.Subscribe(UpdateMovementIntent);    
@@ -140,7 +140,7 @@ public class InputRouter : RegisteredService, IServiceTick, IDisposable
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         EventBus<InteractPress>     .Unsubscribe(interactPress);  
         EventBus<InteractRelease>   .Unsubscribe(interactRelease);  

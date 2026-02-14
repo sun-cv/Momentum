@@ -6,7 +6,7 @@ using UnityEngine;
 
 
 [Service]
-public class SpriteLayeringSystem : IServiceStep, IBind
+public class SpriteLayeringSystem : Service, IServiceStep, IBind
 {
     readonly Logger Log = Logging.For(LogSystem.SpriteLayering);
 
@@ -22,8 +22,6 @@ public class SpriteLayeringSystem : IServiceStep, IBind
 
     List<TrackedSprite> trackedSprites = new();
     
-
-
     public void Register(Bridge bridge)
     {
         var tracked = new TrackedSprite 
@@ -137,14 +135,18 @@ public class SpriteLayeringSystem : IServiceStep, IBind
         RefreshRegistrations();
     }
 
+    public override void Dispose()
+    {
+        // NO OP;
+    }
+
     public UpdatePriority Priority => new(UpdatePhase.Render, 100);
 }
 
 
 
-
 [Service]
-public class DepthCollisionSystem : IServiceStep, IBind
+public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 {
     readonly Logger Log = Logging.For(LogSystem.DepthSorting);
 
@@ -228,6 +230,11 @@ public class DepthCollisionSystem : IServiceStep, IBind
     public void Bind()
     {
         RefreshRegistrations();
+    }
+
+    public override void Dispose()
+    {
+        // NO OP;
     }
 
     public UpdatePriority Priority => new(UpdatePhase.Physics, 99);

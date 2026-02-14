@@ -10,8 +10,8 @@ public static class Config
     public static class Timing
     {
         public const float TICK_RATE_TICK           = 60f;
-        public const float TICK_RATE_LOOP           = 20f;
-        public const float TICK_RATE_STEP           = 10f;
+        public const float TICK_RATE_LOOP           = 30f;
+        public const float TICK_RATE_STEP           = 15f;
         public const float TICK_RATE_UTIL           = 5f;
     }
 
@@ -71,6 +71,7 @@ public static class ServiceUpdatePriority
 {
     public static UpdatePriority TimerManager       = new(UpdatePhase.System,   10);
     public static UpdatePriority SystemLoop         = new(UpdatePhase.System,   20);
+    public static UpdatePriority Services           = new(UpdatePhase.System,   30);
     public static UpdatePriority DevEnv             = new(UpdatePhase.System,   50);
 
     public static UpdatePriority InputDriver        = new(UpdatePhase.Input,    10);
@@ -84,6 +85,7 @@ public static class ServiceUpdatePriority
     public static UpdatePriority DirectionHandler   = new(UpdatePhase.Logic,    60);
     public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    70);
     public static UpdatePriority Lifecycle          = new(UpdatePhase.Logic,    80);
+    public static UpdatePriority Presence           = new(UpdatePhase.Logic,    90);
 
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
     public static UpdatePriority SpriteDepthSorting = new(UpdatePhase.Physics,  90);

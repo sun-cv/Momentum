@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 
 
@@ -28,7 +27,7 @@ public struct Message<TAction, TPayload> : ISystemEvent
 public readonly struct MEmpty { }
 
 
-public class Emit
+public class Emit : IDisposable
 {
     public LocalEventbus Bus    { get; }
     public Link Link            { get; }
@@ -73,6 +72,11 @@ public class Emit
         EventBus<TMessage>.Raise(message);
     }
 
+    public void Dispose()
+    {
+        Bus.Dispose();
+    }
+
 }
 
 public class Link
@@ -81,24 +85,19 @@ public class Link
 
     public Link(LocalEventbus bus) => Bus = bus;
 
-    public void Local<T>(Action<T> handler) where T : IEvent
+    public EventBinding<T> Local<T>(Action<T> handler) where T : IEvent
     {
-        Bus.Subscribe(handler);
+        return Bus.Subscribe(handler);
     }
 
-    public static void Global<T>(Action<T> handler) where T : IEvent
+    public EventBinding<T> LocalBinding<T>(Action<T> handler) where T : IEvent
     {
-        EventBus<T>.Subscribe(handler);
+        return Bus.Subscribe(handler);
     }
 
-    public void Local<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
+    public EventBinding<Message<TAction, TPayload>> Local<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
     {
-        Bus.Subscribe(handler);
-    }
-
-    public static void Global<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
-    {
-        EventBus<Message<TAction, TPayload>>.Subscribe(handler);
+        return Bus.Subscribe(handler);
     }
 
     public void UnsubscribeLocal<T>(EventBinding<T> binding) where T : IEvent
@@ -106,7 +105,17 @@ public class Link
         Bus.Unsubscribe(binding);
     }
 
-    public void UnsubscribeGlobal<T>(EventBinding<T> binding) where T : IEvent
+    public static EventBinding<T> Global<T>(Action<T> handler) where T : IEvent
+    {
+        return EventBus<T>.Subscribe(handler);
+    }
+
+    public static EventBinding<Message<TAction, TPayload>> Global<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
+    {
+        return EventBus<Message<TAction, TPayload>>.Subscribe(handler);
+    }
+
+    public static void UnsubscribeGlobal<T>(EventBinding<T> binding) where T : IEvent
     {
         EventBus<T>.Unsubscribe(binding);
     }
@@ -209,7 +218,7 @@ public static class EventBus<T> where T : IEvent
 
 
 
-public class LocalEventbus
+public class LocalEventbus : IDisposable
 {
     private readonly Dictionary<Type, HashSet<object>> bindings = new();
 
@@ -241,6 +250,11 @@ public class LocalEventbus
         if (!bindings.TryGetValue(typeof(T), out var set)) return;
         foreach (var obj in set.Cast<EventBinding<T>>().ToArray())
             ((IEventBinding<T>)obj).OnEvent.Invoke(@event);
+    }
+
+    public void Dispose()
+    {
+        bindings.Clear();
     }
 }
 
@@ -350,15 +364,18 @@ public class EventBus
 
 
 
-public class GlobalEventHandler<TResponse> where TResponse : ISystemEvent
+public class GlobalEventHandler<TResponse> : IDisposable where TResponse : ISystemEvent
 {
     readonly HashSet<Guid> pendingIds = new();
     readonly Action<TResponse> onResponse;
 
+    readonly EventBinding<TResponse> binding;
+
     public GlobalEventHandler(Action<TResponse> onResponse)
     {
         this.onResponse = onResponse;
-        EventBus<TResponse>.Subscribe(Receive);
+
+        binding = Link.Global<TResponse>(Receive);
     }
 
     public void Send<TAction, TPayload>(TAction action, TPayload payload)
@@ -377,21 +394,29 @@ public class GlobalEventHandler<TResponse> where TResponse : ISystemEvent
     }
 
     public void Clear() => pendingIds.Clear();
+
+    public void Dispose()
+    {
+        Link.UnsubscribeGlobal(binding);
+    }
+
     public int PendingCount => pendingIds.Count;
 }
 
-public class LocalEventHandler<TResponse> where TResponse : ISystemEvent
+public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISystemEvent
 {
     readonly Emit emit;
     readonly HashSet<Guid> pendingIds = new();
     readonly Action<TResponse> onResponse;
+
+    readonly EventBinding<TResponse> binding;
 
     public LocalEventHandler(Emit emit, Action<TResponse> onResponse)
     {
         this.emit = emit;
         this.onResponse = onResponse;
         
-        emit.Link.Local<TResponse>(Receive);
+        binding = emit.Link.Local<TResponse>(Receive);
     }
 
     public void Send<TAction, TPayload>(TAction action, TPayload payload)
@@ -410,5 +435,11 @@ public class LocalEventHandler<TResponse> where TResponse : ISystemEvent
     }
 
     public void Clear() => pendingIds.Clear();
+
+    public void Dispose()
+    {
+        emit.Link.UnsubscribeLocal(binding);
+    }
+
     public int PendingCount => pendingIds.Count;
 }

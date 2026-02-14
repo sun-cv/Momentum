@@ -3,6 +3,8 @@
 
 
 
+using UnityEngine;
+
 public class BridgeController : Controller
 {
     public Bridge Bridge                { get; internal set; }
@@ -23,5 +25,7 @@ public class BridgeController : Controller
             return;
 
         Actors.Deregister(Bridge);
+
+        Bridge = null;
     }
 }

@@ -4,22 +4,26 @@ using UnityEngine;
 
 public class Hero : Player, IHero
 {
-    //========================================
+    // ===============================================================================
     // Systems
-    //========================================
-    public ActorDefinition      Definition          { get; private set; }
-    public IntentSystem         Intent              { get; private set; }
-    public HeroState            State               { get; private set; }
-    public ActorStats           Stats               { get; private set; }
-    public EquipmentManager     Equipment           { get; private set; }
-    public WeaponSystem         Weapons             { get; private set; }
-    public MovementEngine       Movement            { get; private set; }
-    public EffectRegister       Effects             { get; private set; }
-    public AnimationController  Animation           { get; private set; }
+    // ===============================================================================
+    
+    public ActorDefinition      Definition          { get; set; }
+    public IntentSystem         Intent              { get; set; }
+    public HeroState            State               { get; set; }
+    public ActorStats           Stats               { get; set; }
+    public EquipmentManager     Equipment           { get; set; }
+    public WeaponSystem         Weapons             { get; set; }
+    public MovementEngine       Movement            { get; set; }
+    public EffectRegister       Effects             { get; set; }
+    public AnimationController  Animation           { get; set; }
+    public Lifecycle            Lifecycle           { get; set; }
+    public Presence             Presence            { get; set; }
 
-    //========================================
-    // Properties
-    //========================================
+
+    // ===============================================================================
+    // Accessors
+    // ===============================================================================
 
     public float MaxHealth                          { get => Stats.MaxHealth;               }
     public float Health                             { get => Stats.Health;  
@@ -34,9 +38,10 @@ public class Hero : Player, IHero
 
     public float Mass                               { get => Stats.Mass;                    }
 
-    //========================================
+
+    // ===============================================================================
     // State
-    //========================================
+    // ===============================================================================
 
     public bool Inactive                            { get => State.Inactive;        
                                                       set => State.Inactive         = value;}
@@ -45,6 +50,9 @@ public class Hero : Player, IHero
     public bool Impervious                          { get => State.Impervious;    
                                                       set => State.Impervious       = value;}
 
+    public bool Alive                               => State.Alive;
+    public bool Dead                                => State.Dead;
+    
     public bool Disabled                            => State.Disabled;
     public bool Stunned                             { get => State.Stunned;         
                                                       set => State.Stunned          = value;}
@@ -72,6 +80,10 @@ public class Hero : Player, IHero
     public TimePredicate IsIdle                     => State.IsIdle;
 
 
+    // ===================================================================================
+    // Initialization
+    // ===================================================================================
+
     public void Initialize(ActorDefinition definition)
     {
         Definition  = definition;
@@ -85,11 +97,10 @@ public class Hero : Player, IHero
         Movement    = new(this);
         Effects     = new(this);
         Animation   = new(this);
+        Presence    = new(this);
+        Lifecycle   = new(this);
 
         State       = new(this);
-
-        Health      = MaxHealth;
-        Mana        = MaxMana;
     }
 }
 

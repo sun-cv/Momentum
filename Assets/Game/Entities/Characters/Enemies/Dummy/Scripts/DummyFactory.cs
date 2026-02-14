@@ -4,13 +4,14 @@ public static class DummyFactory
 {
     public static Dummy Create()
     {
-        var prefab      = Assets.Get("Dummy");
-        var instance    = Object.Instantiate(prefab);
+        var definition  = new DummyDefinition();
+        var prefab      = Assets.Get(definition.Name);
+        var view        = Object.Instantiate(prefab);
 
         Dummy dummy     = new();
-        dummy.Bridge    = new(dummy, instance);
+        dummy.Bridge    = new(dummy, view);
 
-        dummy.Initialize(new DummyDefinition());
+        dummy.Initialize(definition);
         
         return dummy;
     }

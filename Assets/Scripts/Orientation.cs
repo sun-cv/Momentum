@@ -198,8 +198,6 @@ public class WorldPosition : RegisteredService, IBind
     public Camera Camera                { get; internal set; }
     public RemoteVector2 MousePosition  { get; internal set; }
 
-    public override void Initialize() {}
-
     public Vector2 Mouse()
     {
         return Camera.ScreenToWorldPoint((Vector2)MousePosition);
@@ -234,5 +232,10 @@ public class WorldPosition : RegisteredService, IBind
     {
         Camera          = Services.Get<CameraRig>().Camera;
         MousePosition   = Services.Get<InputRouter>().RemoteMousePosition;
+    }
+
+    public override void Dispose()
+    {
+        // NO OP;
     }
 }

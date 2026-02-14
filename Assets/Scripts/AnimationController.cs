@@ -6,29 +6,22 @@ using UnityEngine;
 
 
 
-public class AnimatorRequest
-{
-    public string Name          { get; init; }
-    public int Hash             { get; init; }
-    public bool AllowInterrupt  { get; init; }
 
-    public AnimatorRequest(string name)
-    {
-        Name            = name;
-        Hash            = Animator.StringToHash(Name);
-        AllowInterrupt  = true;
-    }
-}
-
-
-public class AnimationController : IServiceTick
+public class AnimationController : Service, IServiceLoop, IDisposable
 {
     readonly Logger Log = Logging.For(LogSystem.Animation);
 
-    Actor owner; 
-    Animator animator;
-    Dictionary<string, float> clipDurations;
+    Actor owner;
+
+    readonly Animator animator;
+    
+    readonly Dictionary<string, float> clipDurations         = new();
+    readonly List<AnimationRequestEvent> animationRequests   = new();
+
     ClockTimer transitionTimer;
+
+    bool playing            = false;
+    bool allowInterrupt     = false;
 
     const int LAYER_BASE    = 0;
     const int LAYER_ACTION  = 1;
@@ -42,19 +35,27 @@ public class AnimationController : IServiceTick
 
         CacheClipDurations();
 
-        owner.Emit.Link.Local<Message<Request, AnimationEvent>>(HandleAnimationRequest);
-        owner.Emit.Link.Local<Message<Request, AnimationDuration>>(HandleAnimationDurationRequest);
+        owner.Emit.Link.Local<Message<Request, AnimationRequestEvent>>  (HandleAnimationRequestEvent);
+        owner.Emit.Link.Local<Message<Request, AnimationTriggerEvent>>  (HandleAnimationTriggerRequest);
+        owner.Emit.Link.Local<Message<Request, AnimationDurationEvent>> (HandleAnimationDurationRequest);
+
+        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
     }
 
-    public void Tick()
+    public void Loop()
     {
         UpdateAnimatorParameters();
+        ProcessAnimationRequests();
         DebugLog();
     }
 
     void UpdateAnimatorParameters()
     {
-
+        if (owner is ILiving living)
+        {
+            animator.SetBool("Alive", living.Alive);
+            animator.SetBool("Dead",  living.Dead ); 
+        }
         
         if (owner is IMovableActor movable)
         {
@@ -71,7 +72,7 @@ public class AnimationController : IServiceTick
 
         if (owner is IIdle idle)
         {
-            animator.SetBool ("Idle", idle.IsIdle);
+            animator.SetBool ("Idle",     idle.IsIdle);
             animator.SetFloat("IdleTime", idle.IsIdle.Duration);
         }
 
@@ -85,44 +86,100 @@ public class AnimationController : IServiceTick
         }
     }
 
-    void PlayAnimation(AnimatorRequest request)
+    void PlayAnimation(AnimationRequestEvent request)
     {   
         transitionTimer?.Stop();
 
         animator.SetLayerWeight(LAYER_ACTION, 1f);
         animator.Play(request.Hash, LAYER_ACTION, 0f);
+
+        playing = true;
         
         if (clipDurations.TryGetValue(request.Name, out float duration))
         {
             transitionTimer = new ClockTimer(duration);
             transitionTimer.OnTimerStop += () => animator.SetLayerWeight(LAYER_ACTION, 0f);
+            transitionTimer.OnTimerStop += () => allowInterrupt = true;
             transitionTimer.Start();
         }
     }
 
-    // REWORK REQUIRED CANCEL ANIMATION
-    void HandleAnimationRequest(Message<Request, AnimationEvent> evt)
+    void ProcessAnimationRequests()
     {
-        switch(evt.Action)
+        if (animationRequests.Count == 0)
+            return;
+
+        foreach (var request in animationRequests)
         {
-            case Request.Start:
-                PlayAnimation(evt.Payload.Request);
-                break;
-            case Request.Cancel:
-                break;
+            RequestAnimation(request);
+        }
+
+        animationRequests.Clear();
+    }
+
+    void RequestAnimation(AnimationRequestEvent request)
+    {
+        if (playing && !allowInterrupt)
+            return;
+
+        SetInterrupt(request);
+        PlayAnimation(request);
+    }
+
+    // ============================================================================
+    // EVENT HANDLERS
+    // ============================================================================
+
+
+    void HandleAnimationRequestEvent(Message<Request, AnimationRequestEvent> message)
+    {
+        animationRequests.Add(message.Payload);
+    }
+
+    void HandleAnimationTriggerRequest(Message<Request, AnimationTriggerEvent> message)
+    {
+        animator.SetTrigger(message.Payload.Trigger);
+    }
+
+    void HandleAnimationDurationRequest(Message<Request, AnimationDurationEvent> message)
+    {
+        var duration = clipDurations[message.Payload.Name];
+        owner.Emit.Local(message.Id, Response.Completed, new AnimationDurationEvent(message.Payload.Name, duration));
+    }
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
         }
     }
 
-    void HandleAnimationDurationRequest(Message<Request, AnimationDuration> message)
+    // ============================================================================
+    // PREDICATES
+    // ============================================================================
+
+
+    // ============================================================================
+    // HELPERS
+    // ============================================================================
+
+
+    void SetInterrupt(AnimationRequestEvent request)
     {
-        var duration = clipDurations[message.Payload.Request.Name];
-        owner.Emit.Local(message.Id, Response.Completed, new AnimationDuration(message.Payload.Request, duration));
+        allowInterrupt = request.AllowInterrupt;
     }
 
     void CacheClipDurations()
     {
-        clipDurations = new();
-
         foreach (var clip in animator.runtimeAnimatorController.animationClips)
         {
             string key = clip.name.Split('_')[0];
@@ -133,6 +190,9 @@ public class AnimationController : IServiceTick
 
     void DebugLog()
     {
+        if (owner is not Hero)
+            return;
+
         Log.Trace("Playing Action", () => 
         { 
             if (animator.GetLayerWeight(LAYER_ACTION) < 1)
@@ -149,38 +209,52 @@ public class AnimationController : IServiceTick
         });
     }
 
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
+    }
+
     public UpdatePriority Priority => ServiceUpdatePriority.AnimationHandler;
 }
+
+
 // ============================================================================
-// EVENTS
+// ANIMATION EVENTS
 // ============================================================================
 
 
-public readonly struct AnimationEvent
+public class AnimationRequestEvent
 {
-    public readonly object Owner                { get; init; }
-    public readonly AnimatorRequest Request     { get; init; }
+    public string Name                              { get; init; }
+    public int Hash                                 { get; init; }
+    public bool AllowInterrupt                      { get; init; }
 
-    public AnimationEvent(object owner, AnimatorRequest request)
+    public AnimationRequestEvent(string name)
     {
-        Owner   = owner;
-        Request = request;   
+        Name            = name;
+        Hash            = Animator.StringToHash(Name);
+        AllowInterrupt  = true;
     }
 }
 
-public readonly struct DisableAnimation
-{
-    
+public readonly struct AnimationTriggerEvent
+{    
+    public readonly string Trigger                  { get; init; }
+
+    public AnimationTriggerEvent(string trigger)
+    {
+        Trigger = trigger;   
+    }
 }
 
-public readonly struct AnimationDuration
+public readonly struct AnimationDurationEvent
 {
-    public readonly AnimatorRequest Request     { get; init; }
-    public readonly float Duration              { get; init; } 
+    public readonly string Name                     { get; init; }
+    public readonly float Duration                  { get; init; } 
 
-    public AnimationDuration(AnimatorRequest request, float duration = 0)
+    public AnimationDurationEvent(string name, float duration = 0)
     {
-        Request     = request;   
+        Name        = name;   
         Duration    = duration;
     }
 }

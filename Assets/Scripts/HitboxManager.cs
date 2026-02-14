@@ -103,7 +103,7 @@ public class HitboxInstance : Instance
 // ============================================================================
 
 
-public class HitboxManager : RegisteredService, IServiceTick
+public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 {
     readonly Logger Log = Logging.For(LogSystem.Hitboxes);
 
@@ -113,7 +113,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
     readonly Queue<PendingHitbox>   pending                     = new();
 
-    public override void Initialize()
+    public void Initialize()
     {
         Link.Global<Message<Request, HitboxDeclarationEvent>>(HandleHitboxCreateRequest);
         Link.Global<Message<Request, HitboxIdEvent >>(HandleHitboxDestroyRequest);
@@ -129,9 +129,7 @@ public class HitboxManager : RegisteredService, IServiceTick
 
 // ============================================================================
 // Main Process
-// ====================;========================================================
-
-
+// ============================================================================
 
     void ProcessPending()
     {
@@ -334,6 +332,10 @@ public class HitboxManager : RegisteredService, IServiceTick
         };
     }
 
+    public override void Dispose()
+    {
+        // NO OP;
+    }
 
     void DebugLog()
     {

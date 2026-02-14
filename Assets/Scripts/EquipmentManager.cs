@@ -49,7 +49,7 @@ public class EquipmentSlot
 }
 
 
-public class EquipmentManager
+public class EquipmentManager : Service
 {
     readonly Logger Log = Logging.For(LogSystem.Equipment);
 
@@ -127,6 +127,10 @@ public class EquipmentManager
         Log.Debug("Dash",      () => slots[EquipmentSlotType.Dash]?.Equipped       );
     }
 
+    public override void Dispose()
+    {
+        // NO OP   
+    }
 }
 
 

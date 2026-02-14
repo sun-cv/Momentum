@@ -26,6 +26,8 @@ public class ActorStats : Stats
 
             stats.Add(stat.Name, value);
         }
+
+        owner.Emit.Link.LocalBinding<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
     }
 
     float health; 
@@ -49,6 +51,28 @@ public class ActorStats : Stats
     public float AttackMultiplier   => this[nameof(AttackMultiplier)];
 
     public float Mass               => this[nameof(Mass)];
+
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
+        }
+    }
+    
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
+    }
 
     static readonly PropertyInfo[] StatProperties = typeof(StatsDefinition).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(prop => prop.PropertyType == typeof(float)).ToArray();
 }

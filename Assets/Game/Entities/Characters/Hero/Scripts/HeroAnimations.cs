@@ -5,6 +5,6 @@
 
 public static class HeroAnimation
 {
-    public static readonly AnimatorRequest Idle         = new(nameof(Idle));
-    public static readonly AnimatorRequest SwordStrike  = new(nameof(SwordStrike));
+    public static readonly AnimationRequestEvent Idle         = new(nameof(Idle));
+    public static readonly AnimationRequestEvent SwordStrike  = new(nameof(SwordStrike));
 }

@@ -3,7 +3,7 @@
 
 
 
-public class State
+public abstract class State : Service
 {
     public Actor Owner { get; }
 

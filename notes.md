@@ -8,16 +8,10 @@
 
 > ## **To be fixed**
 >
->> HeroDefinition -> EntityDefinition? No separation needed.
 
 > ## **Rework Required**
 >
 
->> Hitbox: process predicate, process hit, process projectiles
->> Hitbox: Weapon timing handling on active frames?
->> Hitbox: Weaopon system Hitbox creation request in transition to
-
->> Dash is weapon? -> Rephrase. Dash should be weapon, dash is equippable weapon?
 
 
 # **Concepts**
@@ -38,4 +32,4 @@
 > ### **EnemieS**
 
 > #### flying
-> 1. flying drone requires shield throw to down for attack
+> 1. flying drone - requires shield throw to down for attack

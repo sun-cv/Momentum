@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using UnityEngine;
 
 
@@ -11,6 +12,7 @@ public class HeroState : State
     IntentSystem    intent;
     EffectRegister  effects;
     MovementEngine  movement;
+    Lifecycle       lifecycle;
 
     bool inactive               = false;
     bool stunned                = false;
@@ -22,7 +24,6 @@ public class HeroState : State
     bool hasLockedDirection     = false;
 
     TimePredicate   idle;
-
 
     public bool Inactive                            { get => inactive;          set => inactive         = value; }
 
@@ -51,6 +52,8 @@ public class HeroState : State
     public Vector2 Velocity                         => movement.Velocity;
     public Vector2 Momentum                         => movement.Momentum;
 
+    public bool Alive                               => lifecycle.IsAlive;
+    public bool Dead                                => lifecycle.IsDead;
     public bool IsMoving                            => Velocity != Vector2.zero;
     public TimePredicate IsIdle                     => idle ??= new (() => !IsMoving);
 
@@ -69,5 +72,30 @@ public class HeroState : State
         effects     = hero.Effects;
         movement    = hero.Movement;
         intent      = hero.Intent;
+        lifecycle   = hero.Lifecycle;
+
+        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
     }
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
+        }
+    }
+
+    public override void Dispose()
+    {
+        idle.Dispose();
+    }
+
 }

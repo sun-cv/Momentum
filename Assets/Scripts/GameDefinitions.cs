@@ -5,29 +5,8 @@ using UnityEngine;
 //  Interfaces & Base Abstracts
 //
 
-public interface IInitialize    { public void Initialize(); }
-public interface IBind          { public void Bind(); } 
-
-public interface IService                { };
-public interface IServiceTick : IService { public void Tick(); UpdatePriority Priority { get; } };
-public interface IServiceLoop : IService { public void Loop(); UpdatePriority Priority { get; } };
-public interface IServiceStep : IService { public void Step(); UpdatePriority Priority { get; } };
-public interface IServiceUtil : IService { public void Util(); UpdatePriority Priority { get; } };
-public interface IServiceLate : IService { public void Late(); UpdatePriority Priority { get; } };
-
-
-public abstract class Service : IService
-{
-    public Guid RuntimeID               = Guid.NewGuid();
-}
-
-[Service]
-public abstract class RegisteredService : Service, IInitialize
-{
-    public abstract void Initialize();
-}
-
-
+public interface IInitialize                { public void Initialize(); }
+public interface IBind                      { public void Bind();       } 
 
 
 //
@@ -50,7 +29,7 @@ public class Runtime                            { public Guid RuntimeID         
 public class Instance           : Runtime       {}
 public class Entity             : Runtime       {}
 public class Actor              : Entity        { 
-                                                  public Emit Emit                      { get; set;  }
+                                                  public Emit   Emit                    { get; set;  }
                                                   public Bridge Bridge                  { get; set;  }}
 
 
@@ -184,27 +163,29 @@ public interface IAfflictable
     // Frozen, Poisoned, Slowed, Burning, etc.
 }
 
+public interface ILiving
+{
+    bool Alive                              { get; }
+    bool Dead                               { get; }
+}
+
 public interface IIdle
 {
-    TimePredicate IsIdle { get; }
+    TimePredicate IsIdle                    { get; }
 }
 
-public interface IEventTarget
-{
-    Emit Emit                               { get; }   
-}
 
-public interface IActor {}
-public interface IAgent : IControllable {}
-public interface IMovableActor : IAgent, IDepthSorted, IDepthColliding, IMovable, IDynamic, IDirectional, IOrientable, IControllable { }
+public interface IActor         : IDepthSorted, IDepthColliding {}
+public interface IAgent         : IActor, IControllable, ILiving, IDefined {}
+public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IDirectional, IOrientable { }
 
-public interface IHero  : IEventTarget, IMovableActor, IDefined, IControllable, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
-public interface IEnemy : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
-public interface IBoss  : IEnemy {}
+public interface IHero          : IAgent, IMovableActor, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
+public interface IEnemy         : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
+public interface IBoss          : IEnemy {}
 // public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
 
 
-public interface IDummy : IControllable, IDamageable, IDefined, IAfflictable, IDepthSorted, IDepthColliding {}
+public interface IDummy         : IAgent, IDamageable, IAfflictable {}
 //
 //  Items
 //
@@ -241,7 +222,9 @@ public enum Request
     Consume,
     Clear,
     Enable,
-    Disable
+    Disable,
+    Trigger,
+    Transition,
 }
 
 public enum Response
@@ -259,23 +242,43 @@ public enum Response
 
 public enum Publish
 {
+    Creating,
     Created,
+    Destroying,
     Destroyed,
+
+    Enabling,
     Enabled,
+    Disabling,
     Disabled,
+
+    Starting,
     Started,
+    Ending,
     Ended,
+
+    Triggering,
     Triggered,
+    Firing,
     Fired,
+
+    Activating,
     Activated,
+    Deactivating,
     Deactivated,
-    Changed,
+
+    Canceling,
     Canceled,
+    Releasing,
+    Released,
+
     Equipped,
     Unequipped,
-    Released,
-    PhaseChange,
-    StateChange,
+
+    Changing,
+    Changed,
+    Transitioning,
+    Transitioned,
 }
 
 public enum Status

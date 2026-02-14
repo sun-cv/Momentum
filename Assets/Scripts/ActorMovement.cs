@@ -7,7 +7,7 @@ using UnityEngine;
 
 
 
-public class MovementEngine : IServiceTick
+public class MovementEngine : Service, IServiceTick
 {
     readonly Logger Log = Logging.For(LogSystem.Movement);
 
@@ -51,8 +51,9 @@ public class MovementEngine : IServiceTick
 
         modifierHandler     = new(actor);
 
-        owner.Emit.Link.Local<Message<Request, MovementEvent>> (HandleMovementDirective);
-        owner.Emit.Link.Local<Message<Request, ClearMovementScopeEvent>>     (HandleMovementClear);
+        owner.Emit.Link.Local<Message<Request, MovementEvent>>          (HandleMovementDirective);
+        owner.Emit.Link.Local<Message<Request, ClearMovementScopeEvent>>(HandleMovementClear);
+        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
 
         SetSpeed();
         SetMass();
@@ -220,7 +221,7 @@ public class MovementEngine : IServiceTick
     }
 
     // ============================================================================
-    // EVENTS
+    // EVENT HANDLERS
     // =====================================================a=======================
     
     void HandleMovementDirective(Message<Request, MovementEvent> message)
@@ -245,6 +246,22 @@ public class MovementEngine : IServiceTick
             case (Request.Clear, { Owner: not null }):
                 ClearAllOwnedDirectives(payload.Owner);
                 break;
+        }
+    }
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
         }
     }
 
@@ -299,6 +316,11 @@ public class MovementEngine : IServiceTick
         Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Instances.Count);
         Log.Trace("Directive.Count",    () => directives.Count);
         Log.Trace("Actor.CanMove",      () => actor.CanMove);
+    }
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;

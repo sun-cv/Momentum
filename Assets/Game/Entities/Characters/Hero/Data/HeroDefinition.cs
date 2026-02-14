@@ -18,9 +18,38 @@ public class HeroDefinition : ActorDefinition
             Mass                    = 10,
         };
 
-        Lifecycle                   = new()
+        Presence                    = new()
         {
-            
+            EnableAbsentState       = true,
+        };
+
+        Lifecycle                   = new()
+        {   
+            Respawn                 = new()
+            {
+                Enabled             = false
+            },
+
+            Corpse                  = new()
+            {
+                Persists            = true,
+                PersistDuration     = 5,
+            },
+        };
+
+        Animations              = new()
+        {
+            Spawn               = new()
+            {
+                Enabled         = false,
+                Default         = "Spawn"
+            },
+
+            Death               = new()
+            {
+                Enabled         = false,
+                Default         = "Death"
+            },
         };
     }
 }

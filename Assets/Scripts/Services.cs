@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
+using UnityEngine;
+
 
 
 
@@ -17,7 +19,7 @@ public static class Services
 
     public static void Start()
     {
-        Setup.AutoRegister();
+        Setup.Start();
     }
 
     public static void Initialize()
@@ -65,6 +67,11 @@ public static class Services
 
     private static class Setup
     {
+        public static void Start()
+        {
+            AutoRegister();
+            Process();
+        }
 
         public static void AutoRegister()
         {
@@ -88,6 +95,11 @@ public static class Services
                     Registry.RegisterLanes(tickable);
             }
         }
+
+        public static void Process()
+        {
+            Registry.Get<ServiceProcesses>().Util();
+        }
     }
 
 
@@ -106,42 +118,63 @@ public static class Services
         public static void Tick()
         {
             foreach(var service in Registry.TickServices)
-                service.Tick();
+            {
+                if (service.IsEnabled) service.Tick();
+            }
         }
-
+     
         public static void Loop()
         {        
             foreach(var service in Registry.LoopServices)
-                service.Loop();
+            {
+                if (service.IsEnabled) service.Loop();
+            }
         }
 
         public static void Step()
         {        
             foreach(var service in Registry.StepServices)
-                service.Step();
+            {
+                if (service.IsEnabled) service.Step();
+            }
         }
 
         public static void Util()
-        {        
-            ServiceProcesses();
-    
+        {            
             foreach(var service in Registry.UtilServices)
-                service.Util();
+            {
+                if (service.IsEnabled) service.Util();
+            }
         }
 
         public static void Late()
         {
             foreach(var service in Registry.LateServices)
-                service.Late();  
+            {
+                if (service.IsEnabled) service.Late();
+            }
+        }
+    }
+
+    private class ServiceProcesses : RegisteredService, IServiceUtil
+    {
+        public void Util()
+        {
+            Process();
         }
 
-        private static void ServiceProcesses()
+        void Process()
         {
             Registry.ProcessPending();
         }
 
-    }
+        public override void Dispose()
+        {
+            // NO OP;
+        }
 
+        public UpdatePriority Priority => ServiceUpdatePriority.Services;
+    }
 
     private static class Registry
     {
@@ -231,6 +264,7 @@ public static class Services
                 if (service is IServiceLoop ServiceLoop) loopServices.Remove(ServiceLoop);
                 if (service is IServiceStep ServiceStep) stepServices.Remove(ServiceStep);
                 if (service is IServiceUtil ServiceUtil) utilServices.Remove(ServiceUtil);
+                if (service is IServiceLate ServiceLate) lateServices.Remove(ServiceLate);
             }
 
             pendingDeregistrations.Clear();

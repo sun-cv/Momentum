@@ -18,9 +18,37 @@ public class DummyDefinition : ActorDefinition
             Mass                    = 1000,
         };
 
-        Lifecycle                   = new()
+        Presence                    = new()
         {
-            
+            EnableAbsentState       = false,
+        };
+
+        Lifecycle                   = new()
+        {   
+            Respawn                 = new()
+            {
+                Enabled             = false,
+            },
+            Corpse                  = new()
+            {
+                Persists            = true,
+                PersistDuration     = 5,
+            },
+        };
+
+        Animations              = new()
+        {
+            Spawn               = new()
+            {
+                Enabled         = true,
+                Default         = "Spawn"
+            },
+
+            Death               = new()
+            {
+                Enabled         = true,
+                Default         = "Death"
+            },
         };
     }
 }

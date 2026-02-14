@@ -5,13 +5,13 @@ using UnityEngine;
 
 
 
-public class CombatResolver : RegisteredService, IServiceStep
+public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 {
     readonly Logger Log = Logging.For(LogSystem.Combat);
 
     List<CombatEvent> pending = new();
 
-    public override void Initialize()
+    public void Initialize()
     {
         Link.Global<Message<Request, CombatEvent>>(HandleCombatEvent);
     }
@@ -159,6 +159,11 @@ public class CombatResolver : RegisteredService, IServiceStep
     bool IsDynamicForce(DamageComponent component)
     {
         return component.ForceMagnitude > 0;
+    }
+
+    public override void Dispose()
+    {
+        // NO OP;
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.Combat;

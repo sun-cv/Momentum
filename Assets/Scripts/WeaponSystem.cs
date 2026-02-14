@@ -10,7 +10,7 @@ using UnityEngine;
 // ============================================================================
 
 
-public class WeaponSystem : IServiceTick
+public class WeaponSystem : Service, IServiceTick
 {
     readonly Logger Log = Logging.For(LogSystem.Weapons);
 
@@ -30,7 +30,7 @@ public class WeaponSystem : IServiceTick
 
     public int NonCancelableAttackLocks { get; set; } = 0;
 
-    GlobalEventHandler<Message<Response, HitboxIdEvent>> hitboxEvents;
+    GlobalEventHandler<Message<Response, HitboxIdEvent>>    hitboxEvents;
 
     public WeaponSystem(Agent agent)
     {
@@ -46,10 +46,12 @@ public class WeaponSystem : IServiceTick
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        owner.Emit.Link.Local<Publish, CommandPipelinesEvent>   (HandleCommandPipelineUpdates);
-        owner.Emit.Link.Local<Publish, EffectInstanceEvent>     (HandleEffectNonCancelableLockCount);
-        owner.Emit.Link.Local<Publish, LockPublishEvent>              (HandleLocksUpdate);
-        owner.Emit.Link.Local<Publish, EquipmentChangeEvent>    (HandleEquipmentChange);
+        owner.Emit.Link.Local<Publish, CommandPipelinesEvent>       (HandleCommandPipelineUpdates);
+        owner.Emit.Link.Local<Publish, EffectInstanceEvent>         (HandleEffectNonCancelableLockCount);
+        owner.Emit.Link.Local<Publish, LockPublishEvent>            (HandleLocksUpdate);
+        owner.Emit.Link.Local<Publish, EquipmentChangeEvent>        (HandleEquipmentChange);
+        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);
+
     }
 
 
@@ -358,7 +360,7 @@ public class WeaponSystem : IServiceTick
     }
 
     // ============================================================================
-    //  RELEASE PREDICATEs
+    //  RELEASE PREDICATES
     // ============================================================================
 
     bool ShouldReleaseWeapon()
@@ -505,7 +507,7 @@ public class WeaponSystem : IServiceTick
 
     public void RequestAnimation(WeaponAction action)
     {
-        AnimatorRequest request = instance.State.Phase switch
+        AnimationRequestEvent request = instance.State.Phase switch
         {
             WeaponPhase.Charging    => action.Animations.OnCharge,
             WeaponPhase.Fire        => action.Animations.OnFire,
@@ -516,7 +518,7 @@ public class WeaponSystem : IServiceTick
         if (request == null)
             return;
 
-        owner.Emit.Local(Request.Start, new AnimationEvent(owner, request));
+        owner.Emit.Local(Request.Start, request);
     }
 
     // ============================================================================
@@ -637,7 +639,7 @@ public class WeaponSystem : IServiceTick
 
 
     // ============================================================================
-    // VALIDATION HELPERS
+    // VALIDATION
     // ============================================================================
 
     bool HasAllRequiredTriggers(WeaponAction weapon)
@@ -684,15 +686,12 @@ public class WeaponSystem : IServiceTick
             case Publish.Activated:
                 NonCancelableAttackLocks++;
                 break;
-    
             case Publish.Canceled:
             case Publish.Deactivated:
                 NonCancelableAttackLocks--;
                 break;
         }
     }
-
-    
 
     void HandleLocksUpdate(Message<Publish, LockPublishEvent> message)
     {
@@ -725,14 +724,30 @@ public class WeaponSystem : IServiceTick
 
     void PublishTransition()
     {
-        owner.Emit.Local(Publish.PhaseChange, new WeaponInstanceEvent(owner, instance));
-        owner.Emit.Local(Publish.PhaseChange, new WeaponInstanceEvent(owner, instance));
+        owner.Emit.Local(Publish.Transitioned, new WeaponInstanceEvent(owner, instance));
+        owner.Emit.Local(Publish.Transitioned, new WeaponInstanceEvent(owner, instance));
     }
 
     void RegisterCooldown()
     {
         if (instance.Action.Cooldown > 0)
             cooldown.RegisterWeapon(instance.Action);
+    }
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
+        }
     }
     // ============================================================================
     // QUERIES & ACCESSORS
@@ -764,14 +779,6 @@ public class WeaponSystem : IServiceTick
     bool HasBufferCommands()        => buffer?.Count > 0;
 
 
-    public Agent Owner                                                  => owner;
-    public WeaponInstance CurrentWeapon                                 => instance;
-    public WeaponCooldown Cooldown                                      => cooldown;
-    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks => locks;
-
-    public UpdatePriority Priority => ServiceUpdatePriority.WeaponLogic;
-
-    public WeaponInstance PreviousInstance => previousInstance;
 
     void DebugLog()
     {
@@ -783,6 +790,22 @@ public class WeaponSystem : IServiceTick
         Log.Trace("Locks.NonCancelable",  () => NonCancelableAttackLocks );
         Log.Trace("Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance?.Action.Name)}" : "Ready");
     }
+    
+    public override void Dispose()
+    {
+        hitboxEvents.Dispose();
+
+        Services.Lane.Deregister(this);
+    }
+
+    public Agent Owner                                                  => owner;
+    public WeaponInstance CurrentWeapon                                 => instance;
+    public WeaponCooldown Cooldown                                      => cooldown;
+    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks => locks;
+
+    public UpdatePriority Priority => ServiceUpdatePriority.WeaponLogic;
+
+    public WeaponInstance PreviousInstance => previousInstance;
 }
 
 // ============================================================================
@@ -903,7 +926,6 @@ public class ChargingPhaseHandler : IWeaponPhaseHandler
     public void Enter(WeaponInstance instance, WeaponSystem controller)
     {        
         instance.State.PhaseFrames .Restart();
-        instance.State.ActiveFrames.Start();
 
         controller.UpdateAvailableControls();
 
@@ -936,7 +958,6 @@ public class FirePhaseHandler : IWeaponPhaseHandler
         instance.State.HasFired = true;
 
         instance.State.PhaseFrames .Restart();;
-        instance.State.ActiveFrames.Start();
 
         controller.UpdateAvailableControls();
 
@@ -968,7 +989,6 @@ public class FireEndPhaseHandler : IWeaponPhaseHandler
     public void Enter(WeaponInstance instance, WeaponSystem controller)
     {        
         instance.State.PhaseFrames.Reset();
-        instance.State.PhaseFrames.Start();
 
         if (instance.Action.ControlWindow > 0)
         {
@@ -1010,7 +1030,6 @@ public class DisablePhaseHandler : IWeaponPhaseHandler
     public void Enter(WeaponInstance instance, WeaponSystem controller)
     {
         instance.State.PhaseFrames.Reset();
-        instance.State.PhaseFrames.Start();
         
         controller.CancelOnReleaseEffects(instance);
         controller.DestroyHitboxes(instance);

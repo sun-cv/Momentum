@@ -5,11 +5,11 @@ using UnityEngine;
 
 
 
-public class TriggerCoordinator : RegisteredService, IServiceTick
+public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 {
     Queue<TriggerEvent> pendingTriggers = new();
 
-    public override void Initialize()
+    public void Initialize()
     {
         Link.Global<Message<Request, TriggerEvent>>(HandleTriggerEvent);
     }
@@ -45,6 +45,11 @@ public class TriggerCoordinator : RegisteredService, IServiceTick
     void HandleTriggerEvent(Message<Request, TriggerEvent> message)
     {
         pendingTriggers.Enqueue(message.Payload);
+    }
+
+    public override void Dispose()
+    {
+        // NO OP;
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.TriggerCoordinator;

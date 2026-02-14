@@ -5,38 +5,14 @@ using System.Linq;
 
 
 
-public class Command : Instance
-{
-    public Capability           Action  { get; init; }
-    public InputButton          Button  { get; init; }
-    public InputIntentSnapshot  Intent  { get; init; }
 
-    public int FrameCreated     { get; init; }
-
-    public bool locked;
-
-    public Command()
-    {
-        FrameCreated = Clock.FrameCount;
-    }
-
-    public void Lock()   => locked = true;
-    public void Unlock() => locked = false;
-
-    public bool Locked   => locked;
-}
-
-
-
-
-public class CommandSystem
+public class CommandSystem : Service
 {
     Actor owner;
     IntentSystem intent;
 
     Dictionary<Capability, Command> active = new();
     Dictionary<Capability, Command> buffer = new();
-
 
     public void Initialize(IntentSystem intent)
     {
@@ -141,8 +117,35 @@ public class CommandSystem
     void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
 
     void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+
+    public override void Dispose()
+    {
+        // NO OP
+    }
 }
 
+
+
+public class Command : Instance
+{
+    public Capability           Action  { get; init; }
+    public InputButton          Button  { get; init; }
+    public InputIntentSnapshot  Intent  { get; init; }
+
+    public int FrameCreated     { get; init; }
+
+    public bool locked;
+
+    public Command()
+    {
+        FrameCreated = Clock.FrameCount;
+    }
+
+    public void Lock()   => locked = true;
+    public void Unlock() => locked = false;
+
+    public bool Locked   => locked;
+}
 
 
 
@@ -168,7 +171,6 @@ public readonly struct CommandPipelinesEvent
         Buffer = buffer;
     }
 }
-
 
 
 

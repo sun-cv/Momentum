@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 
 
-public class TriggerLocks : RegisteredService
+public class TriggerLocks : RegisteredService, IInitialize
 {
 
     readonly Dictionary<Capability, List<string>> locks = new();
     bool acceptingLocks = true;
 
-    public override void Initialize()
+    public void Initialize()
     {
         Link.Global<Message<Request, LockEvent>>(HandleLockRequest);
     }
@@ -71,7 +71,11 @@ public class TriggerLocks : RegisteredService
 
     public bool IsLocked(Capability action)     => locks.TryGetValue(action, out var list) && list.Count > 0;
     public void SetAcceptingLocks(bool value)   => acceptingLocks = value;
-    void OnEvent<T>(T message) where T : IEvent     => EventBus<T>.Raise(message);
+
+    public override void Dispose()
+    {
+        // NO OP;
+    }
 
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
 } 

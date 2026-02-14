@@ -11,10 +11,10 @@ public static class HeroFactory
         definition ??= new HeroDefinition();
 
         var prefab      = Assets.Get(definition.Name);
-        var instance    = Object.Instantiate(prefab);
+        var view        = Object.Instantiate(prefab);
 
         var hero    = new Hero();
-        hero.Bridge = new(hero, instance);
+        hero.Bridge = new(hero, view);
         hero.Initialize(definition);
         
         return hero;

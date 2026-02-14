@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -52,18 +53,21 @@ public class EffectInstance : Instance
 }
 
 
-public class EffectRegister
+public class EffectRegister : Service
 {
     readonly Logger Log = Logging.For(LogSystem.Effects);
 
-    readonly Actor owner;
+    Actor owner;
+    
     readonly List<EffectInstance> effects = new();
 
     public EffectRegister(Actor actor)
     {
         owner = actor;
-        owner.Emit.Link.Local<Request, EffectDeclarationEvent>(HandleEffectRequest);
-        owner.Emit.Link.Local<Request, EffectInstanceEvent>   (HandleEffectCancellation);
+        owner.Emit.Link.Local<Request, EffectDeclarationEvent>      (HandleEffectRequest);
+        owner.Emit.Link.Local<Request, EffectInstanceEvent>         (HandleEffectCancellation);
+        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);
+
     } 
 
     void HandleEffectRequest(Message<Request, EffectDeclarationEvent> message)
@@ -156,6 +160,27 @@ public class EffectRegister
                 return true; 
         }
         return defaultValue;
+    }
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
+        }
+    }
+
+    public override void Dispose()
+    {
+        effects.Clear();
     }
 
     public List<EffectInstance> Effects => effects;

@@ -197,10 +197,10 @@ public class WeaponAction       : Definition
 
 public class WeaponAnimations
 {
-    public AnimatorRequest OnCharge                { get; init; }
-    public AnimatorRequest OnFire                  { get; init; }
-    public AnimatorRequest OnFireEnd               { get; init; }
-    public AnimatorRequest OnCancel                { get; init; }
+    public AnimationRequestEvent OnCharge                { get; init; }
+    public AnimationRequestEvent OnFire                  { get; init; }
+    public AnimationRequestEvent OnFireEnd               { get; init; }
+    public AnimationRequestEvent OnCancel                { get; init; }
 }
 
 public class WeaponTriggerCondition

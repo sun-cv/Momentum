@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
 
 
 
 
 
-public class IntentSystem : IServiceTick
+public class IntentSystem : Service, IServiceTick
 {
     Actor           owner;
 
@@ -29,14 +30,39 @@ public class IntentSystem : IServiceTick
         command .Initialize(this);
         input   .Initialize(this);
 
+        owner.Emit.Link.LocalBinding<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
     }
-
 
     public void Tick()
     {
         command .Tick();
         input   .Tick();
     }
+
+    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    {
+        switch(message.Payload.State)
+        {
+            case Presence.State.Entering:
+                Enable();
+            break;
+            case Presence.State.Exiting:
+                Disable();
+            break;
+            case Presence.State.Disposal:
+                Dispose();
+            break;
+        }
+    }
+
+    public override void Dispose()
+    {
+        input  .Dispose();
+        command.Dispose();
+
+        Services.Lane.Deregister(this);
+    }
+
 
     public Actor         Owner          => owner;
     public CommandSystem Command        => command;
@@ -48,7 +74,7 @@ public class IntentSystem : IServiceTick
 }
 
 
-public class InputIntent : IDirectionSource
+public class InputIntent : IDirectionSource, IDisposable
 {
     readonly bool normalizeVelocity = Settings.Movement.NORMALIZE_VELOCITY;
 
@@ -133,6 +159,11 @@ public class InputIntent : IDirectionSource
             Direction          = Direction,
             LastDirection      = LastDirection,
         };
+    }
+
+    public void Dispose()
+    {
+        facingDiagonal.Dispose();
     }
 
     public Direction Aim                => aim;

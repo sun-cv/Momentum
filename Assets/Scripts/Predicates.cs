@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 
-public class LivePredicate : IServiceLoop
+public class LivePredicate : Service, IServiceLoop
 {
     private bool value;
     private bool autoUpdateEnabled = true;
@@ -35,6 +35,11 @@ public class LivePredicate : IServiceLoop
     {
         autoUpdateEnabled = true;
         value = evaluator();
+    }
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
     }
 
 
@@ -84,7 +89,7 @@ public class LazyPredicate
 
 }
 
-public class TimePredicate : IServiceLoop
+public class TimePredicate : Service, IServiceLoop
 {
     private bool value              = false;
     private readonly Func<bool>     condition;
@@ -116,6 +121,11 @@ public class TimePredicate : IServiceLoop
             if (resetOnFalse)
                 timer.Reset();
         }
+    }
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
     }
 
     public static implicit operator bool(TimePredicate b) => b.value;

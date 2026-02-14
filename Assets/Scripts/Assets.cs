@@ -24,7 +24,7 @@ public static class Assets
 
         var prefabNames = new HashSet<string>();
 
-        var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => { Debug.Log($"{prefab.name}");cache[prefab.name] = prefab; prefabNames.Add(prefab.name); });
+        var handle = Addressables.LoadAssetsAsync<GameObject>(label, prefab => { cache[prefab.name] = prefab; prefabNames.Add(prefab.name); });
         
         handle.WaitForCompletion();
         
