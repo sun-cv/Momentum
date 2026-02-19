@@ -8,16 +8,22 @@ public abstract class Stats : Service, IServiceTick
 {
     protected readonly Dictionary<string, float> stats  = new();
     protected readonly StatsMediator mediator           = new();
-    
+
+    // ===============================================================================
+
     public void Initialize()
     {
         Services.Lane.Register(this);
     }
 
+    // ===============================================================================
+
     public void Tick()
     {
         mediator.Tick();
     }
+
+    // ===============================================================================
 
     public float this[string stat]
     {
@@ -28,9 +34,23 @@ public abstract class Stats : Service, IServiceTick
         }
     }
 
-    public float GetStat(string stat)               => stats[stat];
-    public void SetStat(string stat, float value)   => stats.Add(stat, value);
-    public void AddModifier(StatModifier modifier)  => Mediator.AddModifier(modifier);
+    public float GetStat(string stat)
+    {
+        return stats[stat];
+    }
+
+    public void SetStat(string stat, float value)
+    {
+        stats.Add(stat, value);
+    }
+
+    public void AddModifier(StatModifier modifier)
+    {
+        Mediator.AddModifier(modifier);
+    }
+    
+    // ===============================================================================
+
 
     public StatsMediator Mediator   => mediator;
     public UpdatePriority Priority  => ServiceUpdatePriority.Stats;
@@ -40,10 +60,37 @@ public abstract class Stats : Service, IServiceTick
 
 public class StatsMediator
 {
-    readonly LinkedList<StatModifier> modifiers = new();
     public event EventHandler<Query> Queries;
-    
-    public void PerformQuery(object sender, Query query) => Queries?.Invoke(sender, query);
+
+            // -----------------------------------
+
+    readonly LinkedList<StatModifier> modifiers = new();
+
+        // ===============================================================================
+
+    public void Tick()
+    {
+        var node = modifiers.First;
+
+        while (node != null)
+        {
+            var nextNode = node.Next;
+
+            if (node.Value.MarkedForRemoval)
+            {
+                node.Value.Dispose();
+            }
+
+            node = nextNode;
+        }
+    }
+
+        // ===============================================================================
+
+    public void PerformQuery(object sender, Query query)
+    {
+        Queries?.Invoke(sender, query);
+    }
 
     public void AddModifier(StatModifier modifier) 
     {
@@ -61,23 +108,12 @@ public class StatsMediator
         modifiers.Remove(modifier);
         Queries -= modifier.Handle;
     }
-
-    public void Tick()
-    {
-        var node = modifiers.First;
-        while (node != null)
-        {
-            var nextNode = node.Next;
-
-            if (node.Value.MarkedForRemoval)
-            {
-                node.Value.Dispose();
-            }
-
-            node = nextNode;
-        }
-    }
 }
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Classes
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 
 public class Query
 {
@@ -92,11 +128,14 @@ public class Query
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                       Behaviours
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 public abstract class StatModifier : IDisposable
 {
-    public bool MarkedForRemoval { get; private set; }
-    readonly    DualCountdown timer;
     public event Action<StatModifier> OnDispose = delegate { };
+    readonly    DualCountdown timer;
 
     protected StatModifier(float duration)
     {
@@ -113,6 +152,8 @@ public abstract class StatModifier : IDisposable
     {
         OnDispose.Invoke(this);
     }
+
+    public bool MarkedForRemoval { get; private set; }
 }
 
 
@@ -126,7 +167,7 @@ public class BasicStatModifier : StatModifier
         this.stat       = stat;
         this.operation  = operation;
     }
-    
+
     public override void Handle(object sender, Query query )
     {
         if (query.stat != stat)
@@ -139,14 +180,14 @@ public class BasicStatModifier : StatModifier
 public class TemporaryHitPointsModifier : StatModifier
 {
     readonly string stat;
-    private float tempHitPoints;
-    
+    readonly float tempHitPoints;
+
     public TemporaryHitPointsModifier(string stat, float amount, float duration) : base(duration)
     {
         this.stat     = stat;
         tempHitPoints = amount;
     }
-    
+
     public override void Handle(object sender, Query query)
     {
         if (query.stat != stat)

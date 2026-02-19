@@ -5403,6 +5403,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Dummy
       objectReference: {fileID: 0}
+    - target: {fileID: 1090350533793962272, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5525583276490888211, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
       propertyPath: m_LocalPosition.x
       value: 4.06
@@ -5441,6 +5445,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5525583276490888211, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656609804010228881, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
+      propertyPath: m_Size.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656609804010228881, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
+      propertyPath: m_Size.y
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656609804010228881, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656609804010228881, guid: 0be0882c6cfe6274bbb6f0686b087615, type: 3}
+      propertyPath: m_WasSpriteAssigned
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

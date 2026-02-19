@@ -12,24 +12,7 @@ public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDispos
 {
     private InputActions input;
 
-    void OnInteractPress   (InputAction.CallbackContext context) => EventBus<InteractPress>     .Raise(new());
-    void OnInteractRelease (InputAction.CallbackContext context) => EventBus<InteractRelease>   .Raise(new());
-
-    void OnActionPress     (InputAction.CallbackContext context) => EventBus<ActionPress>       .Raise(new());
-    void OnActionRelease   (InputAction.CallbackContext context) => EventBus<ActionRelease>     .Raise(new());
-
-    void OnAttack1Press    (InputAction.CallbackContext context) => EventBus<Attack1Press>      .Raise(new());
-    void OnAttack1Release  (InputAction.CallbackContext context) => EventBus<Attack1Release>    .Raise(new());
-
-    void OnAttack2Press    (InputAction.CallbackContext context) => EventBus<Attack2Press>      .Raise(new());
-    void OnAttack2Release  (InputAction.CallbackContext context) => EventBus<Attack2Release>    .Raise(new());
-
-    void OnModifierPress   (InputAction.CallbackContext context) => EventBus<ModifierPress>     .Raise(new());
-    void OnModifierRelease (InputAction.CallbackContext context) => EventBus<ModifierRelease>   .Raise(new());
-
-    void OnDodgePress      (InputAction.CallbackContext context) => EventBus<DashPress>         .Raise(new());
-    void OnDodgeRelease    (InputAction.CallbackContext context) => EventBus<DashRelease>       .Raise(new());
-
+    // ===============================================================================
 
     public void Initialize()
     {
@@ -56,6 +39,8 @@ public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDispos
 
     }
 
+    // ===============================================================================
+    
     public void Tick()
     {
         PollContinousInputs();
@@ -70,6 +55,30 @@ public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDispos
     void PollMousePosition()    => EventBus<MousePosition> .Raise(new MousePosition(input.Player.Mouse.ReadValue<Vector2>()));
     void PollMovementVector()   => EventBus<MovementVector>.Raise(new MovementVector(input.Player.Move.ReadValue<Vector2>()));
 
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
+    void OnInteractPress   (InputAction.CallbackContext context) => EventBus<InteractPress>     .Raise(new());
+    void OnInteractRelease (InputAction.CallbackContext context) => EventBus<InteractRelease>   .Raise(new());
+
+    void OnActionPress     (InputAction.CallbackContext context) => EventBus<ActionPress>       .Raise(new());
+    void OnActionRelease   (InputAction.CallbackContext context) => EventBus<ActionRelease>     .Raise(new());
+
+    void OnAttack1Press    (InputAction.CallbackContext context) => EventBus<Attack1Press>      .Raise(new());
+    void OnAttack1Release  (InputAction.CallbackContext context) => EventBus<Attack1Release>    .Raise(new());
+
+    void OnAttack2Press    (InputAction.CallbackContext context) => EventBus<Attack2Press>      .Raise(new());
+    void OnAttack2Release  (InputAction.CallbackContext context) => EventBus<Attack2Release>    .Raise(new());
+
+    void OnModifierPress   (InputAction.CallbackContext context) => EventBus<ModifierPress>     .Raise(new());
+    void OnModifierRelease (InputAction.CallbackContext context) => EventBus<ModifierRelease>   .Raise(new());
+
+    void OnDodgePress      (InputAction.CallbackContext context) => EventBus<DashPress>         .Raise(new());
+    void OnDodgeRelease    (InputAction.CallbackContext context) => EventBus<DashRelease>       .Raise(new());
+
+    // ===============================================================================
+
     public override void Dispose()
     {
         input?.Player.Disable();
@@ -81,22 +90,18 @@ public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDispos
     public UpdatePriority Priority => ServiceUpdatePriority.InputDriver;
 }
 
-public struct PendingInputEvent
-{
-    public PlayerAction Action      { get; set; }
-    public bool IsPress             { get; set; }
-}
-
 
 public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDisposable
 {
 
-    Dictionary<PlayerAction, InputButton> buttonMap  = new();
+    Dictionary<PlayerAction, InputButton> buttonMap = new();
     HashSet<InputButton> activeButtons              = new();
     Queue<PendingInputEvent> pendingInputs          = new();
 
-    RemoteVector2 mousePositionVector               = new();
-    RemoteVector2 movementDirectionVector           = new();
+    Vector2 mousePositionVector                     = new();
+    Vector2 movementDirectionVector                 = new();
+
+        // -----------------------------------
 
     EventBinding<InteractPress>         interactPress;
     EventBinding<InteractRelease>       interactRelease;
@@ -113,6 +118,8 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
     EventBinding<MovementVector>        movementVector;
     EventBinding<MousePosition>         mousePosition;
 
+    // ===============================================================================
+
     public void Initialize()
     {
         mousePosition   = EventBus<MousePosition> .Subscribe(UpdateMousePosition);
@@ -128,8 +135,8 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
         attack2Release  = BindRelease   <Attack2Release>    ();
         modifierPress   = BindPress     <ModifierPress>     ();
         modifierRelease = BindRelease   <ModifierRelease>   ();
-        dashPress      = BindPress      <DashPress>        ();
-        dashRelease    = BindRelease    <DashRelease>      ();
+        dashPress       = BindPress     <DashPress>         ();
+        dashRelease     = BindRelease   <DashRelease>       ();
 
         foreach (PlayerAction intent in EnumUtils.GetEnumValues<PlayerAction>())
         {
@@ -140,22 +147,8 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
         }
     }
 
-    public override void Dispose()
-    {
-        EventBus<InteractPress>     .Unsubscribe(interactPress);  
-        EventBus<InteractRelease>   .Unsubscribe(interactRelease);  
-        EventBus<ActionPress>       .Unsubscribe(actionPress);  
-        EventBus<ActionRelease>     .Unsubscribe(actionRelease);  
-        EventBus<Attack1Press>      .Unsubscribe(attack1Press);  
-        EventBus<Attack1Release>    .Unsubscribe(attack1Release);  
-        EventBus<Attack2Press>      .Unsubscribe(attack2Press);  
-        EventBus<Attack2Release>    .Unsubscribe(attack2Release);  
-        EventBus<ModifierPress>     .Unsubscribe(modifierPress);  
-        EventBus<ModifierRelease>   .Unsubscribe(modifierRelease);  
-        EventBus<DashPress>         .Unsubscribe(dashPress);  
-        EventBus<DashRelease>       .Unsubscribe(dashRelease);  
-    }
-
+    // ===============================================================================
+    
     public void Tick()
     {
         ResolvePendingInput();
@@ -175,17 +168,6 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
 
     }
 
-    InputButton GetOrCreateButton(PlayerAction input)
-    {
-        if (!buttonMap.TryGetValue(input, out InputButton button))
-        {
-            button = new InputButton(input);
-            buttonMap[input] = button;
-        }
-
-        return button;
-    }
-
     void UpdateButtons()
     {
         foreach (var button in buttonMap.Values)
@@ -199,20 +181,58 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
         }
     }
 
-    void UpdateMousePosition(MousePosition evt)             => mousePositionVector.Vector      = evt.vector;
-    void UpdateMovementIntent(MovementVector evt)           => movementDirectionVector.Vector  = evt.vector;
+    InputButton GetOrCreateButton(PlayerAction input)
+    {
+        if (!buttonMap.TryGetValue(input, out InputButton button))
+        {
+            button = new InputButton(input);
+            buttonMap[input] = button;
+        }
+
+        return button;
+    }
+
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
+
+    void UpdateMousePosition(MousePosition evt)             => mousePositionVector      = evt.vector;
+    void UpdateMovementIntent(MovementVector evt)           => movementDirectionVector  = evt.vector;
 
     EventBinding<T> BindPress<T>()   where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Action = evt.Action, IsPress = true  }); });
     EventBinding<T> BindRelease<T>() where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Action = evt.Action, IsPress = false }); });
 
-    public RemoteVector2 RemoteMousePosition                => mousePositionVector;
-    public RemoteVector2 RemoteMovementDirection            => movementDirectionVector;
+    // ===============================================================================
 
-    public Dictionary<PlayerAction, InputButton> ButtonMap   => buttonMap;
+
+    public override void Dispose()
+    {
+        EventBus<InteractPress>     .Unsubscribe(interactPress);  
+        EventBus<InteractRelease>   .Unsubscribe(interactRelease);  
+        EventBus<ActionPress>       .Unsubscribe(actionPress);  
+        EventBus<ActionRelease>     .Unsubscribe(actionRelease);  
+        EventBus<Attack1Press>      .Unsubscribe(attack1Press);  
+        EventBus<Attack1Release>    .Unsubscribe(attack1Release);  
+        EventBus<Attack2Press>      .Unsubscribe(attack2Press);  
+        EventBus<Attack2Release>    .Unsubscribe(attack2Release);  
+        EventBus<ModifierPress>     .Unsubscribe(modifierPress);  
+        EventBus<ModifierRelease>   .Unsubscribe(modifierRelease);  
+        EventBus<DashPress>         .Unsubscribe(dashPress);  
+        EventBus<DashRelease>       .Unsubscribe(dashRelease);  
+    }
+
+    public Vector2 MousePosition                            => mousePositionVector;
+    public Vector2 MovementDirection                        => movementDirectionVector;
+
+    public Dictionary<PlayerAction, InputButton> ButtonMap  => buttonMap;
     public HashSet<InputButton> ActiveButtons               => activeButtons;
     
     public UpdatePriority Priority => ServiceUpdatePriority.InputRouter;
 }
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
 public class InputButton
@@ -297,6 +317,16 @@ public class InputButton
 }
 
 
+public struct PendingInputEvent
+{
+    public PlayerAction Action      { get; set; }
+    public bool IsPress             { get; set; }
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public interface IInputEvent : IEvent { PlayerAction Action { get; } InputCondition Condition { get; }}
 

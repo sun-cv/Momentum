@@ -8,22 +8,21 @@ public class Lifecycle : Service, IServiceLoop
 
     public enum State { Alive, Dying, Dead }
 
-        // ---------------------------------
+        // -----------------------------------
     
     readonly Actor              owner;
     readonly IDamageable        actor;
     readonly ActorDefinition    definition;
 
+        // -----------------------------------
+
     Dictionary<State, ILifecycleStateHandler> stateHandlers;
 
-        // ---------------------------------
+        // -----------------------------------
 
     State state         = State.Alive;
     public bool respawn = false;
 
-
-    // ===============================================================================
-    // Initialization
     // ===============================================================================
 
     public Lifecycle(Actor actor)
@@ -55,20 +54,14 @@ public class Lifecycle : Service, IServiceLoop
             { State.Dead,   new DeadStateHandler (owner, actor, definition)  }
         };
     }
-
-
-    // ===============================================================================
-    // Core
-    // ===============================================================================
     
+    // ===============================================================================
+
     public void Loop()
     {
         LoopHandler();
     }
 
-
-    // ===============================================================================
-    // Operations
     // ===============================================================================
 
     void LoopHandler()
@@ -76,6 +69,10 @@ public class Lifecycle : Service, IServiceLoop
         if (stateHandlers.TryGetValue(state, out var handler))
             handler.Loop(this);
     }
+
+        // ===================================
+        //  State
+        // ===================================
 
     public void TransitionTo(State newState)
     {
@@ -102,9 +99,8 @@ public class Lifecycle : Service, IServiceLoop
             handler.Enter(this);
     }
 
-
     // ===============================================================================
-    // Event Handlers
+    //  Events
     // ===============================================================================
 
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
@@ -123,50 +119,30 @@ public class Lifecycle : Service, IServiceLoop
         }
     }
 
-
-        // =================================
-        // Event Helpers
-        // =================================
-
     void PublishState()
     {
         owner.Emit.Local(Publish.Transitioning, new LifecycleEvent(owner, state));
     }
 
+    // ===============================================================================
 
-    // ===============================================================================
-    // Debug
-    // ===============================================================================
-    
     readonly Logger Log = Logging.For(LogSystem.Lifecycle);
-
-
-    // ===============================================================================
-    // Lifecycle
-    // ===============================================================================
 
     public override void Dispose()
     {
         Services.Lane.Deregister(this);
     }
+    
+    public IDamageable Actor            => actor;
+    public bool IsAlive                 => state == State.Alive;
+    public bool IsDead                  => !IsAlive;
 
-
-    // ===============================================================================
-    // Properties
-    // ===============================================================================
-
-    public IDamageable Actor => actor;
-
-    public bool IsAlive => state == State.Alive;
-    public bool IsDead  => !IsAlive;
-
-    public UpdatePriority Priority => ServiceUpdatePriority.Lifecycle;
+    public UpdatePriority Priority      => ServiceUpdatePriority.Lifecycle;
 }
 
 
-
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                        Handlers                                        
+//                                     State Handlers                                       
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public interface ILifecycleStateHandler
@@ -177,12 +153,10 @@ public interface ILifecycleStateHandler
 }
 
 
-
-    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-    //                                  Alive state
-    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        
-        // Rework required - Update TimeSinceLastDamage with hit instance.
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                              Alive state
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+            // Rework required - Update TimeSinceLastDamage with hit instance.
 
 public class AliveStateHandler : ILifecycleStateHandler
 {
@@ -190,16 +164,13 @@ public class AliveStateHandler : ILifecycleStateHandler
     readonly IDamageable actor;
     readonly ActorDefinition definition;
     
-        // -------------------------------------
+        // -----------------------------------
 
     float lastHealthPercent     = -1f;
-    float timeSinceLastDamage   = -1f;
+    // float timeSinceLastDamage   = -1f;
 
     HashSet<HealthThreshold> activeThresholds = new();
 
-
-    // ===============================================================================
-    // Initialization
     // ===============================================================================
 
     public AliveStateHandler(Actor owner, IDamageable actor, ActorDefinition definition)
@@ -210,9 +181,6 @@ public class AliveStateHandler : ILifecycleStateHandler
 
     }
 
-
-    // ===============================================================================
-    // Core
     // ===============================================================================
 
     public void Enter(Lifecycle controller)
@@ -249,11 +217,34 @@ public class AliveStateHandler : ILifecycleStateHandler
     {
         activeThresholds.Clear();
     }
-    
 
     // ===============================================================================
-    // Operations
-    // ===============================================================================
+
+        // ===================================
+        //  State
+        // ===================================
+
+    void ClearState()
+    {
+        lastHealthPercent   = -1f;
+        // timeSinceLastDamage = -1f;
+    }
+
+    void ResetActor()
+    {
+        actor.Invulnerable = false;
+
+        actor.Health = actor.MaxHealth;
+
+        if (owner is IControllable controllable)
+            controllable.Inactive = true;
+
+        actor.Health = actor.MaxHealth;
+    }
+
+        // ===================================
+        //  Execution
+        // ===================================
 
     void SpawnActor()
     {            
@@ -303,30 +294,6 @@ public class AliveStateHandler : ILifecycleStateHandler
         }
     }
 
-
-    // ===============================================================================
-    // State Management
-    // ===============================================================================
-
-    void ClearState()
-    {
-        lastHealthPercent   = -1f;
-        timeSinceLastDamage = -1f;
-    }
-
-    void ResetActor()
-    {
-        actor.Invulnerable = false;
-
-        actor.Health = actor.MaxHealth;
-
-        if (owner is IControllable controllable)
-            controllable.Inactive = true;
-
-        actor.Health = actor.MaxHealth;
-    }
-
-
     // ===============================================================================
     //  PREDICATES
     // ===============================================================================
@@ -342,19 +309,15 @@ public class AliveStateHandler : ILifecycleStateHandler
         return true;
     }
 
-
-    // ===============================================================================
-    // Properties
     // ===============================================================================
 
     public Lifecycle.State State => Lifecycle.State.Alive;
 }
 
 
-
-    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-    //                                     Dying state                                       
-    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                               Dying state                                       
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class DyingStateHandler : ILifecycleStateHandler
 {
@@ -362,19 +325,17 @@ public class DyingStateHandler : ILifecycleStateHandler
     readonly IDamageable        actor;
     readonly ActorDefinition    definition;
 
-        // -------------------------------------
+        // -----------------------------------
+
+    readonly LocalEventHandler<Message<Response, AnimationDurationEvent>> animationDurationHandler;
+
+        // -----------------------------------
 
     string deathAnimation;
     float  deathAnimationDuration;
 
     ClockTimer dyingTimer;
 
-        // -------------------------------------
-
-    LocalEventHandler<Message<Response, AnimationDurationEvent>> animationDurationHandler;
-
-    // ===============================================================================
-    // Initialization
     // ===============================================================================
 
     public DyingStateHandler(Actor owner, IDamageable actor, ActorDefinition definition)
@@ -386,9 +347,6 @@ public class DyingStateHandler : ILifecycleStateHandler
         animationDurationHandler = new(owner.Emit, HandleAnimationDuration);
     }
     
-    
-    // ===============================================================================
-    // Core
     // ===============================================================================
     
     public void Enter(Lifecycle controller)
@@ -424,10 +382,21 @@ public class DyingStateHandler : ILifecycleStateHandler
         // Cleanup (like weapon's ClearMovementFromPhase)
     }
     
+    // ===============================================================================
 
-    // ===============================================================================
-    // Operations
-    // ===============================================================================
+        // ===================================
+        //  State
+        // ===================================
+
+    void ClearDyingState()
+    {
+        deathAnimation          = "";
+        deathAnimationDuration  = 0;
+    }
+
+        // ===================================
+        //  Execution
+        // ===================================
 
     void DisableControl()
     {
@@ -453,10 +422,9 @@ public class DyingStateHandler : ILifecycleStateHandler
         }
     }
 
-
-        // =================================
+        // ===================================
         //  Animation
-        // =================================
+        // ===================================
 
     void PlayDeathAnimation()
     {
@@ -485,18 +453,6 @@ public class DyingStateHandler : ILifecycleStateHandler
         deathAnimationDuration = response.Payload.Duration;
     }
 
-
-    // ===============================================================================
-    // State Management
-    // ===============================================================================
-
-    void ClearDyingState()
-    {
-        deathAnimation          = "";
-        deathAnimationDuration  = 0;
-    }
-
-
     // ===============================================================================
     //  Helpers
     // ===============================================================================
@@ -506,7 +462,6 @@ public class DyingStateHandler : ILifecycleStateHandler
         dyingTimer = new ClockTimer(Mathf.Max(0f, deathAnimationDuration));
         dyingTimer.Start();
     }
-
 
     // ===============================================================================
     //  Predicates
@@ -527,19 +482,15 @@ public class DyingStateHandler : ILifecycleStateHandler
         return definition.Lifecycle.AlertOnDeath;
     }
 
-
-    // ===============================================================================
-    // Properties
     // ===============================================================================
 
     public Lifecycle.State State => Lifecycle.State.Dying;
 }
 
 
-
-    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-    //                                    Dead state                                      
-    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                               Dead state                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class DeadStateHandler : ILifecycleStateHandler
 {
@@ -547,14 +498,11 @@ public class DeadStateHandler : ILifecycleStateHandler
     readonly IDamageable        actor;
     readonly ActorDefinition    definition;
     
-        // -------------------------------------
+        // -----------------------------------
 
     ClockTimer respawnTimer     = new(0);
     ClockTimer corpseTimer      = new(0);
     
-
-    // ===============================================================================
-    // Initialization
     // ===============================================================================
 
     public DeadStateHandler(Actor owner, IDamageable actor, ActorDefinition definition)
@@ -563,12 +511,9 @@ public class DeadStateHandler : ILifecycleStateHandler
         this.actor      = actor;
         this.definition = definition;
     }
-
-
-    // ===============================================================================
-    // Core
-    // ===============================================================================
     
+    // ===============================================================================
+
     public void Enter(Lifecycle controller)
     {
 
@@ -585,7 +530,6 @@ public class DeadStateHandler : ILifecycleStateHandler
         }
     }
 
-    
     public void Loop(Lifecycle controller)
     {
         if (RespawnReady())
@@ -605,9 +549,6 @@ public class DeadStateHandler : ILifecycleStateHandler
         
     }
     
-
-    // ===============================================================================
-    // Operations
     // ===============================================================================
 
     void ExitPresence()
@@ -615,7 +556,6 @@ public class DeadStateHandler : ILifecycleStateHandler
         owner.Emit.Local(Request.Transition, new PresenceTargetEvent(Presence.Target.Absent));
     }
 
-    
     // ===============================================================================
     //  Predicates
     // ===============================================================================
@@ -640,14 +580,10 @@ public class DeadStateHandler : ILifecycleStateHandler
         return corpseTimer.IsFinished;
     }
 
-
-    // ===============================================================================
-    // Properties
     // ===============================================================================
 
     public Lifecycle.State State => Lifecycle.State.Dead;
 }
-
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -668,7 +604,6 @@ public class HealthThreshold
     public HealthThresholdTrigger Trigger   { get; init; }
     public List<Effect> Effects             { get; init; } = new();
 }
-
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

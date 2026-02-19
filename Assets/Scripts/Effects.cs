@@ -2,20 +2,19 @@ using System.Collections.Generic;
 
 
 
-
-
-
-
-public class Effect     : Instance
-{
-    public string Name                          { get; init; }
-}
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public enum EffectType
 {
     Speed,
     Grip
 }
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                               Interfaces                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
 public interface ITrigger                   { public WeaponPhase Trigger            { get; init; }}
@@ -32,7 +31,6 @@ public interface ICancelableOnRelease       { public bool CancelOnRelease       
 public interface IActionLock                { public bool RequestActionLock         { get; init; } 
                                               public List<Capability> ActionLocks   { get; init; }}
 
-
 public interface IModifyFloat               { public float Modifier                 { get; init; }}
 public interface IModifyTarget              { public float ModifyTarget             { get; init; }}
 public interface IModifySpeed               { public float ModifySpeed              { get; init; }}
@@ -42,7 +40,6 @@ public interface IModifyTimespan            { public float ModifyTimespan       
 
 public interface IModifiable : IModifyFloat, IModifyTarget, IModifyTimespan, IModifyDurationFrames {}
 
-
 public interface INoUnitCollision           { public bool NoUnitCollision           { get; init; }}
 public interface IImmuneToForce             { public bool ImmuneToForce             { get; init; }}
 public interface ICanAffectInvulnerable     { public bool CanAffectInvulnerable     { get; init; }}
@@ -51,20 +48,13 @@ public interface IImmuneToDamage            { public bool ImmuneToDamage        
 public interface IInvulnerable              { public bool Invulnerable              { get; init; }}
 public interface IStunned                   { public bool Stunned                   { get; init; }}
 
-
-
 public interface IDamage                    { public float Damage                    { get; init; }}
 public interface ISlow : IDuration, IModifySpeed {}                     
 
 public interface IDot : IDamage, IDuration, IInterval {}
 
-
-
-
 public interface IDisableRules : IDisableAttack, IDisableMove, IDisableRotate {}
 public interface ICollisionRules : INoUnitCollision, IImmuneToForce {}
-
-
 
 public interface IEffectCallback
 {
@@ -72,6 +62,16 @@ public interface IEffectCallback
     public string OnClearFunctionName           { get; init; }
 }
 
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
+public class Effect     : Instance
+{
+    public string Name                          { get; init; }
+}
 
 
 // Example status effect 
@@ -81,9 +81,6 @@ public class BurningEffect : Effect, IDot
     public float Interval                   { get; init; }
     public float Damage                     { get; init; }
 }
-
-
-
 
 public class SwordSwingDisable : Effect, ICancelable, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, IActionLock
 {
@@ -99,13 +96,10 @@ public class SwordSwingDisable : Effect, ICancelable, IDurationFrames, IDisableA
     public List<Capability> ActionLocks         { get; init; }
 }
 
-
-
 public class ShieldParryWindow : Effect, IDurationFrames
 {
     public int DurationFrames                   { get; init; }
 }
-
 
 public class ShieldBlockWindow : Effect, ICancelable, IDuration, ICancelableOnRelease
 {
@@ -113,7 +107,6 @@ public class ShieldBlockWindow : Effect, ICancelable, IDuration, ICancelableOnRe
     public float Duration                       { get; init; }
     public bool CancelOnRelease                 { get; init; }
 }
-
 
 public class ShieldBraceDisable : Effect, ICancelable, ITrigger, IDuration, IDurationFrames, IDisableAttack, ICancelableOnRelease, IDisableRotate
 {
@@ -127,7 +120,6 @@ public class ShieldBraceDisable : Effect, ICancelable, ITrigger, IDuration, IDur
     public bool DisableAttack                   { get; init; }
     public bool DisableRotate                   { get; init; }
 }
-
 
 public class ShieldBraceAim : Effect, ICancelable, ITrigger, IDurationFrames
 {
@@ -163,7 +155,6 @@ public class ShieldMobility : Effect, ICancelable, IType, ITrigger, IDurationFra
     public float ModifyTimespan                 { get; init; } = -1;
     public float ModifyDurationFrames           { get; init; } = -1;
 }
-
 
 public class DashDisable : Effect, ICancelable, IDurationFrames, IDisableRules, IActionLock
 {

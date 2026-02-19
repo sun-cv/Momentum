@@ -2,12 +2,12 @@ using UnityEngine;
 
 
 
-
-
 public class Bridge
 {
     public Actor Owner              { get; init; }
     public GameObject View          { get; init; }
+
+        // -----------------------------------
 
     public Rigidbody2D Body         { get; init; }
     public Collider2D FrontZone     { get; init; }
@@ -15,8 +15,13 @@ public class Bridge
     public Collider2D Hurtbox       { get; init; }
     public Collider2D Sortbox       { get; init; }
 
+        // -----------------------------------
+
     public Animator Animator        { get; init; }
     public SpriteRenderer Sprite    { get; init; }
+
+
+    // ===============================================================================
 
     public Bridge(Actor actor, GameObject view)
     {
@@ -36,7 +41,9 @@ public class Bridge
 }
 
 
-
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Factories
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public static class BridgeFactory
 {

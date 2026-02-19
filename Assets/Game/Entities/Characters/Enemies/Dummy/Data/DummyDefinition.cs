@@ -20,7 +20,7 @@ public class DummyDefinition : ActorDefinition
 
         Presence                    = new()
         {
-            EnableAbsentState       = false,
+            CanBeSetAbsent          = false,
         };
 
         Lifecycle                   = new()

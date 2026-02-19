@@ -3,24 +3,23 @@ using UnityEngine;
 
 
 
-
-
 public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 {
-    readonly Logger Log = Logging.For(LogSystem.Combat);
+    readonly List<CombatEvent> pending = new();
 
-    List<CombatEvent> pending = new();
+    // ===============================================================================
 
     public void Initialize()
     {
         Link.Global<Message<Request, CombatEvent>>(HandleCombatEvent);
     }
-
+    
+    // ===============================================================================
+    
     public void Step()
     {
         ProcessPendingEvents();
     }
-
 
     void ProcessPendingEvents()
     {
@@ -31,7 +30,6 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
         pending.Clear();
     }
-
 
     void ProcessEvent(CombatEvent combat)
     {
@@ -49,6 +47,8 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         // target.Emit.Local(Request.Creaate, new KillingBlow());
     }
 
+    // ===============================================================================
+
     float ProcessComponents(Actor source, Actor target, List<DamageComponent> components)
     {
         float damage = 0;
@@ -57,7 +57,7 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         {            
             ApplyEffects(target, component.Effects);
 
-            if (IsDynamicForce(component))
+            if (ForceIsDynamic(component))
             {
                 ResolveDynamicForce(source, target, component);
             }
@@ -68,7 +68,6 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         return damage;
     }
 
-
     void ResolveDynamicForce(Actor source, Actor target, DamageComponent component)
     {
         var direction   = CalculateDirection(source, target);
@@ -76,7 +75,6 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
         ApplyDynamicForce(target, force);
     }
-
 
     void ApplyDynamicForce(Actor target, Vector2 force)
     {
@@ -96,16 +94,6 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         target.Emit.Local(Request.Create, definition);
     }
 
-
-    public void ApplyEffects(Actor actor, List<Effect> effects)
-    {
-        foreach (var effect in effects)
-        {
-            actor.Emit.Local(Request.Create, effect);
-        }
-    }
-
-
     void ApplyDamage(Actor target, float damage)
     {
         if (!CanTakeDamage(target, out var actor))
@@ -116,24 +104,30 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         Log.Debug($"{actor.GetType().Name} has taken {damage} damage. Health: {actor.Health}");
     }
 
+    // ===============================================================================
+    //  Effect Management
+    // ===============================================================================
+
+    public void ApplyEffects(Actor actor, List<Effect> effects)
+    {
+        foreach (var effect in effects)
+        {
+            actor.Emit.Local(Request.Create, effect);
+        }
+    }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+    
     public void HandleCombatEvent(Message<Request, CombatEvent> message)
     {
         pending.Add(message.Payload);
     }
 
-
-    // ============================================================================
-    // QUERIES AND HELPERS
-    // ============================================================================
-
-    Vector2 CalculateDirection(Actor source, Actor target)
-    {
-        return (target.Bridge.View.transform.position - source.Bridge.View.transform.position).normalized;
-    }
-
-    // ============================================================================
-    // PREDICATEs
-    // ============================================================================
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
 
     bool HasKilled(Actor target)
     {
@@ -156,10 +150,23 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         return false;
     }
 
-    bool IsDynamicForce(DamageComponent component)
+    bool ForceIsDynamic(DamageComponent component)
     {
         return component.ForceMagnitude > 0;
     }
+
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
+
+    Vector2 CalculateDirection(Actor source, Actor target)
+    {
+        return (target.Bridge.View.transform.position - source.Bridge.View.transform.position).normalized;
+    }
+
+    // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.Combat);
 
     public override void Dispose()
     {
@@ -170,7 +177,11 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 }
 
 
-public struct DamageComponent
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct DamageComponent
 {
     public object Source                    { get; init; }
     public float Amount                     { get; init; }
@@ -199,6 +210,10 @@ public readonly struct DamagePackage
     }
 }
 
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public readonly struct CombatEvent
 {

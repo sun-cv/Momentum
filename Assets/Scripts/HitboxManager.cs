@@ -4,6 +4,251 @@ using UnityEngine;
 
 
 
+public class HitboxManager : RegisteredService, IServiceTick, IInitialize
+{
+    public static bool ShowDebugGizmos                          = Settings.Debug.SHOW_HITBOXES;
+
+        // -----------------------------------
+
+    readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
+    readonly Queue<PendingHitbox>   pending                     = new();
+    
+    // ============================================================================
+
+    public void Initialize()
+    {
+        Link.Global<Message<Request, HitboxDeclarationEvent>>(HandleHitboxCreateRequest);
+        Link.Global<Message<Request, HitboxIdEvent >>(HandleHitboxDestroyRequest);
+    }
+
+    // ===============================================================================
+    
+    public void Tick()
+    {
+        ProcessPending();
+        ProcessActive();
+
+        DebugLog();
+    }
+
+    // ===============================================================================
+
+    void ProcessPending()
+    {
+        while(pending.TryDequeue(out var request))
+            CreateHitbox(request);
+    }
+
+    void ProcessActive()
+    {
+        var toRemove = new List<Guid>();
+
+        foreach (var (id, instance) in activeHitboxes)
+        {
+            var hitbox = instance.Definition;
+
+            instance.CurrentFrame++;
+
+            if (instance.CurrentFrame == hitbox.Lifetime.FrameStart)
+                ActivateHitbox(instance);
+
+
+            if (hitbox.Lifetime.Type == HitboxLifetime.Conditional)
+            {
+                if (!CheckConditionalHitbox(instance))
+                    continue;
+            }
+
+            if (instance.CurrentFrame == hitbox.Lifetime.FrameEnd)
+            {
+                DeactivateHitbox(instance);
+                toRemove.Add(id);
+            }
+        }
+
+        foreach (var id in toRemove)
+            DestroyHitbox(id);
+    }
+
+    void ActivateHitbox(HitboxInstance hitbox)
+    {
+        if (hitbox.Hitbox != null)
+            hitbox.Hitbox.SetActive(true);
+    }
+
+    bool CheckConditionalHitbox(HitboxInstance hitbox)
+    {
+        return hitbox.Definition.Lifetime.ConditionalRelease(hitbox.Owner);
+    }
+
+    void DeactivateHitbox(HitboxInstance hitbox)
+    {
+        if (hitbox.Hitbox != null)
+            hitbox.Hitbox.SetActive(false);
+    }
+
+        // ===================================
+        //  Construction
+        // ===================================
+
+    void CreateHitbox(PendingHitbox pending)
+    {
+        pending.Owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+
+        Vector2 intentVector        = GetSpawnDirection(pending);
+        Quaternion intentRotation   = Orientation.ToRotation(intentVector);
+        Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Form.Offset);
+
+        var prefab      = Assets.Get(pending.Definition.Form.Prefab);
+        var hitbox      = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
+        
+        var instance    = CreateInstance(pending);
+        instance.Hitbox = hitbox;
+
+        var controller  = hitbox.AddComponent<HitboxController>();
+        controller.Bind(this, instance.Owner, instance.RuntimeID, instance.Definition, instance.Package);
+
+        ApplyHitboxBehavior(hitbox, instance);
+
+        activeHitboxes.Add(instance.RuntimeID, instance);
+
+        PublishHitbox(pending.RequestId, instance.RuntimeID);
+    }
+
+    HitboxInstance CreateInstance(PendingHitbox pending)
+    {
+        HitboxInstance instance = new()
+        {
+            Owner       = pending.Owner,
+            Definition  = pending.Definition,
+            Package     = pending.Package,
+        };
+
+        return instance;
+    }
+
+    void ApplyHitboxBehavior(GameObject hitbox, HitboxInstance instance)
+    {
+        switch (instance.Definition.Behavior.Type)
+        {
+            case HitboxBehavior.Attached:
+                hitbox.transform.SetParent(instance.Owner.Bridge.View.transform);
+                break;
+
+            case HitboxBehavior.Projectile:
+                SetupProjectile(hitbox, instance);
+                break;
+
+            case HitboxBehavior.Stationary:
+                break;
+        }
+    }
+
+    // REWORK REQUIRED
+    void SetupProjectile(GameObject hitbox, HitboxInstance instance)
+    {
+        // var projectile = hitbox.AddComponent<ProjectileMovement>();
+
+        // instance.Owner.Bridge.View.transform.GetPositionAndRotation(out _, out Quaternion rotation);
+        // Vector3 direction = rotation * instance.Definition.ProjectileDirection;
+
+        // projectile.Initialize(instance.Definition.ProjectileSpeed, direction);
+    }
+
+        // ===================================
+        //  Destruction
+        // ===================================
+
+    void DestroyHitbox(Guid hitboxId)
+    {
+        if (activeHitboxes.TryGetValue(hitboxId, out var instance))
+        {
+            if (instance.Hitbox != null)
+                UnityEngine.Object.Destroy(instance.Hitbox);
+
+            activeHitboxes.Remove(hitboxId);
+        }
+    }
+
+    bool ShouldProcessDestructionRequest(Guid hitboxId)
+    {
+        if (!activeHitboxes.TryGetValue(hitboxId, out var instance))
+            return false;
+
+        if (instance.Definition.Lifetime.PersistPastSource && instance.Definition.Lifetime.Type == HitboxLifetime.FrameBased)
+            return false;
+
+        return true;
+    }
+
+    // ============================================================================
+    //  Events
+    // ============================================================================
+
+    void HandleHitboxCreateRequest(Message<Request, HitboxDeclarationEvent> message)
+    {
+        var owner       = message.Payload.Owner;
+        var definition  = message.Payload.Definition;
+        var package     = message.Payload.Package;
+
+        pending.Enqueue(new() { RequestId = message.Id, Owner = owner, Definition = definition, Package = package });
+    }
+
+    void HandleHitboxDestroyRequest(Message<Request, HitboxIdEvent> message)
+    {
+        var hitboxId = message.Payload.HitboxId;
+
+        if (ShouldProcessDestructionRequest(hitboxId))
+            DestroyHitbox(hitboxId);
+    }
+
+    void PublishHitbox(Guid requestId, Guid instanceId)
+    {
+        Emit.Global(requestId, Response.Success, new HitboxIdEvent(instanceId));
+    }
+
+    // ============================================================================
+    // Helpers
+    // ============================================================================
+
+    Vector2 GetSpawnDirection(PendingHitbox pending)
+    {
+        return pending.Definition.Direction.Type switch
+        {
+            HitboxDirectionSource.Input => pending.Definition.Direction.Scope switch
+            {
+                HitboxDirectionScope.Cardinal       => pending.Definition.Direction.Input.Aim.Cardinal,
+                HitboxDirectionScope.Intercardinal  => pending.Definition.Direction.Input.Aim.Intercardinal,
+                _ => pending.Definition.Direction.Input.Aim.Intercardinal
+            },
+            HitboxDirectionSource.Explicit          => pending.Definition.Direction.Explicit,
+            HitboxDirectionSource.OwnerFacing       => pending.Owner is IOrientable instance ? instance.Facing : Vector2.right,
+            _ => Vector2.right
+        };
+    }
+
+    // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.Hitboxes);
+
+    void DebugLog()
+    {
+        Log.Trace("Active", () => activeHitboxes.Count);
+    }
+
+    public override void Dispose()
+    {
+        // NO OP;
+    }
+
+    public UpdatePriority Priority => ServiceUpdatePriority.HitboxManager;
+}
+
+
+
+
+
+
 public enum HitboxBehavior
 {
     Attached,
@@ -98,252 +343,16 @@ public class HitboxInstance : Instance
 }       
 
 
-// ============================================================================
-// HITBOX MANAGER
-// ============================================================================
 
 
-public class HitboxManager : RegisteredService, IServiceTick, IInitialize
-{
-    readonly Logger Log = Logging.For(LogSystem.Hitboxes);
-
-    public static bool ShowDebugGizmos                          = Settings.Debug.SHOW_HITBOXES;
-
-    readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
-
-    readonly Queue<PendingHitbox>   pending                     = new();
-
-    public void Initialize()
-    {
-        Link.Global<Message<Request, HitboxDeclarationEvent>>(HandleHitboxCreateRequest);
-        Link.Global<Message<Request, HitboxIdEvent >>(HandleHitboxDestroyRequest);
-    }
-
-    public void Tick()
-    {
-        ProcessPending();
-        ProcessActive();
-
-        DebugLog();
-    }
-
-// ============================================================================
-// Main Process
-// ============================================================================
-
-    void ProcessPending()
-    {
-        while(pending.TryDequeue(out var request))
-            CreateHitbox(request);
-    }
-
-    void ProcessActive()
-    {
-        var toRemove = new List<Guid>();
-
-        foreach (var (id, instance) in activeHitboxes)
-        {
-            var hitbox = instance.Definition;
-
-            instance.CurrentFrame++;
-
-            if (instance.CurrentFrame == hitbox.Lifetime.FrameStart)
-                ActivateHitbox(instance);
 
 
-            if (hitbox.Lifetime.Type == HitboxLifetime.Conditional)
-            {
-                if (!CheckConditionalHitbox(instance))
-                    continue;
-            }
-
-            if (instance.CurrentFrame == hitbox.Lifetime.FrameEnd)
-            {
-                DeactivateHitbox(instance);
-                toRemove.Add(id);
-            }
-        }
-
-        foreach (var id in toRemove)
-            DestroyHitbox(id);
-    }
-
-    void ActivateHitbox(HitboxInstance hitbox)
-    {
-        if (hitbox.Hitbox != null)
-            hitbox.Hitbox.SetActive(true);
-    }
-
-    bool CheckConditionalHitbox(HitboxInstance hitbox)
-    {
-        return hitbox.Definition.Lifetime.ConditionalRelease(hitbox.Owner);
-    }
-
-    void DeactivateHitbox(HitboxInstance hitbox)
-    {
-        if (hitbox.Hitbox != null)
-            hitbox.Hitbox.SetActive(false);
-    }
-
-// ============================================================================
-// CREATION LOGIC
-// ============================================================================
 
 
-    void CreateHitbox(PendingHitbox pending)
-    {
-        pending.Owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
-
-        Vector2 intentVector        = GetSpawnDirection(pending);
-        Quaternion intentRotation   = Orientation.ToRotation(intentVector);
-        Vector3 spawnPosition       = position + (intentRotation * pending.Definition.Form.Offset);
-
-        var prefab      = Assets.Get(pending.Definition.Form.Prefab);
-        var hitbox      = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
-        
-        var instance    = CreateInstance(pending);
-        instance.Hitbox = hitbox;
-
-        var controller  = hitbox.AddComponent<HitboxController>();
-        controller.Bind(this, instance.Owner, instance.RuntimeID, instance.Definition, instance.Package);
-
-        ApplyHitboxBehavior(hitbox, instance);
-
-        activeHitboxes.Add(instance.RuntimeID, instance);
-
-        PublishHitbox(pending.RequestId, instance.RuntimeID);
-    }
-
-    HitboxInstance CreateInstance(PendingHitbox pending)
-    {
-        HitboxInstance instance = new()
-        {
-            Owner       = pending.Owner,
-            Definition  = pending.Definition,
-            Package     = pending.Package,
-        };
-
-        return instance;
-    }
 
 
-    void ApplyHitboxBehavior(GameObject hitbox, HitboxInstance instance)
-    {
-        switch (instance.Definition.Behavior.Type)
-        {
-            case HitboxBehavior.Attached:
-                hitbox.transform.SetParent(instance.Owner.Bridge.View.transform);
-                break;
-
-            case HitboxBehavior.Projectile:
-                SetupProjectile(hitbox, instance);
-                break;
-
-            case HitboxBehavior.Stationary:
-                break;
-        }
-    }
-
-    // REWORK REQUIRED
-
-    void SetupProjectile(GameObject hitbox, HitboxInstance instance)
-    {
-        // var projectile = hitbox.AddComponent<ProjectileMovement>();
-
-        // instance.Owner.Bridge.View.transform.GetPositionAndRotation(out _, out Quaternion rotation);
-        // Vector3 direction = rotation * instance.Definition.ProjectileDirection;
-
-        // projectile.Initialize(instance.Definition.ProjectileSpeed, direction);
-    }
-
-// ============================================================================
-// DESTRUCTION LOGIC
-// ============================================================================
 
 
-    void DestroyHitbox(Guid hitboxId)
-    {
-        if (activeHitboxes.TryGetValue(hitboxId, out var instance))
-        {
-            if (instance.Hitbox != null)
-                UnityEngine.Object.Destroy(instance.Hitbox);
-
-            activeHitboxes.Remove(hitboxId);
-        }
-    }
-
-
-    bool ShouldProcessDestructionRequest(Guid hitboxId)
-    {
-        if (!activeHitboxes.TryGetValue(hitboxId, out var instance))
-            return false;
-
-        if (instance.Definition.Lifetime.PersistPastSource && instance.Definition.Lifetime.Type == HitboxLifetime.FrameBased)
-            return false;
-
-        return true;
-    }
-
-
-    // ============================================================================
-    // EVENT HANDLERS
-    // ============================================================================
-
-
-    void HandleHitboxCreateRequest(Message<Request, HitboxDeclarationEvent> message)
-    {
-        var owner       = message.Payload.Owner;
-        var definition  = message.Payload.Definition;
-        var package     = message.Payload.Package;
-
-        pending.Enqueue(new() { RequestId = message.Id, Owner = owner, Definition = definition, Package = package });
-    }
-
-    void HandleHitboxDestroyRequest(Message<Request, HitboxIdEvent> message)
-    {
-        var hitboxId = message.Payload.HitboxId;
-
-        if (ShouldProcessDestructionRequest(hitboxId))
-            DestroyHitbox(hitboxId);
-    }
-
-    void PublishHitbox(Guid requestId, Guid instanceId)
-    {
-        Emit.Global(requestId, Response.Success, new HitboxIdEvent(instanceId));
-    }
-
-    // ============================================================================
-    // HELPERS
-    // ============================================================================
-
-    Vector2 GetSpawnDirection(PendingHitbox pending)
-    {
-        return pending.Definition.Direction.Type switch
-        {
-            HitboxDirectionSource.Input => pending.Definition.Direction.Scope switch
-            {
-                HitboxDirectionScope.Cardinal       => pending.Definition.Direction.Input.Aim.Cardinal,
-                HitboxDirectionScope.Intercardinal  => pending.Definition.Direction.Input.Aim.Intercardinal,
-                _ => pending.Definition.Direction.Input.Aim.Intercardinal
-            },
-            HitboxDirectionSource.Explicit          => pending.Definition.Direction.Explicit,
-            HitboxDirectionSource.OwnerFacing       => pending.Owner is IOrientable instance ? instance.Facing : Vector2.right,
-            _ => Vector2.right
-        };
-    }
-
-    public override void Dispose()
-    {
-        // NO OP;
-    }
-
-    void DebugLog()
-    {
-        Log.Trace("Active", () => activeHitboxes.Count);
-    }
-
-    public UpdatePriority Priority => ServiceUpdatePriority.HitboxManager;
-}
 
 
 public readonly struct HitboxDeclarationEvent

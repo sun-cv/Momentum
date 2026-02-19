@@ -2,10 +2,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
-using UnityEngine;
-
-
-
 
 
 
@@ -15,7 +11,27 @@ public class ServiceAttribute : Attribute {  }
 
 public static class Services
 {
-    readonly static Logger Log = Logging.For(LogSystem.Services);
+
+    // ===============================================================================
+    //  Public API
+    // ===============================================================================
+
+    public static T Get<T>()
+    { 
+        return Registry.Get<T>();
+    }
+
+    public static void Register<T>(T service)
+    {
+        Registry.RegisterService(service);
+    }
+
+    public static void Deregister<T>(T service)
+    {
+        Registry.DeregisterService(service);
+    }
+
+    // ===============================================================================
 
     public static void Start()
     {
@@ -40,30 +56,7 @@ public static class Services
         }
     }
 
-    public static void Dispose()
-    {
-        foreach (var service in Registry.RegisteredServicesList)
-        {
-            if (service is IDisposable instance)
-                instance.Dispose();
-        }
-    }
-
-    public static T Get<T>()
-    { 
-        return Registry.Get<T>();
-    }
-
-    public static void Register<T>(T service)
-    {
-        Registry.RegisterService(service);
-    }
-
-    public static void Deregister<T>(T service)
-    {
-        Registry.DeregisterService(service);
-    }
-
+    // ===============================================================================
 
     private static class Setup
     {
@@ -105,6 +98,11 @@ public static class Services
 
     public static class Lane
     {
+
+    // ===============================================================================
+    //  Public API / Accessors
+    // ===============================================================================
+
         public static void Register(IService service) 
         { 
             Registry.RegisterLanes(service); 
@@ -114,6 +112,8 @@ public static class Services
         { 
             Registry.DeregisterLanes(service); 
         }
+
+    // ===============================================================================
 
         public static void Tick()
         {
@@ -168,6 +168,8 @@ public static class Services
             Registry.ProcessPending();
         }
 
+    // ===============================================================================
+
         public override void Dispose()
         {
             // NO OP;
@@ -189,6 +191,7 @@ public static class Services
         private static readonly List<IServiceUtil> utilServices         = new();
         private static readonly List<IServiceLate> lateServices         = new();
 
+        // ===============================================================================
 
         public static void RegisterService<T>(T service)
         {
@@ -305,6 +308,10 @@ public static class Services
             pendingRegistrations.Clear();
         }
 
+
+    // ===============================================================================
+
+
         public static List<object> RegisteredServicesList           => services.Values.ToList();
         public static Dictionary<Type, object> RegisteredServices   => services;
 
@@ -314,4 +321,19 @@ public static class Services
         public static List<IServiceUtil> UtilServices => utilServices;
         public static List<IServiceLate> LateServices => lateServices;
     }
+
+
+    // ===============================================================================
+
+    readonly static Logger Log = Logging.For(LogSystem.Services);
+
+    public static void Dispose()
+    {
+        foreach (var service in Registry.RegisteredServicesList)
+        {
+            if (service is IDisposable instance)
+                instance.Dispose();
+        }
+    }
+
 }

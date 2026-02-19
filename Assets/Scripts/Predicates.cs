@@ -1,15 +1,17 @@
 using System;
-using UnityEngine;
-
-
 
 
 
 public class LivePredicate : Service, IServiceLoop
 {
+    private readonly Func<bool> evaluator;
+
+        // -----------------------------------
+
     private bool value;
     private bool autoUpdateEnabled = true;
-    private readonly Func<bool> evaluator;
+
+    // ===============================================================================
 
     public LivePredicate(Func<bool> evaluator)
     {
@@ -19,11 +21,15 @@ public class LivePredicate : Service, IServiceLoop
         value           = evaluator();
     }
 
+    // ===============================================================================
+
     public void Loop()
     {
         if (autoUpdateEnabled)
             value = evaluator();
     }
+
+    // ===============================================================================
 
     public void SetManual(bool manualValue)
     {
@@ -42,6 +48,8 @@ public class LivePredicate : Service, IServiceLoop
         Services.Lane.Deregister(this);
     }
 
+    // ===============================================================================
+
 
     public static implicit operator bool(LivePredicate b) => b.value;
     public bool IsAuto  => autoUpdateEnabled;
@@ -52,15 +60,20 @@ public class LivePredicate : Service, IServiceLoop
 
 public class LazyPredicate
 {
+    private readonly Func<bool> evaluator;
+    
     private bool cachedValue;
     private bool autoUpdateEnabled = true;
-    private readonly Func<bool> evaluator;
+
+    // ===============================================================================
 
     public LazyPredicate(Func<bool> evaluator)
     {
         this.evaluator  = evaluator;
         cachedValue     = evaluator();
     }
+
+    // ===============================================================================
 
     public void SetManual(bool manualValue)
     {
@@ -72,6 +85,8 @@ public class LazyPredicate
     {
         autoUpdateEnabled = true;
     }
+
+    // ===============================================================================
 
 
     public static implicit operator bool(LazyPredicate b) => b.Value;
@@ -91,10 +106,18 @@ public class LazyPredicate
 
 public class TimePredicate : Service, IServiceLoop
 {
-    private bool value              = false;
-    private readonly Func<bool>     condition;
-    private readonly ClockWatch     timer;
     private readonly bool           resetOnFalse;
+
+        // -----------------------------------
+
+    private readonly Func<bool>     condition;
+
+        // -----------------------------------
+
+    private bool value              = false;
+    private readonly ClockWatch     timer;
+
+    // ===============================================================================
 
     public TimePredicate(Func<bool> condition, bool resetOnFalse = true)
     {
@@ -104,6 +127,8 @@ public class TimePredicate : Service, IServiceLoop
         this.resetOnFalse   = resetOnFalse;
         this.timer          = new ClockWatch();
     }
+
+    // ===============================================================================
 
     public void Loop()
     {
@@ -122,6 +147,8 @@ public class TimePredicate : Service, IServiceLoop
                 timer.Reset();
         }
     }
+
+    // ===============================================================================
 
     public override void Dispose()
     {

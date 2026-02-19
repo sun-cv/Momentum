@@ -2,18 +2,30 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
+
 public class MovementModifierHandler
 {
-    readonly EffectCache cache;    
-    readonly List<EffectType> acceptedModifiers                           = new() 
+
+    readonly List<EffectType> acceptedModifiers                         = new() 
     { 
         EffectType.Speed,
         EffectType.Grip
     };
 
+        // -----------------------------------
+
+    readonly EffectCache cache;    
+
+        // -----------------------------------
+
     readonly Dictionary<EffectType, List<IMovementModifier>> modifiers  = new();
 
-    float value = 1.0f;
+        // -----------------------------------
+
+    float modifier = 1.0f;
+
+    // ===============================================================================
 
     public MovementModifierHandler(Actor actor)
     {
@@ -23,6 +35,8 @@ public class MovementModifierHandler
         cache.OnCancel  += ClearModifier;
         cache.OnClear   += ClearModifier;
     }
+
+    // ===============================================================================
 
     public float Calculate()
     {
@@ -36,15 +50,15 @@ public class MovementModifierHandler
 
             float sum = 0f;
 
-            for (int i = 0; i < count; i++)
-                sum += list[i].Resolve();
+            for (int modifier = 0; modifier < count; modifier++)
+                sum += list[modifier].Resolve();
 
             sumOfAverages += sum / count;
             typeCount++;
         }
 
-        value = typeCount == 0 ? 1f : sumOfAverages / typeCount;
-        return value;
+        modifier = typeCount == 0 ? 1f : sumOfAverages / typeCount;
+        return modifier;
     }
 
     void CreateModifier(EffectInstance instance)
@@ -79,9 +93,18 @@ public class MovementModifierHandler
         };
     }
 
-    public float Value          => value;
+    // ===============================================================================
+
+
+    public float Modifier       => modifier;
     public EffectCache Cache    => cache;
 }    
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 
 public interface IMovementModifier
 {
@@ -89,15 +112,29 @@ public interface IMovementModifier
     public float Resolve();
 }
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                       Behaviours
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
 public class SpeedMovementModifier : IMovementModifier
 {
     readonly EffectInstance instance;
-    public SpeedMovementModifier(EffectInstance instance) => this.instance = instance; 
+
+    // ===============================================================================
+
+    public SpeedMovementModifier(EffectInstance instance)
+    {
+        this.instance = instance;
+    }
+    
+    // ===============================================================================
 
     public float Resolve()
     {
         return ((IModifiable)instance.Effect).Modifier;
     }
+
     public EffectInstance Instance => instance;
 }
 
@@ -106,12 +143,16 @@ public class GripMovementModifier : IMovementModifier
     readonly EffectInstance instance;
     readonly DualCountdown timer;
 
+    // ===============================================================================
+
     public GripMovementModifier(EffectInstance effectInstance)
     {
         instance    = effectInstance;
         timer       = ((IModifiable)effectInstance.Effect).ModifyTimespan != -1 ? new(((IModifiable)effectInstance.Effect).ModifyTimespan) : new(((IModifiable)effectInstance.Effect).ModifyDurationFrames);
         timer.Start();
     } 
+
+    // ===============================================================================
 
     public float Resolve()
     {

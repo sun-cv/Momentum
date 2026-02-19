@@ -4,56 +4,6 @@ using System.Linq;
 
 
 
-
-
-public enum WeaponPhase
-{
-    None,
-    Enable,
-    Charging,
-    Fire,
-    FireEnd,
-    Disable,
-}
-
-/// <summary>What causes this weapon to fire?</summary>
-public enum WeaponActivation
-{
-    OnPress,          // Fires immediately on activation
-    OnCharge,         // Fires when charge completes
-    OnRelease,        // Fires when trigger input released (after min charge)
-    WhileHeld,        // Continuously active while held
-}
-
-/// <summary>What causes this weapon to terminate?</summary>
-public enum WeaponTermination
-{
-    AfterFire,        // Ends after fire phase completes
-    OnRelease,        // Ends when any trigger input released
-    OnRootRelease,    // Ends when RequiredHeldInputs released
-    Manual,           // Only ends when explicitly interrupted
-}
-
-/// <summary>How does this weapon become available/activatable?</summary>
-public enum WeaponAvailability
-{
-    Default,          // Available as default weapon for an input
-    OnPhase,          // Available during parent weapon phase (via AddControlOnX lists)
-    OnHeld,           // Auto-activates when parent active + input held
-}
-
-public enum DirectionSource
-{
-    Movement,
-    Intent,
-    CardinalIntent,
-    Facing,
-}
-
-
-public class DamagingWeapon     : WeaponAction { }
-public class MovementWeapon     : WeaponAction { }
-
 public class WeaponAction       : Definition
 {
     // ============================================================================
@@ -195,12 +145,21 @@ public class WeaponAction       : Definition
 }
 
 
-public class WeaponAnimations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class DamagingWeapon     : WeaponAction { }
+public class MovementWeapon     : WeaponAction { }
+
+public class WeaponDefinition : Definition
 {
-    public AnimationRequestEvent OnCharge                { get; init; }
-    public AnimationRequestEvent OnFire                  { get; init; }
-    public AnimationRequestEvent OnFireEnd               { get; init; }
-    public AnimationRequestEvent OnCancel                { get; init; }
+    public Dictionary<string, WeaponAction> actions;
+    public Dictionary<string, WeaponAction> Actions => actions;
 }
 
 public class WeaponTriggerCondition
@@ -209,21 +168,25 @@ public class WeaponTriggerCondition
     public Func<Actor, bool> Cancel     { get; init; }
 }
 
-public class WeaponDefinition : Definition
+public class WeaponAnimations
 {
-    public Dictionary<string, WeaponAction> actions;
-    public Dictionary<string, WeaponAction> Actions => actions;
+    public AnimationRequestEvent OnCharge                { get; init; }
+    public AnimationRequestEvent OnFire                  { get; init; }
+    public AnimationRequestEvent OnFireEnd               { get; init; }
+    public AnimationRequestEvent OnCancel                { get; init; }
 }
-
-// ============================================================================
-// WEAPON INSTANCE & STATE
-// ============================================================================
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                             Weapon Instance                                                   
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class WeaponInstance : Instance
 {
     public Actor Owner                  { get; init; }
     public WeaponAction Action          { get; init; }
     public WeaponState  State           { get; init; }
+
+    // ===============================================================================
+
     public WeaponInstance(Actor owner, WeaponAction action)
     {
         Owner   = owner;
@@ -233,6 +196,8 @@ public class WeaponInstance : Instance
             OwnedEffects = new(owner.Emit, (effect) => effect.Owner == this)
         };
     }
+
+    // ===============================================================================
 
     public int GetChargeFrames()
     {
@@ -260,6 +225,10 @@ public class WeaponInstance : Instance
         return (float)State.PhaseFrames.CurrentFrame / chargeFrames;
     }
 
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
     public bool IsChargeComplete()  => State.PhaseFrames.CurrentFrame >= GetChargeFrames();
     public bool IsFireComplete()    => State.PhaseFrames.CurrentFrame >= GetFireDurationFrames();
 
@@ -275,26 +244,38 @@ public class WeaponInstance : Instance
 }
 
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                              Weapon State                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class WeaponState
 {
     public WeaponPhase Phase                    { get; set; } = WeaponPhase.Enable;
 
+        // -----------------------------------
+
+    public InputIntentSnapshot Intent           { get; set; }
+
+        // -----------------------------------
+
+    public EffectCache   OwnedEffects           { get; set; }
+    public HashSet<string> AvailableControls    { get; set; } = new();
+
+        // -----------------------------------
+        
+    public HashSet<Guid> OwnedCommands          { get; set; } = new();
+    public HashSet<Guid> OwnedHitboxes          { get; set; } = new();
+
+        // -----------------------------------
+
     public FrameWatch PhaseFrames               { get; set; } = new();
     public FrameWatch ActiveFrames              { get; set; } = new();
     public ClockTimer ControlWindow             { get; set; }
 
-    public HashSet<string> AvailableControls    { get; set; } = new();
-
     public bool HasFired                        { get; set; }
     public bool ReadyToRelease                  { get; set; }
 
-    public InputIntentSnapshot Intent           { get; set; }
-
-    public HashSet<Guid> OwnedCommands          { get; set; } = new();
-    public HashSet<Guid> OwnedHitboxes          { get; set; } = new();
-
-    public EffectCache   OwnedEffects           { get; set; }
+    // ===============================================================================
 
     public void Reset()
     {
@@ -319,10 +300,18 @@ public class WeaponState
 }
 
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                             Weapon Loadout                                                   
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 public class WeaponLoadout
 {
-    private Dictionary<string, (WeaponAction action, Actor source)> actions = new();
-    
+    private readonly Dictionary<string, (WeaponAction action, Actor source)> actions = new();
+        
+    // ===============================================================================
+    //  Public API
+    // ===============================================================================
+
     public void AddAction(WeaponAction action, Actor source)
     {
         actions[action.Name] = (action, source);
@@ -362,3 +351,52 @@ public class WeaponLoadout
                 action.Availability == WeaponAvailability.Default);
     }
 }
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Enums                                                 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public enum WeaponPhase
+{
+    None,
+    Enable,
+    Charging,
+    Fire,
+    FireEnd,
+    Disable,
+}
+
+/// <summary>What causes this weapon to fire?</summary>
+public enum WeaponActivation
+{
+    OnPress,          // Fires immediately on activation
+    OnCharge,         // Fires when charge completes
+    OnRelease,        // Fires when trigger input released (after min charge)
+    WhileHeld,        // Continuously active while held
+}
+
+/// <summary>What causes this weapon to terminate?</summary>
+public enum WeaponTermination
+{
+    AfterFire,        // Ends after fire phase completes
+    OnRelease,        // Ends when any trigger input released
+    OnRootRelease,    // Ends when RequiredHeldInputs released
+    Manual,           // Only ends when explicitly interrupted
+}
+
+/// <summary>How does this weapon become available/activatable?</summary>
+public enum WeaponAvailability
+{
+    Default,          // Available as default weapon for an input
+    OnPhase,          // Available during parent weapon phase (via AddControlOnX lists)
+    OnHeld,           // Auto-activates when parent active + input held
+}
+
+public enum DirectionSource
+{
+    Movement,
+    Intent,
+    CardinalIntent,
+    Facing,
+}
+

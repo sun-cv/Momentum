@@ -1,9 +1,6 @@
-
-
-
-
-
 using UnityEngine;
+
+
 
 public static class Config
 {
@@ -38,9 +35,9 @@ public static class Config
 
 }
 
+
 public static class Settings
 {
-
     public static class Movement
     {
         public const float MAX_SPEED                    = 25f;
@@ -64,7 +61,6 @@ public static class Settings
     }
 
 }
-
 
 
 public static class ServiceUpdatePriority

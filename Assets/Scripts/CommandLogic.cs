@@ -4,15 +4,17 @@ using System.Linq;
 
 
 
-
-
 public class CommandSystem : Service
 {
     Actor owner;
     IntentSystem intent;
 
+        // -----------------------------------
+
     Dictionary<Capability, Command> active = new();
     Dictionary<Capability, Command> buffer = new();
+
+    // ===============================================================================
 
     public void Initialize(IntentSystem intent)
     {
@@ -23,6 +25,8 @@ public class CommandSystem : Service
         Broadcast();
     }
 
+    // ===============================================================================
+    
     public void Tick()
     {
         MonitorEdgePress();
@@ -40,6 +44,8 @@ public class CommandSystem : Service
         if (RemoveExpiredBufferCommands() || RemoveReleasedActiveCommands())
             Broadcast();
     }
+
+    // ===============================================================================
 
     bool CreatePressedCommands()
     {
@@ -88,6 +94,18 @@ public class CommandSystem : Service
         return toRemove.Count > 0;
     }
 
+    void ConsumeCommand(Command command)
+    {   
+        var instance  = buffer.Values.Where(instance => instance.Action == command.Action).OrderBy(instance => instance.Button.pressedframeCount.CurrentFrame).First();
+
+        buffer.Remove(command.Action);
+        active[command.Action] = instance;
+    }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
     void HandleCommandRequest(Message<Request, CommandEvent> message)
     {
         switch (message.Action)
@@ -106,17 +124,21 @@ public class CommandSystem : Service
         Broadcast();
     }
 
-    void ConsumeCommand(Command command)
-    {   
-        var instance  = buffer.Values.Where(instance => instance.Action == command.Action).OrderBy(instance => instance.Button.pressedframeCount.CurrentFrame).First();
+        // ===================================
+        //  Emitters
+        // ===================================
 
-        buffer.Remove(command.Action);
-        active[command.Action] = instance;
-    }
+    void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
+
     void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Lock();
     void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
 
-    void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+    // ===============================================================================
+
 
     public override void Dispose()
     {
@@ -125,6 +147,13 @@ public class CommandSystem : Service
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class Command : Instance
 {
@@ -147,32 +176,9 @@ public class Command : Instance
     public bool Locked   => locked;
 }
 
-
-
-public readonly struct CommandEvent
-{
-    public Command Command { get; init; }
-
-    public CommandEvent(Command command)
-    {
-        Command = command;
-    }
-}
-
-
-public readonly struct CommandPipelinesEvent
-{
-    public IReadOnlyDictionary<Capability, Command> Active { get; init; }
-    public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }
-
-    public CommandPipelinesEvent(IReadOnlyDictionary<Capability, Command> active, IReadOnlyDictionary<Capability, Command> buffer)
-    {
-        Active = active;
-        Buffer = buffer;
-    }
-}
-
-
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Maps                                                  
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public static class IntentMap
 {
@@ -198,3 +204,32 @@ public static class IntentMap
         { Capability.Dash,       PlayerAction.Dash },
     };
 }
+
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct CommandEvent
+{
+    public Command Command { get; init; }
+
+    public CommandEvent(Command command)
+    {
+        Command = command;
+    }
+}
+
+public readonly struct CommandPipelinesEvent
+{
+    public IReadOnlyDictionary<Capability, Command> Active { get; init; }
+    public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }
+
+    public CommandPipelinesEvent(IReadOnlyDictionary<Capability, Command> active, IReadOnlyDictionary<Capability, Command> buffer)
+    {
+        Active = active;
+        Buffer = buffer;
+    }
+}
+

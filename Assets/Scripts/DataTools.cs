@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Unity.VisualScripting;
 
 
 
@@ -16,6 +15,7 @@ public static class DataMapper
         foreach (var field in sourceFields)
         {
             var targetProp = Array.Find(targetProps, p => p.Name == field.Name && p.PropertyType == field.FieldType && p.CanWrite);
+            
             if (targetProp != null)
             {
                 targetProp.SetValue(target, field.GetValue(source));

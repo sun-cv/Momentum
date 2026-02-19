@@ -1,65 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
-
-
-
-
-public class EffectInstance : Instance
-{
-    public Runtime  Owner;
-    public Effect   Effect;
-
-    public Action OnApply;
-    public Action OnClear;
-    public Action OnCancel;
-
-    public DualCountdown timer;
-
-    public EffectInstance(Runtime runtime, Effect effect)
-    {
-        Owner  = runtime;
-        Effect = effect;
-
-        CreateTimer();
-    }
-
-    public void Initialize()
-    {
-        timer.OnTimerStart  += OnApply;
-        timer.OnTimerStop   += OnClear;
-
-        timer.Start();
-    }
-
-    public void Cancel()
-    {
-        timer.Cancel();
-        OnCancel?.Invoke();
-    }
-
-    void CreateTimer()
-    {
-        if (Effect is IDuration time)
-            timer = new(time.Duration);
-
-        else
-
-        if (Effect is IDurationFrames frame)
-            timer = new(frame.DurationFrames);
-    }
-}
 
 
 public class EffectRegister : Service
 {
-    readonly Logger Log = Logging.For(LogSystem.Effects);
-
     Actor owner;
-    
+
+        // -----------------------------------
+
     readonly List<EffectInstance> effects = new();
+
+    // ===============================================================================
 
     public EffectRegister(Actor actor)
     {
@@ -70,15 +23,41 @@ public class EffectRegister : Service
 
     } 
 
-    void HandleEffectRequest(Message<Request, EffectDeclarationEvent> message)
-    {                    
-        RegisterEffect(message.Payload.Runtime, message.Payload.Effect);
+    // ===============================================================================
+    //  Public API
+    // ===============================================================================
+
+    public bool Can<T>(Func<T, bool> isBlocked, bool defaultValue = true) where T : class
+    {
+        foreach (var instance in effects)
+        {
+            if (instance.Effect is T effect && isBlocked(effect))
+                return false; 
+        }
+        return defaultValue;
     }
 
-    void HandleEffectCancellation(Message<Request, EffectInstanceEvent> message)
+    public bool Has<T>(Func<T, bool> hasCondition, bool defaultValue = false) where T : class
     {
-        CancelEffect(message.Payload.Instance.Effect);
+        foreach (var instance in effects)
+        {
+            if (instance.Effect is T effect && hasCondition(effect))
+                return true; 
+        }
+        return defaultValue;
     }
+
+    public bool Is<T>() where T : class
+    {
+        foreach (var instance in effects)
+        {
+            if (instance.Effect is T effect)
+                return true; 
+        }
+        return false;
+    }
+    
+    // ===============================================================================
 
     public void RegisterEffect(Runtime runtime, Effect effect)
     {
@@ -97,7 +76,6 @@ public class EffectRegister : Service
         effects.Add(instance);
         instance.Initialize();
     }
-
 
     void RegisterTriggerLock(EffectInstance instance)
     {
@@ -131,35 +109,18 @@ public class EffectRegister : Service
             effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
     }
 
-    public bool Is<T>() where T : class
-    {
-        foreach (var instance in effects)
-        {
-            if (instance.Effect is T effect)
-                return true; 
-        }
-        return false;
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
+    void HandleEffectRequest(Message<Request, EffectDeclarationEvent> message)
+    {                    
+        RegisterEffect(message.Payload.Runtime, message.Payload.Effect);
     }
 
-
-    public bool Can<T>(Func<T, bool> isBlocked, bool defaultValue = true) where T : class
+    void HandleEffectCancellation(Message<Request, EffectInstanceEvent> message)
     {
-        foreach (var instance in effects)
-        {
-            if (instance.Effect is T effect && isBlocked(effect))
-                return false; 
-        }
-        return defaultValue;
-    }
-
-    public bool Has<T>(Func<T, bool> hasCondition, bool defaultValue = false) where T : class
-    {
-        foreach (var instance in effects)
-        {
-            if (instance.Effect is T effect && hasCondition(effect))
-                return true; 
-        }
-        return defaultValue;
+        CancelEffect(message.Payload.Instance.Effect);
     }
 
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
@@ -178,6 +139,10 @@ public class EffectRegister : Service
         }
     }
 
+    // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.Effects);
+
     public override void Dispose()
     {
         effects.Clear();
@@ -187,42 +152,86 @@ public class EffectRegister : Service
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-
-public readonly struct EffectDeclarationEvent
+public class EffectInstance : Instance
 {
-    public Effect Effect                    { get; init; }
-    public Runtime Runtime                  { get; init; }
+    public Runtime  Owner;
+    public Effect   Effect;
 
-    public EffectDeclarationEvent(Runtime runtime, Effect effect)
+        // -----------------------------------
+
+    public Action OnApply;
+    public Action OnClear;
+    public Action OnCancel;
+
+        // -----------------------------------
+
+    public DualCountdown timer;
+
+    // ===============================================================================
+
+    public EffectInstance(Runtime runtime, Effect effect)
     {
-        Effect  = effect;
-        Runtime = runtime;
+        Owner  = runtime;
+        Effect = effect;
+
+        CreateTimer();
+    }
+
+    public void Initialize()
+    {
+        timer.OnTimerStart  += OnApply;
+        timer.OnTimerStop   += OnClear;
+
+        timer.Start();
+    }
+
+    // ===============================================================================
+    
+    void CreateTimer()
+    {
+        if (Effect is IDuration time)
+            timer = new(time.Duration);
+
+        else
+
+        if (Effect is IDurationFrames frame)
+            timer = new(frame.DurationFrames);
+    }
+
+    public void Cancel()
+    {
+        timer.Cancel();
+        OnCancel?.Invoke();
     }
 }
 
-public readonly struct EffectInstanceEvent
-{
-    public EffectInstance Instance          { get; init; }
 
-    public EffectInstanceEvent(EffectInstance instance)
-    {
-        Instance    = instance;
-    }
-}
-
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                       Utilities
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class EffectCache : IDisposable
 {
     readonly Emit emit;
-    readonly EventBinding<Message<Publish, EffectInstanceEvent>> binding;
-    readonly List<EffectInstance> activeEffects = new();
+
+        // -----------------------------------
 
     readonly Func<EffectInstance, bool> filter;
 
     public Action<EffectInstance> OnApply;
     public Action<EffectInstance> OnClear;
     public Action<EffectInstance> OnCancel;
+
+        // -----------------------------------
+
+    readonly List<EffectInstance> activeEffects = new();
+    readonly EventBinding<Message<Publish, EffectInstanceEvent>> binding;
+
+    // ===============================================================================
 
     public EffectCache(Emit emit, Func<EffectInstance, bool> filter = null)
     {
@@ -231,6 +240,8 @@ public class EffectCache : IDisposable
 
         this.emit.Link.Local<Message<Publish, EffectInstanceEvent>>(HandleEffectPublish);
     }
+
+    // ===============================================================================
 
     public void HandleEffectPublish(Message<Publish, EffectInstanceEvent> message)
     {
@@ -256,6 +267,9 @@ public class EffectCache : IDisposable
         }
     }
 
+    // ===============================================================================
+
+
     public void Bind(LocalEventbus eventbus)
     {
         eventbus.Subscribe<Message<Publish, EffectInstanceEvent> >(HandleEffectPublish);
@@ -263,5 +277,32 @@ public class EffectCache : IDisposable
 
     public IReadOnlyList<EffectInstance> Instances => activeEffects.ToList();
     public void Dispose() => emit.Link.UnsubscribeLocal(binding);
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct EffectDeclarationEvent
+{
+    public Effect Effect                    { get; init; }
+    public Runtime Runtime                  { get; init; }
+
+    public EffectDeclarationEvent(Runtime runtime, Effect effect)
+    {
+        Effect  = effect;
+        Runtime = runtime;
+    }
+}
+
+public readonly struct EffectInstanceEvent
+{
+    public EffectInstance Instance          { get; init; }
+
+    public EffectInstanceEvent(EffectInstance instance)
+    {
+        Instance    = instance;
+    }
 }
 

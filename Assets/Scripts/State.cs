@@ -1,8 +1,6 @@
 
 
 
-
-
 public abstract class State : Service
 {
     public Actor Owner { get; }

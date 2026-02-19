@@ -7,17 +7,23 @@ using UnityEngine;
 
 public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 {
-    Queue<TriggerEvent> pendingTriggers = new();
+    readonly Queue<TriggerEvent> pendingTriggers = new();
+
+    // ===============================================================================
 
     public void Initialize()
     {
         Link.Global<Message<Request, TriggerEvent>>(HandleTriggerEvent);
     }
 
+    // ===============================================================================
+
     public void Tick()
     {
         ProcessPendingTriggers();
     }
+
+    // ===============================================================================
 
     void ProcessPendingTriggers()
     {
@@ -42,10 +48,16 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
         }
     }
 
+    // ===============================================================================
+    // Helpers
+    // ===============================================================================
+
     void HandleTriggerEvent(Message<Request, TriggerEvent> message)
     {
         pendingTriggers.Enqueue(message.Payload);
     }
+
+    // ===============================================================================
 
     public override void Dispose()
     {
@@ -55,7 +67,12 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
     public UpdatePriority Priority => ServiceUpdatePriority.TriggerCoordinator;
 }
 
-public struct TriggerEvent      
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct TriggerEvent      
 {       
     public Actor Source                         { get; init; }
     public Actor Target                         { get; init; }

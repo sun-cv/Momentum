@@ -9,19 +9,19 @@ using UnityEngine;
 public class Dummy : Agent, IDummy
 {
     public ActorDefinition      Definition          { get; private set; }
-    public AnimationController  Animation           { get; private set; }
+    public AnimatorController   Animator            { get; private set; }
     public Presence             Presence            { get; private set; }
     public Lifecycle            Lifecycle           { get; private set; }
 
     //========================================
-    // Properties
+    //  Properties
     //========================================
 
     public float MaxHealth                          { get; set; }
     public float Health                             { get; set; }
 
     //========================================
-    // State
+    //  State
     //========================================
 
     public bool Inactive                            { get; set; } = false;

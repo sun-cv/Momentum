@@ -7,16 +7,20 @@ using UnityEngine;
 
 public class IntentSystem : Service, IServiceTick
 {
-    Actor           owner;
+    readonly Actor          owner;
 
-    InputRouter     inputRouter;
-    WorldPosition   worldPosition;
+    readonly InputRouter    inputRouter;
+    readonly WorldPosition  worldPosition;
 
-    CommandSystem   command     = new();
-    InputIntent     input       = new();
+    // -----------------------------------
+
+    readonly InputIntent    input   = new();
+    readonly CommandSystem  command = new();
 
     // SubSystems
     // Targeting    - intent not resolve
+    
+    // ===============================================================================
 
     public IntentSystem(Actor owner)
     {
@@ -33,11 +37,17 @@ public class IntentSystem : Service, IServiceTick
         owner.Emit.Link.LocalBinding<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
     }
 
+    // ===============================================================================
+
     public void Tick()
     {
         command .Tick();
         input   .Tick();
     }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
 
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
@@ -63,7 +73,6 @@ public class IntentSystem : Service, IServiceTick
         Services.Lane.Deregister(this);
     }
 
-
     public Actor         Owner          => owner;
     public CommandSystem Command        => command;
     public InputIntent   Input          => input;
@@ -78,7 +87,11 @@ public class InputIntent : IDirectionSource, IDisposable
 {
     readonly bool normalizeVelocity = Settings.Movement.NORMALIZE_VELOCITY;
 
+        // -----------------------------------
+
     IntentSystem intent;
+
+        // -----------------------------------
 
     Direction aim               = new(Vector2.down);
     Direction facing            = new(Vector2.down);
@@ -86,6 +99,8 @@ public class InputIntent : IDirectionSource, IDisposable
     Direction lastDirection     = new(Vector2.down);
 
     TimePredicate facingDiagonal;
+
+    // ===============================================================================
 
     public void Initialize(IntentSystem intent)
     {
@@ -100,17 +115,19 @@ public class InputIntent : IDirectionSource, IDisposable
         UpdateAim();
     } 
 
+    // ===============================================================================
+
     void UpdateDirection()
     {
-        var input = intent.InputRouter.RemoteMovementDirection;
+        var input = intent.InputRouter.MovementDirection;
 
         if (input == Vector2.zero && direction != Vector2.zero)
             lastDirection = direction;
 
-        if (normalizeVelocity && input.Vector.sqrMagnitude > 1f)
-            input.Vector = input.Vector.normalized;
+        if (normalizeVelocity && input.sqrMagnitude > 1f)
+            input = input.normalized;
 
-        direction = input.Vector;
+        direction = input;
     }
 
     void UpdateFacing()
@@ -160,6 +177,8 @@ public class InputIntent : IDirectionSource, IDisposable
             LastDirection      = LastDirection,
         };
     }
+
+    // ===============================================================================
 
     public void Dispose()
     {

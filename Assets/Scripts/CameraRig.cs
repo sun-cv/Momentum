@@ -7,53 +7,18 @@ using System;
 
 
 
-
-public class CameraContext
+public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitialize
 {
-    public CinemachineCamera            camera;
-    public CinemachineBrain             brain;
-    public CinemachinePositionComposer  composer;
-    public Camera                       cameraRoot;
-    public PixelPerfectCamera           cameraPixel;
-    public Transform                    cameraTarget;
-}
+    ICameraTarget   target;
+    CameraContext   context;
+    GameObject      cameraRig;
+    
+        // -----------------------------------
 
+    HashSet<ICameraBehavior>                    activeBehaviors;
+    Dictionary<CameraBehavior, ICameraBehavior> cameraBehaviors;
 
-public interface ICameraTarget
-{
-    public bool IsValid { get; }
-    public Vector3 GetPosition();
-}
-
-public interface IAdvancedCameraTarget : ICameraTarget
-{
-    public bool IsMoving        { get; }
-    public Vector2 Velocity     { get; }
-    public TimePredicate Idle   { get; }
-}
-
-public struct DefaultTargetProvider : ICameraTarget
-{
-    public readonly bool IsValid            => true;
-    public readonly Vector3 GetPosition()   => new();
-}
-
-
-
-public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitialize, IBind
-{
-    GameObject  cameraRig;
-    CameraContext context;
-    ICameraTarget target;
-
-    readonly HashSet<CameraBehavior> activeBehaviors    = new();
-
-    readonly Dictionary<CameraBehavior, ICameraBehavior> cameraBehaviors  = new()
-    {
-        { CameraBehavior.PlayerOffset,      new CameraOffsetBehavior()      },
-        { CameraBehavior.MouseOffset,       new CameraMouseOffsetBehavior() },
-        { CameraBehavior.PlayerDeadzone,    new DeadzoneCameraBehavior()    }
-    };
+    // ===============================================================================
 
     public void Initialize()
     {
@@ -68,29 +33,46 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitial
         root  .transform.SetParent(cameraRig.transform, false);
         target.transform.SetParent(cameraRig.transform, false);
 
-        context.camera      = core.AddComponent<CinemachineCamera>();
-        context.composer    = core.AddComponent<CinemachinePositionComposer>();
+        context.camera          = core.AddComponent<CinemachineCamera>();
+        context.composer        = core.AddComponent<CinemachinePositionComposer>();
 
-        context.cameraRoot  = root.AddComponent<Camera>();
-        context.brain       = root.AddComponent<CinemachineBrain>();
+        context.cameraRoot      = root.AddComponent<Camera>();
+        context.brain           = root.AddComponent<CinemachineBrain>();
 
-        context.cameraTarget= target.transform;
+        context.cameraTarget    = target.transform;
 
-        context.cameraRoot.orthographic         = true;
+        context.cameraRoot.orthographic = true;
 
-        context.camera.Lens.OrthographicSize    = Config.Graphics.ORTHOGRAPHIC_SIZE;
-        context.camera.Target.TrackingTarget    = target.transform;
+        context.camera.Lens.OrthographicSize = Config.Graphics.ORTHOGRAPHIC_SIZE;
+        context.camera.Target.TrackingTarget = target.transform;
 
         context.brain.UpdateMethod = CinemachineBrain.UpdateMethods.SmartUpdate;
 
-        foreach(var (type, behavior) in cameraBehaviors) 
-             behavior.Initialize(context);
+        InitializeCameraBehaviors();
     }
+
+    void InitializeCameraBehaviors()
+    {
+        activeBehaviors  = new();
+
+        cameraBehaviors  = new()
+        {
+            { CameraBehavior.PlayerOffset,      new CameraOffsetBehavior()      },
+            { CameraBehavior.MouseOffset,       new CameraMouseOffsetBehavior() },
+            { CameraBehavior.PlayerDeadzone,    new DeadzoneCameraBehavior()    }
+        };
+
+        foreach(var (type, behavior) in cameraBehaviors)
+        {
+             behavior.Initialize(context);
+        }
+    }
+
+    // ===============================================================================
 
     public void Tick()
     {
-        foreach (var behavior in activeBehaviors)
-            cameraBehaviors[behavior].Tick(target);
+        TickCameraBehaviors();
     }
 
     public void Late()
@@ -98,15 +80,28 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitial
         UpdateCameraTargetPosition();
     }
 
+    // ===============================================================================
+
+    void TickCameraBehaviors()
+    {
+        foreach (var instance in activeBehaviors)
+        {
+            if (!instance.IsValidTarget(target))
+                return;
+
+            instance.Tick(target);
+        }
+    }
 
     void UpdateCameraTargetPosition()
     {
         if (target is null || !target.IsValid)
+        {
             target = new DefaultTargetProvider();
+        }
 
         context.cameraTarget.position = target.GetPosition();
     }
-
 
     public void ActivateBehavior(CameraBehavior behavior)
     {
@@ -117,7 +112,7 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitial
             return;
 
         instance.Enable();
-        activeBehaviors.Add(behavior);
+        activeBehaviors.Add(instance);
     }
 
     public void DeactivateBehavior(CameraBehavior behavior)
@@ -126,9 +121,8 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitial
             return;
 
         instance.Disable();
-        activeBehaviors.Remove(behavior);
+        activeBehaviors.Remove(instance);
     }
-
 
     public void SetCameraTarget(ICameraTarget target)
     {
@@ -140,38 +134,51 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitial
         ReevaluateBehaviors();
     }
 
+        // ===================================
+        //  Validation
+        // ===================================
+
     public void ReevaluateBehaviors()
     {
-        var toDeactivate = new List<CameraBehavior>();
+        var toDeactivate = new List<ICameraBehavior>();
 
         foreach (var behavior in activeBehaviors)
         {
-            if (!cameraBehaviors[behavior].IsValidTarget(target))
+            if (!behavior.IsValidTarget(target))
+            {
                 toDeactivate.Add(behavior);
+            }
         }
 
         foreach (var behavior in toDeactivate)
-            DeactivateBehavior(behavior);
+        {
+            activeBehaviors.Remove(behavior);
+        }
     }
 
-    public void Bind()
-    {
-        foreach(var (type, behavior) in cameraBehaviors) 
-            behavior.Bind();
-    }
+    // ===============================================================================
+
+    
+    readonly Logger Log = Logging.For(LogSystem.Camera);
 
     public override void Dispose()
     {
         foreach (var behavior in cameraBehaviors.Values)
+        {
             behavior.Dispose();
+        }
 
         activeBehaviors.Clear();
     }
 
-    public Camera Camera => context.cameraRoot;
-
-    public UpdatePriority Priority => ServiceUpdatePriority.CameraRig;
+    public Camera Camera            => context.cameraRoot;
+    public UpdatePriority Priority  => ServiceUpdatePriority.CameraRig;
 }
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                       Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public enum CameraBehavior
 {
@@ -181,6 +188,10 @@ public enum CameraBehavior
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Behaviors
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 public interface ICameraBehavior : IDisposable
 {
     public void Initialize      (CameraContext context);
@@ -188,13 +199,21 @@ public interface ICameraBehavior : IDisposable
     public bool IsValidTarget   (ICameraTarget target);
     public void Enable  ();
     public void Disable ();
-    public void Bind    ();
 }
 
+
+    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+    //                                      Camera Offset
+    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class CameraOffsetBehavior : ICameraBehavior
 {
     CameraContext                       context;
+
+        // ---------------------------------
+
+    readonly float dampingX             = 0.3f;
+    readonly float dampingY             = 0.3f;
 
     readonly float followSpeedX         = 3f;
     readonly float followSpeedY         = 6f;
@@ -207,40 +226,42 @@ public class CameraOffsetBehavior : ICameraBehavior
     Vector3 lastMoveDirection           = Vector3.right;
 
     Tween offsetTween;
+    IAdvancedCameraTarget cachedTarget;
+
+
+    // ===============================================================================
 
     public void Initialize(CameraContext context)
     {
         this.context = context;
     }
 
-    public bool IsValidTarget(ICameraTarget target)
-    {
-        return target is IAdvancedCameraTarget;
-    }
+    // ===============================================================================
 
     public void Enable()
     {
-        context.composer.Damping.x = 0.3f;
-        context.composer.Damping.y = 0.3f;
-        currentOffset = context.composer.TargetOffset;
-    }
+        context.composer.Damping.x  = dampingX;
+        context.composer.Damping.y  = dampingY;
 
-    public void Disable()
-    {
-        context.composer.Damping.x = 0;
-        context.composer.Damping.y = 0;
+        currentOffset               = context.composer.TargetOffset;
     }
 
     public void Tick(ICameraTarget instance)
     {
-        if (!IsValidTarget(instance)) 
-            return;
+        AdvanceState(instance);
+        TickHandler();
+    }
 
-        var target = instance as IAdvancedCameraTarget;
+    public void Disable()
+    {
+        context.composer.Damping.x  = 0;
+        context.composer.Damping.y  = 0;
+    }
 
-        if (target.IsMoving)
-            StoreLastMoveDirection(target);
+    // ===============================================================================
 
+    void TickHandler()
+    {
         var desiredOffset = CalculateDesiredOffset();
         
         if (desiredOffset != targetOffset)
@@ -250,13 +271,33 @@ public class CameraOffsetBehavior : ICameraBehavior
         }
     }
 
+        // ===================================
+        //  State Management
+        // ===================================
 
-    void StoreLastMoveDirection(IAdvancedCameraTarget target)
+    void AdvanceState(ICameraTarget instance)
     {
-        var moveDir = target.Velocity.normalized;
-        if (moveDir.sqrMagnitude > 0.01f)
-            lastMoveDirection = moveDir;
+        cachedTarget = instance as IAdvancedCameraTarget;
+
+        if (cachedTarget.IsMoving)
+        {
+            StoreLastMoveDirection();
+        }
     }
+
+    void StoreLastMoveDirection()
+    {
+        var moveDir = cachedTarget.Velocity.normalized;
+
+        if (moveDir.sqrMagnitude > 0.01f)
+        {
+            lastMoveDirection = moveDir;
+        }
+    }
+
+        // ===================================
+        //  General
+        // ===================================
 
     Vector3 CalculateDesiredOffset()
     {
@@ -275,7 +316,17 @@ public class CameraOffsetBehavior : ICameraBehavior
         offsetTween = DOTween.To(() => context.composer.TargetOffset, x => context.composer.TargetOffset = x, offset, maxDuration).SetEase(easing);
     }
 
-    public void Bind() {}
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
+    public bool IsValidTarget(ICameraTarget target)
+    {
+        return target is IAdvancedCameraTarget;
+    }
+
+    // ===============================================================================
+
 
     public void Dispose()
     {
@@ -283,60 +334,77 @@ public class CameraOffsetBehavior : ICameraBehavior
     }
 }
 
+
+    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+    //                                       Mouse Offset
+    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 public class CameraMouseOffsetBehavior : ICameraBehavior
 {
+    InputRouter                     inputRouter;
     CameraContext                   context;
 
-    RemoteVector2                   mousePosition;
+        // ---------------------------------
+
+    readonly float dampingX         = .5f;
+    readonly float dampingY         = .5f;
 
     readonly float followSpeedX     = 1f;
     readonly float followSpeedY     = 1f;
     readonly float maxOffsetX       = 2f;
     readonly float maxOffsetY       = 2f;
-    readonly float damping          = .5f;
     readonly float maxDistance      = 10f;
     readonly Ease easing            = Ease.OutQuint;
 
     Vector3 targetOffset            = Vector3.zero;
+    Vector3 desiredOffset           = Vector3.zero;
 
     Tween offsetTween;
 
+    // ===============================================================================
+
     public void Initialize(CameraContext context)
     {
-        this.context = context;
+        this.context        = context;
+        this.inputRouter    = Services.Get<InputRouter>();
     }
 
-    public bool IsValidTarget(ICameraTarget target)
-    {
-        return target is IAdvancedCameraTarget;
-    }
+    // ===============================================================================
 
     public void Enable()
     {
-        context.composer.Damping.x = damping;
-        context.composer.Damping.y = damping;
-    }
-
-    public void Disable()
-    {
-        context.composer.Damping.x = 0;
-        context.composer.Damping.y = 0;
+        context.composer.Damping.x  = dampingX;
+        context.composer.Damping.y  = dampingY;
     }
 
     public void Tick(ICameraTarget instance)
     {
-        if (!IsValidTarget(instance))
-            return;
+        AdvanceState();
+        TickHandler();
+    }
 
-        Vector2 mouseWorldPos   = context.cameraRoot.ScreenToWorldPoint((Vector2)mousePosition);
+    public void Disable()
+    {
+        context.composer.Damping.x  = 0;
+        context.composer.Damping.y  = 0;
+    }
+
+    // ===============================================================================
+
+    void AdvanceState()
+    {
+        Vector2 mouseWorldPos   = context.cameraRoot.ScreenToWorldPoint(inputRouter.MousePosition);
         Vector2 characterPos    = context.cameraTarget.position;
         Vector2 worldDelta      = mouseWorldPos - characterPos;
         Vector2 normalizedDelta = worldDelta / maxDistance;
 
         normalizedDelta = Vector2.ClampMagnitude(normalizedDelta, 1f);
 
-        var desiredOffset = new Vector3(normalizedDelta.x * maxOffsetX,  normalizedDelta.y * maxOffsetY, 0f);
+        desiredOffset   = new Vector3(normalizedDelta.x * maxOffsetX, normalizedDelta.y * maxOffsetY, 0f);
+    }
 
+    void TickHandler()
+    {
         if (Vector3.Distance(desiredOffset, targetOffset) > 0.01f)
         {
             targetOffset = desiredOffset;
@@ -356,10 +424,16 @@ public class CameraMouseOffsetBehavior : ICameraBehavior
         offsetTween = DOTween.To(() => context.composer.TargetOffset, x => context.composer.TargetOffset = x, offset, maxDuration).SetEase(easing);
     }
 
-    public void Bind()
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
+    public bool IsValidTarget(ICameraTarget target)
     {
-        mousePosition = Services.Get<InputRouter>().RemoteMousePosition;
+        return target is IAdvancedCameraTarget;
     }
+
+    // ===============================================================================
 
     public void Dispose()
     {
@@ -368,9 +442,21 @@ public class CameraMouseOffsetBehavior : ICameraBehavior
 }
 
 
+    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+    //                                        Deadzone 
+    // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
 public class DeadzoneCameraBehavior : ICameraBehavior
 {
+
+    private enum DeadzoneState { Closed, Opening, Open, Shrinking }
+
+        // ---------------------------------
+
     CameraContext                           context;
+
+        // ---------------------------------
 
     readonly float idleTimeThreshold        = 0.5f;
     readonly float deadzoneTimeThreshold    = 1f;
@@ -388,26 +474,33 @@ public class DeadzoneCameraBehavior : ICameraBehavior
     DeadzoneState state = DeadzoneState.Closed;
     
     ClockWatch timer;
+    IAdvancedCameraTarget cachedTarget;
+    Vector2 currentSize;
+    
+    // ===============================================================================
 
     public void Initialize(CameraContext context)
     {
         this.context  = context;
     }
 
-    public bool IsValidTarget(ICameraTarget target)
-    {
-        return target is IAdvancedCameraTarget;
-    }
+    // ===============================================================================
 
     public void Enable()
     {
         context.composer.Composition.DeadZone.Enabled = true;
-        context.composer.Composition.DeadZone.Size = movingSize;
+        context.composer.Composition.DeadZone.Size    = movingSize;
 
         timer = new ClockWatch();
         timer.Start();
 
-        state       = DeadzoneState.Closed;
+        state = DeadzoneState.Closed;
+    }
+
+    public void Tick(ICameraTarget instance)
+    {
+        AdvanceState(instance);
+        TickHandler();
     }
 
     public void Disable()
@@ -416,19 +509,14 @@ public class DeadzoneCameraBehavior : ICameraBehavior
         timer.Reset();
     }
 
-    public void Tick(ICameraTarget instance)
+    // ===============================================================================
+
+    void TickHandler()
     {
-        if (!IsValidTarget(instance))
-            return;
-        
-        var target = instance as IAdvancedCameraTarget;
-
-        Vector2 currentSize = context.composer.Composition.DeadZone.Size;
-
         switch (state)
         {
             case DeadzoneState.Closed:
-                if (ShouldOpenDeadzone(target))
+                if (ShouldOpenDeadzone())
                 {
                     StartSizeTween(idleSize, openSpeed, openEase);
                     state = DeadzoneState.Opening;
@@ -461,14 +549,10 @@ public class DeadzoneCameraBehavior : ICameraBehavior
         }
     }
 
-    bool ShouldOpenDeadzone(IAdvancedCameraTarget target)
+    void AdvanceState(ICameraTarget instance)
     {
-        return target.Idle.Timer.CurrentTime > idleTimeThreshold && timer.CurrentTime > deadzoneTimeThreshold;
-    }
-
-    bool IsNearTarget(Vector2 current, Vector2 target)
-    {
-        return Vector2.Distance(current, target) <= sizeThreshold;
+        cachedTarget = instance as IAdvancedCameraTarget;
+        currentSize  = context.composer.Composition.DeadZone.Size;
     }
 
     void ResetTimer()
@@ -477,27 +561,17 @@ public class DeadzoneCameraBehavior : ICameraBehavior
         timer.Start();
     }
 
-    bool IsPlayerOutsideDeadzone()
-    {
-        var rect = GetDeadzoneWorldBounds();
-        
-        Vector3 offsetTarget = context.cameraTarget.position + context.composer.TargetOffset;
-        Vector2 point = offsetTarget;
-
-        return !rect.Contains(point);
-    }
-
     Rect GetDeadzoneWorldBounds()
     {
-        float camHeight = context.camera.Lens.OrthographicSize * 2f;
-        float camWidth = camHeight * context.camera.Lens.Aspect;
+        float camHeight     = context.camera.Lens.OrthographicSize * 2f;
+        float camWidth      = camHeight * context.camera.Lens.Aspect;
 
-        Vector2 screenSize = new(camWidth, camHeight);
-        Vector2 zoneSize = Vector2.Scale(context.composer.Composition.DeadZone.Size, screenSize);
+        Vector2 screenSize  = new(camWidth, camHeight);
+        Vector2 zoneSize    = Vector2.Scale(context.composer.Composition.DeadZone.Size, screenSize);
 
-        Vector3 center = context.camera.transform.position;
-        Vector2 half = zoneSize / 2f;
-        Vector3 min = center - new Vector3(half.x, half.y, 0f);
+        Vector3 center      = context.camera.transform.position;
+        Vector2 half        = zoneSize / 2f;
+        Vector3 min         = center - (Vector3)half;
 
         return new Rect(min, zoneSize);
     }
@@ -507,25 +581,81 @@ public class DeadzoneCameraBehavior : ICameraBehavior
         sizeTween?.Kill();
 
         Vector2 currentSize = context.composer.Composition.DeadZone.Size;
-        float distance = Vector2.Distance(currentSize, toSize);
-        float duration = distance / Mathf.Max(speed, 0.01f);
+        
+        float distance      = Vector2.Distance(currentSize, toSize);
+        float duration      = distance / Mathf.Max(speed, 0.01f);
 
         sizeTween = DOTween.To(() => context.composer.Composition.DeadZone.Size, x => context.composer.Composition.DeadZone.Size = x, toSize, duration).SetEase(ease);
     }
 
-    public void Bind() {}
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
+    public bool IsValidTarget(ICameraTarget target)
+    {
+        return target is IAdvancedCameraTarget;
+    }
+
+    bool ShouldOpenDeadzone()
+    {
+        return cachedTarget.Idle.Timer.CurrentTime > idleTimeThreshold && timer.CurrentTime > deadzoneTimeThreshold;
+    }
+
+    bool IsNearTarget(Vector2 current, Vector2 target)
+    {
+        return Vector2.Distance(current, target) <= sizeThreshold;
+    }
+
+    bool IsPlayerOutsideDeadzone()
+    {
+        var rect = GetDeadzoneWorldBounds();
+        
+        Vector3 offsetTarget = context.cameraTarget.position + context.composer.TargetOffset;
+        Vector2 point        = offsetTarget;
+
+        return !rect.Contains(point);
+    }
+
+    // ===============================================================================
 
     public void Dispose()
     {
         sizeTween?.Kill();
     }
-
-    private enum DeadzoneState
-    {
-        Closed,
-        Opening,
-        Open,
-        Shrinking
-    }
-
 }
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations                                  
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class CameraContext
+{
+    public CinemachineCamera                camera;
+    public CinemachineBrain                 brain;
+    public CinemachinePositionComposer      composer;
+    public Camera                           cameraRoot;
+    public PixelPerfectCamera               cameraPixel;
+    public Transform                        cameraTarget;
+}
+
+public interface ICameraTarget
+{
+    public bool IsValid                     { get; }
+    public Vector3 GetPosition();
+}
+
+public interface IAdvancedCameraTarget  : ICameraTarget
+{
+    public bool IsMoving                    { get; }
+    public Vector2 Velocity                 { get; }
+    public TimePredicate Idle               { get; }
+}
+
+public struct DefaultTargetProvider     : ICameraTarget
+{
+    public readonly bool IsValid            => true;
+    public readonly Vector3 GetPosition()   => new();
+}
+

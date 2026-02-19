@@ -8,20 +8,10 @@ using UnityEngine;
 [Service]
 public class SpriteLayeringSystem : Service, IServiceStep, IBind
 {
-    readonly Logger Log = Logging.For(LogSystem.SpriteLayering);
-
-    class TrackedSprite
-    {
-        public Transform transform;
-        public SpriteRenderer sprite;
-        public Collider2D backZone;
-        public Collider2D sortbox;
-        public float FootY => backZone.bounds.min.y;
-        public Dictionary<TrackedSprite, int> orderOverrides = new();
-    }
-
-    List<TrackedSprite> trackedSprites = new();
+    readonly List<TrackedSprite> trackedSprites = new();
     
+    // ===============================================================================
+
     public void Register(Bridge bridge)
     {
         var tracked = new TrackedSprite 
@@ -34,7 +24,6 @@ public class SpriteLayeringSystem : Service, IServiceStep, IBind
         
         trackedSprites.Add(tracked);
     }
-
 
     public void Step()
     {
@@ -130,6 +119,10 @@ public class SpriteLayeringSystem : Service, IServiceStep, IBind
         }
     }
 
+    // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.SpriteLayering);
+
     public void Bind()
     {
         RefreshRegistrations();
@@ -148,18 +141,11 @@ public class SpriteLayeringSystem : Service, IServiceStep, IBind
 [Service]
 public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 {
-    readonly Logger Log = Logging.For(LogSystem.DepthSorting);
-
-    class EntityCollision
-    {
-        public Actor actor;
-        public Collider2D frontZone;
-        public Collider2D backZone;
-        public Transform transform;
-    }
     
     List<EntityCollision> trackedSprites = new();
-    
+
+        // ===============================================================================
+
     public void Register(Bridge bridge)
     {
         trackedSprites.Add(new EntityCollision
@@ -227,6 +213,10 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
         }
     }
 
+    // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.DepthSorting);
+
     public void Bind()
     {
         RefreshRegistrations();
@@ -238,4 +228,27 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
     }
 
     public UpdatePriority Priority => new(UpdatePhase.Physics, 99);
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Classes
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+class TrackedSprite
+{
+    public Transform transform;
+    public SpriteRenderer sprite;
+    public Collider2D backZone;
+    public Collider2D sortbox;
+    public float FootY => backZone.bounds.min.y;
+    public Dictionary<TrackedSprite, int> orderOverrides = new();
+}
+
+class EntityCollision
+{
+    public Actor actor;
+    public Collider2D frontZone;
+    public Collider2D backZone;
+    public Transform transform;
 }

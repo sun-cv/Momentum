@@ -4,12 +4,12 @@ using UnityEngine;
 
 
 
-
-
 public class Game : MonoBehaviour
 {
     private GameEngine engine;
 
+    // ===============================================================================
+    
     public void Awake()
     {
         engine = new();
@@ -33,12 +33,12 @@ public class Game : MonoBehaviour
 }
 
 
-
-
 public class GameEngine
 {
     readonly Clock   clock          = new();
     readonly GameLoop loop          = new();
+
+    // ===============================================================================
 
     public void Startup()
     {
@@ -57,6 +57,8 @@ public class GameEngine
         loop    .Initialize(clock);
     }
 
+    // ===============================================================================
+    
     public void Tick()
     {
         clock.Tick();
@@ -74,7 +76,6 @@ public class GameEngine
 }
 
 
-
 public class Clock
 {
     public const float TickRate     = Config.Timing.TICK_RATE_TICK;
@@ -82,16 +83,20 @@ public class Clock
     public const float StepRate     = Config.Timing.TICK_RATE_STEP;
     public const float UtilRate     = Config.Timing.TICK_RATE_UTIL;
 
-    public const float TickDelta = 1f/TickRate;
-    public const float LoopDelta = 1f/LoopRate;
-    public const float StepDelta = 1f/StepRate;
-    public const float UtilDelta = 1f/UtilRate;
+        // -----------------------------------
 
     public event Action OnTick;
     public event Action OnLoop;
     public event Action OnStep;
     public event Action OnUtil;
     public event Action OnLate;
+
+        // -----------------------------------
+
+    public const float TickDelta = 1f/TickRate;
+    public const float LoopDelta = 1f/LoopRate;
+    public const float StepDelta = 1f/StepRate;
+    public const float UtilDelta = 1f/UtilRate;
 
     float tickAccumulator; 
     float loopAccumulator; 
@@ -100,13 +105,10 @@ public class Clock
 
     static int frameCount;
     
-    public static int FrameCount    => frameCount;
-    public static float DeltaTime   => UnityEngine.Time.fixedDeltaTime;
-    public static float Time        => UnityEngine.Time.time;
-
+    // ===============================================================================
+    
     public void Tick()
     {
-
         tickAccumulator += DeltaTime;
         loopAccumulator += DeltaTime;
         stepAccumulator += DeltaTime;
@@ -135,12 +137,20 @@ public class Clock
         }
     }
 
+    // ===============================================================================
+
     public void Late()
     {
         OnLate?.Invoke();
     }
-}
 
+    // ===============================================================================
+
+
+    public static int FrameCount    => frameCount;
+    public static float DeltaTime   => UnityEngine.Time.fixedDeltaTime;
+    public static float Time        => UnityEngine.Time.time;
+}
 
 
 
@@ -148,8 +158,12 @@ public class GameLoop
 {
     private Clock clock;
 
+        // -----------------------------------
+
     static int   tickHerz;
     static float timeHerz;
+
+    // ===============================================================================
 
     public void Initialize(Clock clock)
     {
@@ -165,6 +179,8 @@ public class GameLoop
 
         Time.fixedDeltaTime = Clock.TickDelta;
     }
+
+    // ===============================================================================
 
     public void Tick()
     {
@@ -187,6 +203,9 @@ public class GameLoop
         Services.Lane.Late();
     }
 
+    // ===============================================================================
+
+
     static void MeasureTickRate()
     {
         timeHerz += Clock.DeltaTime;
@@ -198,11 +217,12 @@ public class GameLoop
             tickHerz = 0;
         }
     }
-
-    
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public enum UpdatePhase
 {
@@ -214,7 +234,10 @@ public enum UpdatePhase
     Render
 }
 
-
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Structs                                                   
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        
 public readonly struct UpdatePriority : IComparable<UpdatePriority>
 {
     public UpdatePhase Phase { get; }

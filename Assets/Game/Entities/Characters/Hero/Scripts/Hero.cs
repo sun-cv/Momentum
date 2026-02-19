@@ -5,7 +5,7 @@ using UnityEngine;
 public class Hero : Player, IHero
 {
     // ===============================================================================
-    // Systems
+    //  Systems
     // ===============================================================================
     
     public ActorDefinition      Definition          { get; set; }
@@ -16,13 +16,14 @@ public class Hero : Player, IHero
     public WeaponSystem         Weapons             { get; set; }
     public MovementEngine       Movement            { get; set; }
     public EffectRegister       Effects             { get; set; }
-    public AnimationController  Animation           { get; set; }
     public Lifecycle            Lifecycle           { get; set; }
     public Presence             Presence            { get; set; }
+    public AnimatorController   Animator            { get; set; }
+    public AnimationController  Animation           { get; set; }
 
 
     // ===============================================================================
-    // Accessors
+    //  Accessors
     // ===============================================================================
 
     public float MaxHealth                          { get => Stats.MaxHealth;               }
@@ -40,7 +41,7 @@ public class Hero : Player, IHero
 
 
     // ===============================================================================
-    // State
+    //  State
     // ===============================================================================
 
     public bool Inactive                            { get => State.Inactive;        
@@ -80,9 +81,7 @@ public class Hero : Player, IHero
     public TimePredicate IsIdle                     => State.IsIdle;
 
 
-    // ===================================================================================
-    // Initialization
-    // ===================================================================================
+    // ===============================================================================
 
     public void Initialize(ActorDefinition definition)
     {

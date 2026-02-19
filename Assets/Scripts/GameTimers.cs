@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
-
-
 
 
 
@@ -11,8 +8,8 @@ public class Timers : RegisteredService, IServiceTick
 {
     private readonly List<Timer> timers  = new();
     
-    public Timers() {}
-
+    // ===============================================================================
+    
     public void Tick()
     {
         foreach (var timer in new List<Timer>(timers))
@@ -20,10 +17,27 @@ public class Timers : RegisteredService, IServiceTick
             timer.Tick();
         }
     }
-    public void Clear() => timers.Clear();
 
-    public void RegisterTimer(Timer timer)   => timers.Add(timer);
-    public void DeregisterTimer(Timer timer) => timers.Remove(timer);
+    // ===============================================================================
+    //  Public API
+    // ===============================================================================
+
+    public void RegisterTimer(Timer timer)
+    {
+        timers.Add(timer);
+    }
+
+    public void DeregisterTimer(Timer timer)
+    {
+        timers.Remove(timer);
+    }
+
+    public void Clear()
+    {
+        timers.Clear();
+    }
+
+    // ===============================================================================
 
     public override void Dispose()
     {
@@ -39,6 +53,15 @@ public abstract class Timer : IDisposable
 {   
     protected Timers timers;
 
+        // -----------------------------------
+
+    public Action OnTimerStart = delegate { };
+    public Action OnTimerStop  = delegate { };
+
+        // -----------------------------------
+
+    bool disposed;
+
     protected float initialTime;
     public float InitialTime    { get; protected set; }
     public float StartedTime    { get; protected set; }
@@ -53,8 +76,7 @@ public abstract class Timer : IDisposable
     public bool  IsRunning      { get; protected set; }
     public TimerUnit Unit       { get; protected set; }
 
-    public Action OnTimerStart = delegate { };
-    public Action OnTimerStop  = delegate { };
+    // ===============================================================================
 
     protected Timer(float value)
     {
@@ -74,6 +96,8 @@ public abstract class Timer : IDisposable
         timers       = Services.Get<Timers>();
     }
 
+    // ===============================================================================
+    
     public virtual void Start()
     {
         if (Unit == TimerUnit.Time)
@@ -111,9 +135,19 @@ public abstract class Timer : IDisposable
     public abstract void Tick();
     public abstract bool IsFinished { get; }
 
-    public void Resume() => IsRunning = true;
-    public void Pause()  => IsRunning = false;
-    public void Cancel()  { IsRunning = false; timers.DeregisterTimer(this); }
+    public void Resume()
+    {
+        IsRunning = true;
+    }
+    public void Pause()
+    {
+        IsRunning = false;
+    }
+    public void Cancel()
+    { 
+        IsRunning = false; 
+        timers.DeregisterTimer(this); 
+    }
 
     public virtual void Reset()
     {
@@ -171,17 +205,19 @@ public abstract class Timer : IDisposable
         Reset();
     }
 
-
-    bool disposed;
+    // ===============================================================================
+    
     ~Timer()
     {
         Dispose(false);
     }
+
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
     protected virtual void Dispose(bool disposing) 
     {
         if (disposed)
@@ -197,14 +233,26 @@ public abstract class Timer : IDisposable
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 public enum TimerMode { Up, Down }
 public enum TimerUnit { Time, Frame }
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class GenericTimer : Timer
 {
     readonly TimerMode mode;
 
+        // -----------------------------------
+
     float percent;
+
+        // -----------------------------------
 
     public GenericTimer(TimerMode mode, float value = 0 ) : base(value)
     {
@@ -216,6 +264,8 @@ public class GenericTimer : Timer
         this.mode = mode;
     }
 
+    // ===============================================================================
+    
     public override void Tick()
     {
         if (!IsRunning) return;
@@ -234,6 +284,8 @@ public class GenericTimer : Timer
 
         CalculatePercentage();
     }
+    
+    // ===============================================================================
 
     void CalculatePercentage()
     {
@@ -243,12 +295,13 @@ public class GenericTimer : Timer
 
         percent = mode == TimerMode.Down ? 1f - raw : raw;
     }
+
+    // ===============================================================================
+
+
     public override bool IsFinished => !IsRunning && HasRun;
     public float PercentComplete    => percent;
 }
-
-
-
 
 public class ClockWatch : GenericTimer
 {
@@ -269,7 +322,6 @@ public class FrameTimer : GenericTimer
 {
     public FrameTimer(int startValue) : base(TimerMode.Down, startValue) {}
 }
-
 
 public class DualCountdown : GenericTimer
 {

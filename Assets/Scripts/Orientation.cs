@@ -1,38 +1,4 @@
-using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
-
-
-
-
-
-public enum Cardinal
-{
-    North,
-    South,
-    East,
-    West,
-}
-
-public enum Ordinal
-{
-    NortEast,
-    NorthWest,
-    SoutEast,
-    SouthWest
-}
-
-public enum Intercardinal
-{
-    North,
-    NorthEast,
-    East,
-    SouthEast,
-    South,
-    SouthWest,
-    West,
-    NorthWest
-}
 
 
 
@@ -193,49 +159,35 @@ public static class Orientation
 }
 
 
-public class WorldPosition : RegisteredService, IBind
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public enum Cardinal
 {
-    public Camera Camera                { get; internal set; }
-    public RemoteVector2 MousePosition  { get; internal set; }
-
-    public Vector2 Mouse()
-    {
-        return Camera.ScreenToWorldPoint((Vector2)MousePosition);
-    }
-
-    public Vector2 DirectionTo(Vector2 to, Vector2 from)
-    {
-        return (to - from).normalized;
-    }
-
-    public Vector2 MouseDirectionTo(Vector2 position)
-    {
-        return DirectionTo(position, Mouse());
-    }
-
-    public Vector2 MouseDirectionFrom(Vector2 position)
-    {
-        return DirectionTo(Mouse(), position);
-    }
-    
-    public Intercardinal MouseIntercardinalFrom(Vector2 position)
-    {
-        return Orientation.FromVector(MouseDirectionFrom(position));
-    }
-
-    public float DistanceToMouse(Vector2 position)
-    {
-        return Vector2.Distance(position, Mouse());
-    }
-
-    public void Bind()
-    {
-        Camera          = Services.Get<CameraRig>().Camera;
-        MousePosition   = Services.Get<InputRouter>().RemoteMousePosition;
-    }
-
-    public override void Dispose()
-    {
-        // NO OP;
-    }
+    North,
+    South,
+    East,
+    West,
 }
+
+public enum Ordinal
+{
+    NortEast,
+    NorthWest,
+    SoutEast,
+    SouthWest
+}
+
+public enum Intercardinal
+{
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest
+}
+

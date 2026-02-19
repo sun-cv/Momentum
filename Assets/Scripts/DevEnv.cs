@@ -6,15 +6,16 @@ using System;
 
 public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 {
-    readonly Logger Log = Logging.For(LogSystem.Dev);
 
-    public FrameWatch watch;
+    Hero hero;
 
+    // ===============================================================================
+    
     public void Initialize()
     {
         Services.Lane.Register(this);
 
-        var hero        = HeroFactory.Create();
+        hero = HeroFactory.Create();
 
         hero.Equipment.Equip(new Sword());
         hero.Equipment.Equip(new Shield());
@@ -25,11 +26,9 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
         
         DebugLogSetup();
-
-        watch = new();
-        watch.Start();
     }
 
+    // ===============================================================================
 
     public void Tick()
     {
@@ -40,6 +39,11 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
     {
 
     }
+
+    // ===============================================================================
+
+
+    readonly Logger Log = Logging.For(LogSystem.Dev);
 
     public void DebugLogSetup()
     {
@@ -55,14 +59,13 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Logging.For(LogSystem.Presence)         .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Lifecycle)        .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Hero)             .SetLevel(LogLevel.Debug);    
-
     }
 
     public void DebugLog()
     {
-        // Logging.For(LogSystem.Hero).Debug("Health", () => hero.Health);
-        // Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
-        // Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
+        Logging.For(LogSystem.Hero).Debug("Health",() => hero.Health);
+        Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
+        Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
     }
 
     public override void Dispose()

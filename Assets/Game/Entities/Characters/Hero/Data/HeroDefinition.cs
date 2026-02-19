@@ -20,7 +20,7 @@ public class HeroDefinition : ActorDefinition
 
         Presence                    = new()
         {
-            EnableAbsentState       = true,
+            CanBeSetAbsent          = true,
         };
 
         Lifecycle                   = new()
