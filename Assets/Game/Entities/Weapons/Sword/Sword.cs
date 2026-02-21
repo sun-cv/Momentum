@@ -125,7 +125,7 @@ public class SwordStrike : DamagingWeapon
         
         Animations = new()
         {
-            OnFire = HeroAnimation.SwordStrike,
+            OnFire = "SwordStrike",
         };
     }
 }
@@ -225,7 +225,7 @@ public class SwordCleave : DamagingWeapon
         };
         Animations = new()
         {
-            OnFire = HeroAnimation.SwordStrike,
+            OnFire = "SwordStrike",
         };
     }
 }
@@ -327,7 +327,7 @@ public class SwordRend : DamagingWeapon
         };
         Animations = new()
         {
-            OnFire = HeroAnimation.SwordStrike,
+            OnFire = "SwordStrike"
         };
     }
 }

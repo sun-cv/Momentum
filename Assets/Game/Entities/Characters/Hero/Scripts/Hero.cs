@@ -18,8 +18,7 @@ public class Hero : Player, IHero
     public EffectRegister       Effects             { get; set; }
     public Lifecycle            Lifecycle           { get; set; }
     public Presence             Presence            { get; set; }
-    public AnimatorController   Animator            { get; set; }
-    public AnimationController  Animation           { get; set; }
+    public AnimationSystem      Animation           { get; set; }
 
 
     // ===============================================================================

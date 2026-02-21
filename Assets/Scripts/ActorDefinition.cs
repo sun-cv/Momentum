@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 
 
@@ -115,5 +116,7 @@ public class AnimationSet : Definition
     public string   Default                             { get; init; }
     public string[] Random                              { get; init; }
     
-    // public Dictionary<DamageType, string> ByDamageType  { get; init; }
+    public List<string>                 ByName          { get; init; }
+    public Dictionary<string, string>   ByDamage        { get; init; }
+    public Dictionary<string, string>   ByLocation      { get; init; }
 }

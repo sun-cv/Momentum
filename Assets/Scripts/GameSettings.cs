@@ -90,7 +90,8 @@ public static class ServiceUpdatePriority
     public static UpdatePriority Combat             = new(UpdatePhase.Resolve,  20);
 
     public static UpdatePriority SpriteLayering     = new(UpdatePhase.Render,   10);
-    public static UpdatePriority AnimationHandler   = new(UpdatePhase.Render,   20);
-    public static UpdatePriority CameraRig          = new(UpdatePhase.Render,   30);
+    public static UpdatePriority AnimationSystem    = new(UpdatePhase.Render,   20);
+    public static UpdatePriority AnimatorController = new(UpdatePhase.Render,   30);
+    public static UpdatePriority CameraRig          = new(UpdatePhase.Render,   40);
 
 }

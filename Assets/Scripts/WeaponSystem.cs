@@ -544,7 +544,7 @@ public class WeaponSystem : Service, IServiceTick
 
     public void RequestAnimation(WeaponAction action)
     {
-        AnimationRequestEvent request = instance.State.Phase switch
+        string animation = instance.State.Phase switch
         {
             WeaponPhase.Charging    => action.Animations.OnCharge,
             WeaponPhase.Fire        => action.Animations.OnFire,
@@ -552,10 +552,10 @@ public class WeaponSystem : Service, IServiceTick
             _ => null
         };
 
-        if (request == null)
+        if (animation is null)
             return;
 
-        owner.Emit.Local(Request.Start, request);
+        owner.Emit.Local(Request.Start, new AnimationRequestEvent(new(animation)));
     }
 
 

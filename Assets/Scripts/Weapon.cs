@@ -170,10 +170,10 @@ public class WeaponTriggerCondition
 
 public class WeaponAnimations
 {
-    public AnimationRequestEvent OnCharge                { get; init; }
-    public AnimationRequestEvent OnFire                  { get; init; }
-    public AnimationRequestEvent OnFireEnd               { get; init; }
-    public AnimationRequestEvent OnCancel                { get; init; }
+    public string OnCharge    { get; init; }
+    public string OnFire      { get; init; }
+    public string OnFireEnd   { get; init; }
+    public string OnCancel    { get; init; }
 }
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                             Weapon Instance                                                   

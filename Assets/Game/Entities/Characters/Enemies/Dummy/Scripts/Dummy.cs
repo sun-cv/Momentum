@@ -9,7 +9,7 @@ using UnityEngine;
 public class Dummy : Agent, IDummy
 {
     public ActorDefinition      Definition          { get; private set; }
-    public AnimatorController   Animator            { get; private set; }
+    public AnimationSystem      Animation           { get; private set; }
     public Presence             Presence            { get; private set; }
     public Lifecycle            Lifecycle           { get; private set; }
 

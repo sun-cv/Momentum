@@ -52,7 +52,7 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Combat)           .SetLevel(LogLevel.Debug);

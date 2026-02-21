@@ -327,11 +327,10 @@ public class DyingStateHandler : ILifecycleStateHandler
 
         // -----------------------------------
 
-    readonly LocalEventHandler<Message<Response, AnimationDurationEvent>> animationDurationHandler;
+    readonly LocalEventHandler<Message<Response, AnimationRequestEvent>> animationRequestHandler;
 
         // -----------------------------------
 
-    string deathAnimation;
     float  deathAnimationDuration;
 
     ClockTimer dyingTimer;
@@ -344,7 +343,7 @@ public class DyingStateHandler : ILifecycleStateHandler
         this.actor      = actor;
         this.definition = definition;
 
-        animationDurationHandler = new(owner.Emit, HandleAnimationDuration);
+        animationRequestHandler = new(owner.Emit, HandleAnimationDuration);
     }
     
     // ===============================================================================
@@ -360,10 +359,7 @@ public class DyingStateHandler : ILifecycleStateHandler
             AlertDeath();
 
         if (HasDeathAnimation())
-        {
             PlayDeathAnimation();
-            GetDeathAnimationDuration();
-        }
 
         if (HasOnDeathEffects())
             ApplyOnDeathEffects();
@@ -390,7 +386,6 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void ClearDyingState()
     {
-        deathAnimation          = "";
         deathAnimationDuration  = 0;
     }
 
@@ -428,29 +423,20 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void PlayDeathAnimation()
     {
-        deathAnimation = SelectDeathAnimation();
-        owner.Emit.Local(Request.Start, new AnimationRequestEvent(deathAnimation) { AllowInterrupt = false });
+        var request = new AnimationRequest(AnimationIntent.Death) 
+        {
+            options = new() 
+            { 
+                AllowInterrupt = false 
+            },
+        };
+
+        animationRequestHandler.Send(Request.Start, new AnimationRequestEvent(request));
     }
 
-        // Rework required further Damage type animations?
-    string SelectDeathAnimation()
+    void HandleAnimationDuration(Message<Response, AnimationRequestEvent> response)
     {
-        var animations = definition.Animations.Death;
-                
-        if (animations.Random?.Length > 0)
-            return animations.Random[Random.Range(0, animations.Random.Length)];
-        
-        return animations.Default;
-    }
-
-    void GetDeathAnimationDuration()
-    {
-        animationDurationHandler.Send(Request.Get, new AnimationDurationEvent(deathAnimation));  
-    }
-
-    void HandleAnimationDuration(Message<Response, AnimationDurationEvent> response)
-    {
-        deathAnimationDuration = response.Payload.Duration;
+        deathAnimationDuration = response.Payload.AnimationRequest.Data.Duration;
     }
 
     // ===============================================================================

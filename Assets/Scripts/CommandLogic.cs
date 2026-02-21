@@ -180,7 +180,7 @@ public class Command : Instance
         //                                  Maps                                                  
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public static class IntentMap
+public static partial class IntentMap
 {
     public static readonly Dictionary<PlayerAction, Capability> Input = new()
     {
