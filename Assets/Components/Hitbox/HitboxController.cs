@@ -4,8 +4,6 @@ using UnityEngine;
 
 
 
-
-
 public class HitboxController : Controller
 {
     readonly Color gizmoColor = Settings.Debug.GIZMO_COLOR;

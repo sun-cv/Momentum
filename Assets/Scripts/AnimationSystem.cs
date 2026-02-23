@@ -39,7 +39,6 @@ public class AnimationSystem : Service, IServiceLoop
     public void Loop()
     {
         ProcessAnimationRequests();
-        Log.Debug("Animator disabled", () => animator.IsDisabled);
     }
 
     // ===============================================================================
@@ -50,24 +49,32 @@ public class AnimationSystem : Service, IServiceLoop
             return;
 
         foreach (var message in pendingRequests)
-        {
-            var request = message.Payload.AnimationRequest;
-
-            if (!request.IsValid)
-                Resolve(request);
-
-                request.data = new AnimationData
-                {
-                    Duration = animator.RequestAnimationDuration(request.name)
-                };
-
-                RequestAnimation(request);
-
-            owner.Emit.Local(message.Id, Response.Completed, new AnimationRequestEvent(request));
-        }
+            ProcessAnimationRequest(message);
 
         pendingRequests.Clear();
     }
+
+    void ProcessAnimationRequest(Message<Request, AnimationRequestEvent> message)
+    {
+        var request = message.Payload.AnimationRequest;
+
+        if (!request.IsValid)
+            Resolve(request);
+
+        SetAnimationData(request);
+        RequestAnimation(request);
+
+        owner.Emit.Local(message.Id, Response.Completed, new AnimationRequestEvent(request));
+    }
+
+    void SetAnimationData(AnimationRequest request)
+    {
+        request.data = new AnimationData
+        {
+            Duration = animator.RequestAnimationDuration(request.name)
+        };
+    }
+
     AnimationRequest Resolve(AnimationRequest request)
     {
         var set         = SelectAnimationSet(request.intent);
@@ -123,7 +130,6 @@ public class AnimationSystem : Service, IServiceLoop
     //  Events
     // ===============================================================================
 
-
     void HandleAnimationRequest(Message<Request, AnimationRequestEvent> message)
     {
         pendingRequests.Add(message);
@@ -149,23 +155,23 @@ public class AnimationSystem : Service, IServiceLoop
 
     readonly Logger Log = Logging.For(LogSystem.Animation);
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     bool ValidateOwner(Actor actor, out IDefined defined)
     {
         defined = null;
 
-        if (actor is  not IDefined instance)
+        if (actor is not IDefined instance)
         {
-            Log.Error($"{actor.GetType().Name} Failed Validation. Animation Controller requires defined actor");
+            Log.Error($"{actor.GetType().Name} Failed System Validation. Animation System requires IDefined actor");
             return false;
         }
 
         defined = instance;
         return true;
+    }
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
     }
 
     public UpdatePriority Priority      => ServiceUpdatePriority.AnimationSystem;
@@ -177,20 +183,22 @@ public class AnimationSystem : Service, IServiceLoop
 
 public class AnimationRequest
 {
-    public string           name;
-    public AnimationIntent  intent;
-    public AnimationContext context;
-    public AnimationOptions options;
-    public AnimationData    data;
+    public string                       name;
+    public AnimationIntent              intent;
+    public AnimationContext             context;
+    public AnimationOptions             options;
+    public AnimationData                data;
+    public AnimatorParameter.Override[] overrides;
 
-    public bool IsValid     => name     != null;
-    public bool HasContext  => context  != null;
+    public bool IsValid         => name      != null;
+    public bool HasContext      => context   != null;
+    public bool HasOverrides    => overrides != null && overrides.Length > 0;
 
     public AnimationRequest(string name)
     {
-        this.name       = name;
-        options         = new() { AllowInterrupt = true };
-    }   
+        this.name   = name;
+        options     = new() { AllowInterrupt = true };
+    }
 
     public AnimationRequest(AnimationIntent intent, AnimationContext context = null)
     {
@@ -199,11 +207,13 @@ public class AnimationRequest
         options         = new() { AllowInterrupt = true };
     }
 
-    public string           Name    => name;
-    public AnimationIntent  Intent  => intent;
-    public AnimationContext Context => context;
-    public AnimationOptions Options => options;
-    public AnimationData    Data    => data;
+    public string                       Name        => name;
+    public AnimationIntent              Intent      => intent;
+    public AnimationContext             Context     => context;
+    public AnimationOptions             Options     => options;
+    public AnimationData                Data        => data;
+    public AnimatorParameter.Override[] Overrides   => overrides;
+
 }
 
 public class AnimationOptions
@@ -263,16 +273,12 @@ public readonly struct AnimationTriggerEvent
     }
 }
 
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                          Maps
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
 public static partial class IntentMap
 {
+
     public static readonly Dictionary<AnimationIntent, Func<AnimationDefinition, AnimationSet>> Animations = new()
     {
         { AnimationIntent.Spawn, definition => definition.Spawn },
         { AnimationIntent.Death, definition => definition.Death },
     };
-
 }

@@ -20,7 +20,6 @@ public class EffectRegister : Service
         owner.Emit.Link.Local<Request, EffectDeclarationEvent>      (HandleEffectRequest);
         owner.Emit.Link.Local<Request, EffectInstanceEvent>         (HandleEffectCancellation);
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);
-
     } 
 
     // ===============================================================================

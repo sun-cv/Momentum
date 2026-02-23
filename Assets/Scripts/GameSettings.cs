@@ -66,7 +66,8 @@ public static class Settings
 public static class ServiceUpdatePriority
 {
     public static UpdatePriority TimerManager       = new(UpdatePhase.System,   10);
-    public static UpdatePriority SystemLoop         = new(UpdatePhase.System,   20);
+    public static UpdatePriority SystemTick         = new(UpdatePhase.System,   20);
+    public static UpdatePriority SystemLoop         = new(UpdatePhase.System,   21);
     public static UpdatePriority Services           = new(UpdatePhase.System,   30);
     public static UpdatePriority DevEnv             = new(UpdatePhase.System,   50);
 
@@ -74,14 +75,15 @@ public static class ServiceUpdatePriority
     public static UpdatePriority InputRouter        = new(UpdatePhase.Input,    20);
 
     public static UpdatePriority IntentSystem       = new(UpdatePhase.Logic,    10);
-    public static UpdatePriority Stats              = new(UpdatePhase.Logic,    20);
-    public static UpdatePriority CommandSystem      = new(UpdatePhase.Logic,    30);
-    public static UpdatePriority WeaponLogic        = new(UpdatePhase.Logic,    40);
-    public static UpdatePriority EffectManager      = new(UpdatePhase.Logic,    50);
-    public static UpdatePriority DirectionHandler   = new(UpdatePhase.Logic,    60);
-    public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    70);
-    public static UpdatePriority Lifecycle          = new(UpdatePhase.Logic,    80);
-    public static UpdatePriority Presence           = new(UpdatePhase.Logic,    90);
+    public static UpdatePriority Stats              = new(UpdatePhase.Logic,    15);
+    public static UpdatePriority CommandSystem      = new(UpdatePhase.Logic,    20);
+    public static UpdatePriority WeaponLogic        = new(UpdatePhase.Logic,    25);
+    public static UpdatePriority EffectManager      = new(UpdatePhase.Logic,    30);
+    public static UpdatePriority DirectionHandler   = new(UpdatePhase.Logic,    35);
+    public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    40);
+    public static UpdatePriority TeleportService    = new(UpdatePhase.Logic,    45);
+    public static UpdatePriority Lifecycle          = new(UpdatePhase.Logic,    50);
+    public static UpdatePriority Presence           = new(UpdatePhase.Logic,    55);
 
     public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
     public static UpdatePriority SpriteDepthSorting = new(UpdatePhase.Physics,  90);

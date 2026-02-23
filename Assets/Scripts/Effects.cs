@@ -82,8 +82,9 @@ public class BurningEffect : Effect, IDot
     public float Damage                     { get; init; }
 }
 
-public class SwordSwingDisable : Effect, ICancelable, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, IActionLock
+public class SwordSwingDisable : Effect, ICancelable, ITrigger, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, IActionLock
 {
+    public WeaponPhase Trigger                  { get; init; }
     public bool Cancelable                      { get; init; }
 
     public int DurationFrames                   { get; init; }
@@ -91,7 +92,7 @@ public class SwordSwingDisable : Effect, ICancelable, IDurationFrames, IDisableA
     public bool DisableAttack                   { get; init; }
     public bool DisableRotate                   { get; init; }
     public bool DisableMove                     { get; init; }
-    
+
     public bool RequestActionLock               { get; init; }
     public List<Capability> ActionLocks         { get; init; }
 }

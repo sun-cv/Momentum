@@ -3,8 +3,6 @@ using UnityEngine;
 
 
 
-
-
 public class IntentSystem : Service, IServiceTick
 {
     readonly Actor          owner;

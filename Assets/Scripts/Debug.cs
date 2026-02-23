@@ -168,6 +168,7 @@ public enum LogSystem
     Physics,
     Collision,
     Movement,
+    Teleport,
     
     // Combat & Equipment
     Weapons,

@@ -5,15 +5,23 @@ using UnityEngine;
 
 
 
-public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposable
+public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceStep, IDisposable
 {
     readonly Actor owner;
     readonly Animator animator;
     
         // -----------------------------------
 
-    readonly Dictionary<string, float> clipDurations    = new();
-    readonly List<AnimationRequest> animatorRequests    = new();
+    readonly Dictionary<string, float> clipDurations;
+    readonly List<int> validParameters;
+
+        // -----------------------------------
+
+    readonly List<AnimationRequest> animatorRequests;
+
+    readonly Dictionary<int, AnimatorParameter.Override> overrides;
+    readonly Dictionary<int, Action<Animator, Actor>> tickHandlers;
+    readonly Dictionary<int, Action<Animator, Actor>> loopHandlers;
 
         // -----------------------------------
 
@@ -29,12 +37,27 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposab
 
     public AnimatorController(Actor actor)
     {
+        if (!ValidateOwner(actor))
+            return;
+
         Services.Lane.Register(this);
 
-        owner       = actor;
-        animator    = actor.Bridge.Animator;
+        owner               = actor;
+        animator            = actor.Bridge.Animator;
+
+        validParameters     = new();
+        clipDurations       = new();
+
+        animatorRequests    = new();
+
+        overrides           = new();
+        tickHandlers        = new();
+        loopHandlers        = new();
 
         CacheClipDurations();
+        CacheAnimatorParameters();
+
+        BuildHandlers();
 
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
     }
@@ -62,78 +85,49 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposab
 
     public void Tick()
     {
-        TickAnimatorParameters();
+        ProcessHandlers(tickHandlers);
         ProcessAnimatorRequests();
-        DebugLog();
     }
 
     public void Loop()
     {
-        LoopAnimatorParameters();
+        ProcessHandlers(loopHandlers);
+    }
+
+    public void Step()
+    {
+        DebugLog();
     }
 
     // ===============================================================================
 
-    void LoopAnimatorParameters()
+    void ProcessHandlers(Dictionary<int, Action<Animator, Actor>> handlers)
     {
-        if (owner is ILiving living)
+        foreach (var (param, handler) in handlers)
         {
-            animator.SetBool("Alive", living.Alive);
-            animator.SetBool("Dead",  living.Dead ); 
-        }
-        
-        if (owner is IMovableActor movable)
-        {
-            animator.SetBool("Inactive", movable.Inactive);
-            animator.SetBool("Disabled", movable.Disabled);
-            animator.SetBool("IsMoving", movable.IsMoving);
-        }
-
-        if (owner is IIdle idle)
-        {
-            animator.SetBool ("Idle",     idle.IsIdle);
-            animator.SetFloat("IdleTime", idle.IsIdle.Duration);
+            if (overrides.TryGetValue(param, out var o))
+                ApplyOverride(o);
+            else
+                handler(animator, owner);
         }
     }
 
-    void TickAnimatorParameters()
+    void ApplyOverride(AnimatorParameter.Override overrideHandler)
     {
-
-        if (owner is IMovableActor movable && movable is IOrientable orientable && orientable.CanRotate)
+        switch (overrideHandler.Type)
         {
-            animator.SetFloat("LockedFacingX", movable.LockedFacing.X);
-            animator.SetFloat("LockedFacingY", movable.LockedFacing.Y);
-        }
-
-        if (owner is IAimable aimable)
-        {
-            animator.SetFloat("LockedAimX", aimable.LockedAim.X);
-            animator.SetFloat("LockedAimY", aimable.LockedAim.Y);
-
-            animator.SetFloat("LockedCardinalAimX", aimable.LockedAim.Cardinal.x);
-            animator.SetFloat("LockedCardinalAimY", aimable.LockedAim.Cardinal.y);
+            case AnimatorParameter.Override.ParamType.Float: animator.SetFloat  (overrideHandler.Parameter, overrideHandler.Float); break;
+            case AnimatorParameter.Override.ParamType.Bool:  animator.SetBool   (overrideHandler.Parameter, overrideHandler.Bool);  break;
+            case AnimatorParameter.Override.ParamType.Int:   animator.SetInteger(overrideHandler.Parameter, overrideHandler.Int);   break;
         }
     }
-
 
     void PlayAnimation(AnimationRequest request)
     {   
-        transitionTimer?.Stop();
-
         animator.SetLayerWeight(LAYER_ACTION, 1f);
         animator.Play(request.name, LAYER_ACTION, 0f);
 
-        Debug.Log(request.name);
-
         playing = true;
-        
-        if (clipDurations.TryGetValue(request.name, out float duration))
-        {
-            transitionTimer = new ClockTimer(duration);
-            transitionTimer.OnTimerStop += () => animator.SetLayerWeight(LAYER_ACTION, 0f);
-            transitionTimer.OnTimerStop += () => allowInterrupt = true;
-            transitionTimer.Start();
-        }
     }
 
     void ProcessAnimation(AnimationRequest request)
@@ -141,8 +135,14 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposab
         if (playing && !allowInterrupt)
             return;
 
+        ClearTransitionTimer();
+
         SetInterrupt(request);
+        SetOverrides(request);
+
         PlayAnimation(request);
+
+        SetTransitionTimer(request);
     }
 
     void ProcessAnimatorRequests()
@@ -168,9 +168,67 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposab
         }
     }
 
+    void CacheAnimatorParameters()
+    {
+        foreach (var param in animator.parameters)
+        {
+            if (AnimatorParameter.Library.Keys.Contains(param.name))
+                validParameters.Add(AnimatorParameter.Library[param.name]);
+        }
+    }
+
+    void BuildHandlers()
+    {
+        foreach (var (type, entries) in AnimatorParameter.Handlers)
+        {
+            if (!type.IsAssignableFrom(owner.GetType()))
+                continue;
+
+            foreach (var entry in entries)
+            {
+                if (!validParameters.Contains(entry.Parameter))
+                    continue;
+
+                if (entry.Rate == ServiceRate.Tick)
+                    tickHandlers[entry.Parameter] = entry.Handler;
+                
+                if (entry.Rate == ServiceRate.Loop)
+                    loopHandlers[entry.Parameter] = entry.Handler;
+            }
+        }
+    }
+
+
     void SetInterrupt(AnimationRequest request)
     {
         allowInterrupt = request.options.AllowInterrupt;
+    }
+
+    void SetOverrides(AnimationRequest request)
+    {
+        overrides.Clear();
+
+        if (request.HasOverrides)
+        {
+            foreach (var handler in request.overrides)
+                overrides[handler.Parameter] = handler;
+        }
+    }
+
+    void ClearTransitionTimer()
+    {
+        transitionTimer?.Stop();
+    }
+
+    void SetTransitionTimer(AnimationRequest request)
+    {
+        if (clipDurations.TryGetValue(request.name, out float duration))
+        {
+            transitionTimer = new ClockTimer(duration);
+            transitionTimer.OnTimerStop += () => animator.SetLayerWeight(LAYER_ACTION, 0f);
+            transitionTimer.OnTimerStop += () => allowInterrupt = true;
+            transitionTimer.Start();
+        }
     }
 
     // ============================================================================
@@ -218,6 +276,18 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposab
         });
     }
 
+    bool ValidateOwner(Actor actor)
+    {
+        if (actor.Bridge.Animator == null)
+        {
+            Log.Error($"{actor.GetType().Name} Failed System Validation. Animator Controller requires Animator assigned in Bridge");
+            return false;
+        }
+
+        return true;
+    }
+
+
     public override void Dispose()
     {
         Services.Lane.Deregister(this);
@@ -226,4 +296,116 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IDisposab
     public UpdatePriority Priority => ServiceUpdatePriority.AnimatorController;
 }
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                          Maps
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
+public static class AnimatorParameter
+{
+
+    public struct Entry
+    {
+        public ServiceRate Rate;
+        public int Parameter;
+        public Action<Animator, Actor> Handler;
+    }
+
+    public struct Override
+    {
+        public enum ParamType { Float, Bool, Int }
+
+        public int Parameter;
+        public float Float;
+        public bool Bool;
+        public int Int;
+        public ParamType Type;
+    }
+
+    public static Override Float(int param, float value) => new() { Parameter = param, Float = value, Type = Override.ParamType.Float };
+    public static Override Bool (int param, bool value)  => new() { Parameter = param, Bool  = value, Type = Override.ParamType.Bool  };
+    public static Override Int  (int param, int value)   => new() { Parameter = param, Int   = value, Type = Override.ParamType.Int   };
+
+    public static int LockedAimX            = Animator.StringToHash(nameof(LockedAimX));
+    public static int LockedAimY            = Animator.StringToHash(nameof(LockedAimY));
+    public static int LockedCardinalAimX    = Animator.StringToHash(nameof(LockedCardinalAimX));
+    public static int LockedCardinalAimY    = Animator.StringToHash(nameof(LockedCardinalAimY));
+    public static int LockedFacingX         = Animator.StringToHash(nameof(LockedFacingX));
+    public static int LockedFacingY         = Animator.StringToHash(nameof(LockedFacingY));
+    public static int Alive                 = Animator.StringToHash(nameof(Alive));
+    public static int Dead                  = Animator.StringToHash(nameof(Dead));
+    public static int Inactive              = Animator.StringToHash(nameof(Inactive));
+    public static int Disabled              = Animator.StringToHash(nameof(Disabled));
+    public static int IsMoving              = Animator.StringToHash(nameof(IsMoving));
+    public static int Idle                  = Animator.StringToHash(nameof(Idle));
+    public static int IdleTime              = Animator.StringToHash(nameof(IdleTime));
+
+    public static Dictionary<string, int> Library = new()
+    {
+        { nameof(LockedAimX),               LockedAimX          },
+        { nameof(LockedAimY),               LockedAimY          },
+        { nameof(LockedCardinalAimX),       LockedCardinalAimX  },
+        { nameof(LockedCardinalAimY),       LockedCardinalAimY  },
+        { nameof(LockedFacingX),            LockedFacingX       },
+        { nameof(LockedFacingY),            LockedFacingY       },
+        { nameof(Alive),                    Alive               },
+        { nameof(Dead),                     Dead                },
+        { nameof(Inactive),                 Inactive            },
+        { nameof(Disabled),                 Disabled            },
+        { nameof(IsMoving),                 IsMoving            },
+        { nameof(Idle),                     Idle                },
+        { nameof(IdleTime),                 IdleTime            },
+    };
+
+    public static readonly Dictionary<Type, Entry[]> Handlers = new()
+    {
+        { typeof(IAimable), new Entry[]
+            {
+                new() { Rate = ServiceRate.Tick, Parameter = LockedAimX,         Handler = (animator, owner) => animator.SetFloat(LockedAimX,            ((IAimable)owner).LockedAim.X)          },
+                new() { Rate = ServiceRate.Tick, Parameter = LockedAimY,         Handler = (animator, owner) => animator.SetFloat(LockedAimY,            ((IAimable)owner).LockedAim.Y)          },
+                new() { Rate = ServiceRate.Tick, Parameter = LockedCardinalAimX, Handler = (animator, owner) => animator.SetFloat(LockedCardinalAimX,    ((IAimable)owner).LockedAim.Cardinal.x) },
+                new() { Rate = ServiceRate.Tick, Parameter = LockedCardinalAimY, Handler = (animator, owner) => animator.SetFloat(LockedCardinalAimY,    ((IAimable)owner).LockedAim.Cardinal.y) },
+            }
+        },
+        { typeof(IMovableActor), new Entry[]
+            {
+                new() { Rate = ServiceRate.Loop, Parameter = LockedFacingX,      Handler = (animator, owner) => animator.SetFloat(LockedFacingX,         ((IMovableActor)owner).LockedFacing.X)  },
+                new() { Rate = ServiceRate.Loop, Parameter = LockedFacingY,      Handler = (animator, owner) => animator.SetFloat(LockedFacingY,         ((IMovableActor)owner).LockedFacing.Y)  },
+                new() { Rate = ServiceRate.Loop, Parameter = Inactive,           Handler = (animator, owner) => animator.SetBool(Inactive,               ((IMovableActor)owner).Inactive)        },
+                new() { Rate = ServiceRate.Loop, Parameter = Disabled,           Handler = (animator, owner) => animator.SetBool(Disabled,               ((IMovableActor)owner).Disabled)        },
+                new() { Rate = ServiceRate.Loop, Parameter = IsMoving,           Handler = (animator, owner) => animator.SetBool(IsMoving,               ((IMovableActor)owner).IsMoving)        },
+            }
+        },
+        { typeof(ILiving), new Entry[]
+            {
+                new() { Rate = ServiceRate.Loop, Parameter = Alive,              Handler = (animator, owner) => animator.SetBool(Alive,                  ((ILiving)owner).Alive)                 },
+                new() { Rate = ServiceRate.Loop, Parameter = Dead,               Handler = (animator, owner) => animator.SetBool(Dead,                   ((ILiving)owner).Dead)                  },
+            }
+        },
+        { typeof(IIdle), new Entry[]
+            {
+                new() { Rate = ServiceRate.Loop, Parameter = Idle,               Handler = (animator, owner) => animator.SetBool(Idle,                   ((IIdle)owner).IsIdle)                  },
+                new() { Rate = ServiceRate.Loop, Parameter = IdleTime,           Handler = (animator, owner) => animator.SetFloat(IdleTime,              ((IIdle)owner).IsIdle.Duration)         },
+            }
+        },
+    };
+
+    public static readonly Dictionary<Type, Func<InputIntentSnapshot, Override[]>> InputIntentSnapshot = new()
+    {
+        { typeof(IAimable), snapshot => new[]
+            {
+                Float(LockedAimX,         snapshot.Aim.X),
+                Float(LockedAimY,         snapshot.Aim.Y),
+                Float(LockedCardinalAimX, snapshot.Aim.Cardinal.x),
+                Float(LockedCardinalAimY, snapshot.Aim.Cardinal.y),
+            }
+        },
+        { typeof(IMovableActor), snapshot => new[]
+            {
+                Float(LockedFacingX, snapshot.Facing.X),
+                Float(LockedFacingY, snapshot.Facing.Y),
+            }
+        },
+    };
+}
 

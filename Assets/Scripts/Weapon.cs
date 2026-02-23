@@ -141,6 +141,8 @@ public class WeaponAction       : Definition
     /// Animations
     /// ============================================================================
 
+    /// <summary>Lock aim using provided InputIntentSnapshot in animation request context</summary>
+    public bool LockAimDuringPlayback               { get; init; } = false;
     public WeaponAnimations Animations              { get; init; } = new();
 }
 
@@ -170,10 +172,10 @@ public class WeaponTriggerCondition
 
 public class WeaponAnimations
 {
-    public string OnCharge    { get; init; }
-    public string OnFire      { get; init; }
-    public string OnFireEnd   { get; init; }
-    public string OnCancel    { get; init; }
+    public string OnCharge              { get; init; }
+    public string OnFire                { get; init; }
+    public string OnFireEnd             { get; init; }
+    public string OnCancel              { get; init; }
 }
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                             Weapon Instance                                                   

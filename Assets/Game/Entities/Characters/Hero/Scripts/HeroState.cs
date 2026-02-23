@@ -7,12 +7,12 @@ using UnityEngine;
 
 public class HeroState : State
 {
-    Hero            owner;
+    readonly Hero               owner;
 
-    IntentSystem    intent;
-    EffectRegister  effects;
-    MovementEngine  movement;
-    Lifecycle       lifecycle;
+    readonly IntentSystem       intent;
+    readonly EffectRegister     effects;
+    readonly MovementEngine     movement;
+    readonly Lifecycle          lifecycle;
 
     bool inactive               = false;
     bool stunned                = false;
@@ -57,7 +57,6 @@ public class HeroState : State
     public bool IsMoving                            => Velocity != Vector2.zero;
     public TimePredicate IsIdle                     => idle ??= new (() => !IsMoving);
 
-
     //
     //  Cache values:
     //
@@ -97,5 +96,4 @@ public class HeroState : State
     {
         idle.Dispose();
     }
-
 }

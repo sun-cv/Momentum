@@ -27,6 +27,16 @@ public class Definition
 
 public class Runtime                            { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
 public class Instance           : Runtime       {}
+
+public class Zone               : Runtime       { public string Name                    { get; set;  }
+                                                  public string Location                { get; set;  }
+                                                  public string Region                  { get; set;  }
+                                                  public Anchor Anchor                  { get; set;  }}
+public class Portal             : Zone          {}
+public class SpawnPoint         : Zone          {}
+public class AudioPoint         : Zone          {}
+public class CameraPoint        : Zone          {}
+
 public class Entity             : Runtime       {}
 public class Actor              : Entity        { 
                                                   public Emit   Emit                    { get; set;  }
@@ -54,7 +64,7 @@ public class Weapon             : Equipment     { public WeaponDefinition Defini
 public class Armor              : Equipment     { public ArmorDefinition Definition     { get; init; }}
 
 
-public class Controller : MonoBehaviour {}
+public class Controller         : MonoBehaviour {}
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

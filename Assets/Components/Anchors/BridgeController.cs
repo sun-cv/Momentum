@@ -2,10 +2,43 @@ using UnityEngine;
 
 
 
-public class Bridge
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Controller
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class BridgeController : Controller
+{
+    public Bridge Bridge                { get; internal set; }
+    
+    public void Bind(Bridge bridge)
+    {
+        if (Bridge != null)
+            return;
+
+        Bridge = bridge;
+
+        Actors.Register(Bridge);
+    }
+
+    public void OnDestroy()
+    {
+        if (Bridge == null) 
+            return;
+
+        Actors.Deregister(Bridge);
+
+        Bridge = null;
+    }
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                          Anchor
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class Bridge : Anchor
 {
     public Actor Owner              { get; init; }
-    public GameObject View          { get; init; }
 
         // -----------------------------------
 
@@ -19,7 +52,6 @@ public class Bridge
 
     public Animator Animator        { get; init; }
     public SpriteRenderer Sprite    { get; init; }
-
 
     // ===============================================================================
 
@@ -65,5 +97,6 @@ public static class BridgeFactory
         return new Bridge(actor, instance);
     }
 }
+
 
 

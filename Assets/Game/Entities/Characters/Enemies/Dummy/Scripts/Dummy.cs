@@ -1,11 +1,6 @@
 
 
 
-
-
-
-using UnityEngine;
-
 public class Dummy : Agent, IDummy
 {
     public ActorDefinition      Definition          { get; private set; }
@@ -35,7 +30,6 @@ public class Dummy : Agent, IDummy
     public bool Stunned                             { get; set; } = false;
 
 
-
     public void Initialize(ActorDefinition definition)
     {
         Definition  = definition;
@@ -47,7 +41,6 @@ public class Dummy : Agent, IDummy
         Presence    = new(this);
         Lifecycle   = new(this);
     }
-
 }
 
 

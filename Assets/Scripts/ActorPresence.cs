@@ -132,7 +132,7 @@ public class Presence : Service, IServiceLoop
     {
         switch(message.Payload.State)
         {
-            case Presence.State.Disposal:
+            case State.Disposal:
                 Dispose();
             break;
         }
@@ -144,7 +144,7 @@ public class Presence : Service, IServiceLoop
 
     void DebugLog()
     {
-        Log.Debug($"Presence.State.{owner.GetType().Name}",        () => state);
+        Log.Debug($"Presence.State.{owner.GetType().Name}", () => state);
     }
 
     public override void Dispose()

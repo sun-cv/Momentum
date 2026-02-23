@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 
 
 
@@ -102,7 +103,6 @@ public class WeaponSystem : Service, IServiceTick
 
     void AdvanceWeaponState()
     {
-
         if (ShouldReleaseWeapon())
         {            
             ReleaseWeapon();
@@ -124,7 +124,6 @@ public class WeaponSystem : Service, IServiceTick
 
         if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
             handler.Tick(instance, this);
-    
     }
 
 
@@ -160,7 +159,6 @@ public class WeaponSystem : Service, IServiceTick
 
     void ProcessWeaponActivation()
     {
-        
         if (HasActiveWeapon())
         {
             if (TryActivateFromAvailableControls())
@@ -257,7 +255,6 @@ public class WeaponSystem : Service, IServiceTick
             LockAllCommands(active, instance.Action.Trigger);
     }
 
-
         // ===================================
         //  Equip and Enable
         // ===================================
@@ -281,7 +278,6 @@ public class WeaponSystem : Service, IServiceTick
         DeactivateWeapon();
         UnequipWeapon();
     }
-
 
     void DisableWeapon()
     {
@@ -555,7 +551,12 @@ public class WeaponSystem : Service, IServiceTick
         if (animation is null)
             return;
 
-        owner.Emit.Local(Request.Start, new AnimationRequestEvent(new(animation)));
+        var request = new AnimationRequest(animation)
+        {
+            overrides = AnimatorParameter.InputIntentSnapshot[typeof(IAimable)](instance.State.Intent)
+        };
+
+        owner.Emit.Local(Request.Start, new AnimationRequestEvent(request));
     }
 
 
@@ -821,6 +822,31 @@ public class WeaponSystem : Service, IServiceTick
         Log.Trace("Locks.Active",         () => locks == null ? "<none>" : string.Join(", ", locks.Select(kvp => $"{kvp.Key}({kvp.Value.Count})")) ); 
         Log.Trace("Locks.NonCancelable",  () => NonCancelableAttackLocks );
         Log.Trace("Cooldown",             () => cooldown.IsOnCooldown(instance?.Action.Name) ?  $"Remaining: {cooldown.GetRemainingCooldown(instance?.Action.Name)}" : "Ready");
+    
+        // if (owner is Hero hero)
+        // {
+        // if (instance != null && instance.State.Phase == WeaponPhase.Enable)
+        // {
+        //     Log.Debug( $" {instance.State.Phase} {hero.Effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !hero.Disabled)}");
+        //     Log.Debug( $" {instance.State.Phase} Disabled: {hero.Disabled}");
+        //     Log.Debug( $" {instance.State.Phase} Locked aim x {hero.LockedAim.Cardinal.x}");
+        //     Log.Debug( $" {instance.State.Phase} Locked aim y {hero.LockedAim.Cardinal.y}");
+        // }
+
+        // if (instance != null && instance.State.Phase == WeaponPhase.Charging)
+        // {
+
+        //     foreach (var effect in hero.Effects.Effects)
+        //     {
+        //         Log.Debug($"Active effect: {effect.Effect.Name} | DisableRotate: {(effect.Effect is IDisableRotate r ? r.DisableRotate : false)}");
+        //     }
+
+        //     Log.Debug( $" {instance.State.Phase} {hero.Effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !hero.Disabled)}");
+        //     Log.Debug( $" {instance.State.Phase} Disabled: {hero.Disabled}");
+        //     Log.Debug( $" {instance.State.Phase} Locked aim x {hero.LockedAim.Cardinal.x}");
+        //     Log.Debug( $" {instance.State.Phase} Locked aim y {hero.LockedAim.Cardinal.y}");
+        // }
+        // }
     }
 
     public override void Dispose()
@@ -908,10 +934,10 @@ public class ChargingPhaseHandler : IWeaponPhaseHandler
 
         controller.UpdateAvailableControls();
 
-        controller.RequestEffects(instance.Action);
-        controller.RequestMovement(instance.Action);
-        controller.RequestHitboxes(instance.Action);
-        controller.RequestAnimation(instance.Action);
+        controller.RequestEffects   (instance.Action);
+        controller.RequestMovement  (instance.Action);
+        controller.RequestHitboxes  (instance.Action);
+        controller.RequestAnimation (instance.Action);
     }
 
     public void Tick(WeaponInstance instance, WeaponSystem controller)
@@ -936,14 +962,14 @@ public class FirePhaseHandler : IWeaponPhaseHandler
     {        
         instance.State.HasFired = true;
 
-        instance.State.PhaseFrames .Restart();;
+        instance.State.PhaseFrames.Restart();
 
         controller.UpdateAvailableControls();
 
-        controller.RequestEffects(instance.Action);
-        controller.RequestMovement(instance.Action);
-        controller.RequestHitboxes(instance.Action);
-        controller.RequestAnimation(instance.Action);
+        controller.RequestEffects   (instance.Action);
+        controller.RequestMovement  (instance.Action);
+        controller.RequestHitboxes  (instance.Action);
+        controller.RequestAnimation (instance.Action);
     }
 
     public void Tick(WeaponInstance instance, WeaponSystem controller)
@@ -977,10 +1003,10 @@ public class FireEndPhaseHandler : IWeaponPhaseHandler
 
         controller.UpdateAvailableControls();
 
-        controller.RequestEffects(instance.Action);
-        controller.RequestMovement(instance.Action);
-        controller.RequestHitboxes(instance.Action);
-        controller.RequestAnimation(instance.Action);
+        controller.RequestEffects   (instance.Action);
+        controller.RequestMovement  (instance.Action);
+        controller.RequestHitboxes  (instance.Action);
+        controller.RequestAnimation (instance.Action);
     }
 
     public void Tick(WeaponInstance instance, WeaponSystem controller)
@@ -1186,7 +1212,7 @@ public class WeaponActivationValidator
         var result = ValidateActivation(weapon, skipContextCheck);
 
         if (!result.Success())
-            Log.Debug("Validator.Failed", () => $"{weapon.Name} - {result.Reason}");
+            Log.Trace("Validator.Failed", () => $"{weapon.Name} - {result.Reason}");
 
         return result.Success();
     }

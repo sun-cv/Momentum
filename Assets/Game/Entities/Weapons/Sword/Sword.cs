@@ -1,8 +1,6 @@
 
 
 
-
-
 public class Sword : Weapon
 {
     public Sword()
@@ -43,11 +41,13 @@ public class SwordStrike : DamagingWeapon
         FireDurationFrames          = 30;
         ControlWindow               = 0.3f;
         AddControlOnFire            = new() { "SwordCleave"};
+        LockAimDuringPlayback       = true;
         Effects = new()
         {
             new SwordSwingDisable()
             {   
                 Name                = "SwordSwingDisable",
+                Trigger             = WeaponPhase.Fire,
                 Cancelable          = false,
                 DurationFrames      = 30,
                 DisableAttack       = true,
@@ -60,6 +60,7 @@ public class SwordStrike : DamagingWeapon
             new SwordSwingDisable()
             {
                 Name                = "SwordSwingDisableCancelable",
+                Trigger             = WeaponPhase.Fire,
                 Cancelable          = true,
                 DurationFrames      = 60,
                 DisableAttack       = true,
@@ -68,7 +69,6 @@ public class SwordStrike : DamagingWeapon
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
-
         };
 
         MovementDefinitions = new()
@@ -151,6 +151,7 @@ public class SwordCleave : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "SwordSwingDisable",
+                Trigger             = WeaponPhase.Fire,
                 Cancelable          = false,
                 DurationFrames      = 30,
                 DisableAttack       = true,
@@ -159,17 +160,19 @@ public class SwordCleave : DamagingWeapon
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
+            
             new SwordSwingDisable()
             {
                 Name                = "SwordSwingDisableCancelable",
+                Trigger             = WeaponPhase.Fire,
                 Cancelable          = true,
                 DurationFrames      = 60,
                 DisableAttack       = true,
-                DisableMove         = true,
                 DisableRotate       = true,
+                DisableMove         = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
-            }
+            },
         };
 
         MovementDefinitions = new()
@@ -225,7 +228,7 @@ public class SwordCleave : DamagingWeapon
         };
         Animations = new()
         {
-            OnFire = "SwordStrike",
+            OnFire = "SwordCleave",
         };
     }
 }
@@ -252,26 +255,28 @@ public class SwordRend : DamagingWeapon
             new SwordSwingDisable()
             {   
                 Name                = "SwordSwingDisable",
+                Trigger             = WeaponPhase.Fire,
                 Cancelable          = false,
-                DurationFrames      = 20,
+                DurationFrames      = 30,
                 DisableAttack       = true,
-                DisableMove         = true,                
                 DisableRotate       = true,
+                DisableMove         = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
             },
+            
             new SwordSwingDisable()
             {
                 Name                = "SwordSwingDisableCancelable",
+                Trigger             = WeaponPhase.Fire,
                 Cancelable          = true,
                 DurationFrames      = 60,
                 DisableAttack       = true,
-                DisableMove         = true,                
                 DisableRotate       = true,
+                DisableMove         = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Attack1 }
-            }
-
+            },
         };
 
         MovementDefinitions = new()
@@ -327,7 +332,7 @@ public class SwordRend : DamagingWeapon
         };
         Animations = new()
         {
-            OnFire = "SwordStrike"
+            OnFire = "SwordRend"
         };
     }
 }

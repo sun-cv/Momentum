@@ -33,9 +33,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1948904095272771497}
-  - {fileID: 3374305897295006547}
   - {fileID: 2076546768926015759}
+  - {fileID: 3374305897295006547}
+  - {fileID: 1948904095272771497}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!50 &8446298551125433605
@@ -199,7 +199,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1283392957962132814}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1ddb7ecdec4a7e4ea5086a9d1719694, type: 3}
+  m_Script: {fileID: 11500000, guid: 96b29fba9ee5f0d47938c5fbf7521701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HurtboxController
   Hitbox: {fileID: 2647680417262864072}
@@ -276,7 +276,7 @@ Transform:
   m_GameObject: {fileID: 4564992974362161422}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: -0.219, z: 0}
+  m_LocalPosition: {x: 0, y: -0.219, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -291,7 +291,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4564992974362161422}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0106587a7a795074796fc2612db34766, type: 3}
+  m_Script: {fileID: 11500000, guid: ec37221dc8f01494db1e7999cbe9e965, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SortboxController
   Hitbox: {fileID: 1884160025734486717}
@@ -350,11 +350,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1948904095272771497}
-  - component: {fileID: 6633986203311982522}
+  - component: {fileID: 1411908989437590677}
   - component: {fileID: 6730827333961026335}
   - component: {fileID: 8268631336321656951}
   m_Layer: 11
-  m_Name: Pushbox
+  m_Name: DepthBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -375,7 +375,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5525583276490888211}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6633986203311982522
+--- !u!114 &1411908989437590677
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -384,7 +384,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6735512840583264529}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b469bd3f8050d154891fc54e9c25c1b6, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d8f75bceb60b454d98fe998811ac80a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DepthController
   frontZone: {fileID: 6730827333961026335}

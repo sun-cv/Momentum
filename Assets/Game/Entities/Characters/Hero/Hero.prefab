@@ -9,11 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8531829842364462756}
-  - component: {fileID: 2127684276749605152}
+  - component: {fileID: 6214393397094838749}
   - component: {fileID: 4074202120183557633}
   - component: {fileID: 8285998534317280119}
   m_Layer: 10
-  m_Name: Pushbox
+  m_Name: DepthBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34,7 +34,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7083728335885723611}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2127684276749605152
+--- !u!114 &6214393397094838749
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,7 +43,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 740058438063433679}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b469bd3f8050d154891fc54e9c25c1b6, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d8f75bceb60b454d98fe998811ac80a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DepthController
   frontZone: {fileID: 4074202120183557633}
@@ -149,8 +149,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5991743449807464407}
-  - component: {fileID: 6068593344735166885}
   - component: {fileID: 98318480202214613}
+  - component: {fileID: 6068593344735166885}
   m_Layer: 20
   m_Name: Sortbox
   m_TagString: Untagged
@@ -173,6 +173,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7083728335885723611}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &98318480202214613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2981179538651798326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec37221dc8f01494db1e7999cbe9e965, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SortboxController
+  Hitbox: {fileID: 6068593344735166885}
 --- !u!70 &6068593344735166885
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -210,19 +223,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.75, y: 2}
   m_Direction: 0
---- !u!114 &98318480202214613
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2981179538651798326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0106587a7a795074796fc2612db34766, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SortboxController
-  Hitbox: {fileID: 6068593344735166885}
 --- !u!1 &3082596592330844211
 GameObject:
   m_ObjectHideFlags: 0
@@ -232,8 +232,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3168856250132808507}
-  - component: {fileID: 7001473429218496758}
   - component: {fileID: 6580105749432837240}
+  - component: {fileID: 7001473429218496758}
   m_Layer: 20
   m_Name: Hurtbox
   m_TagString: Untagged
@@ -256,6 +256,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7083728335885723611}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6580105749432837240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3082596592330844211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96b29fba9ee5f0d47938c5fbf7521701, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HurtboxController
+  Hitbox: {fileID: 7001473429218496758}
 --- !u!70 &7001473429218496758
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -293,19 +306,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.75, y: 2}
   m_Direction: 0
---- !u!114 &6580105749432837240
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3082596592330844211}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1ddb7ecdec4a7e4ea5086a9d1719694, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HurtboxController
-  Hitbox: {fileID: 7001473429218496758}
 --- !u!1 &6840426740202194978
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,9 +339,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8531829842364462756}
-  - {fileID: 3168856250132808507}
   - {fileID: 5991743449807464407}
+  - {fileID: 3168856250132808507}
+  - {fileID: 8531829842364462756}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!50 &3571020359995789645
