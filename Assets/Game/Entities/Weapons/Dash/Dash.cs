@@ -1,8 +1,6 @@
 
 
 
-using UnityEngine;
-
 public class Dash : Weapon
 {
     public Dash()
@@ -13,7 +11,7 @@ public class Dash : Weapon
 }
 
 
-
+[Definition]
 public class DashDefinition : WeaponDefinition
 {
 

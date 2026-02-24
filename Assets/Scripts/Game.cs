@@ -41,19 +41,21 @@ public class GameEngine
 
     public void Startup()
     {
-        Services.Start();
+        Definitions .Start();
+        Factories   .Start();
+        Services    .Start();
 
         Initialize();
     }
 
     public void Initialize()
     {
-        Assets  .Initialize();
-
-        Services.Initialize();
-        Services.Bind();
-
-        loop    .Initialize(clock);
+        Assets      .Initialize();
+    
+        Services    .Initialize();
+        Services    .Bind();
+    
+        loop        .Initialize(clock);
     }
 
     // ===============================================================================

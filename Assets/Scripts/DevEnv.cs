@@ -6,9 +6,6 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 {
     Hero hero;
 
-    FrameTimer Left;
-    FrameTimer Right;
-
     // ===============================================================================
     
     public void Initialize()
@@ -26,17 +23,6 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
         
         DebugLogSetup();
-
-        Left        = new(60);
-        Right       = new(60);
-
-        Left.OnTimerStop += () => Emit.Global<Message<Request, TeleportEvent>>(new(Guid.NewGuid(), Request.Trigger, new() { Name = "Left", Location = "Home", Agent = hero}));
-        Left.OnTimerStop += () => Right.Restart();
-
-        Right.OnTimerStop += () => Emit.Global<Message<Request, TeleportEvent>>(new(Guid.NewGuid(), Request.Trigger, new() { Name = "Right", Location = "Home", Agent = hero}));
-        Right.OnTimerStop += () => Left.Restart();
-
-        Left.Start();
     }
 
     // ===============================================================================

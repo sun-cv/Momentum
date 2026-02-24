@@ -7,7 +7,7 @@ using System.Linq;
 //                                          Actor
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class ActorDefinition : Definition
+public abstract class ActorDefinition : Definition
 {
     public StatsDefinition Stats                        { get; init; }
     public PresenceDefinition Presence                  { get; init; }

@@ -18,10 +18,6 @@ public class PortalController : Controller
     public void Start()
     {
         Anchor =  new PortalAnchor(new Portal() { Name = Name, Location = Location ??= null, Region = Region ??= null}, gameObject);
-        
-        var svc = Services.Get<TeleportService>();
-        Debug.Log(svc == null);
-        Debug.Log(Anchor == null);
 
         Services.Get<TeleportService>().Register(Anchor);
     }
@@ -54,10 +50,12 @@ public class PortalAnchor : Anchor
 
     public PortalAnchor(Portal portal, GameObject view)
     {
-        Owner       = portal;
-        View        = view;
-        
-        Zone        = view.GetComponent<Collider2D>();
+        Owner           = portal;
+        View            = view;
+
+        Zone            = view.GetComponent<Collider2D>();
+
+        Owner.Anchor    = this;
     }
 }
 

@@ -11,7 +11,7 @@ public class Shield : Weapon
 
 
 
-
+[Definition]
 public class ShieldDefinition : WeaponDefinition
 {
     public ShieldDefinition()

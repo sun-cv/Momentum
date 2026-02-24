@@ -80,12 +80,14 @@ public static class ServiceUpdatePriority
     public static UpdatePriority WeaponLogic        = new(UpdatePhase.Logic,    25);
     public static UpdatePriority EffectManager      = new(UpdatePhase.Logic,    30);
     public static UpdatePriority DirectionHandler   = new(UpdatePhase.Logic,    35);
-    public static UpdatePriority MovementEngine     = new(UpdatePhase.Logic,    40);
+    public static UpdatePriority SpawnerService     = new(UpdatePhase.Logic,    40);
+    public static UpdatePriority Spawner            = new(UpdatePhase.Logic,    41);
     public static UpdatePriority TeleportService    = new(UpdatePhase.Logic,    45);
     public static UpdatePriority Lifecycle          = new(UpdatePhase.Logic,    50);
     public static UpdatePriority Presence           = new(UpdatePhase.Logic,    55);
 
-    public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  10);
+    public static UpdatePriority MovementEngine     = new(UpdatePhase.Physics,  10);
+    public static UpdatePriority HitboxManager      = new(UpdatePhase.Physics,  20);
     public static UpdatePriority SpriteDepthSorting = new(UpdatePhase.Physics,  90);
 
     public static UpdatePriority TriggerCoordinator = new(UpdatePhase.Resolve,  10);  

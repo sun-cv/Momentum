@@ -2,7 +2,7 @@
 
 
 
-
+[Definition]
 public class DummyDefinition : ActorDefinition
 {
     public DummyDefinition()

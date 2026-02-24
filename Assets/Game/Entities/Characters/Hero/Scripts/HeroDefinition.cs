@@ -2,7 +2,7 @@
 
 
 
-
+[Definition]
 public class HeroDefinition : ActorDefinition
 {
     public HeroDefinition()

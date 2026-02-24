@@ -11,17 +11,18 @@ using UnityEngine;
         //                               Interfaces                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public interface IInitialize                { public void Initialize(); }
-public interface IBind                      { public void Bind();       } 
+public interface IInitialize                    { public void Initialize(); }
+public interface IBind                          { public void Bind();       } 
 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬1▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class Definition
+
+public abstract class Definition
 { 
-    public string ID                    { get; set; }
-    public string Name                  { get; set; }
+    public string ID                            { get; set; }
+    public string Name                          { get; set; }
 }
 
 
@@ -29,10 +30,9 @@ public class Runtime                            { public Guid RuntimeID         
 public class Instance           : Runtime       {}
 
 public class Zone               : Runtime       { public string Name                    { get; set;  }
-                                                  public string Location                { get; set;  }
-                                                  public string Region                  { get; set;  }
                                                   public Anchor Anchor                  { get; set;  }}
-public class Portal             : Zone          {}
+public class Portal             : Zone          { public string Location                { get; set;  }
+                                                  public string Region                  { get; set;  }}
 public class SpawnPoint         : Zone          {}
 public class AudioPoint         : Zone          {}
 public class CameraPoint        : Zone          {}

@@ -2,6 +2,22 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+// CORPSE REWORK 
+
+    // Alive,
+    // Dying,      // Death animation playing
+    // Corpse,     // Fresh corpse, can be looted/interacted with
+    // Decaying,   // Decomposition, animals can eat, visual changes
+    // Disposed    // Cleanup and removal
+
+
+// public enum Corpse
+// {
+//     Fresh,
+//     Decaying,
+//     Consumed,
+// }
+
 
 public class Lifecycle : Service, IServiceLoop
 {
@@ -135,7 +151,7 @@ public class Lifecycle : Service, IServiceLoop
     
     public IDamageable Actor            => actor;
     public bool IsAlive                 => state == State.Alive;
-    public bool IsDead                  => !IsAlive;
+    public bool IsDead                  => state == State.Dead;
 
     public UpdatePriority Priority      => ServiceUpdatePriority.Lifecycle;
 }
@@ -386,7 +402,7 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void ClearDyingState()
     {
-        deathAnimationDuration  = 0;
+        deathAnimationDuration  = 1f;
     }
 
         // ===================================
@@ -437,6 +453,8 @@ public class DyingStateHandler : ILifecycleStateHandler
     void HandleAnimationDuration(Message<Response, AnimationRequestEvent> response)
     {
         deathAnimationDuration = response.Payload.AnimationRequest.Data.Duration;
+        Debug.Log(deathAnimationDuration);
+        StartDeathTimer();
     }
 
     // ===============================================================================

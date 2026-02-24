@@ -31,6 +31,8 @@ public class TeleportService : RegisteredService, IServiceLoop
         {
             Teleport(request.Name, request.Location, request.Agent);
         }
+
+        requests.Clear();
     }
 
     public void Teleport(string name, string location, Agent agent)

@@ -2,7 +2,7 @@
 
 
 
-public class ArmorDefinition : Definition
+public abstract class ArmorDefinition : Definition
 {
     
 }

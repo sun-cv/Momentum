@@ -151,6 +151,7 @@ public enum LogSystem
     Timers,
     System,
     Services,
+    Definitions,
     Assets,
     Actors,
     Factories,
@@ -175,6 +176,7 @@ public enum LogSystem
     Hitboxes,
     Equipment,
     Combat,
+    Spawners,
     
     // Player & Input
     Hero,

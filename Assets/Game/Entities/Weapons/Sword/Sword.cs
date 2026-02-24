@@ -10,7 +10,7 @@ public class Sword : Weapon
     }
 }
 
-
+[Definition]
 public class SwordDefinition : WeaponDefinition
 {
     public SwordDefinition()
