@@ -87,6 +87,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
     {
         ProcessHandlers(tickHandlers);
         ProcessAnimatorRequests();
+        DebugLog();
     }
 
     public void Loop()
@@ -96,7 +97,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     public void Step()
     {
-        DebugLog();
+
     }
 
     // ===============================================================================
@@ -125,7 +126,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
     void PlayAnimation(AnimationRequest request)
     {   
         animator.SetLayerWeight(LAYER_ACTION, 1f);
-        animator.Play(request.name, LAYER_ACTION, 0f);
+        animator.Play(request.data.Animation, LAYER_ACTION, 0f);
 
         playing = true;
     }
@@ -222,11 +223,12 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     void SetTransitionTimer(AnimationRequest request)
     {
-        if (clipDurations.TryGetValue(request.name, out float duration))
+        if (clipDurations.TryGetValue(request.data.Animation, out float duration))
         {
             transitionTimer = new ClockTimer(duration);
             transitionTimer.OnTimerStop += () => animator.SetLayerWeight(LAYER_ACTION, 0f);
             transitionTimer.OnTimerStop += () => allowInterrupt = true;
+            transitionTimer.OnTimerStop += () => owner.Emit.Local(Publish.Ended, new AnimatorPlaybackEvent(request.data.Animation));
             transitionTimer.Start();
         }
     }
@@ -295,6 +297,25 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     public UpdatePriority Priority => ServiceUpdatePriority.AnimatorController;
 }
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct AnimatorPlaybackEvent
+{
+    public readonly string Name         { get; init; }
+
+    public AnimatorPlaybackEvent(string name)
+    {
+        Name = name;
+    }
+}
+
+
+
+
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                          Maps
@@ -378,8 +399,8 @@ public static class AnimatorParameter
         },
         { typeof(ILiving), new Entry[]
             {
-                new() { Rate = ServiceRate.Loop, Parameter = Alive,              Handler = (animator, owner) => animator.SetBool(Alive,                  ((ILiving)owner).Alive)                 },
-                new() { Rate = ServiceRate.Loop, Parameter = Dead,               Handler = (animator, owner) => animator.SetBool(Dead,                   ((ILiving)owner).Dead)                  },
+                new() { Rate = ServiceRate.Tick, Parameter = Alive,              Handler = (animator, owner) => animator.SetBool(Alive,                  ((ILiving)owner).Alive)                 },
+                new() { Rate = ServiceRate.Tick, Parameter = Dead,               Handler = (animator, owner) => animator.SetBool(Dead,                   ((ILiving)owner).Dead)                  },
             }
         },
         { typeof(IIdle), new Entry[]

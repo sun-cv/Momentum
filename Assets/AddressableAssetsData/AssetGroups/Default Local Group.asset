@@ -21,6 +21,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Core
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47c93f8da34ca624b91e3ed326dd03fb
+    m_Address: Assets/Game/Entities/Characters/Enemies/MovableDummy/MovableDummy.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Core
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 585f2757aeafedf44b6a36dc40cb867f
     m_Address: Weapons/Sword/HB_SwordSwing
     m_ReadOnly: 0
@@ -41,6 +47,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e231eaf64433d134bac32ca178bec684
     m_Address: Shield/HB_ShieldParry
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Core
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef8a8ee290186de44a5f55f52722b232
+    m_Address: Enemies/DummyCorpse
     m_ReadOnly: 0
     m_SerializedLabels:
     - Core

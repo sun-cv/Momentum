@@ -32,7 +32,8 @@ public class HeroDefinition : ActorDefinition
 
             Corpse                  = new()
             {
-                Persists            = true,
+                Enabled             = true,
+                Name                = "HeroCorpse",
                 PersistDuration     = 5,
             },
         };

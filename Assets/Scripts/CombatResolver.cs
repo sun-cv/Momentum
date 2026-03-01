@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 {
-    readonly List<CombatEvent> pending = new();
+    readonly List<CombatContext> pendingRequests = new();
 
     // ===============================================================================
 
@@ -23,28 +23,27 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
     void ProcessPendingEvents()
     {
-        foreach (var combat in pending)
+        foreach (var combat in pendingRequests)
         {
-            ProcessEvent(combat);
+            ProcessCombatEvent(combat);
         }
 
-        pending.Clear();
+        pendingRequests.Clear();
     }
 
-    void ProcessEvent(CombatEvent combat)
+    void ProcessCombatEvent(CombatContext context)
     {
-        var source      = combat.Source;
-        var target      = combat.Target;
-        var components  = combat.Package.Components;
+        var source      = context.Source;
+        var target      = context.Target;
+        var components  = context.Package.Components;
 
-        float damage      = ProcessComponents(source, target, components);
+        float damage    = ProcessComponents(source, target, components);
         
         ApplyDamage(target, damage);
 
-        // Under consideration killing blow effect for lifecycle? 
         // if (HasKilled(target))
-            // SendKillingBlow();
-        // target.Emit.Local(Request.Creaate, new KillingBlow());
+        //     SendKillingBlow();
+
     }
 
     // ===============================================================================
@@ -78,7 +77,6 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
     void ApplyDynamicForce(Actor target, Vector2 force)
     {
-
         if (target is not IDynamic dynamic)
             return;
 
@@ -91,7 +89,7 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
             Mass            = dynamic.Mass,
         };
 
-        target.Emit.Local(Request.Create, definition);
+        target.Emit.Local(Request.Create, new MovementEvent(target, definition));
     }
 
     void ApplyDamage(Actor target, float damage)
@@ -122,7 +120,7 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
     
     public void HandleCombatEvent(Message<Request, CombatEvent> message)
     {
-        pending.Add(message.Payload);
+        pendingRequests.Add(message.Payload.Context);
     }
 
     // ===============================================================================
@@ -140,7 +138,7 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
     bool CanTakeDamage(Actor target, out IDamageable actor)
     {
-        if (target is IDamageable damageable && !damageable.Invulnerable)
+        if (target is IDamageable damageable && !damageable.Invulnerable && !damageable.Impervious)
         {
             actor = damageable;
             return true;
@@ -181,6 +179,17 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 //                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+    // REWORK REQUIRED - Implementation of killing blow data, type (DeathType enum?) 
+public class KillingBlow
+{
+    
+}
+
+
 public readonly struct DamageComponent
 {
     public object Source                    { get; init; }
@@ -210,6 +219,12 @@ public readonly struct DamagePackage
     }
 }
 
+public readonly struct CombatContext
+{
+    public Actor Target                     { get; init; }
+    public Actor Source                     { get; init; }
+    public DamagePackage Package            { get; init; }
+}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
@@ -217,9 +232,7 @@ public readonly struct DamagePackage
 
 public readonly struct CombatEvent
 {
-    public Actor Target                     { get; init; }
-    public Actor Source                     { get; init; }
-    public DamagePackage Package            { get; init; }
+    public CombatContext Context            { get; init; }
 }
 
 

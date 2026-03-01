@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
@@ -20,6 +21,7 @@ public class AnimationSystem : Service, IServiceLoop
 
     public AnimationSystem(Actor actor)
     {
+
         if (!ValidateOwner(actor, out IDefined defined))
             return;
 
@@ -61,29 +63,20 @@ public class AnimationSystem : Service, IServiceLoop
         if (!request.IsValid)
             Resolve(request);
 
-        SetAnimationData(request);
         RequestAnimation(request);
 
         owner.Emit.Local(message.Id, Response.Completed, new AnimationRequestEvent(request));
     }
 
-    void SetAnimationData(AnimationRequest request)
-    {
-        request.data = new AnimationData
-        {
-            Duration = animator.RequestAnimationDuration(request.name)
-        };
-    }
-
     AnimationRequest Resolve(AnimationRequest request)
     {
-        var set         = SelectAnimationSet(request.intent);
-        var animation   = SelectAnimation(set, request);
-        request.name    = animation;
+        var set                 = SelectAnimationSet(request.intent);
+        var animation           = SelectAnimation(set, request);
+
+        SetAnimationData(request, animation);
 
         return request;
     }
-
 
     AnimationSet SelectAnimationSet(AnimationIntent intent)
     {
@@ -114,6 +107,11 @@ public class AnimationSystem : Service, IServiceLoop
         return set.Default;
     }
 
+    void SetAnimationData(AnimationRequest request, string animation)
+    {
+        request.data.Animation  = animation;
+        request.data.Duration   = animator.RequestAnimationDuration(request.data.Animation);
+    }
 
     void RequestAnimation(AnimationRequest request)
     {
@@ -183,37 +181,33 @@ public class AnimationSystem : Service, IServiceLoop
 
 public class AnimationRequest
 {
-    public string                       name;
     public AnimationIntent              intent;
     public AnimationContext             context;
     public AnimationOptions             options;
     public AnimationData                data;
     public AnimatorParameter.Override[] overrides;
 
-    public bool IsValid         => name      != null;
-    public bool HasContext      => context   != null;
-    public bool HasOverrides    => overrides != null && overrides.Length > 0;
+    public bool IsValid         => data.Animation   != null;
+    public bool HasContext      => context          != null;
+    public bool HasOverrides    => overrides        != null && overrides.Length > 0;
 
     public AnimationRequest(string name)
     {
-        this.name   = name;
-        options     = new() { AllowInterrupt = true };
+        this.intent         = new();
+        this.context        = new();
+        this.options        = new() { AllowInterrupt = true };
+        this.data           = new();
+
+        data.Animation  = name;
     }
 
     public AnimationRequest(AnimationIntent intent, AnimationContext context = null)
     {
-        this.intent     = intent;
-        this.context    = context;
-        options         = new() { AllowInterrupt = true };
+        this.intent         = intent;
+        this.context        = context;
+        this.options        = new() { AllowInterrupt = true };
+        this.data           = new();
     }
-
-    public string                       Name        => name;
-    public AnimationIntent              Intent      => intent;
-    public AnimationContext             Context     => context;
-    public AnimationOptions             Options     => options;
-    public AnimationData                Data        => data;
-    public AnimatorParameter.Override[] Overrides   => overrides;
-
 }
 
 public class AnimationOptions
@@ -228,7 +222,8 @@ public class AnimationContext
 
 public class AnimationData
 {
-    public float Duration                           { get; set;}
+    public string Animation                         { get; set; }
+    public float Duration                           { get; set; }
 }
 
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

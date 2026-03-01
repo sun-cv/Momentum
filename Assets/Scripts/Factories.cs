@@ -6,6 +6,27 @@ using UnityEngine;
 
 
 
+public interface IFactory
+{
+    
+}
+
+public interface IActorFactory : IFactory
+{
+    Actor Spawn(Vector3 position);
+}
+
+public interface ICorpseFactory : IActorFactory
+{
+    Actor SpawnCorpse(Actor owner, Vector3 position);
+}
+
+public interface IRespawnFactory : IActorFactory
+{
+    
+}
+
+
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class FactoryAttribute : Attribute 
 {
@@ -23,14 +44,20 @@ public static class Factories
     //  Public API
     // ===============================================================================
 
-    public static Actor CreateActor(string actorName, Vector3 position)
+    public static T Get<T>()
     {
-        return Registry.CreateActor(actorName, position);
+        return Registry.Get<T>();
     }
 
-    public static bool CanCreate(string actorName)
+
+    public static T Get<T>(string name)
     {
-        return Registry.HasFactory(actorName);
+        return Registry.Get<T>(name);
+    }
+
+    public static IFactory Get(string name)
+    {
+        return Registry.Get(name);
     }
 
     // ===============================================================================
@@ -53,108 +80,106 @@ public static class Factories
         {
             Assembly assembly = Assembly.GetExecutingAssembly();
             
-                Debug.Log("Should see1");
-
-
             foreach (var type in assembly.GetTypes())
             {
-                Debug.Log("Should see2");
-
-
-                if (!type.IsClass || type.IsAbstract && !type.IsSealed)
+                if (type.IsAbstract)
                     continue;
 
-                Debug.Log("Should see3");
-
-
                 var attribute = type.GetCustomAttribute<FactoryAttribute>();
+
                 if (attribute == null)
                     continue;
 
-                Debug.Log("Should see4");
+                var constructor = type.GetConstructor(Type.EmptyTypes);
 
-                // Look for a static Create method with signature: Actor Create(Vector3)
-                var createMethod = type.GetMethod(
-                    "Create",
-                    BindingFlags.Public | BindingFlags.Static,
-                    null,
-                    new[] { typeof(Vector3) },
-                    null
-                );
-
-                if (createMethod == null)
+                if (constructor == null)
                 {
-                    Log.Error($"[ActorFactory] class {type.Name} has no public static Create(Vector3) method.");
+                    Log.Error($"[Factory] class {type.Name} has no no public empty constructor.");
                     continue;
                 }
+                var factory = Activator.CreateInstance(type);
 
-                if (!typeof(Actor).IsAssignableFrom(createMethod.ReturnType))
-                {
-                    Log.Error($"[ActorFactory] class {type.Name}.Create must return Actor or subclass.");
-                    continue;
-                }
-
-                var factory = (Func<Vector3, Actor>)Delegate.CreateDelegate(
-                    typeof(Func<Vector3, Actor>), 
-                    createMethod
-                );
-
-                Debug.Log(factory.GetType().Name);
-
-                Registry.RegisterFactory(attribute.Name, factory);
-                
-                Log.Debug($"Registered factory: {attribute.Name} -> {type.Name}");
+                Registry.RegisterFactory(attribute.Name, type, (IFactory)factory);
             }
         }
     }
 
     private static class Registry
     {
-        private static readonly Dictionary<string, Func<Vector3, Actor>> factories = new();
+        private static readonly Dictionary<Type, IFactory>   byType = new();
+        private static readonly Dictionary<string, IFactory> byName = new();
+
 
         // ===============================================================================
 
-        public static void RegisterFactory(string actorName, Func<Vector3, Actor> factory)
+        public static void RegisterFactory(string name, Type type, IFactory factory)
         {
-            if (factories.ContainsKey(actorName))
-                throw new InvalidOperationException($"Factory for '{actorName}' is already registered.");
+            if (byType.ContainsKey(type))
+                throw new InvalidOperationException($"Factory {type.Name} is already registered.");
 
-            factories[actorName] = factory;
+            byType[type] = factory;
+            byName[name] = factory;
         }
 
-        public static void DeregisterFactory(string actorName)
+        public static void DeregisterFactory(string name)
         {
-            if (!factories.ContainsKey(actorName))
-                throw new InvalidOperationException($"Factory for '{actorName}' is not registered.");
+            if (!byName.TryGetValue(name, out var factory))
+                throw new InvalidOperationException($"Factory for '{name}' is not registered.");
 
-            factories.Remove(actorName);
+            byName.Remove(name);
+
+            var type = factory.GetType();
+            byType.Remove(type);
         }
 
         // ===============================================================================
 
-        public static Actor CreateActor(string actorName, Vector3 position)
+        public static IFactory Get(string name)
         {
-            if (!factories.TryGetValue(actorName, out var factory))
-                throw new KeyNotFoundException($"No factory registered for actor: '{actorName}'");
+            if (!byName.TryGetValue(name, out var factory))
+                throw new KeyNotFoundException($"No factory registered for: '{name}'");
 
-            return factory(position);
+            return factory;
         }
 
-        public static bool HasFactory(string actorName)
+        public static T Get<T>()
         {
-            return factories.ContainsKey(actorName);
+            if (!byType.TryGetValue(typeof(T), out var factory))
+                throw new KeyNotFoundException($"No factory registered for: '{typeof(T).Name}'");
+
+            return (T)factory;
+        }
+
+
+        public static T Get<T>(string name)
+        {
+            if (!byName.TryGetValue(name, out var factory))
+                throw new KeyNotFoundException($"No factory registered for: '{name}'");
+
+            var type = factory.GetType();
+
+            if (factory is not T typed)
+                throw new KeyNotFoundException($"Factory registered for '{name}' is not assignable to '{typeof(T).Name}'");
+
+            return (T)factory;
+        }
+
+        public static bool HasFactory(string name)
+        {
+            return byName.ContainsKey(name);
         }
 
         // ===============================================================================
 
         public static void Clear()
         {
-            factories.Clear();
+            byType.Clear();
+            byName.Clear();
         }
 
         public static void Dispose() => Clear();
 
-        public static List<string> RegisteredFactories => factories.Keys.ToList();
+        public static List<string> RegisteredFactories => byName.Keys.ToList();
     }
 
     // ===============================================================================

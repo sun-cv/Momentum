@@ -2,42 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-// CORPSE REWORK 
-
-    // Alive,
-    // Dying,      // Death animation playing
-    // Corpse,     // Fresh corpse, can be looted/interacted with
-    // Decaying,   // Decomposition, animals can eat, visual changes
-    // Disposed    // Cleanup and removal
-
-
-// public enum Corpse
-// {
-//     Fresh,
-//     Decaying,
-//     Consumed,
-// }
-
 
 public class Lifecycle : Service, IServiceLoop
 {
 
-    public enum State { Alive, Dying, Dead }
+    public enum State { Alive, Dying, Dead, Disposal }
 
-        // -----------------------------------
+    // ===============================================================================
     
-    readonly Actor              owner;
-    readonly IDamageable        actor;
-    readonly ActorDefinition    definition;
+    readonly Actor                                          owner;
+    readonly ActorDefinition                                definition;
 
         // -----------------------------------
 
-    Dictionary<State, ILifecycleStateHandler> stateHandlers;
+    Dictionary<State, StateHandler<Lifecycle, State>>       stateHandlers;
 
         // -----------------------------------
 
-    State state         = State.Alive;
-    public bool respawn = false;
+    LifecycleInstance                                       instance;
+    LifecycleInstance                                       previousInstance;
 
     // ===============================================================================
 
@@ -45,45 +28,48 @@ public class Lifecycle : Service, IServiceLoop
     {
         Services.Lane.Register(this);
 
-        if (actor is not IDamageable damageable)
-            return; 
+        if (actor is not IDamageable)
+            return;
 
         if (actor is not IDefined defined)
             return;
 
         this.owner      = actor;
-        this.actor      = damageable;
         this.definition = defined.Definition;
 
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
 
+        InitializeState();
         InitializeStateHandlers();
-        EnterHandler();
+        EnterLifecycle();
     }
 
     void InitializeStateHandlers()
     {
-        stateHandlers = new()
-        {
-            { State.Alive,  new AliveStateHandler(owner, actor, definition)  },
-            { State.Dying,  new DyingStateHandler(owner, actor, definition)  },
-            { State.Dead,   new DeadStateHandler (owner, actor, definition)  }
-        };
+        stateHandlers = new();
+        Register(State.Alive,    new LifecycleAliveState(owner, definition));
+        Register(State.Dying,    new LifecycleDyingState(owner, definition));
+        Register(State.Dead,     new LifecycleDeadState (owner, definition));
     }
-    
+
+    public void InitializeState()
+    {
+        instance = new(owner);
+    }
+
     // ===============================================================================
 
     public void Loop()
     {
-        LoopHandler();
+        UpdateHandler();
     }
 
     // ===============================================================================
 
-    void LoopHandler()
+    void UpdateHandler()
     {
-        if (stateHandlers.TryGetValue(state, out var handler))
-            handler.Loop(this);
+        if (stateHandlers.TryGetValue(instance.State.Condition, out var handler))
+            handler.Update(this);
     }
 
         // ===================================
@@ -99,19 +85,25 @@ public class Lifecycle : Service, IServiceLoop
 
     void ExitHandler()
     {
-        if (stateHandlers.TryGetValue(state, out var handler))
+        if (stateHandlers.TryGetValue(instance.State.Condition, out var handler))
             handler.Exit(this);
     }
 
     void TransitionState(State newState)
     {
-        state = newState;
+        instance.State.Condition = newState;
         PublishState();
     }
 
     void EnterHandler()
     {
-        if (stateHandlers.TryGetValue(state, out var handler))
+        if (stateHandlers.TryGetValue(instance.State.Condition, out var handler))
+            handler.Enter(this);
+    }
+
+    void EnterLifecycle()
+    {
+        if (stateHandlers.TryGetValue(State.Alive, out var handler))
             handler.Enter(this);
     }
 
@@ -137,7 +129,14 @@ public class Lifecycle : Service, IServiceLoop
 
     void PublishState()
     {
-        owner.Emit.Local(Publish.Transitioning, new LifecycleEvent(owner, state));
+        owner.Emit.Local(Publish.Transitioning, new LifecycleEvent(owner, instance.State.Condition));
+    }
+    // ===============================================================================
+
+    void Register(State state, StateHandler<Lifecycle, State> handler)
+    {
+        handler.Transition += TransitionTo;
+        stateHandlers[state] = handler;
     }
 
     // ===============================================================================
@@ -149,9 +148,11 @@ public class Lifecycle : Service, IServiceLoop
         Services.Lane.Deregister(this);
     }
     
-    public IDamageable Actor            => actor;
-    public bool IsAlive                 => state == State.Alive;
-    public bool IsDead                  => state == State.Dead;
+    public IDamageable Actor            => owner as IDamageable;
+    public bool IsAlive                 => instance.State.Condition == State.Alive;
+    public bool IsDead                  => instance.State.Condition == State.Dead;
+
+    public LifecycleInstance Instance   => instance;
 
     public UpdatePriority Priority      => ServiceUpdatePriority.Lifecycle;
 }
@@ -161,23 +162,15 @@ public class Lifecycle : Service, IServiceLoop
 //                                     State Handlers                                       
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public interface ILifecycleStateHandler
-{    
-    void Enter(Lifecycle controller);
-    void Loop (Lifecycle controller);
-    void Exit (Lifecycle controller);
-}
-
-
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                              Alive state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
             // Rework required - Update TimeSinceLastDamage with hit instance.
 
-public class AliveStateHandler : ILifecycleStateHandler
+public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
 {
     readonly Actor owner;
-    readonly IDamageable actor;
+    readonly IDamageable damageable;
     readonly ActorDefinition definition;
     
         // -----------------------------------
@@ -185,23 +178,25 @@ public class AliveStateHandler : ILifecycleStateHandler
     float lastHealthPercent     = -1f;
     // float timeSinceLastDamage   = -1f;
 
-    HashSet<HealthThreshold> activeThresholds = new();
+    readonly HashSet<HealthThreshold> activeThresholds = new();
 
     // ===============================================================================
 
-    public AliveStateHandler(Actor owner, IDamageable actor, ActorDefinition definition)
+    public LifecycleAliveState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
-        this.actor      = actor;
+        this.damageable = owner as IDamageable;
         this.definition = definition;
 
     }
 
     // ===============================================================================
 
-    public void Enter(Lifecycle controller)
+    public override void Enter(Lifecycle controller)
     { 
-        if (controller.respawn)
+        controller.InitializeState();
+
+        if (controller.Instance.State.Respawn)
         {
             ClearState();
             ResetActor();
@@ -209,17 +204,14 @@ public class AliveStateHandler : ILifecycleStateHandler
         }
         else
         {
-            actor.Health = actor.MaxHealth;
+            damageable.Health = damageable.MaxHealth;
         }
     }
     
-    public void Loop(Lifecycle controller)
+    public override void Update(Lifecycle controller)
     {
-        if (ActorShouldDie())
-        {
+        if (damageable.Health == 0)
             controller.TransitionTo(Lifecycle.State.Dying);
-            return;
-        }
 
         if (definition.Lifecycle.EnableHealthThresholds)
             ProcessHealthThresholds();
@@ -229,7 +221,7 @@ public class AliveStateHandler : ILifecycleStateHandler
         
     }
     
-    public void Exit(Lifecycle controller)
+    public override void Exit(Lifecycle controller)
     {
         activeThresholds.Clear();
     }
@@ -248,14 +240,14 @@ public class AliveStateHandler : ILifecycleStateHandler
 
     void ResetActor()
     {
-        actor.Invulnerable = false;
+        damageable.Invulnerable = false;
 
-        actor.Health = actor.MaxHealth;
+        damageable.Health = damageable.MaxHealth;
 
         if (owner is IControllable controllable)
             controllable.Inactive = true;
 
-        actor.Health = actor.MaxHealth;
+        damageable.Health = damageable.MaxHealth;
     }
 
         // ===================================
@@ -269,7 +261,7 @@ public class AliveStateHandler : ILifecycleStateHandler
 
     void ProcessHealthThresholds()
     {
-        float currentPercent = actor.Health / actor.MaxHealth;
+        float currentPercent = damageable.Health / damageable.MaxHealth;
         
         foreach (var threshold in definition.Lifecycle.HealthThresholds)
         {
@@ -301,29 +293,19 @@ public class AliveStateHandler : ILifecycleStateHandler
     
     void ProcessHealthChangeAlerts()
     {
-        float currentPercent = actor.Health / actor.MaxHealth;
+        float currentPercent = damageable.Health / damageable.MaxHealth;
 
         if (Mathf.Abs(currentPercent - lastHealthPercent) > 0.01f)
         {
-            owner.Emit.Local( Publish.Changed, new HealthEvent(owner, actor.Health, actor.MaxHealth, lastHealthPercent, currentPercent));
+            owner.Emit.Local( Publish.Changed, new HealthEvent(owner, damageable.Health, damageable.MaxHealth, lastHealthPercent, currentPercent));
             lastHealthPercent = currentPercent;
         }
     }
 
     // ===============================================================================
-    //  PREDICATES
+    //  Events
     // ===============================================================================
 
-    bool ActorShouldDie()
-    {
-        if (actor.Impervious)
-            return false;
-        
-        if(actor.Health > 0)
-            return false;
-
-        return true;
-    }
 
     // ===============================================================================
 
@@ -335,10 +317,10 @@ public class AliveStateHandler : ILifecycleStateHandler
         //                               Dying state                                       
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class DyingStateHandler : ILifecycleStateHandler
+public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 {
     readonly Actor              owner;
-    readonly IDamageable        actor;
+    readonly IDamageable        damageable;
     readonly ActorDefinition    definition;
 
         // -----------------------------------
@@ -347,24 +329,23 @@ public class DyingStateHandler : ILifecycleStateHandler
 
         // -----------------------------------
 
-    float  deathAnimationDuration;
-
-    ClockTimer dyingTimer;
+    AnimationRequest deathAnimation;
 
     // ===============================================================================
 
-    public DyingStateHandler(Actor owner, IDamageable actor, ActorDefinition definition)
+    public LifecycleDyingState(Actor owner,ActorDefinition definition)
     {
         this.owner      = owner;
-        this.actor      = actor;
+        this.damageable = owner as IDamageable;
         this.definition = definition;
 
-        animationRequestHandler = new(owner.Emit, HandleAnimationDuration);
+        animationRequestHandler = new(owner.Emit, HandleAnimationPlayback);
+        owner.Emit.Link.Local<Message<Publish, AnimatorPlaybackEvent>>(HandleAnimationPlaybackFinished);
     }
     
     // ===============================================================================
     
-    public void Enter(Lifecycle controller)
+    public override void Enter(Lifecycle controller)
     {
         ClearDyingState();
 
@@ -375,23 +356,21 @@ public class DyingStateHandler : ILifecycleStateHandler
             AlertDeath();
 
         if (HasDeathAnimation())
-            PlayDeathAnimation();
+            RequestDeathAnimation();
 
         if (HasOnDeathEffects())
             ApplyOnDeathEffects();
-        
-        StartDeathTimer();
     }
     
-    public void Loop(Lifecycle controller)
+    public override void Update(Lifecycle controller)
     {
-        if (dyingTimer.IsFinished)
+        if (!HasDeathAnimation())
             controller.TransitionTo(Lifecycle.State.Dead);
     }
     
-    public void Exit(Lifecycle controller)
+    public override void Exit(Lifecycle controller)
     {
-        // Cleanup (like weapon's ClearMovementFromPhase)
+        controller.Instance.Context.DeathAnimation = deathAnimation;
     }
     
     // ===============================================================================
@@ -402,7 +381,7 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void ClearDyingState()
     {
-        deathAnimationDuration  = 1f;
+        deathAnimation          = null;
     }
 
         // ===================================
@@ -417,7 +396,7 @@ public class DyingStateHandler : ILifecycleStateHandler
 
     void DisableDamage()
     {
-        actor.Invulnerable = true;
+        damageable.Invulnerable = true;
     }
 
     void AlertDeath()
@@ -437,7 +416,7 @@ public class DyingStateHandler : ILifecycleStateHandler
         //  Animation
         // ===================================
 
-    void PlayDeathAnimation()
+    void RequestDeathAnimation()
     {
         var request = new AnimationRequest(AnimationIntent.Death) 
         {
@@ -450,21 +429,18 @@ public class DyingStateHandler : ILifecycleStateHandler
         animationRequestHandler.Send(Request.Start, new AnimationRequestEvent(request));
     }
 
-    void HandleAnimationDuration(Message<Response, AnimationRequestEvent> response)
+    void HandleAnimationPlayback(Message<Response, AnimationRequestEvent> response)
     {
-        deathAnimationDuration = response.Payload.AnimationRequest.Data.Duration;
-        Debug.Log(deathAnimationDuration);
-        StartDeathTimer();
+        deathAnimation = response.Payload.AnimationRequest;
     }
 
-    // ===============================================================================
-    //  Helpers
-    // ===============================================================================
-
-    void StartDeathTimer()
+    void HandleAnimationPlaybackFinished(Message<Publish, AnimatorPlaybackEvent> message)
     {
-        dyingTimer = new ClockTimer(Mathf.Max(0f, deathAnimationDuration));
-        dyingTimer.Start();
+        if (deathAnimation == null)
+            return;
+
+        if (deathAnimation.data.Animation == message.Payload.Name)
+            Transition.Invoke(Lifecycle.State.Dead);
     }
 
     // ===============================================================================
@@ -496,64 +472,61 @@ public class DyingStateHandler : ILifecycleStateHandler
         //                               Dead state                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class DeadStateHandler : ILifecycleStateHandler
+public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
 {
     readonly Actor              owner;
-    readonly IDamageable        actor;
+    readonly IDamageable        damageable;
     readonly ActorDefinition    definition;
     
         // -----------------------------------
 
-    ClockTimer respawnTimer     = new(0);
-    ClockTimer corpseTimer      = new(0);
-    
+    LifeCycleContext context;
+
     // ===============================================================================
 
-    public DeadStateHandler(Actor owner, IDamageable actor, ActorDefinition definition)
+    public LifecycleDeadState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
-        this.actor      = actor;
+        this.damageable = owner as IDamageable;
         this.definition = definition;
     }
     
     // ===============================================================================
 
-    public void Enter(Lifecycle controller)
+    public override void Enter(Lifecycle controller)
     {
+        context = controller.Instance.Context;
+
+        if (CanBecomeCorpse())
+        {
+            RequestCorpseSpawn();
+        }
 
         if (CanRespawn())
         {
-            respawnTimer = new(definition.Lifecycle.Respawn.RespawnDelay);
-            respawnTimer.Start();
-        }
-
-        if (CanPersist())
-        {
-            corpseTimer = new(definition.Lifecycle.Corpse.PersistDuration);
-            corpseTimer.Start();     
+            // Send respawn request? Hero specific all other entities are disposed and respawned by spawner.
         }
     }
 
-    public void Loop(Lifecycle controller)
+    public override void Update(Lifecycle controller)
     {
-        if (RespawnReady())
-        {
-            controller.respawn = true;
-            controller.TransitionTo(Lifecycle.State.Alive);
-        }
+        if (CanRespawn())
+            return;
 
-        if (CorpseExpired())
-        {
-            ExitPresence();
-        }
+        ExitPresence();
     }
 
-    public void Exit(Lifecycle controller)
+    public override void Exit(Lifecycle controller)
     {
         
     }
-    
+
     // ===============================================================================
+
+    void RequestCorpseSpawn()
+    {
+        Emit.Global(Request.Create, new CorpseRequestEvent(new() { Owner = owner, Animation = context.DeathAnimation, KillingBlow = context.KillingBlow}));
+    }
 
     void ExitPresence()
     {
@@ -564,24 +537,15 @@ public class DeadStateHandler : ILifecycleStateHandler
     //  Predicates
     // ===============================================================================
 
+
     bool CanRespawn()
     {
         return definition.Lifecycle.Respawn.Enabled;
     }
 
-    bool CanPersist()
+    bool CanBecomeCorpse()
     {
-        return definition.Lifecycle.Corpse.Persists;
-    }
-
-    bool RespawnReady()
-    {
-        return respawnTimer.IsFinished;
-    }
-
-    bool CorpseExpired()
-    {
-        return corpseTimer.IsFinished;
+        return definition.Lifecycle.Corpse.Enabled;
     }
 
     // ===============================================================================
@@ -594,11 +558,36 @@ public class DeadStateHandler : ILifecycleStateHandler
 //                                      Declarations                                      
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public enum HealthThresholdTrigger
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class LifecycleInstance
 {
-    OnEnter,
-    OnExit,
-    OnCross,
+    public Actor Owner                      { get; init; }
+    public LifecycleState State             { get; init; }
+    public LifeCycleContext Context         { get; set;  }
+
+    public LifecycleInstance(Actor actor)
+    {
+        Owner           = actor;
+        State           = new();
+        Context         = new();
+
+        State.Condition = Lifecycle.State.Alive;
+    }
+}
+
+public class LifecycleState
+{
+    public Lifecycle.State Condition        { get; set; }
+    public bool Respawn                     { get; set; }
+}
+
+public class LifeCycleContext
+{
+    public KillingBlow KillingBlow          { get; set; }
+    public AnimationRequest DeathAnimation  { get; set; }
 }
 
 public class HealthThreshold
@@ -609,6 +598,17 @@ public class HealthThreshold
     public List<Effect> Effects             { get; init; } = new();
 }
 
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Enums                                                 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public enum HealthThresholdTrigger
+{
+    OnEnter,
+    OnExit,
+    OnCross,
+}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events                                         
@@ -644,6 +644,15 @@ public readonly struct LifecycleEvent
     }
 }
 
+public readonly struct LifecycleTargetEvent
+{
+    public readonly Lifecycle.State Target  { get; init; }
+
+    public LifecycleTargetEvent(Lifecycle.State target)
+    {
+        Target = target;
+    }
+}
 public readonly struct ActorDeathEvent
 {
     public readonly Actor Owner             { get; init; }

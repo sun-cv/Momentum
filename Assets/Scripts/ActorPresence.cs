@@ -15,7 +15,7 @@ public class Presence : Service, IServiceLoop
 
         // -----------------------------------
 
-    Dictionary<State, IPresenceStateHandler> stateHandlers;
+    Dictionary<State, StateHandler<Presence, State>> stateHandlers;
 
         // -----------------------------------
 
@@ -45,14 +45,13 @@ public class Presence : Service, IServiceLoop
 
     void InitializeStateHandlers()
     {
-        stateHandlers = new()
-        {
-            { State.Entering,   new EnteringStateHandler(owner, definition) },
-            { State.Present,    new PresentStateHandler (owner, definition) },
-            { State.Exiting,    new ExitingStateHandler (owner, definition) },
-            { State.Absent,     new AbsentStateHandler  (owner, definition) },
-            { State.Disposal,   new DisposalStateHandler(owner, definition) },
-        };
+        stateHandlers = new();
+
+        Register(State.Entering,    new PresenceEnteringState(owner, definition));
+        Register(State.Present,     new PresencePresentState (owner, definition));
+        Register(State.Exiting,     new PresenceExitingState (owner, definition));
+        Register(State.Absent,      new PresenceAbsentState  (owner, definition));
+        Register(State.Disposal,    new PresenceDisposalState(owner, definition));
     }
 
     // ===============================================================================
@@ -60,16 +59,16 @@ public class Presence : Service, IServiceLoop
     public void Loop()
     {
         AdvanceState();
-        LoopHandler();
+        UpdateHandler();
         DebugLog();
     }
 
     // ===============================================================================
 
-    void LoopHandler()
+    void UpdateHandler()
     {
         if (stateHandlers.TryGetValue(state, out var handler))
-            handler.Loop(this);
+            handler.Update(this);
     }
 
         // =================================
@@ -140,6 +139,14 @@ public class Presence : Service, IServiceLoop
 
     // ===============================================================================
 
+    void Register(State state, StateHandler<Presence, State> handler)
+    {
+        handler.Transition += TransitionTo;
+        stateHandlers[state] = handler;
+    }
+    
+    // ===============================================================================
+
     readonly Logger Log = Logging.For(LogSystem.Presence);
 
     void DebugLog()
@@ -161,26 +168,18 @@ public class Presence : Service, IServiceLoop
 //                                     State Handlers                                       
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public interface IPresenceStateHandler
-{
-    void Enter(Presence controller);
-    void Loop (Presence controller);
-    void Exit (Presence controller);
-}
-
-
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                Entering
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class EnteringStateHandler : IPresenceStateHandler
+public class PresenceEnteringState : StateHandler<Presence, Presence.State>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
 
     // ===============================================================================
 
-    public EnteringStateHandler(Actor owner, ActorDefinition definition)
+    public PresenceEnteringState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
@@ -188,18 +187,19 @@ public class EnteringStateHandler : IPresenceStateHandler
 
     // ===============================================================================
 
-    public void Enter(Presence controller)
+    public override void Enter(Presence controller)
     {   
         PublishStateChange();
     }
 
-    public void Loop(Presence controller)
+    public override void Update(Presence controller)
     {
         controller.TransitionTo(Presence.State.Present);
     }
 
-    public void Exit(Presence controller)
+    public override void Exit(Presence controller)
     {
+        
     }
 
     // ===============================================================================
@@ -215,14 +215,14 @@ public class EnteringStateHandler : IPresenceStateHandler
         //                                 Present
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class PresentStateHandler : IPresenceStateHandler
+public class PresencePresentState : StateHandler<Presence, Presence.State>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
 
     // ===============================================================================
 
-    public PresentStateHandler(Actor owner, ActorDefinition definition)
+    public PresencePresentState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
@@ -230,18 +230,20 @@ public class PresentStateHandler : IPresenceStateHandler
 
     // ===============================================================================
 
-    public void Enter(Presence controller)
+    public override void Enter(Presence controller)
     {   
         SetCurrentTarget(controller);
         PublishStateChange();
     }
 
-    public void Loop(Presence controller)
+    public override void Update(Presence controller)
     {
+        
     }
 
-    public void Exit(Presence controller)
+    public override void Exit(Presence controller)
     {
+        
     }
 
     // ===============================================================================
@@ -266,14 +268,14 @@ public class PresentStateHandler : IPresenceStateHandler
         //                                 Exiting
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class ExitingStateHandler : IPresenceStateHandler
+public class PresenceExitingState : StateHandler<Presence, Presence.State>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
 
     // ===============================================================================
 
-    public ExitingStateHandler(Actor owner, ActorDefinition definition)
+    public PresenceExitingState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
@@ -281,12 +283,12 @@ public class ExitingStateHandler : IPresenceStateHandler
 
     // ===============================================================================
 
-    public void Enter(Presence controller)
+    public override void Enter(Presence controller)
     {   
         PublishStateChange();
     }
 
-    public void Loop(Presence controller)
+    public override void Update(Presence controller)
     {
         if (CanBeAbsent())
             controller.TransitionTo(Presence.State.Absent);
@@ -294,18 +296,13 @@ public class ExitingStateHandler : IPresenceStateHandler
             controller.TransitionTo(Presence.State.Disposal);
     }
 
-    public void Exit(Presence controller)
+    public override void Exit(Presence controller)
     {
     }
 
     // ===============================================================================
     //  PREDICATES
     // ===============================================================================
-
-    bool ExitingComplete()
-    {
-        return true;
-    }
 
     bool CanBeAbsent()
     {
@@ -327,14 +324,14 @@ public class ExitingStateHandler : IPresenceStateHandler
         //                                 Absent
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class AbsentStateHandler : IPresenceStateHandler
+public class PresenceAbsentState : StateHandler<Presence, Presence.State>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
 
     // ===============================================================================
 
-    public AbsentStateHandler(Actor owner, ActorDefinition definition)
+    public PresenceAbsentState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
@@ -342,18 +339,18 @@ public class AbsentStateHandler : IPresenceStateHandler
 
     // ===============================================================================
 
-    public void Enter(Presence controller)
+    public override void Enter(Presence controller)
     {   
         SetCurrentTarget(controller);
         PublishStateChange();
     }
 
-    public void Loop(Presence controller)
+    public override void Update(Presence controller)
     {
         
     }
 
-    public void Exit(Presence controller)
+    public override void Exit(Presence controller)
     {
 
     }
@@ -380,14 +377,14 @@ public class AbsentStateHandler : IPresenceStateHandler
         //                                Disposal
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class DisposalStateHandler : IPresenceStateHandler
+public class PresenceDisposalState : StateHandler<Presence, Presence.State>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
 
     // ===============================================================================
 
-    public DisposalStateHandler(Actor owner, ActorDefinition definition)
+    public PresenceDisposalState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
@@ -395,7 +392,7 @@ public class DisposalStateHandler : IPresenceStateHandler
 
     // ===============================================================================
 
-    public void Enter(Presence controller)
+    public override void Enter(Presence controller)
     {   
         PublishStateChange();
 
@@ -404,11 +401,11 @@ public class DisposalStateHandler : IPresenceStateHandler
         Object.Destroy(owner.Bridge.View);
     }
 
-    public void Loop(Presence controller)
+    public override void Update(Presence controller)
     {   
     }
 
-    public void Exit(Presence controller)
+    public override void Exit(Presence controller)
     {
     }
 

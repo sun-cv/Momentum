@@ -1,0 +1,129 @@
+Date : 2026-02-28 19:26:31
+Directory : c:\Dev\Projects\Momentum
+Total : 79 files,  10466 codes, 1667 comments, 3551 blanks, all 15684 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C#       |         78 |     10,449 |      1,667 |      3,533 |     15,649 |
+| Markdown |          1 |         17 |          0 |         18 |         35 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                              | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                 |         79 |     10,466 |      1,667 |      3,551 |     15,684 |
+| . (Files)                                                                                         |          1 |         17 |          0 |         18 |         35 |
+| Assets                                                                                            |         78 |     10,449 |      1,667 |      3,533 |     15,649 |
+| Assets\Components                                                                                 |          8 |        273 |         25 |        134 |        432 |
+| Assets\Components\Anchors                                                                         |          4 |        148 |         25 |         86 |        259 |
+| Assets\Components\Hitbox                                                                          |          4 |        125 |          0 |         48 |        173 |
+| Assets\Game                                                                                       |         15 |      1,151 |         93 |        209 |      1,453 |
+| Assets\Game\Entities                                                                              |         15 |      1,151 |         93 |        209 |      1,453 |
+| Assets\Game\Entities\Characters                                                                   |         12 |        421 |         24 |        143 |        588 |
+| Assets\Game\Entities\Characters\Enemies                                                           |          5 |        124 |         11 |         48 |        183 |
+| Assets\Game\Entities\Characters\Enemies\Dummy                                                     |          5 |        124 |         11 |         48 |        183 |
+| Assets\Game\Entities\Characters\Enemies\Dummy\Scripts                                             |          5 |        124 |         11 |         48 |        183 |
+| Assets\Game\Entities\Characters\Hero                                                              |          7 |        297 |         13 |         95 |        405 |
+| Assets\Game\Entities\Characters\Hero\Scripts                                                      |          7 |        297 |         13 |         95 |        405 |
+| Assets\Game\Entities\Weapons                                                                      |          3 |        730 |         69 |         66 |        865 |
+| Assets\Game\Entities\Weapons\Dash                                                                 |          1 |         81 |         69 |         17 |        167 |
+| Assets\Game\Entities\Weapons\Shield                                                               |          1 |        335 |          0 |         24 |        359 |
+| Assets\Game\Entities\Weapons\Sword                                                                |          1 |        314 |          0 |         25 |        339 |
+| Assets\Scripts                                                                                    |         52 |      8,891 |      1,362 |      3,075 |     13,328 |
+| Assets\System                                                                                     |          3 |        134 |        187 |        115 |        436 |
+| Assets\System\Definitions                                                                         |          1 |          4 |          0 |          1 |          5 |
+| Assets\System\Editor                                                                              |          1 |        130 |         11 |         34 |        175 |
+| Assets\System\Template                                                                            |          1 |          0 |        176 |         80 |        256 |
+| Assets\System\Template\Folder                                                                     |          1 |          0 |        176 |         80 |        256 |
+| Assets\System\Template\Folder\Entity                                                              |          1 |          0 |        176 |         80 |        256 |
+| Assets\System\Template\Folder\Entity\Scripts                                                      |          1 |          0 |        176 |         80 |        256 |
++---------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                          | language | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| c:\Dev\Projects\Momentum\Assets\Components\Anchors\Anchor.cs                                      | C#       |         29 |          3 |         15 |         47 |
+| c:\Dev\Projects\Momentum\Assets\Components\Anchors\BridgeController.cs                            | C#       |         36 |          6 |         21 |         63 |
+| c:\Dev\Projects\Momentum\Assets\Components\Anchors\PortalController.cs                            | C#       |         32 |          9 |         22 |         63 |
+| c:\Dev\Projects\Momentum\Assets\Components\Anchors\SpawnController.cs                             | C#       |         51 |          7 |         28 |         86 |
+| c:\Dev\Projects\Momentum\Assets\Components\Hitbox\DepthController.cs                              | C#       |          7 |          0 |          3 |         10 |
+| c:\Dev\Projects\Momentum\Assets\Components\Hitbox\HitboxController.cs                             | C#       |        108 |          0 |         37 |        145 |
+| c:\Dev\Projects\Momentum\Assets\Components\Hitbox\HurtboxController.cs                            | C#       |          5 |          0 |          4 |          9 |
+| c:\Dev\Projects\Momentum\Assets\Components\Hitbox\SortboxController.cs                            | C#       |          5 |          0 |          4 |          9 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Enemies\Dummy\Scripts\Dummy.cs           | C#       |         38 |          6 |         19 |         63 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Enemies\Dummy\Scripts\DummyAnimations.cs | C#       |          0 |          5 |          5 |         10 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Enemies\Dummy\Scripts\DummyBootstrap.cs  | C#       |         15 |          0 |          5 |         20 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Enemies\Dummy\Scripts\DummyDefinition.cs | C#       |         46 |          0 |          9 |         55 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Enemies\Dummy\Scripts\DummyFactory.cs    | C#       |         25 |          0 |         10 |         35 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\Hero.cs                     | C#       |         81 |         10 |         29 |        120 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\HeroAnimations.cs           | C#       |          5 |          0 |          5 |         10 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\HeroBootstrap.cs            | C#       |         15 |          0 |          2 |         17 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\HeroCameraTarget.cs         | C#       |         52 |          0 |         11 |         63 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\HeroDefinition.cs           | C#       |         46 |          0 |         10 |         56 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\HeroFactory.cs              | C#       |         26 |          0 |         13 |         39 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Characters\Hero\Scripts\HeroState.cs                | C#       |         72 |          3 |         25 |        100 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Weapons\Dash\Dash.cs                                | C#       |         81 |         69 |         17 |        167 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Weapons\Shield\Shield.cs                            | C#       |        335 |          0 |         24 |        359 |
+| c:\Dev\Projects\Momentum\Assets\Game\Entities\Weapons\Sword\Sword.cs                              | C#       |        314 |          0 |         25 |        339 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\ActorDefinition.cs                                        | C#       |         68 |         24 |         37 |        129 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\ActorLifecycle.cs                                         | C#       |        398 |         77 |        152 |        627 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\ActorPresence.cs                                          | C#       |        269 |         63 |        119 |        451 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\ActorStats.cs                                             | C#       |         64 |          9 |         22 |         95 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Actors.cs                                                 | C#       |         75 |         12 |         22 |        109 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\AgentMovement.cs                                          | C#       |        277 |         31 |         95 |        403 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\AnimationSystem.cs                                        | C#       |        199 |         20 |         67 |        286 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\AnimatorController.cs                                     | C#       |        324 |         19 |         90 |        433 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Armor.cs                                                  | C#       |          3 |          0 |          5 |          8 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Assets.cs                                                 | C#       |         49 |          6 |         22 |         77 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\CameraRig.cs                                              | C#       |        441 |         57 |        164 |        662 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\CombatResolver.cs                                         | C#       |        140 |         28 |         59 |        227 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\CommandLogic.cs                                           | C#       |        152 |         27 |         57 |        236 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Corpse.cs                                                 | C#       |        222 |         49 |        100 |        371 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\CorpseService.cs                                          | C#       |         45 |         19 |         35 |         99 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\DataTools.cs                                              | C#       |         39 |          0 |         10 |         49 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Debug.cs                                                  | C#       |        133 |         20 |         40 |        193 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Definitions.cs                                            | C#       |        160 |          9 |         59 |        228 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\DevEnv.cs                                                 | C#       |         51 |          3 |         22 |         76 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Ecosystem.cs                                              | C#       |          3 |          0 |          7 |         10 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\EffectRegister.cs                                         | C#       |        205 |         28 |         75 |        308 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Effects.cs                                                | C#       |        131 |         10 |         46 |        187 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\EquipmentManager.cs                                       | C#       |        135 |         20 |         51 |        206 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\EventBus.cs                                               | C#       |        289 |         49 |        110 |        448 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Factories.cs                                              | C#       |        131 |          9 |         53 |        193 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Game.cs                                                   | C#       |        182 |         18 |         60 |        260 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\GameDefinitions.cs                                        | C#       |        255 |         20 |         65 |        340 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\GameSettings.cs                                           | C#       |         86 |          0 |         23 |        109 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\GameTimers.cs                                             | C#       |        230 |         22 |         81 |        333 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\GizmoTools.cs                                             | C#       |        143 |          0 |         32 |        175 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\HitboxManager.cs                                          | C#       |        257 |         24 |        100 |        381 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\InputActions.cs                                           | C#       |        396 |        212 |         22 |        630 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\InputDriver.cs                                            | C#       |        244 |         19 |         91 |        354 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Intent.cs                                                 | C#       |        162 |         13 |         59 |        234 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Inventory.cs                                              | C#       |         47 |          6 |         13 |         66 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\MovementCommands.cs                                       | C#       |        122 |         78 |         69 |        269 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\MovementModifiers.cs                                      | C#       |        101 |         16 |         48 |        165 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Orientation.cs                                            | C#       |        167 |          3 |         24 |        194 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Predicates.cs                                             | C#       |        105 |         13 |         49 |        167 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Service.cs                                                | C#       |         32 |          9 |         18 |         59 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Services.cs                                               | C#       |        252 |         14 |         76 |        342 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Spawner.cs                                                | C#       |        274 |         24 |         98 |        396 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\SpawnerService.cs                                         | C#       |        101 |         15 |         45 |        161 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\SpriteDepthSorting.cs                                     | C#       |        194 |          9 |         52 |        255 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\State.cs                                                  | C#       |          8 |          0 |          5 |         13 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Stats.cs                                                  | C#       |        133 |         13 |         52 |        198 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\TeleportService.cs                                        | C#       |         76 |          8 |         32 |        116 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\TriggerCoordinator.cs                                     | C#       |         48 |         11 |         20 |         79 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\TriggerLocks.cs                                           | C#       |         90 |         11 |         36 |        137 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\Weapon.cs                                                 | C#       |        214 |        110 |         81 |        405 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\WeaponSystem.cs                                           | C#       |        928 |        101 |        290 |      1,319 |
+| c:\Dev\Projects\Momentum\Assets\Scripts\WorldPosition.cs                                          | C#       |         41 |          4 |         15 |         60 |
+| c:\Dev\Projects\Momentum\Assets\System\Definitions\IsExternalInit.cs                              | C#       |          4 |          0 |          1 |          5 |
+| c:\Dev\Projects\Momentum\Assets\System\Editor\AsepriteImporter.cs                                 | C#       |        130 |         11 |         34 |        175 |
+| c:\Dev\Projects\Momentum\Assets\System\Template\Folder\Entity\Scripts\ScriptTemplate.cs           | C#       |          0 |        176 |         80 |        256 |
+| c:\Dev\Projects\Momentum\notes.md                                                                 | Markdown |         17 |          0 |         18 |         35 |
+| Total                                                                                             |          |     10,466 |      1,667 |      3,551 |     15,684 |
++---------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

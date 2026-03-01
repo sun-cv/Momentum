@@ -8,7 +8,6 @@ public class Hero : Player, IHero
     //  Systems
     // ===============================================================================
     
-    public ActorDefinition      Definition          { get; set; }
     public IntentSystem         Intent              { get; set; }
     public HeroState            State               { get; set; }
     public ActorStats           Stats               { get; set; }
@@ -16,8 +15,8 @@ public class Hero : Player, IHero
     public WeaponSystem         Weapons             { get; set; }
     public MovementEngine       Movement            { get; set; }
     public EffectRegister       Effects             { get; set; }
-    public Lifecycle            Lifecycle           { get; set; }
     public Presence             Presence            { get; set; }
+    public Lifecycle            Lifecycle           { get; set; }
     public AnimationSystem      Animation           { get; set; }
 
 
@@ -61,8 +60,8 @@ public class Hero : Player, IHero
     public bool Blocking                            => State.Blocking;
 
     public bool CanMove                             => State.CanMove;
-    public bool CanAttack                           => State.CanAttack;
     public bool CanRotate                           => State.CanRotate; 
+    public bool CanAttack                           => State.CanAttack;
 
     public Direction Aim                            => State.Aim;
     public Direction Facing                         => State.Facing;
@@ -94,11 +93,28 @@ public class Hero : Player, IHero
         Weapons     = new(this);
         Movement    = new(this);
         Effects     = new(this);
-        Animation   = new(this);
         Presence    = new(this);
         Lifecycle   = new(this);
+        Animation   = new(this);
 
         State       = new(this);
     }
 }
 
+public class HeroCorpse : Actor, IDefined, ICorpse
+{
+    public Presence             Presence            { get; set; }
+    public Corpse               Corpse              { get; set; }
+    public AnimationSystem      Animation           { get; set; }
+
+    public Corpse.State Condition                   => Corpse.Condition;
+
+    public void Initialize(ActorDefinition definition)
+    {
+        Definition  = definition;
+
+        Presence    = new(this);
+        Corpse      = new(this);
+        Animation   = new(this);
+    }
+}

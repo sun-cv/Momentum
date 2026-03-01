@@ -2,9 +2,10 @@ using UnityEngine;
 
 
 [Factory(nameof(Dummy))]
-public static class DummyFactory
+public class DummyFactory : ICorpseFactory
 {
-    public static Actor Create(Vector3 position)
+
+    public Actor Spawn(Vector3 position)
     {
         var definition  = new DummyDefinition();
         var prefab      = Assets.Get(definition.Name);
@@ -18,15 +19,17 @@ public static class DummyFactory
         return dummy;
     }
     
-
-    public static Dummy Create(GameObject view)
+    public Actor SpawnCorpse(Actor owner, Vector3 position)
     {
-        Dummy dummy  = new();
-        dummy.Bridge = new(dummy, view);
+        var definition  = new DummyDefinition();
+        var prefab      = Assets.Get(definition.Lifecycle.Corpse.Name);
+        var view        = Object.Instantiate(prefab, position, Quaternion.identity);
 
-        dummy.Initialize(new DummyDefinition());
+        Dummy dummy     = new();
+        dummy.Bridge    = new(dummy, view);
+
+        dummy.Initialize(definition);
+
         return dummy;
     }
-
-
 }

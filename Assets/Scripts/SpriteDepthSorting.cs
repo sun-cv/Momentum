@@ -38,9 +38,9 @@ public class SpriteLayeringSystem : Service, IServiceStep, IBind
 
         trackedSprites.Clear();
         
-        foreach (var bridge in Actors.GetInterface<IDepthSorted>())
+        foreach (var actor in Actors.GetInterface<IDepthSorted>())
         {
-            Register(bridge);
+            Register(actor.Bridge);
         }
     }
 
@@ -133,7 +133,7 @@ public class SpriteLayeringSystem : Service, IServiceStep, IBind
         // NO OP;
     }
 
-    public UpdatePriority Priority => new(UpdatePhase.Render, 100);
+    public UpdatePriority Priority => ServiceUpdatePriority.SpriteLayering;
 }
 
 
@@ -170,9 +170,9 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 
         trackedSprites.Clear();
         
-        foreach (var bridge in Actors.GetInterface<IDepthColliding>())
+        foreach (var actor in Actors.GetInterface<IDepthColliding>())
         {
-            Register(bridge);
+            Register(actor.Bridge);
         }
     }
 
@@ -227,7 +227,7 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
         // NO OP;
     }
 
-    public UpdatePriority Priority => new(UpdatePhase.Physics, 99);
+    public UpdatePriority Priority => ServiceUpdatePriority.SpriteDepthSorting;
 }
 
 

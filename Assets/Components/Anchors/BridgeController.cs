@@ -17,7 +17,22 @@ public class BridgeController : Controller
 
         Bridge = bridge;
 
-        Actors.Register(Bridge);
+        Actors.Register(Bridge.Owner);
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        Bridge.Owner.Emit.Local(Request.Create, new CollisionEvent(CollisionPhase.Enter, collision));
+    }
+    
+    public void OnCollisionStay2D (Collision2D collision)
+    {
+        Bridge.Owner.Emit.Local(Request.Create, new CollisionEvent(CollisionPhase.Stay,  collision));
+    }
+
+    public void OnCollisionExit2D (Collision2D collision)
+    {
+        Bridge.Owner.Emit.Local(Request.Create, new CollisionEvent(CollisionPhase.Exit,  collision));
     }
 
     public void OnDestroy()
@@ -25,7 +40,7 @@ public class BridgeController : Controller
         if (Bridge == null) 
             return;
 
-        Actors.Deregister(Bridge);
+        Actors.Deregister(Bridge.Owner);
 
         Bridge = null;
     }

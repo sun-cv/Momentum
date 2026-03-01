@@ -34,8 +34,9 @@ public class MovementEngine : Service, IServiceTick
 
     Vector2 momentum            = Vector2.zero;
     Vector2 velocity            = Vector2.zero;
+    Vector2 positionBeforeMove  = Vector2.zero;
 
-    List<MovementDirective> directives = new();
+    readonly List<MovementDirective> directives = new();
 
     // ===============================================================================
 
@@ -55,7 +56,9 @@ public class MovementEngine : Service, IServiceTick
 
         owner.Emit.Link.Local<Message<Request, MovementEvent>>          (HandleMovementDirective);
         owner.Emit.Link.Local<Message<Request, ClearMovementScopeEvent>>(HandleMovementClear);
+        owner.Emit.Link.Local<Message<Request, CollisionImpactEvent>>   (HandleCollisionImpact);
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
+
 
         SetSpeed();
         SetMass();
@@ -253,6 +256,17 @@ public class MovementEngine : Service, IServiceTick
         }
     }
 
+    void HandleCollisionImpact(Message<Request, CollisionImpactEvent> message)
+    {
+        var normal        = message.Payload.Normal;
+        float penetration = Vector2.Dot(velocity, -normal);
+    
+        if (penetration > 0)
+        {
+            velocity += normal * penetration;
+        }
+    }
+
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
         switch(message.Payload.State)
@@ -393,7 +407,7 @@ public static class MovementControllerFactory
     {
         return (definition.MovementForce, definition.DynamicSource, agent)switch
         {
-            (MovementForce.Kinematic, DynamicSource.Collision, IMovableActor movable) =>
+            (MovementForce.Dynamic, DynamicSource.Collision, IMovableActor movable) =>
                 new DynamicForceController(definition.Force, definition.Mass),
             _ => null
         };

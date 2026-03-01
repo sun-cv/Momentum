@@ -95,8 +95,14 @@ public class RespawnBehavior : Definition
 
 public class CorpseBehavior : Definition
 {
-    public bool Persists                                { get; init; } = false;
-    public float PersistDuration                        { get; init; } = -1;
+    public bool Enabled                                 { get; init; }
+    public float FreshDuration                          { get; init; }
+    public float DecayDuration                          { get; init; }
+    public float ConsumeDuration                        { get; init; }
+    public float RemainsDuration                        { get; init; }
+    public float PersistDuration                        { get; init; }
+
+    public bool AllowMultiConsume                       { get; init; }
 }
 
 

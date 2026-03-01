@@ -1,6 +1,6 @@
 public class HeroBootstrap : Controller
 {
-    private Hero hero;
+    private Actor hero;
 
     public void Start()
     {
@@ -10,7 +10,7 @@ public class HeroBootstrap : Controller
         }
         else
         {
-            hero = HeroFactory.Create(gameObject);
+            hero = Factories.Get<HeroFactory>().Spawn(gameObject.transform.position);
         }
     }
 }

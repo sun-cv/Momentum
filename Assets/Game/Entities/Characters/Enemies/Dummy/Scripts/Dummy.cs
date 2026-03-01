@@ -3,10 +3,9 @@
 
 public class Dummy : Agent, IDummy
 {
-    public ActorDefinition      Definition          { get; private set; }
-    public AnimationSystem      Animation           { get; private set; }
     public Presence             Presence            { get; private set; }
     public Lifecycle            Lifecycle           { get; private set; }
+    public AnimationSystem      Animation           { get; private set; }
 
     //========================================
     //  Properties
@@ -28,8 +27,7 @@ public class Dummy : Agent, IDummy
 
     public bool Disabled                            { get; set; } = false;
     public bool Stunned                             { get; set; } = false;
-
-
+    
     public void Initialize(ActorDefinition definition)
     {
         Definition  = definition;
@@ -44,3 +42,21 @@ public class Dummy : Agent, IDummy
 }
 
 
+public class DummyCorpse : Actor, IDefined, ICorpse
+{
+    public Presence             Presence            { get; set; }
+    public Corpse               Corpse              { get; set; }
+    public AnimationSystem      Animation           { get; set; }
+
+    public Corpse.State Condition                   => Corpse.Condition;
+
+    public void Initialize(ActorDefinition definition)
+    {
+        Definition = definition;
+
+        Presence    = new(this);
+        Corpse      = new(this);
+        Animation   = new(this);
+
+    }
+}

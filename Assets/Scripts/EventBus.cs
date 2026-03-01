@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -194,7 +195,7 @@ public class Emit : IDisposable
 
     public void Local<TAction, TPayload>(TAction action, TPayload payload) 
     {
-        Bus.Raise(new Message<TAction, TPayload>(Guid.NewGuid(), action, payload));
+        Bus.Raise(new Message<TAction, TPayload>(action, payload));
     }
 
     public void Local<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
@@ -214,7 +215,7 @@ public class Emit : IDisposable
 
     public static void Global<TAction, TPayload>(TAction action, TPayload payload) 
     {
-        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(Guid.NewGuid(), action, payload));
+        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(action, payload));
     }
 
     public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
@@ -318,7 +319,7 @@ public class GlobalEventHandler<TResponse> : IDisposable where TResponse : ISyst
 
     public void Send<TAction, TPayload>(TAction action, TPayload payload)
     {
-        var message = new Message<TAction, TPayload>(Guid.NewGuid(), action, payload);
+        var message = new Message<TAction, TPayload>(action, payload);
         pendingIds.Add(message.Id);
         EventBus<Message<TAction, TPayload>>.Raise(message);
     }
@@ -412,11 +413,19 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISyst
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+
 public readonly struct Message<TAction, TPayload> : ISystemEvent
 {
     public Guid Id              { get; }
     public TPayload Payload     { get; }
     public TAction Action       { get; }
+
+    public Message(TAction action, TPayload payload)
+    {
+        Id          = Guid.NewGuid();
+        Action      = action;
+        Payload     = payload;
+    }
 
     public Message(Guid id, TAction action, TPayload payload)
     {

@@ -194,6 +194,7 @@ public abstract class Timer : IDisposable
 
         initialTime = newTime;
         Reset();
+        Start();
     }
     
     public virtual void Restart(int newFrame)
@@ -203,6 +204,7 @@ public abstract class Timer : IDisposable
 
         initialFrame = newFrame;
         Reset();
+        Start();
     }
 
     // ===============================================================================

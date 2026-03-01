@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,6 +20,8 @@ public class EquipmentManager : Service
         slots[EquipmentSlotType.MainHand] = new() { SlotType = EquipmentSlotType.MainHand   };
         slots[EquipmentSlotType.OffHand ] = new() { SlotType = EquipmentSlotType.OffHand    };
         slots[EquipmentSlotType.Dash    ] = new() { SlotType = EquipmentSlotType.Dash       };
+
+        owner.Emit.Link.Local<Message<Request, EquipEvent>>(HandleEquipEvent);
     }
 
     // ===============================================================================
@@ -90,6 +91,13 @@ public class EquipmentManager : Service
         
         DebugLog();
         return item;
+    }
+
+    // ===============================================================================
+
+    void HandleEquipEvent(Message<Request, EquipEvent> message)
+    {
+        EquipOrSwap(message.Payload.Equipment);
     }
 
     // ===============================================================================
@@ -170,6 +178,19 @@ public class EquipmentSlot
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+public readonly struct EquipEvent
+{
+    public readonly Actor Owner              { get; init; }
+    public readonly Equipment Equipment      { get; init; }
+
+    public EquipEvent(Actor owner, Equipment equipment)
+    {
+        Owner       = owner;
+        Equipment   = equipment;
+    }
+}
+
+
 public readonly struct EquipmentChangeEvent
 {
     public readonly Actor Owner              { get; init; }
@@ -183,4 +204,3 @@ public readonly struct EquipmentChangeEvent
         Slot        = slot;
     }
 }
-

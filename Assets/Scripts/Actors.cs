@@ -10,32 +10,32 @@ public static class Actors
     //  Public API
     // ===============================================================================
 
-    public static void Register(Bridge bridge)
+    public static void Register(Actor actor)
     {
-        Registry.Register(bridge);
+        Registry.Register(actor);
     }
 
-    public static void Deregister(Bridge bridge)
+    public static void Deregister(Actor actor)
     {
-        Registry.Deregister(bridge);
+        Registry.Deregister(actor);
     }
 
-    public static Bridge GetID(Guid guid)
+    public static Actor GetID(Guid guid)
     {
         return Registry.GetID(guid);
     }
 
-    public static IEnumerable<Bridge> GetActors()
+    public static IEnumerable<Actor> GetActors()
     {
         return Registry.Actors;
     }
 
-    public static IEnumerable<Bridge> GetInterface<T>() where T : class
+    public static IEnumerable<Actor> GetInterface<T>() where T : class
     {
         if (Registry.Interfaces.TryGetValue(typeof(T), out var list))
             return list;
 
-        return Enumerable.Empty<Bridge>();
+        return Enumerable.Empty<Actor>();
     }
 
     // ===============================================================================
@@ -44,10 +44,10 @@ public static class Actors
 
     private static class Registry
     {
-        static readonly List<Bridge> actors                         = new();
-        static readonly Dictionary<Type, List<Bridge>> interfaces   = new();
+        static readonly List<Actor> actors                         = new();
+        static readonly Dictionary<Type, List<Actor>> interfaces   = new();
         
-        static readonly HashSet<Type> indexedInterfaces             = new()
+        static readonly HashSet<Type> indexedInterfaces            = new()
         {
             typeof(IDepthColliding),
             typeof(IDepthSorted),
@@ -57,42 +57,42 @@ public static class Actors
         //  Queries
         // ===================================
 
-        public static Bridge GetID(Guid guid)
+        public static Actor GetID(Guid guid)
         {
-            return actors.FirstOrDefault(bridge => bridge.Owner.RuntimeID == guid);
+            return actors.FirstOrDefault(Actor => Actor.RuntimeID == guid);
         }
 
-        public static List<Bridge> Actors => actors;
-        public static Dictionary<Type, List<Bridge>> Interfaces => interfaces;
+        public static List<Actor> Actors => actors;
+        public static Dictionary<Type, List<Actor>> Interfaces => interfaces;
 
         // ===================================
         // Mutations
         // ===================================
 
-        public static void Register(Bridge bridge)
+        public static void Register(Actor actor)
         {
-            actors.Add(bridge);
+            actors.Add(actor);
 
             foreach (var interfaceType in indexedInterfaces)
             {
-                if (interfaceType.IsAssignableFrom(bridge.Owner.GetType()))
+                if (interfaceType.IsAssignableFrom(actor.GetType()))
                 {
                     if (!interfaces.ContainsKey(interfaceType))
                     {
                         interfaces[interfaceType] = new();
                     }
-                    interfaces[interfaceType].Add(bridge);
+                    interfaces[interfaceType].Add(actor);
                 }
             }
         }
 
-        public static void Deregister(Bridge bridge)
+        public static void Deregister(Actor actor)
         {
-            actors.Remove(bridge);
+            actors.Remove(actor);
 
             foreach (var list in interfaces.Values)
             {
-                list.Remove(bridge);
+                list.Remove(actor);
             }
         }
 

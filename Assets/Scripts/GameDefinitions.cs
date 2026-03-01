@@ -14,6 +14,23 @@ using UnityEngine;
 public interface IInitialize                    { public void Initialize(); }
 public interface IBind                          { public void Bind();       } 
 
+public interface IStateHandler<TController>
+{    
+    void Enter  (TController controller);
+    void Update (TController controller);
+    void Exit   (TController controller);
+}
+
+public abstract class StateHandler<TController, TState> : IStateHandler<TController>
+{
+    public Action<TState> Transition;
+
+    public abstract void Enter  (TController controller);
+    public abstract void Update (TController controller);
+    public abstract void Exit   (TController controller);
+}
+
+
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬1▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -30,17 +47,19 @@ public class Runtime                            { public Guid RuntimeID         
 public class Instance           : Runtime       {}
 
 public class Zone               : Runtime       { public string Name                    { get; set;  }
-                                                  public Anchor Anchor                  { get; set;  }}
+                                                  public Anchor Anchor                  { get; set;  }
+                                                  public Collider2D Area                { get; set;  }}
 public class Portal             : Zone          { public string Location                { get; set;  }
                                                   public string Region                  { get; set;  }}
-public class SpawnPoint         : Zone          {}
+public class SpawnPoint         : Zone          { public Spawner Spawner                { get; set;  }}
 public class AudioPoint         : Zone          {}
 public class CameraPoint        : Zone          {}
 
 public class Entity             : Runtime       {}
 public class Actor              : Entity        { 
                                                   public Emit   Emit                    { get; set;  }
-                                                  public Bridge Bridge                  { get; set;  }}
+                                                  public Bridge Bridge                  { get; set;  }
+                                                  public ActorDefinition Definition     { get; set;  }}
 
 public class Agent              : Actor         {}
 
@@ -147,6 +166,7 @@ public interface IAimable
 public interface IDynamic
 {
     Vector2 Velocity                        { get; }
+    Vector2 Momentum                        { get; }
     float Mass                              { get; }
 }
 
@@ -164,8 +184,14 @@ public interface ILiving
     bool Dead                               { get; }
 }
 
+public interface ICorpse : IDefined
+{
+    Corpse.State Condition                  { get; }
+}
+
 public interface IIdle
 {
+    
     TimePredicate IsIdle                    { get; }
 }
 
@@ -181,6 +207,7 @@ public interface IBoss          : IEnemy {}
 
 
 public interface IDummy         : IAgent, IDamageable, IAfflictable {}
+public interface IMovableDummy  : IAgent, IMovableActor, IDynamic, IDamageable, IAfflictable {}
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -193,6 +220,8 @@ public enum Request
     Destroy,
     Start,
     Stop,
+    Enable,
+    Disable,
     Set,
     Get,
     Lock,
@@ -202,10 +231,10 @@ public enum Request
     Cancel,
     Consume,
     Clear,
-    Enable,
-    Disable,
     Trigger,
     Transition,
+    Dispose,
+    Equip,
 }
 
 public enum Response

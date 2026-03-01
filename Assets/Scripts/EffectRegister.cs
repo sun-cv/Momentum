@@ -62,9 +62,9 @@ public class EffectRegister : Service
     {
         var instance = new EffectInstance(runtime, effect);
 
-        instance.OnApply   += () => owner.Emit.Local(Guid.NewGuid(), Publish.Activated,   new EffectInstanceEvent(instance));
-        instance.OnClear   += () => owner.Emit.Local(Guid.NewGuid(), Publish.Deactivated, new EffectInstanceEvent(instance));
-        instance.OnCancel  += () => owner.Emit.Local(Guid.NewGuid(), Publish.Canceled,    new EffectInstanceEvent(instance));
+        instance.OnApply   += () => owner.Emit.Local(Publish.Activated,   new EffectInstanceEvent(instance));
+        instance.OnClear   += () => owner.Emit.Local(Publish.Deactivated, new EffectInstanceEvent(instance));
+        instance.OnCancel  += () => owner.Emit.Local(Publish.Canceled,    new EffectInstanceEvent(instance));
         
         RegisterTriggerLock(instance);
         RegisterDebugLog(instance);

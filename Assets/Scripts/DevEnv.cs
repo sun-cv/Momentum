@@ -1,10 +1,10 @@
-using System;
+using UnityEngine;
 
 
 
 public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 {
-    Hero hero;
+    Actor hero;
 
     // ===============================================================================
     
@@ -12,11 +12,13 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
     {
         Services.Lane.Register(this);
 
-        hero = HeroFactory.Create();
+        var factory = Factories.Get<HeroFactory>();
 
-        hero.Equipment.Equip(new Sword());
-        hero.Equipment.Equip(new Shield());
-        hero.Equipment.Equip(new Dash());
+        hero = factory.Spawn(Vector3.zero);
+
+        hero.Emit.Local(Request.Equip, new EquipEvent(hero, new Sword()) );
+        hero.Emit.Local(Request.Equip, new EquipEvent(hero, new Shield()));
+        hero.Emit.Local(Request.Equip, new EquipEvent(hero, new Dash())  );
 
         Services.Get<CameraRig>().SetCameraTarget(new ActorCameraTarget(hero));
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
@@ -60,9 +62,9 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 
     public void DebugLog()
     {
-        Logging.For(LogSystem.Hero).Debug("Health",() => hero.Health);
-        Logging.For(LogSystem.Hero).Debug("Parry", () => hero.Parrying);
-        Logging.For(LogSystem.Hero).Debug("block", () => hero.Blocking);
+        Logging.For(LogSystem.Hero).Debug("Health",() => ((Hero)hero).Health);
+        Logging.For(LogSystem.Hero).Debug("Parry", () => ((Hero)hero).Parrying);
+        Logging.For(LogSystem.Hero).Debug("block", () => ((Hero)hero).Blocking);
     }
 
     public override void Dispose()

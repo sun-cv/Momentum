@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
 
 
 
 public class SpawnController : Controller
 {
-    [SerializeField] private string Definition;
+    [SerializeField] private string definition;
 
         // -----------------------------------
 
@@ -14,20 +15,43 @@ public class SpawnController : Controller
 
     public void Start()
     {
-        Anchor =  new SpawnAnchor(new SpawnPoint() { Name  = Definition }, gameObject);
+        Anchor = new SpawnAnchor(definition, gameObject);
 
-        Services.Get<SpawnerService>().Register(Anchor.Owner);
+        Emit.Global<Message<Request, SpawnerEvent>>(new(Request.Create, new SpawnerEvent(Anchor.Owner)));
     }
 
-        // REWORK REQUIRED - FIX DEREGISTER
     public void OnDestroy()
     {
         if (Anchor == null) 
             return;
 
-        // Services.Get<SpawnerService>().Deregister(Anchor.Owner.Spawner);
+        Emit.Global<Message<Request, SpawnerEvent>>(new(Request.Destroy, new SpawnerEvent(Anchor.Owner)));
 
         Anchor = null;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!SpawnerService.ShowDebugGizmos) return;
+        
+        Gizmos.color = Settings.Debug.GIZMO_COLOR_SPAWNER;
+        DrawColliders();
+    }
+    
+    private void OnDrawGizmosSelected()
+    {
+        if (!SpawnerService.ShowDebugGizmos) return;
+
+        Gizmos.color = Settings.Debug.GIZMO_COLOR_SPAWNER_SELECTED;        
+        DrawColliders();
+    }
+    
+    void DrawColliders()
+    {
+        var colliders = GetComponentsInChildren<Collider2D>();
+
+        foreach (var collider in colliders)
+            GizmoTools.DrawCollider(collider, true);
     }
 }
 
@@ -41,17 +65,20 @@ public class SpawnAnchor : Anchor
 
         // -----------------------------------
 
-    public Collider2D Zone          { get; init; }
+    public Collider2D Area          { get; init; }
 
     // ===============================================================================
 
-    public SpawnAnchor(SpawnPoint portal, GameObject view)
+    public SpawnAnchor(string definition, GameObject view)
     {
-        Owner           = portal;
         View            = view;
-        Zone            = view.GetComponent<Collider2D>();
+        Area            = view.GetComponent<Collider2D>();
 
+        Owner           = new();
+
+        Owner.Name      = definition;
         Owner.Anchor    = this;
+        Owner.Area      = Area;
     }
 }
 

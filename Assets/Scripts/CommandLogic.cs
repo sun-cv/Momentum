@@ -128,7 +128,7 @@ public class CommandSystem : Service
         //  Emitters
         // ===================================
 
-    void Broadcast() => owner.Emit.Local(Guid.NewGuid(), Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+    void Broadcast() => owner.Emit.Local(Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
 
     // ===============================================================================
     //  Helpers

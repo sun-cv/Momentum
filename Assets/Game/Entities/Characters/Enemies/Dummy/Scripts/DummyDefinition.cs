@@ -31,23 +31,24 @@ public class DummyDefinition : ActorDefinition
             },
             Corpse                  = new()
             {
-                Persists            = true,
+                Name                = "DummyCorpse",
+                Enabled             = true,
                 PersistDuration     = 5,
             },
         };
 
-        Animations              = new()
-        {
-            Spawn               = new()
-            {
-                Enabled         = true,
-                Default         = "Spawn"
-            },
+        Animations                  = new()
+        {   
+            Spawn                   = new()
+            {   
+                Enabled             = true,
+                Default             = "Spawn"
+            },  
 
-            Death               = new()
-            {
-                Enabled         = true,
-                Default         = "Death"
+            Death                   = new()
+            {   
+                Enabled             = true,
+                Default             = "Dying"
             },
         };
     }

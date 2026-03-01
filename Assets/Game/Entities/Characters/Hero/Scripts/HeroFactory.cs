@@ -1,33 +1,39 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 
 
 
-
-public static class HeroFactory
+[Factory(nameof(Hero))]
+public class HeroFactory : IRespawnFactory, ICorpseFactory
 {
-    public static Hero Create(HeroDefinition definition = null)
+    public Actor Spawn(Vector3 position)
     {
-        definition ??= new HeroDefinition();
+        var definition  = new HeroDefinition();
 
         var prefab      = Assets.Get(definition.Name);
-        var view        = Object.Instantiate(prefab);
+        var view        = Object.Instantiate(prefab, position, quaternion.identity);
 
-        var hero    = new Hero();
-        hero.Bridge = new(hero, view);
+        var hero        = new Hero();
+
+        hero.Bridge     = new(hero, view);
         hero.Initialize(definition);
         
         return hero;
     }
-    
-    public static Hero Create(GameObject view, HeroDefinition definition = null)
+
+    public Actor SpawnCorpse(Actor owner, Vector3 position)
     {
-        definition ??= new HeroDefinition();
+        var definition  = new HeroDefinition();
+        var prefab      = Assets.Get(definition.Lifecycle.Corpse.Name);
+        var view        = Object.Instantiate(prefab, position, Quaternion.identity);
 
-        var hero    = new Hero();
-        hero.Bridge = new Bridge(hero, view);
+        var hero        = new Hero();
 
+        hero.Bridge     = new(hero, view);
         hero.Initialize(definition);
+        
         return hero;
     }
+
 }
