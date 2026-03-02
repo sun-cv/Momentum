@@ -19,7 +19,7 @@ public class ActorStats : Stats
     {
         if (actor is not IDefined instance)
         {
-        Log.Error($"Cannot initialize ActorStats for {actor.GetType().Name}. Actor does not implement IDefined interface");
+            Log.Error($"Cannot initialize ActorStats for {actor.GetType().Name}. Actor does not implement IDefined interface");
             return;
         }
 
@@ -60,7 +60,6 @@ public class ActorStats : Stats
     public float SpeedMultiplier    => this[nameof(SpeedMultiplier)];
     public float Attack             => this[nameof(Attack)];
     public float AttackMultiplier   => this[nameof(AttackMultiplier)];
-    public float Mass               => this[nameof(Mass)];
 
     // ===============================================================================
     //  Events

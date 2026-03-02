@@ -2,8 +2,6 @@ using System.Collections.Generic;
 
 
 
-
-
 public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 {
     readonly Queue<TriggerEvent> pendingTriggers = new();

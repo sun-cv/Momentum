@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 
 
@@ -175,6 +174,7 @@ public class EventBinding<T> : IEventBinding<T> where T : IEvent
     public void Add(Action<T> onEvent)          => this.onEvent  += onEvent;
     public void Remove(Action<T> onEvent)       => this.onEvent  -= onEvent;
 }
+
 
 public class Emit : IDisposable
 {

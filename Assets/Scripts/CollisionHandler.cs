@@ -1,99 +1,139 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 
 
-public class CollisionHandler
+public class CollisionHandler : RegisteredService, IServiceTick
 {
-    readonly Actor owner;
+        // -----------------------------------
+
+    List<ProcessedCollision> pendingCollisions    = new();
 
         // -----------------------------------
 
-    public CollisionHandler(Actor owner)
+    public CollisionHandler()
     {
-        this.owner = owner;
-
-        owner.Emit.Link.Local<Message<Request, CollisionEvent>>(HandleCollisionEvent);
+        Link.Global<Message<Request, CollisionEvent>>(HandleCollisionEvent);
     }
 
     // ===============================================================================
 
-    public void OnEnter(Collision2D collision)
+    public void Tick()
     {
-        var normal    = collision.GetContact(0).normal;
-        var momentum  = GetMomentum();
-        var impact    = CalculateImpactForce(momentum, normal);
-
-        DispatchMovementImpact(normal, impact);
-        DispatchCollisionImpact(collision, normal, impact, CollisionPhase.Enter);
+        ProcessCollisions();
     }
 
-    public void OnStay(Collision2D collision)
-    {
-        var normal          = collision.GetContact(0).normal;
-        var momentum        = GetMomentum();
-        float penetration   = Vector2.Dot(momentum.normalized, -normal);
+    // ===============================================================================
 
-        if (penetration < 0.8f) 
-            return;
-
-        var impact = CalculateImpactForce(momentum, normal);
-        DispatchMovementImpact(normal, impact);
-    }
-    
-    public void OnExit(Collision2D collision)
+    void ProcessCollisions()
     {
-        DispatchCollisionImpact(collision, Vector2.zero, 0f, CollisionPhase.Exit);
+        foreach( var collision in pendingCollisions)
+        {
+            ProcessCollision(collision);
+        }
+
+        pendingCollisions.Clear();
     }
 
-    float CalculateImpactForce(Vector2 momentum, Vector2 normal)
+     void ProcessCollision(ProcessedCollision collision)
     {
-        return Mathf.Max(0, Vector2.Dot(momentum, -normal));
+        switch (collision.Type)
+        {
+            case CollisionType.Actor:
+                Emit.Global(Request.Create, new CollisionPhysicsEvent
+                {
+                    Owner  = collision.Owner,
+                    Other  = collision.Other,
+                    Phase  = collision.Phase,
+                    Normal = collision.Normal,
+                    Impact = collision.Impact
+                });
+                break;
+
+            case CollisionType.Environment:
+            case CollisionType.Prop:
+                Emit.Global(Request.Create, new SurfacePhysicsEvent
+                {
+                    Owner  = collision.Owner,
+                    Phase  = collision.Phase,
+                    Normal = collision.Normal,
+                    Impact = collision.Impact
+                });
+                break;
+        }
     }
 
-    Vector2 GetMomentum()
+    Actor GetActor(Collision2D collision)
+    {
+        return collision.gameObject.GetComponent<BridgeController>().Bridge.Owner;
+    }
+
+    float CalculateImpactForce(Actor owner, Vector2 normal)
     {
         if (owner is IDynamic dynamic)
-            return dynamic.Momentum;
+            return Mathf.Max(0, Vector2.Dot(dynamic.Momentum, -normal));
 
-        return Vector2.zero;
+        return 0f;
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-void DispatchMovementImpact(Vector2 normal, float impact)
-{    
-    if (impact <= 0) 
-        return;
-
-    owner.Emit.Local(Request.Create, new CollisionImpactEvent(normal, impact));
-}
-
-    void DispatchCollisionImpact(Collision2D collision, Vector2 normal, float impact, CollisionPhase phase)
-    {
-        if (impact <= 0 && phase != CollisionPhase.Exit) return;
-
-        owner.Emit.Local(Request.Create, new CollisionPublishEvent(phase, collision, normal, impact));
-    }
-
 
     void HandleCollisionEvent(Message<Request, CollisionEvent> message)
-    {   
-        switch (message.Payload.Phase)
+    {
+        var phase     = message.Payload.Phase;
+        var collision = message.Payload.Collision;
+        var owner     = message.Payload.Owner;
+        var type      = GetType(collision);
+
+        var normal = Vector2.zero;
+        var impact = 0f;
+        Actor other = null;
+
+        if (phase != CollisionPhase.Exit && collision.contactCount > 0)
         {
-            case CollisionPhase.Enter: 
-                OnEnter(message.Payload.Collision);
-                break;
-            case CollisionPhase.Stay: 
-                OnStay(message.Payload.Collision);
-                break;
-            case CollisionPhase.Exit: 
-                OnExit(message.Payload.Collision);
-                break;
-        }        
+            normal = collision.GetContact(0).normal;
+            impact = CalculateImpactForce(owner, normal);
+        }
+
+        if (type == CollisionType.Actor)
+            other = GetActor(collision);
+
+        pendingCollisions.Add(new ProcessedCollision
+        {
+            Owner  = owner,
+            Other  = other,
+            Type   = type,
+            Phase  = phase,
+            Normal = normal,
+            Impact = impact
+        });
     }
 
+
+    CollisionType GetType(Collision2D collision)
+    {
+        int layer = collision.gameObject.layer;
+
+        if (layer == Layers.Player || layer == Layers.Enemy || layer == Layers.NPC)
+            return CollisionType.Actor;
+
+        if (layer == Layers.Prop)
+            return CollisionType.Prop;
+
+        return CollisionType.Environment;
+    }
+
+    // ===============================================================================
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
+    }
+
+    public UpdatePriority Priority => ServiceUpdatePriority.CollisionHandler;
 }
 
 
@@ -104,50 +144,49 @@ void DispatchMovementImpact(Vector2 normal, float impact)
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-public enum CollisionPhase { Enter, Stay, Exit }
+public enum CollisionPhase  
+{ 
+    Enter, 
+    Stay, 
+    Exit    
+}
 
+public enum CollisionType   
+{ 
+    Actor, 
+    Prop, 
+    Environment
+}
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Structs                                                
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public struct ProcessedCollision
+{
+    public Actor          Owner;
+    public Actor          Other;
+    public CollisionType  Type;
+    public CollisionPhase Phase;
+    public Vector2        Normal;
+    public float          Impact;
+}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct CollisionImpactEvent
-{
-    public Vector2 Normal   { get; init; }
-    public float Impact     { get; init; }
-
-    public CollisionImpactEvent(Vector2 normal, float impact)
-    {
-        Normal  = normal;
-        Impact  = impact;
-    }
-}
-
 public readonly struct CollisionEvent
 {
-    public CollisionPhase Phase     { get; init; }
-    public Collision2D Collision    { get; init; }
+    public Actor            Owner       { get; init; }
+    public CollisionPhase   Phase       { get; init; }
+    public Collision2D      Collision   { get; init; }
 
-
-    public CollisionEvent(CollisionPhase phase, Collision2D collision)
+    public CollisionEvent(Actor owner, CollisionPhase phase, Collision2D collision)
     {
+        Owner       = owner;
         Phase       = phase;
         Collision   = collision;
     }
 }
 
-public readonly struct CollisionPublishEvent
-{
-    public CollisionPhase Phase     { get; init; }
-    public Collision2D Collision    { get; init; }
-    public Vector2 Normal           { get; init; }
-    public float Impact             { get; init; }
-
-    public CollisionPublishEvent(CollisionPhase phase, Collision2D collision, Vector2 normal, float impact)
-    {
-        Phase       = phase;
-        Collision   = collision;
-        Normal      = normal;
-        Impact      = impact;
-    }
-}

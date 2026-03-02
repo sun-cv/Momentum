@@ -15,7 +15,15 @@ public class HeroDefinition : ActorDefinition
             MaxMana                 = 100,
             Speed                   = 5,
             Attack                  = 15,
-            Mass                    = 10,
+        };
+
+        Physics                     = new()
+        {
+            Mass                    = 20,
+            BleedRatio              = 0.2f,
+            BleedThreshold          = 50f,
+            PushResistance          = 0f,
+            MomentumThreshold       = 0f,
         };
 
         Presence                    = new()

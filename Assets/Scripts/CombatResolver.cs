@@ -69,28 +69,18 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
     void ResolveDynamicForce(Actor source, Actor target, DamageComponent component)
     {
-        var direction   = CalculateDirection(source, target);
-        var force       = direction * component.ForceMagnitude;
+        var direction = CalculateDirection(source, target);
 
-        ApplyDynamicForce(target, force);
-    }
-
-    void ApplyDynamicForce(Actor target, Vector2 force)
-    {
-        if (target is not IDynamic dynamic)
-            return;
-
-        var definition = new MovementDefinition()
+        Emit.Global(Request.Create, new ForcePhysicsEvent
         {
-            MovementForce   = MovementForce.Dynamic,
-            DynamicSource   = DynamicSource.Collision,
-
-            Force           = force,
-            Mass            = dynamic.Mass,
-        };
-
-        target.Emit.Local(Request.Create, new MovementEvent(target, definition));
+            Owner  = source,
+            Target = target,
+            Phase  = CollisionPhase.Enter,
+            Normal = -direction,
+            Impact = component.ForceMagnitude
+        });
     }
+
 
     void ApplyDamage(Actor target, float damage)
     {

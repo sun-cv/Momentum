@@ -5,7 +5,6 @@ using UnityEngine;
 public class MovableDummy : Agent, IMovableDummy
 {
     public MovementEngine       Movement            { get; private set; }
-    public CollisionHandler     Collision           { get; private set; }
     public Presence             Presence            { get; private set; }
     public Lifecycle            Lifecycle           { get; private set; }
     public AnimationSystem      Animation           { get; private set; }
@@ -20,21 +19,24 @@ public class MovableDummy : Agent, IMovableDummy
     public float Speed                              { get; set; }
     public float SpeedMultiplier                    { get; set; }
 
-    public float Mass                               { get; set; } = 10;
+    public float Mass                               { get; set; } = 100;
 
     //========================================
     //  State
     //========================================
 
-    public bool Inactive                            { get; set; } = false;
-    public bool Invulnerable                        { get; set; } = false;
-    public bool Impervious                          { get; set; } = false;
+    public bool Inactive                            { get; set; }
+    public bool Invulnerable                        { get; set; }
+    public bool Impervious                          { get; set; }
+    public bool ImmuneToForce                       { get; set; }
 
     public bool Alive                               => Lifecycle.IsAlive;
     public bool Dead                                => Lifecycle.IsDead;
 
-    public bool Disabled                            { get; set; } = false;
-    public bool Stunned                             { get; set; } = false;
+    public bool Disabled                            { get; set; }
+    public bool Stunned                             { get; set; }
+
+    public bool Constrained                         { get; set; }
 
     public bool CanMove                             { get; set; }
     public bool CanRotate                           { get; set; }
@@ -49,6 +51,9 @@ public class MovableDummy : Agent, IMovableDummy
     public Vector2 Velocity                         => Movement.Velocity;
     public Vector2 Momentum                         => Movement.Momentum;
     
+    public Vector2 Normal                           { get; set; }
+    public Vector2 Force                            { get; set; }
+
     public bool IsMoving                            { get; set; }
     public TimePredicate IsIdle                     { get; set; }
 
@@ -62,7 +67,6 @@ public class MovableDummy : Agent, IMovableDummy
         Emit        = new();
 
         Movement    = new(this);
-        Collision   = new(this);
         Animation   = new(this);
         Presence    = new(this);
         Lifecycle   = new(this);

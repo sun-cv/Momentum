@@ -35,8 +35,7 @@ public class Hero : Player, IHero
     public float Attack                             { get => Stats.Attack;                  }
     public float AttackMultiplier                   { get => Stats.AttackMultiplier;        }
 
-    public float Mass                               { get => Stats.Mass;                    }
-
+    public float Mass                               { get => Definition.Physics.Mass;       }
 
     // ===============================================================================
     //  State
@@ -49,12 +48,18 @@ public class Hero : Player, IHero
     public bool Impervious                          { get => State.Impervious;    
                                                       set => State.Impervious       = value;}
 
+    public bool ImmuneToForce                       => State.ImmuneToForce;
+
+
     public bool Alive                               => State.Alive;
     public bool Dead                                => State.Dead;
     
     public bool Disabled                            => State.Disabled;
     public bool Stunned                             { get => State.Stunned;         
                                                       set => State.Stunned          = value;}
+
+    public bool Constrained                         { get => State.Constrained;    
+                                                      set => State.Constrained      = value;}
 
     public bool Parrying                            => State.Parrying;
     public bool Blocking                            => State.Blocking;
@@ -75,6 +80,11 @@ public class Hero : Player, IHero
     public Vector2 Velocity                         => State.Velocity;
     public Vector2 Momentum                         => State.Momentum;
     
+    public Vector2 Normal                           { get => State.Normal;    
+                                                      set => State.Normal           = value;}
+    public Vector2 Force                            { get => State.Force;    
+                                                      set => State.Force            = value;}
+
     public bool IsMoving                            => State.IsMoving;
     public TimePredicate IsIdle                     => State.IsIdle;
 

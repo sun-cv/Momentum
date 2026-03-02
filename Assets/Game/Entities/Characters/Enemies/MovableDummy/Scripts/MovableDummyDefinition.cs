@@ -15,9 +15,17 @@ public class MovableDummyDefinition : ActorDefinition
             MaxMana                 = 100,
             Speed                   = 5,
             Attack                  = 0,
-            Mass                    = 10,
         };
 
+        Physics                     = new()
+        {
+            Mass                    = 5f,
+            BleedThreshold          = 0f,
+            BleedRatio              = 0f,
+            PushResistance          = 0f,
+            MomentumThreshold       = 1f,
+        };
+        
         Presence                    = new()
         {
             CanBeSetAbsent          = false,

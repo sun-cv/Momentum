@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -10,6 +11,7 @@ using System.Linq;
 public abstract class ActorDefinition : Definition
 {
     public StatsDefinition Stats                        { get; init; }
+    public PhysicsDefinition Physics                    { get; init; }
     public PresenceDefinition Presence                  { get; init; }
     public LifecycleDefinition Lifecycle                { get; init; }
     public AnimationDefinition Animations               { get; init; }
@@ -32,7 +34,6 @@ public class StatsDefinition : Definition
     public float Attack                                 { get; init; }
 
     public float Speed                                  { get; init; }    
-    public float Mass                                   { get; init; }
 }
 
 
@@ -126,3 +127,27 @@ public class AnimationSet : Definition
     public Dictionary<string, string>   ByDamage        { get; init; }
     public Dictionary<string, string>   ByLocation      { get; init; }
 }
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Physics
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
+public class PhysicsDefinition
+{
+    /// <summary> Mass of the entity. Affects momentum transfer ratios and solver-based collision response. </summary>
+    public float Mass                   { get; init; }
+
+    /// <summary> Minimum impact magnitude required before bleed force is applied back onto this entity. Prevents bounce on casual contact. </summary>
+    public float BleedThreshold         { get; init; }
+
+    /// <summary> Fraction of non-transferred force that bleeds back onto this entity on impact. 0 = no bleed, 1 = full bleed. </summary>
+    public float BleedRatio             { get; init; }
+
+    /// <summary> Reduces incoming transfer force from Actor contacts. 0 = full force received, 1 = immovable. </summary>
+    public float PushResistance         { get; init; }
+
+    /// <summary> Minimum impact magnitude required before this entity responds to Actor contact forces. </summary>
+    public float MomentumThreshold      { get; init; }
+}
+

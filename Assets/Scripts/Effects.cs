@@ -172,6 +172,12 @@ public class DashDisable : Effect, ICancelable, IDurationFrames, IDisableRules, 
 
 }
 
+public class DashForceImmunity : Effect, IDurationFrames, IImmuneToForce
+{
+    public int DurationFrames                   { get; init; }
+    public bool ImmuneToForce                   { get; init; }
+}
+
 public class WeaponMobility : Effect, ICancelable, IType, ITrigger, IDurationFrames, IModifiable
 {
     public bool Cancelable                      { get; init; }

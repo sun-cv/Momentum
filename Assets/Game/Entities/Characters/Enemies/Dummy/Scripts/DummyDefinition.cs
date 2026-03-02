@@ -15,7 +15,12 @@ public class DummyDefinition : ActorDefinition
             MaxMana                 = 100,
             Speed                   = 0,
             Attack                  = 0,
+        };
+
+        Physics                     = new()
+        {
             Mass                    = 1000,
+
         };
 
         Presence                    = new()

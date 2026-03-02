@@ -51,6 +51,7 @@ public static class Actors
         {
             typeof(IDepthColliding),
             typeof(IDepthSorted),
+            typeof(IPhysicsBody),
         };
 
         // ===================================

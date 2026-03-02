@@ -43,7 +43,7 @@ public class SwordStrike : DamagingWeapon
         AddControlOnFire            = new() { "SwordCleave"};
         LockAimDuringPlayback       = true;
         AppliesDynamicForce         = true;
-        ForceMagnitude              = 250f;
+        ForceMagnitude              = 2500f;
         Effects = new()
         {
             new SwordSwingDisable()

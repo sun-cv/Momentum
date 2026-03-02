@@ -22,17 +22,17 @@ public class BridgeController : Controller
 
     public void OnCollisionEnter2D(Collision2D collision)
     {
-        Bridge.Owner.Emit.Local(Request.Create, new CollisionEvent(CollisionPhase.Enter, collision));
+        Emit.Global(Request.Create, new CollisionEvent(Bridge.Owner, CollisionPhase.Enter, collision));
     }
-    
+
     public void OnCollisionStay2D (Collision2D collision)
     {
-        Bridge.Owner.Emit.Local(Request.Create, new CollisionEvent(CollisionPhase.Stay,  collision));
+        Emit.Global(Request.Create, new CollisionEvent(Bridge.Owner, CollisionPhase.Stay,  collision));
     }
 
     public void OnCollisionExit2D (Collision2D collision)
     {
-        Bridge.Owner.Emit.Local(Request.Create, new CollisionEvent(CollisionPhase.Exit,  collision));
+        Emit.Global(Request.Create, new CollisionEvent(Bridge.Owner, CollisionPhase.Exit,  collision));
     }
 
     public void OnDestroy()

@@ -5,8 +5,7 @@ using UnityEngine;
 
 
 
-[Service]
-public class SpriteLayeringSystem : Service, IServiceStep, IBind
+public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
 {
     readonly List<TrackedSprite> trackedSprites = new();
     
@@ -138,7 +137,6 @@ public class SpriteLayeringSystem : Service, IServiceStep, IBind
 
 
 
-[Service]
 public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 {
     

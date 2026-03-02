@@ -31,7 +31,7 @@ public abstract class StateHandler<TController, TState> : IStateHandler<TControl
 }
 
 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬1▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
@@ -85,6 +85,18 @@ public class Armor              : Equipment     { public ArmorDefinition Definit
 
 public class Controller         : MonoBehaviour {}
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Maps                                                  
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public static class Layers
+{
+    public static readonly int Player       = LayerMask.NameToLayer("Player");
+    public static readonly int Enemy        = LayerMask.NameToLayer("Enemy");
+    public static readonly int NPC          = LayerMask.NameToLayer("NPC");
+    public static readonly int Prop         = LayerMask.NameToLayer("Prop");
+    public static readonly int Environment  = LayerMask.NameToLayer("Environment");
+}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                 Definition Declarations
@@ -170,6 +182,15 @@ public interface IDynamic
     float Mass                              { get; }
 }
 
+public interface IPhysicsBody
+{
+    bool    Constrained                     { get; set; }
+    Vector2 Normal                          { get; set; }
+    Vector2 Force                           { get; set; }
+    bool    ImmuneToForce                   { get; }
+
+}
+
 public interface IAfflictable
 {
     bool Disabled                           { get; }
@@ -196,9 +217,10 @@ public interface IIdle
 }
 
 
+
 public interface IActor         : IDepthSorted, IDepthColliding {}
 public interface IAgent         : IActor, IControllable, ILiving, IDefined {}
-public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IDirectional, IOrientable { }
+public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IPhysicsBody, IDirectional, IOrientable { }
 
 public interface IHero          : IAgent, IMovableActor, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
 public interface IEnemy         : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
@@ -210,9 +232,9 @@ public interface IDummy         : IAgent, IDamageable, IAfflictable {}
 public interface IMovableDummy  : IAgent, IMovableActor, IDynamic, IDamageable, IAfflictable {}
 
 
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                    Enum Declarations
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Enums                                                 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public enum Request
 {

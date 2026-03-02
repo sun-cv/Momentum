@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -10,8 +9,6 @@ public class MovementEngine : Service, IServiceTick
     readonly float maxSpeed         = Settings.Movement.MAX_SPEED;
     readonly float acceleration     = Settings.Movement.ACCELERATION;
     readonly float friction         = Settings.Movement.FRICTION;
-    readonly float retention        = Settings.Movement.MOMENTUM_RETENTION;
-    readonly float inertia          = Settings.Movement.INERTIA;
     readonly float forceThreshold   = Settings.Movement.FORCE_THRESHOLD;
 
         // -----------------------------------
@@ -20,13 +17,11 @@ public class MovementEngine : Service, IServiceTick
     readonly IMovableActor  agent;
     readonly Rigidbody2D    body;
 
+    // -----------------------------------
+
+    readonly MovementModifierHandler modifierHandler;
+
         // -----------------------------------
-
-    MovementModifierHandler modifierHandler;
-
-        // -----------------------------------
-
-    readonly bool applyFriction = true;
 
     float modifier;
     float speed;
@@ -34,7 +29,6 @@ public class MovementEngine : Service, IServiceTick
 
     Vector2 momentum            = Vector2.zero;
     Vector2 velocity            = Vector2.zero;
-    Vector2 positionBeforeMove  = Vector2.zero;
 
     readonly List<MovementDirective> directives = new();
 
@@ -51,12 +45,12 @@ public class MovementEngine : Service, IServiceTick
         body.freezeRotation = true;
         body.gravityScale   = 0;
         body.interpolation  = RigidbodyInterpolation2D.Interpolate; 
+        body.mass           = agent.Definition.Physics.Mass;
 
         modifierHandler     = new(agent);
 
         owner.Emit.Link.Local<Message<Request, MovementEvent>>          (HandleMovementDirective);
         owner.Emit.Link.Local<Message<Request, ClearMovementScopeEvent>>(HandleMovementClear);
-        owner.Emit.Link.Local<Message<Request, CollisionImpactEvent>>   (HandleCollisionImpact);
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
 
 
@@ -73,8 +67,6 @@ public class MovementEngine : Service, IServiceTick
         CalculateModifier();
         CalculateVelocity();
         CalculateMomentum();
-
-        ApplyFriction();
 
         if (CanApplyVelocity())
             ApplyVelocity();
@@ -98,12 +90,13 @@ public class MovementEngine : Service, IServiceTick
             return;
         }
 
-        Vector2 kinematicVelocity   = CalculateKinematicForces();
-        Vector2 dynamicVelocity     = CalculateDynamicForces();
+        Vector2 intentVelocity  = CalculateKinematicForces();
+        Vector2 physicsVelocity = GetPhysicsVelocity();
 
-        velocity                    = ApplyVelocityTransition(CombineMovementForces(kinematicVelocity, dynamicVelocity));
+        intentVelocity = ApplyIntentFriction(intentVelocity);
+
+        velocity = CombineMovementForces(intentVelocity, physicsVelocity);
     }
-
     void CalculateMomentum()
     {
         momentum = mass * velocity;
@@ -118,7 +111,7 @@ public class MovementEngine : Service, IServiceTick
             targetVelocity = BaseMovementVelocity();
         }
 
-        foreach(var directive in FilterAndSortDescendingDirectives(ForceIsKinematic))
+        foreach(var directive in directives)
         {
             Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
 
@@ -142,21 +135,6 @@ public class MovementEngine : Service, IServiceTick
         return targetVelocity;
     }
 
-    Vector2 CalculateDynamicForces()
-    {
-        Vector2 forceVelocity = Vector2.zero;
-
-        foreach(var directive in FilterAndSortDescendingDirectives(ForceIsDynamic))
-        {
-            if (directive.Controller.Mode == ControllerMode.Additive)
-            {
-                forceVelocity += directive.Controller.CalculateVelocity(owner);
-            }
-        }
-
-        return forceVelocity;
-    }
-
         // ===================================
         //  Execution
         // ===================================
@@ -166,37 +144,20 @@ public class MovementEngine : Service, IServiceTick
         return Vector2.MoveTowards(velocity, Mathf.Clamp(speed * modifier, 0, maxSpeed) * agent.Direction.Vector, acceleration * Clock.DeltaTime);
     }
 
-    Vector2 CombineMovementForces(Vector2 directed, Vector2 external)
+    Vector2 CombineMovementForces(Vector2 intent, Vector2 physics)
     {
-        if (external.magnitude > forceThreshold)
-        {
-            return external + directed * 0.2f;
-        }
+        if (physics.magnitude > forceThreshold)
+            return physics + intent * 0.2f;
 
-        return directed;
+        return intent;
     }
 
-    Vector2 ApplyVelocityTransition(Vector2 targetVelocity)
+    Vector2 ApplyIntentFriction(Vector2 intent)
     {
-        bool isReversing = agent.CanMove && directives.Count == 0 && velocity.magnitude > 1f && Vector2.Dot(velocity.normalized, agent.Direction) < -0.3f;
+        if (intent.magnitude < 0.001f) 
+            return Vector2.zero;
 
-        if (isReversing)
-        {
-            return Vector2.MoveTowards(velocity, Vector2.zero, acceleration * inertia * Clock.DeltaTime);
-        }
-
-        return Vector2.Lerp(targetVelocity, velocity, retention);
-    }
-
-    void ApplyFriction()
-    {   
-        if (agent.Disabled || velocity.magnitude < 0.001f)
-            return;
-        
-        if (applyFriction || (directives.Count == 0 && agent.CanMove))
-        {
-            velocity *= Mathf.Exp(-friction * Clock.DeltaTime);
-        }
+        return intent * Mathf.Exp(-friction * Clock.DeltaTime);
     }
 
     void ApplyVelocity()
@@ -256,17 +217,6 @@ public class MovementEngine : Service, IServiceTick
         }
     }
 
-    void HandleCollisionImpact(Message<Request, CollisionImpactEvent> message)
-    {
-        var normal        = message.Payload.Normal;
-        float penetration = Vector2.Dot(velocity, -normal);
-    
-        if (penetration > 0)
-        {
-            velocity += normal * penetration;
-        }
-    }
-
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
         switch(message.Payload.State)
@@ -292,15 +242,20 @@ public class MovementEngine : Service, IServiceTick
     bool AgentIsDisabled()  => agent.Disabled;
     bool AgentCanMove()     => agent.CanMove;
 
-    bool ForceIsDynamic  (MovementDirective directive) => directive.Definition.MovementForce is MovementForce.Dynamic;
-    bool ForceIsKinematic(MovementDirective directive) => directive.Definition.MovementForce is MovementForce.Kinematic;
-
     // ===============================================================================
     //  Helpers
     // ===============================================================================
 
     void SetSpeed() => speed = agent.Speed;
     void SetMass()  => mass  = agent.Mass;
+
+    Vector2 GetPhysicsVelocity()
+    {
+        if (agent is IPhysicsBody body)
+            return body.Force;
+
+        return Vector2.zero;
+    }
 
     void ClearMovement()
     {
@@ -313,17 +268,7 @@ public class MovementEngine : Service, IServiceTick
 
     IMovementController CreateController(MovementDefinition definition)
     {
-        return definition.MovementForce switch
-        {
-            MovementForce.Dynamic   => MovementControllerFactory.CreateDynamic  (owner, definition),
-            MovementForce.Kinematic => MovementControllerFactory.CreateKinematic(owner, definition),
-            _ => default,
-        };
-    }
-
-    List<MovementDirective> FilterAndSortDescendingDirectives(Func<MovementDirective, bool> filter)
-    {
-        return directives.Where(directive => filter(directive)).OrderByDescending(directive => directive.Controller.Priority).ToList();
+        return MovementControllerFactory.CreateController(owner, definition);
     }
 
     // ===============================================================================
@@ -388,29 +333,17 @@ public readonly struct ClearMovementScopeEvent
 
 public static class MovementControllerFactory
 {
-    
-    public static IMovementController CreateKinematic(Agent agent, MovementDefinition definition)
+    public static IMovementController CreateController(Agent agent, MovementDefinition definition)
     {
-        return (definition.MovementForce, definition.KinematicAction, agent)switch
+        return (definition.KinematicAction, agent)switch
         {
-            (MovementForce.Kinematic, KinematicAction.Dash, IMovableActor movable) =>
+            (KinematicAction.Dash, IMovableActor movable) =>
                 new DashController(definition.InputIntent.Direction, definition.InputIntent.LastDirection, definition.Speed, definition.DurationFrames),
 
-            (MovementForce.Kinematic, KinematicAction.Lunge, IMovableActor movable) => 
+            (KinematicAction.Lunge, IMovableActor movable) => 
                 new LungeController(definition.InputIntent.Aim, definition.Speed, definition.DurationFrames, definition.SpeedCurve),
 
             _ => null
         };
     }
-
-    public static IMovementController CreateDynamic(Agent agent, MovementDefinition definition)
-    {
-        return (definition.MovementForce, definition.DynamicSource, agent)switch
-        {
-            (MovementForce.Dynamic, DynamicSource.Collision, IMovableActor movable) =>
-                new DynamicForceController(definition.Force, definition.Mass),
-            _ => null
-        };
-    }
-
 }

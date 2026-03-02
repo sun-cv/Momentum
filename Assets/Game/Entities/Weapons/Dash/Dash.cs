@@ -66,6 +66,13 @@ public class BaseDash : MovementWeapon
                 RequestActionLock   = true,
             },
 
+            new DashForceImmunity()
+            {
+                Name                = "DashForceImmunity",
+                DurationFrames      = 45,
+                ImmuneToForce       = true,
+            },
+
             new WeaponMobility()
             {
                 Trigger             = WeaponPhase.FireEnd,
@@ -86,7 +93,7 @@ public class BaseDash : MovementWeapon
                 KinematicAction     = KinematicAction.Dash,
                 Phase               = WeaponPhase.Fire,
                 Scope               = (int)WeaponPhase.Fire,
-                Speed               = 15f,
+                Speed               = 100f,
                 DurationFrames      = 10,
                 PersistPastScope    = true,
             }

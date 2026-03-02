@@ -42,8 +42,7 @@ public static class Settings
     {
         public const float MAX_SPEED                        = 25f;
         public const float ACCELERATION                     = 25f;
-        public const float FRICTION                         = 5f;
-        public const float MOMENTUM_RETENTION               = 0f;
+        public const float FRICTION                         = 2.5f;
         public const float INERTIA                          = .2f;
         public const float FORCE_THRESHOLD                  = 2f;
 
@@ -53,6 +52,11 @@ public static class Settings
 
         public static bool NORMALIZE_VELOCITY               = false;
     }   
+
+    public static class Physics
+    {
+        public const float FRICTION                         = 2.5f;
+    }
 
     public static class Debug   
     {   
@@ -94,8 +98,10 @@ public static class ServiceUpdatePriority
     public static UpdatePriority Lifecycle                  = new(UpdatePhase.Logic,    40);
     public static UpdatePriority Presence                   = new(UpdatePhase.Logic,    45);
 
-    public static UpdatePriority MovementEngine             = new(UpdatePhase.Physics,  10);
-    public static UpdatePriority HitboxManager              = new(UpdatePhase.Physics,  20);
+    public static UpdatePriority CollisionHandler           = new(UpdatePhase.Physics,  10);
+    public static UpdatePriority PhysicsEngine              = new(UpdatePhase.Physics,  20);
+    public static UpdatePriority MovementEngine             = new(UpdatePhase.Physics,  30);
+    public static UpdatePriority HitboxManager              = new(UpdatePhase.Physics,  40);
     public static UpdatePriority SpriteDepthSorting         = new(UpdatePhase.Physics,  90);
 
     public static UpdatePriority TriggerCoordinator         = new(UpdatePhase.Resolve,  10);  

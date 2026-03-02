@@ -23,6 +23,10 @@ public class HeroState : State
     bool hasLockedFacing        = false;
     bool hasLockedDirection     = false;
 
+    bool constrained            = false;
+    Vector2 normal              = Vector2.zero;
+    Vector2 force               = Vector2.zero;
+
     TimePredicate   idle;
 
     public bool Inactive                            { get => inactive;          set => inactive         = value; }
@@ -30,11 +34,15 @@ public class HeroState : State
     public bool Invulnerable                        { get => invulnerable;      set => invulnerable     = value; }
     public bool Impervious                          { get => impervious;        set => impervious       = value; }
 
+    public bool ImmuneToForce                       => effects.Has<DashForceImmunity>((effect) => effect is not null);
+
     public bool Parrying                            => effects.Has<ShieldParryWindow>((effect) => effect is not null);
     public bool Blocking                            => effects.Has<ShieldBlockWindow>((effect) => effect is not null);
 
     public bool Disabled                            => Inactive || Stunned; // || other cc 
     public bool Stunned                             { get => effects.Has<IStunned>(effect => effect.Stunned,        defaultValue: stunned); set => stunned = value; }
+
+    public bool Constrained                         { get => constrained;       set => constrained      = value; }
 
     public bool CanMove                             => effects.Can<IDisableMove>  (effect => effect.DisableMove,   defaultValue: !Disabled); 
     public bool CanAttack                           => effects.Can<IDisableAttack>(effect => effect.DisableAttack, defaultValue: !Disabled); 
@@ -51,6 +59,9 @@ public class HeroState : State
 
     public Vector2 Velocity                         => movement.Velocity;
     public Vector2 Momentum                         => movement.Momentum;
+
+    public Vector2 Normal                           { get => normal;            set => normal           = value; }
+    public Vector2 Force                            { get => force;             set => force            = value; }
 
     public bool Alive                               => lifecycle.IsAlive;
     public bool Dead                                => lifecycle.IsDead;

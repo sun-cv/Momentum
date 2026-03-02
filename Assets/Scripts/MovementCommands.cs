@@ -28,14 +28,8 @@ public interface IMovementController
 
 public class MovementDefinition : Definition
 {
-    public MovementForce   MovementForce    { get; init; }
-    public DynamicSource   DynamicSource    { get; init; }
     public KinematicAction KinematicAction  { get; init; }
 
-    // DYNAMIC
-    public Vector2 Force                    { get; init; }
-    public float Mass                       { get; init; }
-    
     // KINEMATIC
     public float Speed                      { get; init; }
     public AnimationCurve SpeedCurve        { get; init; }
@@ -66,22 +60,12 @@ public class MovementDirective
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-public enum MovementForce
-{
-    Kinematic,
-    Dynamic
-}
 
 public enum KinematicAction
 {
     Lunge,
     Charge,
     Dash,
-}
-
-public enum DynamicSource
-{
-    Collision
 }
 
 public enum ControllerMode
