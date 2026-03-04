@@ -55,7 +55,7 @@ public static class Settings
 
     public static class Physics
     {
-        public const float FRICTION                         = 2.5f;
+        public const float FRICTION                         = 5f;
     }
 
     public static class Debug   
@@ -97,19 +97,20 @@ public static class ServiceUpdatePriority
     public static UpdatePriority EffectManager              = new(UpdatePhase.Logic,    35);
     public static UpdatePriority Lifecycle                  = new(UpdatePhase.Logic,    40);
     public static UpdatePriority Presence                   = new(UpdatePhase.Logic,    45);
+    public static UpdatePriority HitboxManager              = new(UpdatePhase.Logic,    50);
+    public static UpdatePriority TriggerCoordinator         = new(UpdatePhase.Logic,    55);  
+    public static UpdatePriority Combat                     = new(UpdatePhase.Logic,    60);
+    public static UpdatePriority Damage                     = new(UpdatePhase.Logic,    65);
+
 
     public static UpdatePriority CollisionHandler           = new(UpdatePhase.Physics,  10);
     public static UpdatePriority PhysicsEngine              = new(UpdatePhase.Physics,  20);
     public static UpdatePriority MovementEngine             = new(UpdatePhase.Physics,  30);
-    public static UpdatePriority HitboxManager              = new(UpdatePhase.Physics,  40);
     public static UpdatePriority SpriteDepthSorting         = new(UpdatePhase.Physics,  90);
 
-    public static UpdatePriority TriggerCoordinator         = new(UpdatePhase.Resolve,  10);  
-    public static UpdatePriority Combat                     = new(UpdatePhase.Resolve,  20);
 
     public static UpdatePriority SpriteLayering             = new(UpdatePhase.Render,   10);
     public static UpdatePriority AnimationSystem            = new(UpdatePhase.Render,   20);
     public static UpdatePriority AnimatorController         = new(UpdatePhase.Render,   30);
     public static UpdatePriority CameraRig                  = new(UpdatePhase.Render,   40);
-
 }

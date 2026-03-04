@@ -21,15 +21,9 @@ public interface IStateHandler<TController>
     void Exit   (TController controller);
 }
 
-public abstract class StateHandler<TController, TState> : IStateHandler<TController>
-{
-    public Action<TState> Transition;
-
-    public abstract void Enter  (TController controller);
-    public abstract void Update (TController controller);
-    public abstract void Exit   (TController controller);
-}
-
+public interface IResolver                      { void Resolve();           }   // terminal. Takes a request, produces a side effect, doesn't return a value
+public interface IProcessor<T>                  { T Process(T value);       }   // transforming. Takes a value, returns a modified value, passes it along.
+public interface IHandler                       { bool Handle();            }   // claims and stops. One handler in the chain responds, the rest are skipped.
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    
@@ -177,18 +171,20 @@ public interface IAimable
 
 public interface IDynamic
 {
-    Vector2 Velocity                        { get; }
     Vector2 Momentum                        { get; }
+    Vector2 Velocity                        { get; set; }
+    Vector2 Control                         { get; set; }
     float Mass                              { get; }
+    float Friction                          { get; }
 }
 
 public interface IPhysicsBody
 {
-    bool    Constrained                     { get; set; }
+    float   Friction                        { get; }
     Vector2 Normal                          { get; set; }
     Vector2 Force                           { get; set; }
+    bool    Constrained                     { get; set; }
     bool    ImmuneToForce                   { get; }
-
 }
 
 public interface IAfflictable
@@ -220,17 +216,12 @@ public interface IIdle
 
 public interface IActor         : IDepthSorted, IDepthColliding {}
 public interface IAgent         : IActor, IControllable, ILiving, IDefined {}
-public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IPhysicsBody, IDirectional, IOrientable { }
+public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IDirectional, IOrientable { }
 
-public interface IHero          : IAgent, IMovableActor, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
-public interface IEnemy         : IMovableActor, IControllable, IAttacker, IDamageable, IAfflictable { }
-public interface IBoss          : IEnemy {}
-// public interface ITurret        : IAttacker, IDamageable, IOrientable                   {} 
-
-
+public interface IHero          : IMovableActor, IPhysicsBody, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
+public interface IEnemy         : IMovableActor, IPhysicsBody, IControllable, IAttacker, IDamageable, IAfflictable { }
 public interface IDummy         : IAgent, IDamageable, IAfflictable {}
-public interface IMovableDummy  : IAgent, IMovableActor, IDynamic, IDamageable, IAfflictable {}
-
+public interface IMovableDummy  : IMovableActor, IPhysicsBody, IDamageable, IAfflictable {}
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 

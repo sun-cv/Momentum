@@ -13,7 +13,7 @@ public class Hero : Player, IHero
     public ActorStats           Stats               { get; set; }
     public EquipmentManager     Equipment           { get; set; }
     public WeaponSystem         Weapons             { get; set; }
-    public MovementEngine       Movement            { get; set; }
+    public Movement             Movement            { get; set; }
     public EffectRegister       Effects             { get; set; }
     public Presence             Presence            { get; set; }
     public Lifecycle            Lifecycle           { get; set; }
@@ -24,29 +24,23 @@ public class Hero : Player, IHero
     //  Accessors
     // ===============================================================================
 
-    public float MaxHealth                          { get => Stats.MaxHealth;               }
-    public float Health                             { get => Stats.Health;  
-                                                      set => Stats.Health           = value;}
-    public float MaxMana                            { get => Stats.MaxMana;                 }
-    public float Mana                               { get => Stats.Mana;    
-                                                      set => Stats.Mana             = value;}
-    public float Speed                              { get => Stats.Speed;                   }
-    public float SpeedMultiplier                    { get => Stats.SpeedMultiplier;         }
-    public float Attack                             { get => Stats.Attack;                  }
-    public float AttackMultiplier                   { get => Stats.AttackMultiplier;        }
-
-    public float Mass                               { get => Definition.Physics.Mass;       }
+    public float MaxHealth                          { get => Stats.MaxHealth;                                               }
+    public float Health                             { get => Stats.Health;              set => Stats.Health         = value;}
+    public float MaxMana                            { get => Stats.MaxMana;                                                 }
+    public float Mana                               { get => Stats.Mana;                set => Stats.Mana           = value;}
+    public float Speed                              { get => Stats.Speed;                                                   }
+    public float SpeedMultiplier                    { get => Stats.SpeedMultiplier;                                         }
+    public float Strength                           { get => Stats.Strength;                                                }
+    public float Attack                             { get => Stats.Attack;                                                  }
+    public float AttackMultiplier                   { get => Stats.AttackMultiplier;                                        }
 
     // ===============================================================================
     //  State
     // ===============================================================================
 
-    public bool Inactive                            { get => State.Inactive;        
-                                                      set => State.Inactive         = value;}
-    public bool Invulnerable                        { get => State.Invulnerable;    
-                                                      set => State.Invulnerable     = value;}
-    public bool Impervious                          { get => State.Impervious;    
-                                                      set => State.Impervious       = value;}
+    public bool Inactive                            { get => State.Inactive;            set => State.Inactive       = value;}
+    public bool Invulnerable                        { get => State.Invulnerable;        set => State.Invulnerable   = value;}
+    public bool Impervious                          { get => State.Impervious;          set => State.Impervious     = value;}
 
     public bool ImmuneToForce                       => State.ImmuneToForce;
 
@@ -55,11 +49,9 @@ public class Hero : Player, IHero
     public bool Dead                                => State.Dead;
     
     public bool Disabled                            => State.Disabled;
-    public bool Stunned                             { get => State.Stunned;         
-                                                      set => State.Stunned          = value;}
+    public bool Stunned                             { get => State.Stunned;             set => State.Stunned        = value;}
 
-    public bool Constrained                         { get => State.Constrained;    
-                                                      set => State.Constrained      = value;}
+    public bool Constrained                         { get => State.Constrained;         set => State.Constrained    = value;}
 
     public bool Parrying                            => State.Parrying;
     public bool Blocking                            => State.Blocking;
@@ -77,13 +69,15 @@ public class Hero : Player, IHero
     public Direction LockedFacing                   => State.LockedFacing;
     public Direction LockedDirection                => State.LockedDirection;
 
-    public Vector2 Velocity                         => State.Velocity;
+    public float Friction                           { get => State.Friction;                                                }
+    public float Mass                               { get => Definition.Physics.Mass;                                       }
+
     public Vector2 Momentum                         => State.Momentum;
-    
-    public Vector2 Normal                           { get => State.Normal;    
-                                                      set => State.Normal           = value;}
-    public Vector2 Force                            { get => State.Force;    
-                                                      set => State.Force            = value;}
+
+    public Vector2 Velocity                         { get => State.Velocity;            set => State.Velocity       = value;}
+    public Vector2 Control                          { get => State.Control;             set => State.Control        = value;}
+    public Vector2 Force                            { get => State.Force;               set => State.Force          = value;}
+    public Vector2 Normal                           { get => State.Normal;              set => State.Normal         = value;}
 
     public bool IsMoving                            => State.IsMoving;
     public TimePredicate IsIdle                     => State.IsIdle;

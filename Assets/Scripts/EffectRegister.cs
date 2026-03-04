@@ -6,7 +6,7 @@ using System.Linq;
 
 public class EffectRegister : Service
 {
-    Actor owner;
+    readonly Actor owner;
 
         // -----------------------------------
 

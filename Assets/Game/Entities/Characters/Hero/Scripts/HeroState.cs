@@ -1,4 +1,4 @@
-using NUnit.Framework;
+
 using UnityEngine;
 
 
@@ -11,7 +11,7 @@ public class HeroState : State
 
     readonly IntentSystem       intent;
     readonly EffectRegister     effects;
-    readonly MovementEngine     movement;
+    readonly Movement           movement;
     readonly Lifecycle          lifecycle;
 
     bool inactive               = false;
@@ -24,8 +24,12 @@ public class HeroState : State
     bool hasLockedDirection     = false;
 
     bool constrained            = false;
-    Vector2 normal              = Vector2.zero;
+
+    Vector2 velocity            = Vector2.zero;
     Vector2 force               = Vector2.zero;
+    Vector2 control             = Vector2.zero;
+
+    Vector2 normal              = Vector2.zero;
 
     TimePredicate   idle;
 
@@ -57,11 +61,15 @@ public class HeroState : State
     public Direction LockedFacing                   { get { if (CanRotate) { hasLockedFacing    = false; return intent.Input.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Input.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
     public Direction LockedDirection                { get { if (CanRotate) { hasLockedDirection = false; return intent.Input.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Input.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
 
-    public Vector2 Velocity                         => movement.Velocity;
+    public Vector2 Velocity                         { get => velocity;          set => velocity         = value; }
+    public Vector2 Control                          { get => control;           set => control          = value; }
+    public Vector2 Force                            { get => force;             set => force            = value; }
+
     public Vector2 Momentum                         => movement.Momentum;
 
     public Vector2 Normal                           { get => normal;            set => normal           = value; }
-    public Vector2 Force                            { get => force;             set => force            = value; }
+
+    public float Friction                           => owner.Definition.Physics.Friction;
 
     public bool Alive                               => lifecycle.IsAlive;
     public bool Dead                                => lifecycle.IsDead;

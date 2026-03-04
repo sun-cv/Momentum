@@ -109,27 +109,10 @@ public class WeaponAction       : Definition
     /// WEAPON CONFIGURATION
     /// ============================================================================
 
-    ///  REWORK REQUIED? Currently not in use.
-    // /// <summary>Number of times weapon can be fired</summary>
-    // public int ClipSize                             { get; init; } = 0;
-    // /// <summary>Duration in seconds regen of clip</summary>
-    // public float ClipRegenInterval                  { get; init; } = 0;
-    // /// <summary>Regen full clip size?</summary>
-    // public bool FullClipRegen                       { get; init; } = false;
-
     /// <summary>Custom predicates - intended for player context</summary>
     public WeaponTriggerCondition Condition         { get; init; } = new();
     /// <summary>List of effects applied by weapon</summary>
     public List<Effect> Effects                     { get; init; } = new();
-
-    /// ============================================================================
-    /// KINETIC DAMAGE
-    /// ============================================================================
-
-    /// <summary>Does this weapon apply kinetic force on impact?</summary>
-    public bool AppliesDynamicForce                 { get; init; } = false;
-    /// <summary>Force value multiplier</summary>
-    public float ForceMagnitude                     { get; init; } = 0f;
 
     /// ============================================================================
     /// Hitboxes

@@ -48,10 +48,11 @@ public interface IImmuneToDamage            { public bool ImmuneToDamage        
 public interface IInvulnerable              { public bool Invulnerable              { get; init; }}
 public interface IStunned                   { public bool Stunned                   { get; init; }}
 
-public interface IDamage                    { public float Damage                    { get; init; }}
+public interface IFriction                  { public float Friction                 { get; init; }}
+public interface IDamaging                  { public float Damage                   { get; init; }}
 public interface ISlow : IDuration, IModifySpeed {}                     
 
-public interface IDot : IDamage, IDuration, IInterval {}
+public interface IDot : IDamaging, IDuration, IInterval {}
 
 public interface IDisableRules : IDisableAttack, IDisableMove, IDisableRotate {}
 public interface ICollisionRules : INoUnitCollision, IImmuneToForce {}
@@ -77,9 +78,14 @@ public class Effect     : Instance
 // Example status effect 
 public class BurningEffect : Effect, IDot
 {
-    public float Duration                   { get; init; }
-    public float Interval                   { get; init; }
-    public float Damage                     { get; init; }
+    public float Duration                       { get; init; }
+    public float Interval                       { get; init; }
+    public float Damage                         { get; init; }
+}
+
+public class IFrictionEffect : Effect, IFriction
+{
+    public float Friction                       { get; init;}
 }
 
 public class SwordSwingDisable : Effect, ICancelable, ITrigger, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, IActionLock

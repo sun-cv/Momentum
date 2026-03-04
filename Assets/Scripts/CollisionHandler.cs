@@ -7,7 +7,7 @@ public class CollisionHandler : RegisteredService, IServiceTick
 {
         // -----------------------------------
 
-    List<ProcessedCollision> pendingCollisions    = new();
+    List<ProcessedCollision> queue    = new();
 
         // -----------------------------------
 
@@ -27,12 +27,12 @@ public class CollisionHandler : RegisteredService, IServiceTick
 
     void ProcessCollisions()
     {
-        foreach( var collision in pendingCollisions)
+        foreach( var collision in queue)
         {
             ProcessCollision(collision);
         }
 
-        pendingCollisions.Clear();
+        queue.Clear();
     }
 
      void ProcessCollision(ProcessedCollision collision)
@@ -101,7 +101,7 @@ public class CollisionHandler : RegisteredService, IServiceTick
         if (type == CollisionType.Actor)
             other = GetActor(collision);
 
-        pendingCollisions.Add(new ProcessedCollision
+        queue.Add(new ProcessedCollision
         {
             Owner  = owner,
             Other  = other,

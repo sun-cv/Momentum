@@ -11,7 +11,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         // -----------------------------------
 
     readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
-    readonly Queue<PendingHitbox>   pending                     = new();
+    readonly List<PendingHitbox> queue                         = new();
     
     // ============================================================================
 
@@ -25,7 +25,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     
     public void Tick()
     {
-        ProcessPending();
+        ProcessQueued();
         ProcessActive();
 
         DebugLog();
@@ -33,10 +33,12 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     // ===============================================================================
 
-    void ProcessPending()
+    void ProcessQueued()
     {
-        while(pending.TryDequeue(out var request))
-            CreateHitbox(request);
+        foreach( var hitbox in queue)
+        {
+            CreateHitbox(hitbox);
+        }
     }
 
     void ProcessActive()
@@ -191,7 +193,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         var definition  = message.Payload.Definition;
         var package     = message.Payload.Package;
 
-        pending.Enqueue(new() { RequestId = message.Id, Owner = owner, Definition = definition, Package = package });
+        queue.Add(new() { RequestId = message.Id, Owner = owner, Definition = definition, Package = package });
     }
 
     void HandleHitboxDestroyRequest(Message<Request, HitboxIdEvent> message)

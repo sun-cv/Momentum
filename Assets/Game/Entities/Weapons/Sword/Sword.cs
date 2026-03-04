@@ -42,8 +42,6 @@ public class SwordStrike : DamagingWeapon
         ControlWindow               = 0.3f;
         AddControlOnFire            = new() { "SwordCleave"};
         LockAimDuringPlayback       = true;
-        AppliesDynamicForce         = true;
-        ForceMagnitude              = 2500f;
         Effects = new()
         {
             new SwordSwingDisable()
@@ -92,7 +90,7 @@ public class SwordStrike : DamagingWeapon
             new()
             {
                 Amount              = 10,
-                ForceMagnitude      = 1,
+                Force               = 500,
                 Effects             = new(),
             }
         };
@@ -196,7 +194,7 @@ public class SwordCleave : DamagingWeapon
             new()
             {
                 Amount              = 10,
-                ForceMagnitude      = 1,
+                Force               = 500,
                 Effects             = new(),
             }
         };
@@ -300,7 +298,7 @@ public class SwordRend : DamagingWeapon
             new()
             {
                 Amount              = 10,
-                ForceMagnitude      = 1,
+                Force               = 750,
                 Effects             = new(),
             }
         };

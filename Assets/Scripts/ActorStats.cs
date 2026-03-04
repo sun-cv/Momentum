@@ -58,6 +58,7 @@ public class ActorStats : Stats
     
     public float Speed              => this[nameof(Speed)];
     public float SpeedMultiplier    => this[nameof(SpeedMultiplier)];
+    public float Strength           => this[nameof(Strength)];
     public float Attack             => this[nameof(Attack)];
     public float AttackMultiplier   => this[nameof(AttackMultiplier)];
 

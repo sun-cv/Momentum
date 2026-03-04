@@ -15,7 +15,7 @@ public class AnimationSystem : Service, IServiceLoop
 
     // -----------------------------------
 
-    readonly List<Message<Request, AnimationRequestEvent>> pendingRequests = new();
+    readonly List<Message<Request, AnimationRequestEvent>> queue = new();
 
     // ===============================================================================
 
@@ -47,13 +47,13 @@ public class AnimationSystem : Service, IServiceLoop
 
     void ProcessAnimationRequests()
     {
-        if (pendingRequests.Count == 0)
+        if (queue.Count == 0)
             return;
 
-        foreach (var message in pendingRequests)
+        foreach (var message in queue)
             ProcessAnimationRequest(message);
 
-        pendingRequests.Clear();
+        queue.Clear();
     }
 
     void ProcessAnimationRequest(Message<Request, AnimationRequestEvent> message)
@@ -130,7 +130,7 @@ public class AnimationSystem : Service, IServiceLoop
 
     void HandleAnimationRequest(Message<Request, AnimationRequestEvent> message)
     {
-        pendingRequests.Add(message);
+        queue.Add(message);
     }
 
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)

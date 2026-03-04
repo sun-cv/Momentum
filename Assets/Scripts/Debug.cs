@@ -168,6 +168,7 @@ public enum LogSystem
     // Physics & Movement
     Physics,
     Collision,
+    MovementEngine,
     Movement,
     Teleport,
     
@@ -176,6 +177,7 @@ public enum LogSystem
     Hitboxes,
     Equipment,
     Combat,
+    Damage,
     Spawners,
     
     // Player & Input

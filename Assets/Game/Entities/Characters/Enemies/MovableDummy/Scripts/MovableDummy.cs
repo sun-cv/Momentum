@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MovableDummy : Agent, IMovableDummy
 {
-    public MovementEngine       Movement            { get; private set; }
+    public Movement             Movement            { get; private set; }
     public Presence             Presence            { get; private set; }
     public Lifecycle            Lifecycle           { get; private set; }
     public AnimationSystem      Animation           { get; private set; }
@@ -18,8 +18,6 @@ public class MovableDummy : Agent, IMovableDummy
 
     public float Speed                              { get; set; }
     public float SpeedMultiplier                    { get; set; }
-
-    public float Mass                               { get; set; } = 100;
 
     //========================================
     //  State
@@ -48,8 +46,13 @@ public class MovableDummy : Agent, IMovableDummy
     public Direction LockedFacing                   { get; set; }
     public Direction LockedDirection                { get; set; }
 
-    public Vector2 Velocity                         => Movement.Velocity;
-    public Vector2 Momentum                         => Movement.Momentum;
+    public float Friction                           => Definition.Physics.Friction;
+    public float Mass                               => Definition.Physics.Mass;
+
+
+    public Vector2 Velocity                         { get; set; }
+    public Vector2 Control                          { get; set; }
+    public Vector2 Momentum                         { get; set; }
     
     public Vector2 Normal                           { get; set; }
     public Vector2 Force                            { get; set; }

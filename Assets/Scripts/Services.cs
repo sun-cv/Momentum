@@ -325,6 +325,12 @@ public static class Services
     }
 
 
+        public static List<IServiceTick> TickServices => Registry.TickServices;
+        public static List<IServiceLoop> LoopServices => Registry.LoopServices;
+        public static List<IServiceStep> StepServices => Registry.StepServices; 
+        public static List<IServiceUtil> UtilServices => Registry.UtilServices;
+        public static List<IServiceLate> LateServices => Registry.LateServices;
+
     // ===============================================================================
 
     readonly static Logger Log = Logging.For(LogSystem.Services);

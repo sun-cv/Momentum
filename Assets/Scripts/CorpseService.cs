@@ -9,7 +9,7 @@ public class CorpseService : RegisteredService, IServiceLoop
 
         // -----------------------------------
 
-    readonly List<CorpseRequest> pendingRequests = new();
+    readonly List<CorpseRequest> queue = new();
 
         // -----------------------------------
 
@@ -26,13 +26,13 @@ public class CorpseService : RegisteredService, IServiceLoop
 
     void ProcessCorpseRequests()
     {
-        if (pendingRequests.Count == 0)
+        if (queue.Count == 0)
             return;
 
-        foreach (var request in pendingRequests)
+        foreach (var request in queue)
             ProcessCorpseRequest(request);
 
-        pendingRequests.Clear();
+        queue.Clear();
     }
 
     void ProcessCorpseRequest(CorpseRequest request)

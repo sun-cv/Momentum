@@ -5,9 +5,6 @@ using UnityEngine;
 
 public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
 {
-    float friction = Settings.Physics.FRICTION;
-
-        // -----------------------------------
 
     readonly List<IPhysicsResolver> resolvers = new();
 
@@ -24,9 +21,7 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
 
     public void Tick()
     {
-
         TickResolvers();
-        DecayPhysicsVelocity();
     }
     // ===============================================================================
 
@@ -41,22 +36,6 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
             resolver.Resolve();
     }
 
-    void DecayPhysicsVelocity()
-    {
-        foreach (var actor in Actors.GetActors())
-        {
-            if (actor is not IPhysicsBody body) 
-                continue;
-
-            if (body.Force.magnitude < 0.001f)
-            {
-                body.Force = Vector2.zero;
-                continue;
-            }
-
-            body.Force *= Mathf.Exp(-friction * Clock.DeltaTime);
-        }
-    }
 
     // ===============================================================================
 
@@ -97,7 +76,7 @@ public interface IPhysicsResolver
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                        Handlers
+//                                        Resolvers
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -106,7 +85,7 @@ public interface IPhysicsResolver
 
 public class ForceApplicationResolver : IPhysicsResolver
 {
-    readonly Queue<ForcePhysicsEvent> pending = new();
+    readonly List<ForcePhysicsEvent> queue = new();
 
     public ForceApplicationResolver(PhysicsEngine engine)
     {
@@ -115,9 +94,9 @@ public class ForceApplicationResolver : IPhysicsResolver
 
     public void Resolve()
     {
-        while (pending.Count > 0)
+        foreach(var force in queue)
         {
-            ProcessForce(pending.Dequeue());
+            ProcessForce(force);
         }
     }
 
@@ -128,11 +107,17 @@ public class ForceApplicationResolver : IPhysicsResolver
 
         if (instance.Target is not IPhysicsBody body) 
             return;
-            
-        if (instance.Target is not IDynamic dynamic)
+
+        if (instance.Target is not IDynamic dynamic) 
+            return;
+
+        if (body.ImmuneToForce) 
             return;
 
         var physicsDefinition = instance.Target.Definition.Physics;
+
+    Debug.Log($"Impact: {instance.Impact} | Threshold: {physicsDefinition.MomentumThreshold} | Resistance: {physicsDefinition.PushResistance} | Mass: {dynamic.Mass}");
+
 
         if (instance.Impact < physicsDefinition.MomentumThreshold) 
             return;
@@ -141,11 +126,13 @@ public class ForceApplicationResolver : IPhysicsResolver
         Vector2 appliedForce = (1f - resistance) * instance.Impact * -instance.Normal / dynamic.Mass;
 
         body.Force += appliedForce;
+
+    Debug.Log($"Applied Force: {appliedForce} | Current Force: {body.Force}");
     }
 
     void HandleEvent(Message<Request, ForcePhysicsEvent> message)
     {
-        pending.Enqueue(message.Payload);
+        queue.Add(message.Payload);
     }
 }
 
@@ -155,7 +142,7 @@ public class ForceApplicationResolver : IPhysicsResolver
 
 public class ActorContactResolver : IPhysicsResolver
 {
-    readonly Queue<CollisionPhysicsEvent> pending = new();
+    readonly List<CollisionPhysicsEvent> queue = new();
 
     public ActorContactResolver(PhysicsEngine engine)
     {
@@ -164,9 +151,9 @@ public class ActorContactResolver : IPhysicsResolver
 
     public void Resolve()
     {
-        while (pending.Count > 0)
+        foreach( var collision in queue)
         {
-            ProcessCollision(pending.Dequeue());
+            ProcessCollision(collision);
         }
     }
 
@@ -183,29 +170,48 @@ public class ActorContactResolver : IPhysicsResolver
 
     void ApplyTransfer(CollisionPhysicsEvent instance)
     {
-        if (instance.Owner is not IDynamic ownerDynamic) return;
-        if (instance.Other is not IPhysicsBody otherBody) return;
-        if (instance.Other is not IDynamic otherDynamic) return;
-        if (otherBody.ImmuneToForce) return;
-    
-        var otherPhysics = instance.Other.Definition.Physics;
-    
-        if (instance.Impact < otherPhysics.MomentumThreshold) return;
-    
-        float totalMass     = ownerDynamic.Mass + otherDynamic.Mass;
-        float transferRatio = ownerDynamic.Mass / totalMass * (1f - otherPhysics.PushResistance);
-    
-        Vector2 targetVelocity = instance.Impact * transferRatio * -instance.Normal / otherDynamic.Mass;
-    
-        Debug.Log($"ApplyTransfer | impact: {instance.Impact:F2} | transferRatio: {transferRatio:F2} | targetVelocity: {targetVelocity.magnitude:F2} | currentForce before: {otherBody.Force.magnitude:F2}");
-    
-        otherBody.Force = targetVelocity;
-    
-        Debug.Log($"ApplyTransfer | force after set: {otherBody.Force.magnitude:F2}");
+        if (instance.Owner is not IDynamic ownerDynamic) 
+            return;
+
+        if (instance.Owner is not IDefined ownerDefined) 
+            return;
+
+        if (instance.Other is not IPhysicsBody otherBody) 
+            return;
+
+        if (instance.Other is not IDynamic otherDynamic) 
+            return;
+
+        if (otherBody.ImmuneToForce) 
+            return;
+
+
+        var otherPhysics    = instance.Other.Definition.Physics;
+        float ownerStrength = ownerDefined.Definition.Stats.Strength;
+        float impact        = instance.Impact * ownerStrength;
+
+        if (impact < otherPhysics.MomentumThreshold) return;
+
+        float massRatio      = ownerDynamic.Mass / (ownerDynamic.Mass + otherDynamic.Mass);
+        float transferRatio  = massRatio * (1f - otherPhysics.PushResistance);
+        Vector2 appliedForce = transferRatio * impact * -instance.Normal / otherDynamic.Mass;
+
+        if (instance.Owner is IPhysicsBody ownerBody && !ownerBody.ImmuneToForce)
+        {
+            var ownerPhysics = instance.Owner.Definition.Physics;
+
+            if (impact >= ownerPhysics.BleedThreshold)
+            {
+                ownerBody.Force += ownerPhysics.BleedRatio * impact * instance.Normal / ownerDynamic.Mass;
+            }
+        }
+
+        otherBody.Force = appliedForce;
     }
+
     void HandleEvent(Message<Request, CollisionPhysicsEvent> message)
     {
-        pending.Enqueue(message.Payload);
+        queue.Add(message.Payload);
     }
 }
 
@@ -216,7 +222,7 @@ public class ActorContactResolver : IPhysicsResolver
 
 public class SurfaceContactResolver : IPhysicsResolver
 {
-    readonly Queue<SurfacePhysicsEvent> pending = new();
+    readonly List<SurfacePhysicsEvent> queue = new();
 
     public SurfaceContactResolver(PhysicsEngine engine)
     {
@@ -225,9 +231,9 @@ public class SurfaceContactResolver : IPhysicsResolver
 
     public void Resolve()
     {
-        while (pending.Count > 0)
+        foreach( var surface in queue)
         {
-            ProcessSurface(pending.Dequeue());
+            ProcessSurface(surface);
         }
     }
 
@@ -287,7 +293,7 @@ public class SurfaceContactResolver : IPhysicsResolver
 
     void HandleSurfaceEvent(Message<Request, SurfacePhysicsEvent> message)
     {
-        pending.Enqueue(message.Payload);
+        queue.Add(message.Payload);
     }
 }
 

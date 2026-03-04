@@ -19,7 +19,8 @@ public class MovableDummyDefinition : ActorDefinition
 
         Physics                     = new()
         {
-            Mass                    = 5f,
+            Mass                    = 20f,
+            Friction                = Settings.Physics.FRICTION,
             BleedThreshold          = 0f,
             BleedRatio              = 0f,
             PushResistance          = 0f,

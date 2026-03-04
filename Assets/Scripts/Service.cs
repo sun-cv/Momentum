@@ -12,12 +12,13 @@ public enum ServiceRate { Tick, Loop, Step, Util }
         //                               Interfaces                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public interface IService     : IDisposable { public bool IsEnabled { get; }};
-public interface IServiceTick : IService    { public void Tick(); UpdatePriority Priority { get; } };
-public interface IServiceLoop : IService    { public void Loop(); UpdatePriority Priority { get; } };
-public interface IServiceStep : IService    { public void Step(); UpdatePriority Priority { get; } };
-public interface IServiceUtil : IService    { public void Util(); UpdatePriority Priority { get; } };
-public interface IServiceLate : IService    { public void Late(); UpdatePriority Priority { get; } };
+public interface IService     : IDisposable                 { public bool IsEnabled     { get; }};
+public interface IServicePriority                           { UpdatePriority Priority   { get; }};
+public interface IServiceTick : IService, IServicePriority  { public void Tick();               };
+public interface IServiceLoop : IService, IServicePriority  { public void Loop();               };
+public interface IServiceStep : IService, IServicePriority  { public void Step();               };
+public interface IServiceUtil : IService, IServicePriority  { public void Util();               };
+public interface IServiceLate : IService, IServicePriority  { public void Late();               };
 
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

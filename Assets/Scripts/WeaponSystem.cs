@@ -563,12 +563,11 @@ public class WeaponSystem : Service, IServiceTick
     // Damage Package
     // ============================================================================
 
-        // Rework required - force magnitude calculation.
     DamagePackage CreateDamagePackage()
     {
         var components = instance.Action.DamageComponents.ToList();
 
-        components.Add(new DamageComponent(source: owner,amount: ((IAttacker)Owner).Attack, forceMagnitude: instance.Action.ForceMagnitude != 0 ? instance.Action.ForceMagnitude : 0));
+        components.Add(new DamageComponent(source: owner, amount: ((IAttacker)Owner).Attack));
 
         var package = new DamagePackage()
         {

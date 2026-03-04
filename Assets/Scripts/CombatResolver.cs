@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 {
-    readonly List<CombatContext> pendingRequests = new();
+    readonly List<CombatContext> queue = new();
 
     // ===============================================================================
 
@@ -18,17 +18,17 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
     
     public void Step()
     {
-        ProcessPendingEvents();
+        ProcessQueuedEvents();
     }
 
-    void ProcessPendingEvents()
+    void ProcessQueuedEvents()
     {
-        foreach (var combat in pendingRequests)
+        foreach (var combat in queue)
         {
             ProcessCombatEvent(combat);
         }
 
-        pendingRequests.Clear();
+        queue.Clear();
     }
 
     void ProcessCombatEvent(CombatContext context)
@@ -39,11 +39,7 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
         float damage    = ProcessComponents(source, target, components);
         
-        ApplyDamage(target, damage);
-
-        // if (HasKilled(target))
-        //     SendKillingBlow();
-
+        // rework required send damage request.
     }
 
     // ===============================================================================
@@ -54,21 +50,25 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
         foreach (var component in components)
         {            
-            ApplyEffects(target, component.Effects);
-
-            if (ForceIsDynamic(component))
-            {
-                ResolveDynamicForce(source, target, component);
-            }
-
-            damage += component.Amount;
+            damage += ProcessComponent(source, target, component);
         }
 
         return damage;
     }
 
+    float ProcessComponent(Actor source, Actor target, DamageComponent component)
+    {
+        ApplyEffects(target, component.Effects);
+        ResolveDynamicForce(source, target, component);
+
+        return component.Amount;
+    }
+
     void ResolveDynamicForce(Actor source, Actor target, DamageComponent component)
     {
+        if (!ComponentHasForce(component))
+            return;
+
         var direction = CalculateDirection(source, target);
 
         Emit.Global(Request.Create, new ForcePhysicsEvent
@@ -77,19 +77,8 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
             Target = target,
             Phase  = CollisionPhase.Enter,
             Normal = -direction,
-            Impact = component.ForceMagnitude
+            Impact = component.Force
         });
-    }
-
-
-    void ApplyDamage(Actor target, float damage)
-    {
-        if (!CanTakeDamage(target, out var actor))
-            return;
-
-        actor.Health -= damage;
-
-        Log.Debug($"{actor.GetType().Name} has taken {damage} damage. Health: {actor.Health}");
     }
 
     // ===============================================================================
@@ -110,37 +99,17 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
     
     public void HandleCombatEvent(Message<Request, CombatEvent> message)
     {
-        pendingRequests.Add(message.Payload.Context);
+        queue.Add(message.Payload.Context);
     }
 
     // ===============================================================================
     //  Predicates
     // ===============================================================================
 
-    bool HasKilled(Actor target)
-    {
-        if (!CanTakeDamage(target, out var actor))
-        {
-            return false;
-        }
-        return actor.Health <= 0;
-    }
 
-    bool CanTakeDamage(Actor target, out IDamageable actor)
+    bool ComponentHasForce(DamageComponent component)
     {
-        if (target is IDamageable damageable && !damageable.Invulnerable && !damageable.Impervious)
-        {
-            actor = damageable;
-            return true;
-        }
-
-        actor = null;
-        return false;
-    }
-
-    bool ForceIsDynamic(DamageComponent component)
-    {
-        return component.ForceMagnitude > 0;
+        return component.Force > 0;
     }
 
     // ===============================================================================
@@ -179,21 +148,19 @@ public class KillingBlow
     
 }
 
-
 public readonly struct DamageComponent
 {
-    public object Source                    { get; init; }
     public float Amount                     { get; init; }
+    public object Source                    { get; init; }
     public List<Effect> Effects             { get; init; }
 
-    /// <summary> force * velocity.magnitude * mass </summary>
-    public float ForceMagnitude             { get; init;}
+    public float Force             { get; init;}
 
-    public DamageComponent(object source, float amount, float forceMagnitude = 0)
+    public DamageComponent(object source, float amount, float force = 0)
     {
         Source          = source;
         Amount          = amount;
-        ForceMagnitude  = forceMagnitude;
+        Force           = force;
 
         Effects         = new();
     }
@@ -208,6 +175,8 @@ public readonly struct DamagePackage
         Components = components ?? new();
     }
 }
+
+
 
 public readonly struct CombatContext
 {

@@ -93,7 +93,7 @@ public class BaseDash : MovementWeapon
                 KinematicAction     = KinematicAction.Dash,
                 Phase               = WeaponPhase.Fire,
                 Scope               = (int)WeaponPhase.Fire,
-                Speed               = 100f,
+                Speed               = 15f,
                 DurationFrames      = 10,
                 PersistPastScope    = true,
             }
