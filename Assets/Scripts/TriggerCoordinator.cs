@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using UnityEditor.Rendering.LookDev;
+using UnityEngine;
 
 
 
@@ -35,13 +37,20 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
         switch (trigger.Package)
         {
             case DamagePackage package:
-                Emit.Global(Request.Create, new CombatEvent() { 
-                    Context = new()
-                    {
-                        Source  = trigger.Source,
-                        Target  = trigger.Target,
-                        Package = package
-                    }});
+                Emit.Global(Request.Create, new CombatEvent(
+                    new DamageContext(
+                        trigger.Source, 
+                        trigger.Target,
+                        package
+                    )));
+                break;
+            case ForcePackage package:
+                Emit.Global(Request.Create, new ForceEvent(
+                    new ForceContext(
+                        trigger.Source,
+                        trigger.Target,
+                        package
+                    )));
                 break;
         }
     }

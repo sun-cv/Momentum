@@ -21,12 +21,12 @@ public class Movement : Service, IServiceTick
 
         // -----------------------------------
 
-    float modifier;
-    float speed;
     float mass;
+    float speed;
+    float modifier;
 
-    Vector2 momentum            = Vector2.zero;
     Vector2 control             = Vector2.zero;
+    Vector2 momentum            = Vector2.zero;
 
     readonly List<MovementDirective> directives = new();
 
@@ -60,18 +60,64 @@ public class Movement : Service, IServiceTick
 
     public void Tick()
     {
-        RemoveInactiveControllers();
-    
+        ProcessDirectives();
+
         CalculateModifier();
         CalculateVelocity();
         CalculateMomentum();
 
-        ApplyControlVelocity();
+        ApplyControl();
 
-        DebugLog();
+        if (owner is Hero) DebugLog();
     }
 
     // ===============================================================================
+
+
+    void AddDirective(object source, MovementDefinition definition)
+    {
+        var controller = CreateController(definition);
+
+        if (controller == null)
+            return;
+
+        controller.Enter(this);
+        
+        directives.Add(new() { Owner = source, Definition = definition, Controller = controller });
+    }
+
+    void ProcessDirectives()
+    {
+        var expired = AllDisabledDirectives();
+
+        foreach (var directive in expired)
+        {
+            directive.Controller.Exit(this);
+            directives.Remove(directive);
+        }
+    }
+
+    void RemoveDirective(object source, int scope)
+    {
+        var expired = AllScopeDirectives(source, scope);
+
+        foreach (var directive in expired)
+        {
+            directive.Controller.Exit(this);
+            directives.Remove(directive);
+        }
+    }
+
+    void RemoveAllDirectives(object source)
+    {
+        var expired = AllSourceDirectives(source);
+
+        foreach (var directive in expired)
+        {
+            directive.Controller.Exit(this);
+            directives.Remove(directive);
+        }
+    }
 
         // ===================================
         //  Calculations
@@ -86,48 +132,44 @@ public class Movement : Service, IServiceTick
     {
         if (AgentIsDisabled())
         {
-            ClearMovement();
+            control = Vector2.zero;
             return;
         }
 
-        control = CalculateKinematicForces();
+        control = ProcessControllers();
     }
+
     void CalculateMomentum()
     {
         momentum = mass * control;
     }
 
-    Vector2 CalculateKinematicForces()
+    Vector2 ProcessControllers()
     {
-        Vector2 targetVelocity = Vector2.zero;
+        Vector2 result = AgentCanMove() ? BaseMovementVelocity() : Vector2.zero;
 
-        if (AgentCanMove())
+        foreach (var directive in directives)
         {
-            targetVelocity = BaseMovementVelocity();
-        }
+            var velocity = directive.Controller.Process(this);
 
-        foreach(var directive in directives)
-        {
-            Vector2 controllerVelocity = directive.Controller.CalculateVelocity(owner);
-
-            switch(directive.Controller.Mode)
+            switch (directive.Controller.Mode)
             {
                 case ControllerMode.Ignore:
-                    targetVelocity  = controllerVelocity;
-                    goto FinishedBlending;
+                    result = velocity;
+                    goto Done;
 
                 case ControllerMode.Blend:
-                    targetVelocity += controllerVelocity * directive.Controller.Weight;
+                    result += velocity * directive.Controller.Weight;
                     break;
 
                 case ControllerMode.AllowOverride:
-                    targetVelocity  = Vector2.Lerp(targetVelocity, controllerVelocity, directive.Controller.Weight);
+                    result = Vector2.Lerp(result, velocity, directive.Controller.Weight);
                     break;
             }
         }
 
-        FinishedBlending:
-        return targetVelocity;
+        Done:
+        return result;
     }
 
         // ===================================
@@ -139,45 +181,25 @@ public class Movement : Service, IServiceTick
         return Vector2.MoveTowards(control, Mathf.Clamp(speed * modifier, 0, maxSpeed) * movable.Direction.Vector, acceleration * Clock.DeltaTime);
     }
 
-    void ApplyControlVelocity()
+    void ApplyControl()
     {
         movable.Control = control;
     }
 
-        // ===================================
-        //  Registration
-        // ===================================
 
-    void RemoveInactiveControllers()
-    {   
-        directives.RemoveAll(directive => !directive.Controller.Active);
-    }
-
-    void RequestMovementDirective(object owner, MovementDefinition definition)
+    public void SetControlSpeed(float speed)
     {
-        directives.Add(new() { Owner = owner, Definition = definition, Controller = CreateController(definition)});
-    }
-
-    void ClearMovementDirective(object owner, int scope)
-    {
-        directives.RemoveAll(directive => directive.Owner == owner && directive.Definition.Scope == scope && !directive.Definition.PersistPastScope);
-    }
-
-    void ClearAllOwnedDirectives(object owner)
-    {
-        directives.RemoveAll(directive => directive.Owner == owner && !directive.Definition.PersistPastSource);
+        control = control.normalized * Mathf.Min(control.magnitude, speed);
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
     
+
     void HandleMovementDirective(Message<Request, MovementEvent> message)
     {
-        var owner       = message.Payload.Owner;
-        var Definition  = message.Payload.Definition;
-
-        RequestMovementDirective(owner, Definition);
+        AddDirective(message.Payload.Owner, message.Payload.Definition);
     }
 
     void HandleMovementClear(Message<Request, ClearMovementScopeEvent> message)
@@ -187,30 +209,25 @@ public class Movement : Service, IServiceTick
         switch (message.Action, payload)
         {
             case (Request.Clear, { Owner: not null, Scope: not -1 }):
-                ClearMovementDirective(payload.Owner, payload.Scope);
+                RemoveDirective(payload.Owner, payload.Scope);
                 break;
 
             case (Request.Clear, { Owner: not null }):
-                ClearAllOwnedDirectives(payload.Owner);
+                RemoveAllDirectives(payload.Owner);
                 break;
         }
     }
 
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
-        switch(message.Payload.State)
+        switch (message.Payload.State)
         {
-            case Presence.State.Entering:
-                Enable();
-            break;
-            case Presence.State.Exiting:
-                Disable();
-            break;
-            case Presence.State.Disposal:
-                Dispose();
-            break;
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
         }
     }
+
 
     // ===============================================================================
     //  Predicates
@@ -226,14 +243,10 @@ public class Movement : Service, IServiceTick
     void SetSpeed() => speed = movable.Speed;
     void SetMass()  => mass  = movable.Mass;
 
-    void ClearMovement()
-    {
-        ClearMomentum();
-        ClearVelocity();
-    }
 
-    void ClearMomentum() => momentum = Vector2.zero;
-    void ClearVelocity() => control  = Vector2.zero;
+    List<MovementDirective> AllDisabledDirectives()                         => directives.Where(directive => !directive.Controller.Active).ToList();
+    List<MovementDirective> AllScopeDirectives(object source, int scope)    => directives.Where(directive => directive.Owner == source && directive.Definition.Scope == scope && !directive.Definition.PersistPastScope).ToList();
+    List<MovementDirective> AllSourceDirectives(object source)              => directives.Where(directive => directive.Owner == source && !directive.Definition.PersistPastSource).ToList();
 
     IMovementController CreateController(MovementDefinition definition)
     {
@@ -260,10 +273,11 @@ public class Movement : Service, IServiceTick
         Services.Lane.Deregister(this);
     }
 
+    public Agent Owner      => owner;
     public Vector2 Control  => control;
     public Vector2 Momentum => momentum;
 
-    public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;
+    public UpdatePriority Priority => ServiceUpdatePriority.Movement;
 }
 
 
@@ -307,10 +321,10 @@ public static class MovementControllerFactory
         return (definition.KinematicAction, agent)switch
         {
             (KinematicAction.Dash, IMovableActor movable) =>
-                new DashController(definition.InputIntent.Direction, definition.InputIntent.LastDirection, definition.Speed, definition.DurationFrames),
+                new DashController(definition),
 
             (KinematicAction.Lunge, IMovableActor movable) => 
-                new LungeController(definition.InputIntent.Aim, definition.Speed, definition.DurationFrames, definition.SpeedCurve),
+                new LungeController(definition),
 
             _ => null
         };

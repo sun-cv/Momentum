@@ -16,14 +16,21 @@ public interface IBind                          { public void Bind();       }
 
 public interface IStateHandler<TController>
 {    
-    void Enter  (TController controller);
-    void Update (TController controller);
-    void Exit   (TController controller);
+    void Enter      (TController controller);
+    void Update     (TController controller);
+    void Exit       (TController controller);
 }
 
-public interface IResolver                      { void Resolve();           }   // terminal. Takes a request, produces a side effect, doesn't return a value
-public interface IProcessor<T>                  { T Process(T value);       }   // transforming. Takes a value, returns a modified value, passes it along.
+public interface IStateProcessor<TController, TValue>
+{
+    void Enter      (TController controller);
+    TValue Process  (TController controller);
+    void Exit       (TController controller);
+}
+
 public interface IHandler                       { bool Handle();            }   // claims and stops. One handler in the chain responds, the rest are skipped.
+public interface IProcessor<T>                  { T Process(T value);       }   // transforming. Takes a value, returns a modified value, passes it along.
+public interface IResolver                      { void Resolve();           }   // terminal. Takes a request, produces a side effect, doesn't return a value
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    

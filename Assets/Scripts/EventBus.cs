@@ -213,15 +213,16 @@ public class Emit : IDisposable
         Bus.Raise(new EmptyMessage<TAction>(id, action));
     }    
 
+    public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
+    {
+        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(id, action, payload));
+    }
+
     public static void Global<TAction, TPayload>(TAction action, TPayload payload) 
     {
         EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(action, payload));
     }
 
-    public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
-    {
-        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(id, action, payload));
-    }
 
     public static void Global<TMessage>(TMessage message) where TMessage : IEvent
     {

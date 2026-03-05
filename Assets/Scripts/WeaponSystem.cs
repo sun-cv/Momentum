@@ -495,7 +495,12 @@ public class WeaponSystem : Service, IServiceTick
             {
                 hitboxDefinition.Direction.Input = instance.State.Intent;
 
-                hitboxEvents.Send(Request.Create, new HitboxDeclarationEvent(owner, hitboxDefinition, CreateDamagePackage()));
+                var packages = new List<object>
+                {
+                    CreateDamagePackage(),
+                    CreateForcePackage()
+                };
+                hitboxEvents.Send(Request.Create, new HitboxDeclarationEvent(owner, hitboxDefinition, packages));
             }
         }
     }
@@ -567,14 +572,16 @@ public class WeaponSystem : Service, IServiceTick
     {
         var components = instance.Action.DamageComponents.ToList();
 
-        components.Add(new DamageComponent(source: owner, amount: ((IAttacker)Owner).Attack));
+        components.Add(new DamageComponent(new Damage(instance.Action.Damage, instance.Action.DamageType)));
 
-        var package = new DamagePackage()
-        {
-            Components = components,
-        };
+        return new DamagePackage(components);
+    }
 
-        return package;
+    ForcePackage CreateForcePackage()
+    {
+        var components = instance.Action.ForceComponents.ToList();
+
+        return new ForcePackage(components);
     }
 
     // ============================================================================
@@ -647,17 +654,11 @@ public class WeaponSystem : Service, IServiceTick
 
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
-        switch(message.Payload.State)
+        switch (message.Payload.State)
         {
-            case Presence.State.Entering:
-                Enable();
-            break;
-            case Presence.State.Exiting:
-                Disable();
-            break;
-            case Presence.State.Disposal:
-                Dispose();
-            break;
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
         }
     }
 

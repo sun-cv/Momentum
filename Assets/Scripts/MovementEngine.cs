@@ -104,10 +104,10 @@ public class MovementCombineProcessor : IMovementProcessor
         Vector2 control = movable.Control;
         Vector2 force   = actor is IPhysicsBody physics ? physics.Force : Vector2.zero;
 
-        if (actor is MovableDummy) Log.Debug("Control", () => $"{control}");
-        if (actor is MovableDummy) Log.Debug("Force",   () => $"{force}");
-        if (actor is MovableDummy) Log.Debug("Velocity",() => $"{control + force}");
-
+        if (actor is Hero) Log.Debug("Control", () => $"{control}");
+        if (actor is Hero) Log.Debug("Force",   () => $"{force}");
+        if (actor is Hero) Log.Debug("Velocity",() => $"{control + force}");
+        if (actor is Hero) Log.Debug($" combine: {control}");
         movable.Velocity = control + force;
     }
 }
@@ -154,7 +154,7 @@ public class MovementVelocityProcessor : IMovementProcessor
         var body     = actor.Bridge.Body;
         var velocity = movable.Velocity;
 
-        if (actor is MovableDummy) Log.Debug("Magnitude",() => $"{velocity.magnitude}");
+        if (actor is Hero) Log.Debug("Magnitude",() => $"{velocity.magnitude}");
 
         if (velocity.magnitude < 0.01f)
         {
@@ -162,7 +162,7 @@ public class MovementVelocityProcessor : IMovementProcessor
             return;
         }
             
-        if (actor is MovableDummy) Log.Debug("Final Velocity",() => $"{velocity}");
+        if (actor is Hero) Log.Debug("Final Velocity",() => $"{velocity}");
 
         body.linearVelocity = velocity;
     }

@@ -35,10 +35,10 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     void ProcessQueued()
     {
-        foreach( var hitbox in queue)
-        {
+        foreach(var hitbox in queue)
             CreateHitbox(hitbox);
-        }
+
+        queue.Clear();
     }
 
     void ProcessActive()
@@ -47,28 +47,35 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
         foreach (var (id, instance) in activeHitboxes)
         {
-            var hitbox = instance.Definition;
+            UpdateHitbox(instance);
 
-            instance.CurrentFrame++;
-
-            if (instance.CurrentFrame == hitbox.Lifetime.FrameStart)
-                ActivateHitbox(instance);
-
-
-            if (hitbox.Lifetime.Type == HitboxLifetime.Conditional)
+            if (ShouldRemove(instance))
             {
-                if (!CheckConditionalHitbox(instance))
-                    continue;
-            }
-
-            if (instance.CurrentFrame == hitbox.Lifetime.FrameEnd)
-            {
-                DeactivateHitbox(instance);
                 toRemove.Add(id);
             }
         }
 
-        foreach (var id in toRemove)
+        RemoveHitboxes(toRemove);
+    }
+
+
+    void UpdateHitbox(HitboxInstance instance)
+    {
+        instance.CurrentFrame++;
+
+        if (IsActivationFrame(instance))
+            ActivateHitbox(instance);
+
+        if (instance.Definition.Lifetime.Type == HitboxLifetime.Conditional)
+            CheckConditionalHitbox(instance);
+
+        if (IsDeactivationFrame(instance))
+            DeactivateHitbox(instance);
+    }
+
+    void RemoveHitboxes(List<Guid> ids)
+    {
+        foreach (var id in ids)
             DestroyHitbox(id);
     }
 
@@ -83,10 +90,9 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         return hitbox.Definition.Lifetime.ConditionalRelease(hitbox.Owner);
     }
 
-    void DeactivateHitbox(HitboxInstance hitbox)
+    void DeactivateHitbox(HitboxInstance instance)
     {
-        if (hitbox.Hitbox != null)
-            hitbox.Hitbox.SetActive(false);
+        instance.Hitbox.SetActive(false);
     }
 
         // ===================================
@@ -108,7 +114,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         instance.Hitbox = hitbox;
 
         var controller  = hitbox.AddComponent<HitboxController>();
-        controller.Bind(this, instance.Owner, instance.RuntimeID, instance.Definition, instance.Package);
+        controller.Bind(this, instance.RuntimeID);
 
         ApplyHitboxBehavior(hitbox, instance);
 
@@ -123,7 +129,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         {
             Owner       = pending.Owner,
             Definition  = pending.Definition,
-            Package     = pending.Package,
+            Packages    = pending.Packages,
         };
 
         return instance;
@@ -183,6 +189,75 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         return true;
     }
 
+        // ===================================
+        //  Hit Detection
+        // ===================================
+
+    public void OnHitDetected(Guid hitboxId, Actor target, CollisionPhase phase)
+    {
+        if (!activeHitboxes.TryGetValue(hitboxId, out var instance))
+            return;
+
+        if (!ShouldHit(instance, target, phase))
+            return;
+
+        RecordHit(instance, target);
+        SendHitboxPackages(instance, target);
+    }
+
+    public void OnHitExited(Guid hitboxId, Actor target)
+    {
+        if (!activeHitboxes.TryGetValue(hitboxId, out var instance))
+            return;
+
+        instance.NextHitTime.Remove(target);
+    }
+
+    bool ShouldHit(HitboxInstance instance, Actor target, CollisionPhase phase)
+    {
+        if (target == instance.Owner) 
+            return false;
+
+        if (phase == CollisionPhase.Stay && !instance.Definition.Behavior.AllowMultiHit)
+            return false;
+
+        if (!instance.Definition.Behavior.AllowMultiHit)
+            return !instance.HitActors.Contains(target);
+
+        if (instance.NextHitTime.TryGetValue(target, out float nextTime))
+            return Clock.Time >= nextTime;
+
+        return true;
+    }
+
+    void RecordHit(HitboxInstance instance, Actor target)
+    {
+        if (!instance.Definition.Behavior.AllowMultiHit)
+            instance.HitActors.Add(target);
+        else
+            instance.NextHitTime[target] = Clock.Time + instance.Definition.Behavior.MultiHitInterval;
+    }
+
+    void SendHitboxPackages(HitboxInstance instance, Actor target)
+    {
+        foreach (var package in instance.Packages)
+        {
+            SendPackage(instance.Owner, target, package);
+        }
+    }
+
+    void SendPackage(Actor source, Actor target, object package)
+    {
+        Emit.Global(Request.Queue, new TriggerEvent
+        {
+            Source  = source,
+            Target  = target,
+            Package = package
+        });
+    }
+
+
+
     // ============================================================================
     //  Events
     // ============================================================================
@@ -191,9 +266,9 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     {
         var owner       = message.Payload.Owner;
         var definition  = message.Payload.Definition;
-        var package     = message.Payload.Package;
+        var packages    = message.Payload.Packages;
 
-        queue.Add(new() { RequestId = message.Id, Owner = owner, Definition = definition, Package = package });
+        queue.Add(new() { RequestId = message.Id, Owner = owner, Definition = definition, Packages = packages });
     }
 
     void HandleHitboxDestroyRequest(Message<Request, HitboxIdEvent> message)
@@ -209,6 +284,24 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         Emit.Global(requestId, Response.Success, new HitboxIdEvent(instanceId));
     }
 
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
+    bool IsActivationFrame(HitboxInstance instance)
+    {
+        return instance.CurrentFrame == instance.Definition.Lifetime.FrameStart;
+    }
+    
+    bool IsDeactivationFrame(HitboxInstance instance)
+    {
+        return instance.CurrentFrame == instance.Definition.Lifetime.FrameEnd;
+    }
+    
+    bool ShouldRemove(HitboxInstance instance)
+    {
+        return !instance.Hitbox.activeSelf;
+    }
     // ============================================================================
     // Helpers
     // ============================================================================
@@ -247,36 +340,13 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-
-
-
-public enum HitboxBehavior
-{
-    Attached,
-    Stationary,
-    Projectile
-}
-
-public enum HitboxLifetime
-{
-    FrameBased,
-    Conditional,
-    Permanent
-}
-
-public enum HitboxDirectionScope
-{
-    Cardinal,
-    Intercardinal,
-}
-
-public enum HitboxDirectionSource
-{
-    Input,
-    Explicit,
-    OwnerFacing
-}
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class HitboxDefinition : Definition
 {
@@ -293,7 +363,6 @@ public class HitboxDirectionDefinition : Definition
     public Vector2 Explicit                     { get; set;  }
     public InputIntentSnapshot Input            { get; set;  }
 }
-
 
 public class HitboxFormDefinition : Definition
 {
@@ -325,13 +394,12 @@ public class HitboxLifetimeDefinition : Definition
 }
 
 
-
 public class PendingHitbox      
 {       
     public Guid RequestId                       { get; init; }
     public Actor Owner                          { get; init; }
     public HitboxDefinition Definition          { get; init; }
-    public object Package                       { get; init; }
+    public List<object> Packages                { get; init; }
 }       
 
 public class HitboxInstance : Instance      
@@ -341,33 +409,60 @@ public class HitboxInstance : Instance
     public HitboxDefinition Definition          { get; init; }
 
     public int CurrentFrame                     { get; set;  }
-    public object Package                       { get; init; }
+    public List<object> Packages                { get; init; }
+
+    public HashSet<Actor> HitActors             { get; } = new();
+    public Dictionary<Actor, float> NextHitTime { get; } = new();
 }       
 
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Enums                                                 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public enum HitboxBehavior
+{
+    Attached,
+    Stationary,
+    Projectile
+}
+
+public enum HitboxLifetime
+{
+    FrameBased,
+    Conditional,
+    Permanent
+}
+
+public enum HitboxDirectionScope
+{
+    Cardinal,
+    Intercardinal,
+}
+
+public enum HitboxDirectionSource
+{
+    Input,
+    Explicit,
+    OwnerFacing
+}
 
 
-
-
-
-
-
-
-
-
-
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public readonly struct HitboxDeclarationEvent
 {
     public readonly Actor Owner                 { get; init; }
     public readonly HitboxDefinition Definition { get; init; }
-    public readonly object Package              { get; init; }
+    public readonly List<object> Packages       { get; init; }
 
-    public HitboxDeclarationEvent(Actor owner, HitboxDefinition definition, object package)
+    public HitboxDeclarationEvent(Actor owner, HitboxDefinition definition, List<object> packages)
     {
         Owner       = owner;
         Definition  = definition;
-        Package     = package;
+        Packages    = packages ?? new();
     }
 
 }

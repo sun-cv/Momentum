@@ -31,11 +31,8 @@ public class Lifecycle : Service, IServiceLoop
         if (actor is not IDamageable)
             return;
 
-        if (actor is not IDefined defined)
-            return;
-
-        this.owner      = actor;
-        this.definition = defined.Definition;
+        owner       = actor;
+        definition  = actor.Definition;
 
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
 
@@ -111,19 +108,13 @@ public class Lifecycle : Service, IServiceLoop
     //  Events
     // ===============================================================================
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
-        switch(message.Payload.State)
+        switch (message.Payload.State)
         {
-            case Presence.State.Entering:
-                Enable();
-            break;
-            case Presence.State.Exiting:
-                Disable();
-            break;
-            case Presence.State.Disposal:
-                Dispose();
-            break;
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
         }
     }
 
@@ -175,10 +166,13 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
     
         // -----------------------------------
 
-    float lastHealthPercent     = -1f;
-    // float timeSinceLastDamage   = -1f;
+    float lastHealthPercent;
+    float timeSinceLastDamage;
 
-    readonly HashSet<HealthThreshold> activeThresholds = new();
+        // -----------------------------------
+
+    readonly HashSet<HealthThreshold> activeThresholds  = new();
+    readonly List<DamageEvent> queue                    = new();
 
     // ===============================================================================
 
@@ -188,6 +182,7 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
         this.damageable = owner as IDamageable;
         this.definition = definition;
 
+        owner.Emit.Link.Local<Message<Publish, DamageEvent>>(HandleDamageEvent);
     }
 
     // ===============================================================================
@@ -210,15 +205,15 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
     
     public override void Update(Lifecycle controller)
     {
-        if (damageable.Health == 0)
-            controller.TransitionTo(Lifecycle.State.Dying);
 
         if (definition.Lifecycle.EnableHealthThresholds)
             ProcessHealthThresholds();
         
         if (definition.Lifecycle.AlertOnHealthChange)
             ProcessHealthChangeAlerts();
-        
+
+        if (damageable.Health == 0)
+            controller.TransitionTo(Lifecycle.State.Dying);
     }
     
     public override void Exit(Lifecycle controller)
@@ -305,6 +300,11 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
     // ===============================================================================
     //  Events
     // ===============================================================================
+
+    void HandleDamageEvent(Message<Publish, DamageEvent> message)
+    {
+        
+    }
 
 
     // ===============================================================================

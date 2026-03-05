@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 {
-    readonly List<CombatContext> queue = new();
+    readonly List<DamageContext> queue = new();
 
     // ===============================================================================
 
@@ -23,62 +23,36 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
     void ProcessQueuedEvents()
     {
-        foreach (var combat in queue)
+        foreach (var context in queue)
         {
-            ProcessCombatEvent(combat);
+            ProcessCombatEvent(context);
         }
 
         queue.Clear();
     }
 
-    void ProcessCombatEvent(CombatContext context)
+    void ProcessCombatEvent(DamageContext context)
     {
         var source      = context.Source;
         var target      = context.Target;
         var components  = context.Package.Components;
 
-        float damage    = ProcessComponents(source, target, components);
-        
-        // rework required send damage request.
+        ProcessComponents(source, target, components);
     }
 
     // ===============================================================================
 
-    float ProcessComponents(Actor source, Actor target, List<DamageComponent> components)
+    void ProcessComponents(Actor source, Actor target, List<DamageComponent> components)
     {
-        float damage = 0;
-
         foreach (var component in components)
         {            
-            damage += ProcessComponent(source, target, component);
+            ProcessComponent(source, target, component);
         }
-
-        return damage;
     }
 
-    float ProcessComponent(Actor source, Actor target, DamageComponent component)
+    void ProcessComponent(Actor source, Actor target, DamageComponent component)
     {
         ApplyEffects(target, component.Effects);
-        ResolveDynamicForce(source, target, component);
-
-        return component.Amount;
-    }
-
-    void ResolveDynamicForce(Actor source, Actor target, DamageComponent component)
-    {
-        if (!ComponentHasForce(component))
-            return;
-
-        var direction = CalculateDirection(source, target);
-
-        Emit.Global(Request.Create, new ForcePhysicsEvent
-        {
-            Owner  = source,
-            Target = target,
-            Phase  = CollisionPhase.Enter,
-            Normal = -direction,
-            Impact = component.Force
-        });
     }
 
     // ===============================================================================
@@ -102,23 +76,9 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
         queue.Add(message.Payload.Context);
     }
 
-    // ===============================================================================
-    //  Predicates
-    // ===============================================================================
-
-
-    bool ComponentHasForce(DamageComponent component)
+    public void SendDamageEvent()
     {
-        return component.Force > 0;
-    }
-
-    // ===============================================================================
-    //  Helpers
-    // ===============================================================================
-
-    Vector2 CalculateDirection(Actor source, Actor target)
-    {
-        return (target.Bridge.View.transform.position - source.Bridge.View.transform.position).normalized;
+        Emit.Global(Request.Create, new DamageEvent());
     }
 
     // ===============================================================================
@@ -126,8 +86,8 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
     readonly Logger Log = Logging.For(LogSystem.Combat);
 
     public override void Dispose()
-    {
-        // NO OP;
+    {   
+        Services.Lane.Deregister(this);
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.Combat;
@@ -135,63 +95,17 @@ public class CombatResolver : RegisteredService, IServiceStep, IInitialize
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                      Declarations
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Classes                                                    
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-    // REWORK REQUIRED - Implementation of killing blow data, type (DeathType enum?) 
-public class KillingBlow
-{
-    
-}
-
-public readonly struct DamageComponent
-{
-    public float Amount                     { get; init; }
-    public object Source                    { get; init; }
-    public List<Effect> Effects             { get; init; }
-
-    public float Force             { get; init;}
-
-    public DamageComponent(object source, float amount, float force = 0)
-    {
-        Source          = source;
-        Amount          = amount;
-        Force           = force;
-
-        Effects         = new();
-    }
-}
-
-public readonly struct DamagePackage
-{
-    public List<DamageComponent> Components { get; init; }
-
-    public DamagePackage(List<DamageComponent> components = null)
-    {
-        Components = components ?? new();
-    }
-}
-
-
-
-public readonly struct CombatContext
-{
-    public Actor Target                     { get; init; }
-    public Actor Source                     { get; init; }
-    public DamagePackage Package            { get; init; }
-}
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public readonly struct CombatEvent
 {
-    public CombatContext Context            { get; init; }
+    public DamageContext Context            { get; init; }
+
+    public CombatEvent(DamageContext context)
+    {
+        Context = context;
+    }
 }
 
 

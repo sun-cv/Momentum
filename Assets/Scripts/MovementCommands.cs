@@ -13,11 +13,14 @@ using UnityEngine;
 
 public interface IMovementController
 {
-    Vector2 CalculateVelocity(Actor actor);
+    MovementDefinition Definition           { get; }
+
+    void Enter(Movement controller);
+    Vector2 Process(Movement controller);
+    void Exit(Movement controller);
 
     float Weight                            { get; }
     bool  Active                            { get; }
-
     ControllerMode Mode                     { get; }
     ControllerPriority Priority             { get; }
 }
@@ -32,6 +35,8 @@ public class MovementDefinition : Definition
 
     // KINEMATIC
     public float Speed                      { get; init; }
+    public float ExitSpeed                  { get; init; }
+
     public AnimationCurve SpeedCurve        { get; init; }
     public int DurationFrames               { get; init; }
 
@@ -94,28 +99,43 @@ public enum ControllerPriority
         //                                   Dash                                                  
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class DashController : IMovementController
+public class DashController : StateProcessor<Movement, Vector2>, IMovementController
 {
+    public MovementDefinition Definition          { get; init; }
+
     readonly float speed;
     readonly Vector2 direction;
     readonly FrameTimer timer;
 
     // ===============================================================================
 
-    public DashController(Vector2 direction, Vector2 lastDirection, float speed, int duration)
+    public DashController(MovementDefinition definition)
     {
-        this.direction  = direction != Vector2.zero ? direction.normalized : lastDirection.normalized;
-        this.speed      = speed;
-        this.timer      = new FrameTimer(duration);
-        timer.Start();
+        Definition = definition;
+        direction  = Definition.InputIntent.Direction != Vector2.zero ? Definition.InputIntent.Direction.Vector.normalized : Definition.InputIntent.LastDirection.Vector.normalized;
+        speed      = Definition.Speed;
+        timer      = new FrameTimer(definition.DurationFrames);
     }
 
     // ===============================================================================
+    
+    public override void Enter(Movement controller)
+    {
+        timer.Start();
+    }
 
-    public Vector2 CalculateVelocity(Actor actor) => direction * speed;
+    public override Vector2 Process(Movement controller)
+    {
+        return direction * speed;
+    }
+
+    public override void Exit(Movement controller)
+    {
+        if (Definition.ExitSpeed > 0)
+            controller.SetControlSpeed(Definition.ExitSpeed);
+    }
 
     // ===============================================================================
-
 
     public float Weight                     => 1f;
     public bool  Active                     => !timer.IsFinished;
@@ -128,8 +148,10 @@ public class DashController : IMovementController
         //                                  Lunge                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class LungeController : IMovementController
+public class LungeController : StateProcessor<Movement, Vector2>, IMovementController
 {
+    public MovementDefinition Definition          { get; init; }
+
     readonly float maxSpeed;
     readonly Vector2 direction;
     readonly AnimationCurve speedCurve;
@@ -137,22 +159,30 @@ public class LungeController : IMovementController
 
         // ===============================================================================
 
-    public LungeController(Vector2 direction, float maxSpeed, int duration, AnimationCurve curve = null)
+    public LungeController(MovementDefinition definition)
     {
-        this.direction  = direction.normalized;
-        this.maxSpeed   = maxSpeed;
-        this.speedCurve = curve ?? AnimationCurve.EaseInOut(0, 1, 1, 0);
-        this.timer      = new FrameTimer(duration);
-        
-        timer.Start();
+        Definition  = definition;
+        direction   = Definition.InputIntent.Direction.Vector.normalized;
+        maxSpeed    = Definition.Speed;
+        speedCurve  = Definition.SpeedCurve ?? AnimationCurve.EaseInOut(0, 1, 1, 0);
+        timer       = new FrameTimer(Definition.DurationFrames);
     }
     
     // ===============================================================================
 
-    public Vector2 CalculateVelocity(Actor actor)
+    public override void Enter(Movement controller)
+    {
+        timer.Start();
+    }
+
+    public override Vector2 Process(Movement controller)
     {
         float speedMultiplier = speedCurve.Evaluate(timer.PercentComplete);
         return maxSpeed * speedMultiplier * direction;
+    }
+    public override void Exit(Movement controller)
+    {
+        
     }
 
     // ===============================================================================
@@ -164,41 +194,6 @@ public class LungeController : IMovementController
     public ControllerPriority Priority      => ControllerPriority.Normal;
 
 }
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Dynamic                                                 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class DynamicForceController : IMovementController
-{
-    Vector2 currentVelocity;
-    readonly float friction = Settings.Movement.FRICTION;
-
-    // ===============================================================================
-
-    public DynamicForceController(Vector2 force, float mass)
-    {
-        currentVelocity = force / mass;
-    }
-
-    // ===============================================================================
-
-    public Vector2 CalculateVelocity(Actor actor)
-    {
-        currentVelocity *= Mathf.Exp(-friction * Clock.DeltaTime);
-        return currentVelocity;
-    }
-
-    // ===============================================================================
-
-
-    public float Weight                     => 1f;
-    public bool  Active                     => currentVelocity.magnitude > 0.01f;
-    public ControllerMode Mode              => ControllerMode.Additive;
-    public ControllerPriority Priority      => ControllerPriority.Forced;
-}
-
-
 
 // REWORK REQUIRED WHEN TARGETING IMPLEMENTED
 

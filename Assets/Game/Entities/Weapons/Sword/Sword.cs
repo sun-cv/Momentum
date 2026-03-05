@@ -85,13 +85,27 @@ public class SwordStrike : DamagingWeapon
             }
         };
 
-        DamageComponents    = new()
+        DamageComponents            = new()
         {
             new()
             {
-                Amount              = 10,
-                Force               = 500,
+                Damage              = new()
+                {
+                    Amount          = 10,
+                    Type            = DamageType.Physical,
+                },
                 Effects             = new(),
+            }
+        };
+
+        ForceComponents             = new()
+        {
+            new()
+            {
+                Force               = new()
+                {
+                    Magnitude       = 500
+                }
             }
         };
 
@@ -189,16 +203,29 @@ public class SwordCleave : DamagingWeapon
             }
         };
 
-        DamageComponents    = new()
+        DamageComponents            = new()
         {
             new()
             {
-                Amount              = 10,
-                Force               = 500,
+                Damage              = new()
+                {
+                    Amount          = 10,
+                    Type            = DamageType.Physical,
+                },
                 Effects             = new(),
             }
         };
 
+        ForceComponents             = new()
+        {
+            new()
+            {
+                Force               = new()
+                {
+                    Magnitude       = 500
+                }
+            }
+        };
         Hitboxes = new()
         {
             new()
@@ -293,13 +320,27 @@ public class SwordRend : DamagingWeapon
             }
         };
 
-        DamageComponents    = new()
+        DamageComponents            = new()
         {
             new()
             {
-                Amount              = 10,
-                Force               = 750,
+                Damage              = new()
+                {
+                    Amount          = 10,
+                    Type            = DamageType.Physical,
+                },
                 Effects             = new(),
+            }
+        };
+
+        ForceComponents             = new()
+        {
+            new()
+            {
+                Force               = new()
+                {
+                    Magnitude       = 1000
+                }
             }
         };
 

@@ -46,20 +46,14 @@ public class IntentSystem : Service, IServiceTick
     // ===============================================================================
     //  Events
     // ===============================================================================
-
+    
     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
     {
-        switch(message.Payload.State)
+        switch (message.Payload.State)
         {
-            case Presence.State.Entering:
-                Enable();
-            break;
-            case Presence.State.Exiting:
-                Disable();
-            break;
-            case Presence.State.Disposal:
-                Dispose();
-            break;
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
         }
     }
 

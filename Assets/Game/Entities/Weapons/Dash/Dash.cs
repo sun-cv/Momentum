@@ -41,7 +41,7 @@ public class BaseDash : MovementWeapon
         Availability                = WeaponAvailability.Default;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 10;
+        FireDurationFrames          = 15;
         Cooldown                    = 0.5f;
         CanCancelDisables           = true;
         CanInterrupt                = true;
@@ -81,8 +81,8 @@ public class BaseDash : MovementWeapon
                 Cancelable          = false,
                 DurationFrames      = 15,
                 Modifier            = 1f,
-                ModifyTarget        = .1f,
-                ModifyTimespan      = .2f,
+                ModifyTarget        = .2f,
+                ModifyTimespan      = .25f,
             },
         };
 
@@ -94,8 +94,9 @@ public class BaseDash : MovementWeapon
                 Phase               = WeaponPhase.Fire,
                 Scope               = (int)WeaponPhase.Fire,
                 Speed               = 15f,
-                DurationFrames      = 10,
+                DurationFrames      = FireDurationFrames,
                 PersistPastScope    = true,
+                ExitSpeed           = 7f,
             }
         };
     }

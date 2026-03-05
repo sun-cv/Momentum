@@ -83,34 +83,35 @@ public static class ServiceUpdatePriority
     public static UpdatePriority InputDriver                = new(UpdatePhase.Input,    10);
     public static UpdatePriority InputRouter                = new(UpdatePhase.Input,    20);
 
-    public static UpdatePriority TeleportService            = new(UpdatePhase.Logic,    01);
-    public static UpdatePriority EcoSystem                  = new(UpdatePhase.Logic,    02);
-    public static UpdatePriority SpawnerService             = new(UpdatePhase.Logic,    03);
-    public static UpdatePriority Spawner                    = new(UpdatePhase.Logic,    04);
-    public static UpdatePriority CorpseService              = new(UpdatePhase.Logic,    05);
-    public static UpdatePriority Corpse                     = new(UpdatePhase.Logic,    06);
+    public static UpdatePriority EcoSystem                  = new(UpdatePhase.Logic,    01);
+    public static UpdatePriority SpawnerService             = new(UpdatePhase.Logic,    02);
+    public static UpdatePriority Spawner                    = new(UpdatePhase.Logic,    03);
+    public static UpdatePriority TeleportService            = new(UpdatePhase.Logic,    04);
     public static UpdatePriority Stats                      = new(UpdatePhase.Logic,    10);
     public static UpdatePriority IntentSystem               = new(UpdatePhase.Logic,    20);
     public static UpdatePriority DirectionHandler           = new(UpdatePhase.Logic,    21);
     public static UpdatePriority CommandSystem              = new(UpdatePhase.Logic,    25);
     public static UpdatePriority WeaponLogic                = new(UpdatePhase.Logic,    30);
     public static UpdatePriority EffectManager              = new(UpdatePhase.Logic,    35);
-    public static UpdatePriority Lifecycle                  = new(UpdatePhase.Logic,    40);
-    public static UpdatePriority Presence                   = new(UpdatePhase.Logic,    45);
+
     public static UpdatePriority HitboxManager              = new(UpdatePhase.Logic,    50);
     public static UpdatePriority TriggerCoordinator         = new(UpdatePhase.Logic,    55);  
     public static UpdatePriority Combat                     = new(UpdatePhase.Logic,    60);
     public static UpdatePriority Damage                     = new(UpdatePhase.Logic,    65);
 
-
     public static UpdatePriority CollisionHandler           = new(UpdatePhase.Physics,  10);
     public static UpdatePriority PhysicsEngine              = new(UpdatePhase.Physics,  20);
+    public static UpdatePriority Movement                   = new(UpdatePhase.Physics,  25);
     public static UpdatePriority MovementEngine             = new(UpdatePhase.Physics,  30);
-    public static UpdatePriority SpriteDepthSorting         = new(UpdatePhase.Physics,  90);
 
+    public static UpdatePriority Lifecycle                  = new(UpdatePhase.Resolve,  10);
+    public static UpdatePriority Presence                   = new(UpdatePhase.Resolve,  15);
+    public static UpdatePriority CorpseService              = new(UpdatePhase.Resolve,  20);
+    public static UpdatePriority Corpse                     = new(UpdatePhase.Resolve,  25);
 
     public static UpdatePriority SpriteLayering             = new(UpdatePhase.Render,   10);
-    public static UpdatePriority AnimationSystem            = new(UpdatePhase.Render,   20);
-    public static UpdatePriority AnimatorController         = new(UpdatePhase.Render,   30);
-    public static UpdatePriority CameraRig                  = new(UpdatePhase.Render,   40);
+    public static UpdatePriority SpriteDepthSorting         = new(UpdatePhase.Render,   20);
+    public static UpdatePriority AnimationSystem            = new(UpdatePhase.Render,   30);
+    public static UpdatePriority AnimatorController         = new(UpdatePhase.Render,   40);
+    public static UpdatePriority CameraRig                  = new(UpdatePhase.Render,   50);
 }

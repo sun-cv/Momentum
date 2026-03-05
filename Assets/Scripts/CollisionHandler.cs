@@ -5,15 +5,16 @@ using UnityEngine;
 
 public class CollisionHandler : RegisteredService, IServiceTick
 {
-        // -----------------------------------
+    // -----------------------------------
 
-    List<ProcessedCollision> queue    = new();
+    readonly List<CollisionContext> collisionQueue  = new();
+    readonly List<ContactContext>   contactQueue    = new();
 
         // -----------------------------------
 
     public CollisionHandler()
     {
-        Link.Global<Message<Request, CollisionEvent>>(HandleCollisionEvent);
+        Link.Global<Message<Request, CollisionHandlerEvent>>(HandleCollisionEvent);
     }
 
     // ===============================================================================
@@ -27,43 +28,22 @@ public class CollisionHandler : RegisteredService, IServiceTick
 
     void ProcessCollisions()
     {
-        foreach( var collision in queue)
+        foreach( var context in collisionQueue)
         {
-            ProcessCollision(collision);
+            Emit.Global(Request.Create, new CollisionEvent(context));
+        }
+        
+        foreach( var context in contactQueue)
+        {
+            Emit.Global(Request.Create, new ContactEvent(context));
         }
 
-        queue.Clear();
+        collisionQueue  .Clear();
+        contactQueue    .Clear();
     }
 
-     void ProcessCollision(ProcessedCollision collision)
-    {
-        switch (collision.Type)
-        {
-            case CollisionType.Actor:
-                Emit.Global(Request.Create, new CollisionPhysicsEvent
-                {
-                    Owner  = collision.Owner,
-                    Other  = collision.Other,
-                    Phase  = collision.Phase,
-                    Normal = collision.Normal,
-                    Impact = collision.Impact
-                });
-                break;
 
-            case CollisionType.Environment:
-            case CollisionType.Prop:
-                Emit.Global(Request.Create, new SurfacePhysicsEvent
-                {
-                    Owner  = collision.Owner,
-                    Phase  = collision.Phase,
-                    Normal = collision.Normal,
-                    Impact = collision.Impact
-                });
-                break;
-        }
-    }
-
-    Actor GetActor(Collision2D collision)
+    Actor GetTarget(Collision2D collision)
     {
         return collision.gameObject.GetComponent<BridgeController>().Bridge.Owner;
     }
@@ -81,35 +61,65 @@ public class CollisionHandler : RegisteredService, IServiceTick
     // ===============================================================================
 
 
-    void HandleCollisionEvent(Message<Request, CollisionEvent> message)
+    void HandleCollisionEvent(Message<Request, CollisionHandlerEvent> message)
     {
-        var phase     = message.Payload.Phase;
-        var collision = message.Payload.Collision;
-        var owner     = message.Payload.Owner;
-        var type      = GetType(collision);
+        var instance = message.Payload;
 
-        var normal = Vector2.zero;
-        var impact = 0f;
-        Actor other = null;
-
-        if (phase != CollisionPhase.Exit && collision.contactCount > 0)
+        switch(GetType(instance.Collision))
         {
-            normal = collision.GetContact(0).normal;
-            impact = CalculateImpactForce(owner, normal);
+            case CollisionType.Actor:            
+            case CollisionType.Prop:
+                CreateContactContext(instance);
+                break;
+            case CollisionType.Environment:       
+                CreateCollisionContext(instance);
+                break;
         }
 
-        if (type == CollisionType.Actor)
-            other = GetActor(collision);
+    }
 
-        queue.Add(new ProcessedCollision
-        {
-            Owner  = owner,
-            Other  = other,
-            Type   = type,
-            Phase  = phase,
-            Normal = normal,
-            Impact = impact
-        });
+    void CreateContactContext(CollisionHandlerEvent instance)
+    {
+        if (instance.Phase == CollisionPhase.Exit)
+            return;
+
+        var source      = instance.Source;
+        var target      = GetTarget(instance.Collision);
+        var phase       = instance.Phase;
+        var normal      = instance.Collision.GetContact(0).normal;
+        var magnitude   = CalculateImpactForce(source, normal);
+
+        var force       = new Force(magnitude);
+        var collision   = new Collision(normal);
+        var contact     = new Contact(force, collision);
+        var component   = new ContactComponent(contact, phase);
+        var package     = new ContactPackage(new());
+
+        package.Components.Add(component);        
+
+        var context = new ContactContext(source, target, package);
+
+        contactQueue.Add(context);
+    }
+
+    void CreateCollisionContext(CollisionHandlerEvent instance)
+    {
+        if (instance.Phase == CollisionPhase.Exit)
+            return;
+        
+        var phase       = instance.Phase;
+        var normal      = instance.Collision.GetContact(0).normal;        
+        var source      = instance.Source;
+
+        var collision   = new Collision(normal);
+        var component   = new CollisionComponent(collision, phase);
+        var package     = new CollisionPackage(new());
+
+        package.Components.Add(component);        
+
+        var context = new CollisionContext(source, package);
+
+        collisionQueue.Add(context);
     }
 
 
@@ -158,35 +168,20 @@ public enum CollisionType
     Environment
 }
 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Structs                                                
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public struct ProcessedCollision
-{
-    public Actor          Owner;
-    public Actor          Other;
-    public CollisionType  Type;
-    public CollisionPhase Phase;
-    public Vector2        Normal;
-    public float          Impact;
-}
-
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct CollisionEvent
+public readonly struct CollisionHandlerEvent
 {
-    public Actor            Owner       { get; init; }
+    public Actor            Source      { get; init; }
     public CollisionPhase   Phase       { get; init; }
     public Collision2D      Collision   { get; init; }
 
-    public CollisionEvent(Actor owner, CollisionPhase phase, Collision2D collision)
+    public CollisionHandlerEvent(Actor source, CollisionPhase phase, Collision2D collision)
     {
-        Owner       = owner;
+        Source      = source;
         Phase       = phase;
         Collision   = collision;
     }
 }
-

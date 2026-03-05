@@ -9,8 +9,10 @@ public class WeaponAction       : Definition
     // ============================================================================
     // DAMAGE
     // ============================================================================
-    public int Damage                               { get; init; } = 0;
+    public float Damage                             { get; init; }
+    public DamageType DamageType                    { get; init; }
     public List<DamageComponent> DamageComponents   { get; init; } = new();
+    public List<ForceComponent> ForceComponents     { get; init; } = new();
 
     // ============================================================================
     // IDENTITY
@@ -44,9 +46,9 @@ public class WeaponAction       : Definition
     /// <summary>Weapons that are removed from availability during FireEnd phase</summary>
     public List<string> RemoveControlOnFireEnd      { get; init; } = new();
     /// <summary>Automatic weapon chain - available during FireEnd/ControlWindow</summary>
-    public string SwapOnFire                        { get; init; } = "";
+    public string SwapOnFire                        { get; init; }
 
-    public bool ForceReleaseOnSwap                  { get; init; } = false;
+    public bool ForceReleaseOnSwap                  { get; init; }
     // ============================================================================
     // CHAIN ANCHORING
     // ============================================================================
@@ -59,44 +61,44 @@ public class WeaponAction       : Definition
     // ============================================================================
     
     /// <summary>Can this weapon interrupt other weapons?</summary>
-    public bool CanInterrupt                        { get; init; } = false;
+    public bool CanInterrupt                        { get; init; }
     /// <summary>Can this weapon cancel through disable effects?</summary>
-    public bool CanCancelDisables                   { get; init; } = false;
+    public bool CanCancelDisables                   { get; init; }
 
     // ============================================================================
     // TRIGGER LOCKS
     // ============================================================================
     
     /// <summary>Should this weapon lock its trigger inputs while active?</summary>
-    public bool LockTriggerAction                   { get; init; } = false;
+    public bool LockTriggerAction                   { get; init; }
     /// <summary>Should this weapon respect trigger lock requests from effects?</summary>
-    public bool AcceptTriggerLockRequests           { get; init; } = false;
+    public bool AcceptTriggerLockRequests           { get; init; }
 
     // ============================================================================
     // TIMING
     // ============================================================================
     
     /// <summary>Control window duration (in seconds) for combo continuation</summary>
-    public float ControlWindow                      { get; init; } = 0.0f;
+    public float ControlWindow                      { get; init; }
     /// <summary>Cooldown after weapon completes</summary>
-    public float Cooldown                           { get; init; } = 0.0f;
+    public float Cooldown                           { get; init; }
     /// <summary>Charge time in seconds</summary>
-    public float ChargeTime                         { get; init; } = 0.0f;
+    public float ChargeTime                         { get; init; }
     /// <summary>Charge time in frames (takes priority over ChargeTime if set)</summary>
-    public int ChargeTimeFrames                     { get; init; } = 0;
+    public int ChargeTimeFrames                     { get; init; }
     /// <summary>Fire phase duration in Seconds</summary>
-    public float FireDuration                       { get; init; } = 0;
+    public float FireDuration                       { get; init; }
     /// <summary>Fire phase duration in frames (takes priority over ChargeTime if set)</summary>
-    public int FireDurationFrames                   { get; init; } = 0;
+    public int FireDurationFrames                   { get; init; }
 
     // ============================================================================
     // CHARGE BEHAVIOR
     // ============================================================================
     
     /// <summary>OnRelease triggers: minimum charge percentage required to fire (0.0 to 1.0)</summary>
-    public float MinimumChargeToFire                { get; init; } = 0;
+    public float MinimumChargeToFire                { get; init; }
     /// <summary>For OnRelease triggers: force fire when max charge is reached </summary>
-    public bool ForceMaxChargeRelease               { get; init; } = false;
+    public bool ForceMaxChargeRelease               { get; init; }
 
     /// ============================================================================
     /// MOVEMENT COMMANDS
@@ -125,7 +127,7 @@ public class WeaponAction       : Definition
     /// ============================================================================
 
     /// <summary>Lock aim using provided InputIntentSnapshot in animation request context</summary>
-    public bool LockAimDuringPlayback               { get; init; } = false;
+    public bool LockAimDuringPlayback               { get; init; }
     public WeaponAnimations Animations              { get; init; } = new();
 }
 

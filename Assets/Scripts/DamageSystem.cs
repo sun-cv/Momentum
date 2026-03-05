@@ -1,21 +1,21 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 
 
 
 public class DamageSystem : RegisteredService, IServiceStep
 {
 
-    // -----------------------------------
-
-    readonly List<DamageContext> queue = new();
+    readonly List<IMitigationProcessor> mitigations = new();
 
         // -----------------------------------
 
+    readonly List<DamageContext> queue              = new();
+
+    // ===============================================================================
 
     public DamageSystem()
     {
-        Link.Global<Message<Request, DamageEvent>>(HandleDamageRequest);
+        Link.Global<Message<Request, DamageEvent>>(HandleDamageEvent);
     }
 
     // ===============================================================================
@@ -29,30 +29,57 @@ public class DamageSystem : RegisteredService, IServiceStep
 
     void ProcessDamageQueue()
     {
-        foreach ( var damage in queue)
+        foreach (var context in queue)
         {
-            ProcessDamage(damage);
+            ProcessDamageComponents(context, context.Package.Components);
         }
     }
 
 
-    void ProcessDamage(DamageContext damage)
+    void ProcessDamageComponents(DamageContext context, List<DamageComponent> components)
     {
-        
+        foreach (var component in components)
+        {
+            ProcessDamage(context, component);
+        }
     }
 
-    void ApplyDamage(IDamageable actor, float damage)
+
+    void ProcessDamage(DamageContext context, DamageComponent component)
     {
-        actor.Health -= damage;
+        if (!IsDamageable(context.Target, out var damageable))
+            return;
+
+        CalculateMitigation(context);
+        ApplyDamage(damageable, component.Damage);
+        NotifyActor(context);
+    }
+
+    void ApplyDamage(IDamageable target, Damage damage)
+    {
+        target.Health -= damage.Amount;
+    }
+
+    void CalculateMitigation(DamageContext context)
+    {
+        foreach (var handler in mitigations)
+        {
+            handler.Process(context);
+        }
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-    void HandleDamageRequest(Message<Request, DamageEvent> message)
+    void HandleDamageEvent(Message<Request, DamageEvent> message)
     {
         queue.Add(message.Payload.Context);
+    }
+
+    void NotifyActor(DamageContext context)
+    {
+        context.Target.Emit.Local(Publish.Triggered, new DamageEvent(context));
     }
 
 
@@ -93,8 +120,10 @@ public enum DamageType
     Fire,
     Frost,
     Shock,
+    Poison,
     Physical,
     Dynamic,
+    Explosion,
 }
 
 
@@ -104,9 +133,6 @@ public enum DamageType
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Structs                                               
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public readonly struct Damage
 {
@@ -125,16 +151,50 @@ public readonly struct Damage
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct DamageContext
+public readonly struct DamageComponent
+{
+    public Damage Damage                    { get; init; }
+    public List<Effect> Effects             { get; init; }
+
+    public DamageComponent(Damage damage)
+    {
+        Damage          = damage;
+        Effects         = new();
+    }
+}
+
+public readonly struct DamagePackage
+{
+    public List<DamageComponent> Components { get; init; }
+
+    public DamagePackage(List<DamageComponent> components)
+    {
+        Components = components;
+    }
+}
+
+public class DamageContext
 {
     public Actor Target                     { get; init; }
     public Actor Source                     { get; init; }
-    public Damage Damage                    { get; init; }
+    public DamagePackage Package            { get; init; }
+
+    public DamageContext(Actor target, Actor source, DamagePackage package)
+    {
+        Target      = target;
+        Source      = source;
+        Package     = package;
+    }
  }
 
 public readonly struct DamageEvent
 {
     public DamageContext Context            { get; init; }
+
+    public DamageEvent(DamageContext context)
+    {
+        Context = context; 
+    }
 }
 
 
@@ -144,11 +204,26 @@ public readonly struct DamageEvent
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-
-public class ArmorMitigation : IProcessor<float>
+public interface IMitigationProcessor
 {
-    public float Process(float value)
+    float Process(DamageContext context);
+}
+
+
+public class ArmorMitigation : IMitigationProcessor
+{
+    public float Process(DamageContext context)
     {
         return 0f;
     }
 }
+
+public class ResistanceMitigation : IMitigationProcessor
+{
+    public float Process(DamageContext context)
+    {
+        return 0f;
+    }
+}
+
+public class KillingBlow {}
