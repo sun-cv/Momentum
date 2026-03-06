@@ -126,7 +126,7 @@ public class DashController : StateProcessor<Movement, Vector2>, IMovementContro
 
     public override Vector2 Process(Movement controller)
     {
-        return direction * speed;
+        return speed * direction.normalized;
     }
 
     public override void Exit(Movement controller)
@@ -152,18 +152,18 @@ public class LungeController : StateProcessor<Movement, Vector2>, IMovementContr
 {
     public MovementDefinition Definition          { get; init; }
 
-    readonly float maxSpeed;
-    readonly Vector2 direction;
+    readonly float          speed;
     readonly AnimationCurve speedCurve;
-    readonly FrameTimer timer;
+    readonly Vector2        direction;
+    readonly FrameTimer     timer;
 
         // ===============================================================================
 
     public LungeController(MovementDefinition definition)
     {
         Definition  = definition;
-        direction   = Definition.InputIntent.Direction.Vector.normalized;
-        maxSpeed    = Definition.Speed;
+        direction   = Definition.InputIntent.Aim.Vector.normalized;
+        speed       = Definition.Speed;
         speedCurve  = Definition.SpeedCurve ?? AnimationCurve.EaseInOut(0, 1, 1, 0);
         timer       = new FrameTimer(Definition.DurationFrames);
     }
@@ -177,9 +177,9 @@ public class LungeController : StateProcessor<Movement, Vector2>, IMovementContr
 
     public override Vector2 Process(Movement controller)
     {
-        float speedMultiplier = speedCurve.Evaluate(timer.PercentComplete);
-        return maxSpeed * speedMultiplier * direction;
+        return speed * speedCurve.Evaluate(timer.PercentComplete) * direction;
     }
+    
     public override void Exit(Movement controller)
     {
         

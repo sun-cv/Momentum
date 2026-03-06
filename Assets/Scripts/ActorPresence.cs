@@ -30,11 +30,8 @@ public class Presence : Service, IServiceLoop
     {
         Services.Lane.Register(this);
 
-        if (actor is not IDefined defined)
-            return;
-
         owner       = actor;
-        definition  = defined.Definition;
+        definition  = actor.Definition;
 
         owner.Emit.Link.Local<Message<Request, PresenceTargetEvent>>(HandlePresenceTargetEvent);
         owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);

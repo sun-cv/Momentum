@@ -77,7 +77,7 @@ public class MovableDummy : Agent, IMovableDummy
 }
 
 
-public class MovableDummyCorpse : Actor, IDefined, ICorpse
+public class MovableDummyCorpse : Actor, ICorpse
 {
     public Presence             Presence            { get; set; }
     public Corpse               Corpse              { get; set; }

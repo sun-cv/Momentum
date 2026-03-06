@@ -73,7 +73,7 @@ public class HeroState : State
 
     public bool Alive                               => lifecycle.IsAlive;
     public bool Dead                                => lifecycle.IsDead;
-    public bool IsMoving                            => Velocity != Vector2.zero;
+    public bool IsMoving                            => CanMove && (Velocity != Vector2.zero || Direction != Vector2.zero);
     public TimePredicate IsIdle                     => idle ??= new (() => !IsMoving);
 
     //

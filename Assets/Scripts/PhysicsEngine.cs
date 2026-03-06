@@ -57,9 +57,8 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-public interface IPhysicsResolver
+public interface IPhysicsResolver : IResolver
 {
-    void Resolve();
 }
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -76,27 +75,6 @@ public readonly struct Force
     }
 }
 
-public readonly struct Collision
-{
-    public Vector2 Normal                           { get; init; }
-
-    public Collision(Vector2 normal)
-    {
-        Normal = normal;
-    }
-}
-public readonly struct Contact
-{
-    public Force Force                              { get; init; }
-    public Collision Collision                      { get; init; }
-
-    public Contact(Force force, Collision collision)
-    {
-        Force = force;
-        Collision = collision;
-    }
-}
-
 public readonly struct ForceComponent
 {
     public Force Force                              { get; init; }
@@ -107,55 +85,11 @@ public readonly struct ForceComponent
     }
 }
 
-public readonly struct CollisionComponent
-{
-    public Collision Collision                      { get; init; }
-    public CollisionPhase Phase                     { get; init; }
-
-    public CollisionComponent(Collision collision, CollisionPhase phase)
-    {
-        Collision = collision;
-        Phase = phase;
-    }
-}
-
-public readonly struct ContactComponent
-{
-    public Contact Contact                          { get; init; }
-    public CollisionPhase Phase                     { get; init; }
-
-    public ContactComponent(Contact contact, CollisionPhase phase)
-    {
-        Contact = contact;
-        Phase = phase;
-    }
-}
-
 public readonly struct ForcePackage
 {
     public List<ForceComponent> Components      { get; init; }
 
     public ForcePackage(List<ForceComponent> components)
-    {
-        Components = components;
-    }
-}
-
-public readonly struct CollisionPackage
-{
-    public List<CollisionComponent> Components  { get; init; }
-
-    public CollisionPackage(List<CollisionComponent> components)
-    {
-        Components = components;
-    }
-}
-
-public readonly struct ContactPackage
-{
-    public List<ContactComponent> Components  { get; init; }
-
-    public ContactPackage(List<ContactComponent> components)
     {
         Components = components;
     }
@@ -175,6 +109,39 @@ public readonly struct ForceContext
     }
 }
 
+
+public readonly struct Collision
+{
+    public Vector2 Normal                           { get; init; }
+
+    public Collision(Vector2 normal)
+    {
+        Normal = normal;
+    }
+}
+
+public readonly struct CollisionComponent
+{
+    public Collision Collision                      { get; init; }
+    public CollisionPhase Phase                     { get; init; }
+
+    public CollisionComponent(Collision collision, CollisionPhase phase)
+    {
+        Collision = collision;
+        Phase = phase;
+    }
+}
+
+public readonly struct CollisionPackage
+{
+    public List<CollisionComponent> Components  { get; init; }
+
+    public CollisionPackage(List<CollisionComponent> components)
+    {
+        Components = components;
+    }
+}
+
 public readonly struct CollisionContext
 {
     public Actor Source                         { get; init; }
@@ -184,6 +151,40 @@ public readonly struct CollisionContext
     {
         Source  = source;
         Package = package;
+    }
+}
+
+public readonly struct Contact
+{
+    public Force Force                              { get; init; }
+    public Collision Collision                      { get; init; }
+
+    public Contact(Force force, Collision collision)
+    {
+        Force = force;
+        Collision = collision;
+    }
+}
+
+public readonly struct ContactPackage
+{
+    public List<ContactComponent> Components  { get; init; }
+
+    public ContactPackage(List<ContactComponent> components)
+    {
+        Components = components;
+    }
+}
+
+public readonly struct ContactComponent
+{
+    public Contact Contact                          { get; init; }
+    public CollisionPhase Phase                     { get; init; }
+
+    public ContactComponent(Contact contact, CollisionPhase phase)
+    {
+        Contact = contact;
+        Phase = phase;
     }
 }
 
@@ -319,9 +320,6 @@ public class ActorContactResolver : IPhysicsResolver
         if (context.Source is not IDynamic ownerDynamic) 
             return;
 
-        if (context.Source is not IDefined ownerDefined) 
-            return;
-
         if (context.Source is not IPhysicsBody otherBody) 
             return;
 
@@ -332,7 +330,7 @@ public class ActorContactResolver : IPhysicsResolver
             return;
 
         var otherPhysics    = context.Target.Definition.Physics;
-        float ownerStrength = ownerDefined.Definition.Stats.Strength;
+        float ownerStrength = context.Source.Definition.Stats.Strength;
         float impact        = contact.Force.Magnitude * ownerStrength;
 
         if (impact < otherPhysics.MomentumThreshold) return;

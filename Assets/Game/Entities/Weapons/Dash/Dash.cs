@@ -41,7 +41,7 @@ public class BaseDash : MovementWeapon
         Availability                = WeaponAvailability.Default;
         AcceptTriggerLockRequests   = true;
         ChargeTimeFrames            = 3;
-        FireDurationFrames          = 15;
+        FireDurationFrames          = 20;
         Cooldown                    = 0.5f;
         CanCancelDisables           = true;
         CanInterrupt                = true;
@@ -51,19 +51,12 @@ public class BaseDash : MovementWeapon
             {   
                 Name                = "DashDisable",
                 Cancelable          = false,
-                DurationFrames      = 30,
+                DurationFrames      = 20,
                 DisableRotate       = true,
+                DisableMove         = true,
+                DisableAttack       = true,
                 RequestActionLock   = true,
                 ActionLocks         = new(){ Capability.Dash }
-            },
-
-            new DashDisable()
-            {
-                Name                = "DashDisableAttack",
-                Cancelable          = false,
-                DisableAttack       = true,
-                DurationFrames      = 30,
-                RequestActionLock   = true,
             },
 
             new DashForceImmunity()
@@ -73,17 +66,17 @@ public class BaseDash : MovementWeapon
                 ImmuneToForce       = true,
             },
 
-            new WeaponMobility()
-            {
-                Trigger             = WeaponPhase.FireEnd,
-                Name                = "DashMobilityEndModifier",
-                Type                = EffectType.Grip,
-                Cancelable          = false,
-                DurationFrames      = 15,
-                Modifier            = 1f,
-                ModifyTarget        = .2f,
-                ModifyTimespan      = .25f,
-            },
+            // new WeaponMobility()
+            // {
+            //     Trigger             = WeaponPhase.FireEnd,
+            //     Name                = "DashMobilityEndModifier",
+            //     Type                = EffectType.Grip,
+            //     Cancelable          = false,
+            //     DurationFrames      = 15,
+            //     Modifier            = 1f,
+            //     ModifyTarget        = .2f,
+            //     ModifyTimespan      = .25f,
+            // },
         };
 
         MovementDefinitions = new()
@@ -93,10 +86,10 @@ public class BaseDash : MovementWeapon
                 KinematicAction     = KinematicAction.Dash,
                 Phase               = WeaponPhase.Fire,
                 Scope               = (int)WeaponPhase.Fire,
-                Speed               = 15f,
-                DurationFrames      = FireDurationFrames,
+                Speed               = 35.5f,
+                DurationFrames      = 10,
                 PersistPastScope    = true,
-                ExitSpeed           = 7f,
+                ExitSpeed           = 0f,
             }
         };
     }

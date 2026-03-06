@@ -14,7 +14,6 @@ public class DummyDefinition : ActorDefinition
             MaxHealth               = 100,
             MaxMana                 = 100,
             Speed                   = 0,
-            Attack                  = 0,
         };
 
         Physics                     = new()

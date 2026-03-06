@@ -14,7 +14,6 @@ public class MovableDummyDefinition : ActorDefinition
             MaxHealth               = 100,
             MaxMana                 = 100,
             Speed                   = 5,
-            Attack                  = 0,
         };
 
         Physics                     = new()

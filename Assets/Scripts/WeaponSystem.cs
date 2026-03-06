@@ -571,16 +571,12 @@ public class WeaponSystem : Service, IServiceTick
     DamagePackage CreateDamagePackage()
     {
         var components = instance.Action.DamageComponents.ToList();
-
-        components.Add(new DamageComponent(new Damage(instance.Action.Damage, instance.Action.DamageType)));
-
         return new DamagePackage(components);
     }
 
     ForcePackage CreateForcePackage()
     {
         var components = instance.Action.ForceComponents.ToList();
-
         return new ForcePackage(components);
     }
 

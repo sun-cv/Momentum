@@ -22,13 +22,10 @@ public class AnimationSystem : Service, IServiceLoop
     public AnimationSystem(Actor actor)
     {
 
-        if (!ValidateOwner(actor, out IDefined defined))
-            return;
-
         Services.Lane.Register(this);
 
         owner       = actor;
-        animations  = defined.Definition.Animations;
+        animations  = actor.Definition.Animations;
 
         animator    = new(owner);
 
@@ -146,20 +143,6 @@ public class AnimationSystem : Service, IServiceLoop
     // ===============================================================================
 
     readonly Logger Log = Logging.For(LogSystem.Animation);
-
-    bool ValidateOwner(Actor actor, out IDefined defined)
-    {
-        defined = null;
-
-        if (actor is not IDefined instance)
-        {
-            Log.Error($"{actor.GetType().Name} Failed System Validation. Animation System requires IDefined actor");
-            return false;
-        }
-
-        defined = instance;
-        return true;
-    }
 
     public override void Dispose()
     {

@@ -107,7 +107,6 @@ public class MovementCombineProcessor : IMovementProcessor
         if (actor is Hero) Log.Debug("Control", () => $"{control}");
         if (actor is Hero) Log.Debug("Force",   () => $"{force}");
         if (actor is Hero) Log.Debug("Velocity",() => $"{control + force}");
-        if (actor is Hero) Log.Debug($" combine: {control}");
         movable.Velocity = control + force;
     }
 }

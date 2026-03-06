@@ -6,28 +6,17 @@ using UnityEngine;
 
 public class ActorStats : Stats
 {
-    Actor owner;
+    readonly Actor owner;
     
-        // -----------------------------------
-
-    float health; 
-    float mana;
-
     // ===============================================================================
 
     public ActorStats(Actor actor)
     {
-        if (actor is not IDefined instance)
-        {
-            Log.Error($"Cannot initialize ActorStats for {actor.GetType().Name}. Actor does not implement IDefined interface");
-            return;
-        }
-
         owner = actor;
         
         foreach (var stat in StatProperties)
         {
-            var value = (float)stat.GetValue(instance.Definition.Stats);
+            var value = (float)stat.GetValue(actor.Definition.Stats);
 
             if (value < 0)
                 continue;
@@ -42,25 +31,15 @@ public class ActorStats : Stats
     // Accessors
     // ===============================================================================
 
-    public float MaxHealth          => this[nameof(MaxHealth)]; 
-    public float Health
-    {
-        get => health;
-        set => health = Mathf.Clamp(value, 0, MaxHealth);
-    }
-    
+    public float MaxHealth          => this[nameof(MaxHealth)];
+    public float MaxArmor           => this[nameof(MaxArmor)];
+    public float MaxShield          => this[nameof(MaxShield)];
     public float MaxMana            => this[nameof(MaxMana)];
-    public float Mana
-    {
-        get => mana;
-        set => mana = Mathf.Clamp(value, 0, MaxHealth);
-    }
-    
+    public float Strength           => this[nameof(Strength)];
+    public float StrengthMultiplier => this[nameof(StrengthMultiplier)];
     public float Speed              => this[nameof(Speed)];
     public float SpeedMultiplier    => this[nameof(SpeedMultiplier)];
-    public float Strength           => this[nameof(Strength)];
-    public float Attack             => this[nameof(Attack)];
-    public float AttackMultiplier   => this[nameof(AttackMultiplier)];
+
 
     // ===============================================================================
     //  Events

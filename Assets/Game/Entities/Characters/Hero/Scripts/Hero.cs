@@ -1,3 +1,4 @@
+using Mono.Cecil;
 using UnityEngine;
 
 
@@ -11,6 +12,7 @@ public class Hero : Player, IHero
     public IntentSystem         Intent              { get; set; }
     public HeroState            State               { get; set; }
     public ActorStats           Stats               { get; set; }
+    public Resources            Resource            { get; set; }
     public EquipmentManager     Equipment           { get; set; }
     public WeaponSystem         Weapons             { get; set; }
     public Movement             Movement            { get; set; }
@@ -24,15 +26,19 @@ public class Hero : Player, IHero
     //  Accessors
     // ===============================================================================
 
+    public float Health                             { get => Resource.Health;                                               }
     public float MaxHealth                          { get => Stats.MaxHealth;                                               }
-    public float Health                             { get => Stats.Health;              set => Stats.Health         = value;}
+    public float Armor                              { get => Resource.Armor;                                                }
+    public float MaxArmor                           { get => Stats.MaxArmor;                                                }
+    public float Shield                             { get => Resource.Shield;                                               }
+    public float MaxShield                          { get => Stats.MaxShield;                                               }
+    public float Mana                               { get => Resource.Mana;                                                 }
     public float MaxMana                            { get => Stats.MaxMana;                                                 }
-    public float Mana                               { get => Stats.Mana;                set => Stats.Mana           = value;}
+    public float Strength                           { get => Stats.Strength;                                                }
+    public float StrengthMultiplier                 { get => Stats.StrengthMultiplier;                                      }
     public float Speed                              { get => Stats.Speed;                                                   }
     public float SpeedMultiplier                    { get => Stats.SpeedMultiplier;                                         }
-    public float Strength                           { get => Stats.Strength;                                                }
-    public float Attack                             { get => Stats.Attack;                                                  }
-    public float AttackMultiplier                   { get => Stats.AttackMultiplier;                                        }
+
 
     // ===============================================================================
     //  State
@@ -102,10 +108,11 @@ public class Hero : Player, IHero
         Animation   = new(this);
 
         State       = new(this);
+
     }
 }
 
-public class HeroCorpse : Actor, IDefined, ICorpse
+public class HeroCorpse : Actor, ICorpse
 {
     public Presence             Presence            { get; set; }
     public Corpse               Corpse              { get; set; }

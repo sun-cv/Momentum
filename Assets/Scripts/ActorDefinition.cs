@@ -8,12 +8,12 @@ using System.Collections.Generic;
 
 public abstract class ActorDefinition : Definition
 {
-    public StatsDefinition Stats                        { get; init; }
+    public StatsDefinition  Stats                       { get; init; }
     public PhysicsDefinition Physics                    { get; init; }
     public PresenceDefinition Presence                  { get; init; }
+    public ResourceDefinition Resource                  { get; init; }
     public LifecycleDefinition Lifecycle                { get; init; }
     public AnimationDefinition Animations               { get; init; }
-
 };  
 
 
@@ -23,17 +23,12 @@ public abstract class ActorDefinition : Definition
 
 public class StatsDefinition : Definition
 {   
-    public float Health                                 { get; init; }
     public float MaxHealth                              { get; init; }
-
-    public float Mana                                   { get; init; }
+    public float MaxArmor                               { get; init; }
+    public float MaxShield                              { get; init; }
     public float MaxMana                                { get; init; }
-
     public float Strength                               { get; init; }
-    public float Attack                                 { get; init; }
-
     public float Speed                                  { get; init; }
-
 }
 
 
@@ -47,6 +42,35 @@ public class PresenceDefinition : Definition
     public bool CanBeCameraTarget                       { get; init; }
 }
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Resource
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class ResourceDefinition : Definition
+{
+    public ResourceConfig Health                        { get; init; }
+    public ResourceConfig Armor                         { get; init; }
+    public ResourceConfig Shield                        { get; init; }
+    public ResourceConfig Mana                          { get; init; }
+}
+
+public class ResourceConfig
+{
+    public bool                     Enabled             { get; init; }
+    public bool                     AlertOnChange       { get; init; }
+    public bool                     EnableThresholds    { get; init; }
+    public List<ResourceThreshold>  Thresholds          { get; init; }
+}
+
+public class ResourceThreshold
+{
+    public string EventName                             { get; init; }
+    public float Percentage                             { get; init; }
+    public ThresholdTrigger Trigger                     { get; init; }
+    public List<Effect> Effects                         { get; init; } = new();
+}
+
+
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                        Lifecycle
@@ -54,16 +78,13 @@ public class PresenceDefinition : Definition
 
 public class LifecycleDefinition : Definition
 {
-    public bool EnableHealthThresholds                  { get; init; } = false;
-    public bool AlertOnHealthChange                     { get; init; } = false;
-    public bool AlertOnDeath                            { get; init; } = false;
-
     public SpawnBehavior    Spawn                       { get; init; }
     public RespawnBehavior  Respawn                     { get; init; }
     public CorpseBehavior   Corpse                      { get; init; }
     
-    public List<HealthThreshold> HealthThresholds       { get; init; }
     public List<Effect> OnDeathEffects                  { get; init; }
+    public bool AlertOnDeath                            { get; init; }
+
 }
 
 

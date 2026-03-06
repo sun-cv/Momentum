@@ -28,7 +28,7 @@ public class Lifecycle : Service, IServiceLoop
     {
         Services.Lane.Register(this);
 
-        if (actor is not IDamageable)
+        if (actor is not IMortal)
             return;
 
         owner       = actor;
@@ -139,7 +139,7 @@ public class Lifecycle : Service, IServiceLoop
         Services.Lane.Deregister(this);
     }
     
-    public IDamageable Actor            => owner as IDamageable;
+    public IMortal Mortal               => owner as IMortal;
     public bool IsAlive                 => instance.State.Condition == State.Alive;
     public bool IsDead                  => instance.State.Condition == State.Dead;
 
@@ -161,28 +161,14 @@ public class Lifecycle : Service, IServiceLoop
 public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
 {
     readonly Actor owner;
-    readonly IDamageable damageable;
-    readonly ActorDefinition definition;
+    readonly IMortal mortal;
     
-        // -----------------------------------
-
-    float lastHealthPercent;
-    float timeSinceLastDamage;
-
-        // -----------------------------------
-
-    readonly HashSet<HealthThreshold> activeThresholds  = new();
-    readonly List<DamageEvent> queue                    = new();
-
     // ===============================================================================
 
     public LifecycleAliveState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
-        this.damageable = owner as IDamageable;
-        this.definition = definition;
-
-        owner.Emit.Link.Local<Message<Publish, DamageEvent>>(HandleDamageEvent);
+        this.mortal     = owner as IMortal;
     }
 
     // ===============================================================================
@@ -193,119 +179,37 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
 
         if (controller.Instance.State.Respawn)
         {
-            ClearState();
             ResetActor();
             SpawnActor();
-        }
-        else
-        {
-            damageable.Health = damageable.MaxHealth;
         }
     }
     
     public override void Update(Lifecycle controller)
     {
 
-        if (definition.Lifecycle.EnableHealthThresholds)
-            ProcessHealthThresholds();
-        
-        if (definition.Lifecycle.AlertOnHealthChange)
-            ProcessHealthChangeAlerts();
-
-        if (damageable.Health == 0)
+        if (mortal.Health == 0 && !mortal.Impervious)
             controller.TransitionTo(Lifecycle.State.Dying);
     }
     
     public override void Exit(Lifecycle controller)
     {
-        activeThresholds.Clear();
     }
 
     // ===============================================================================
 
-        // ===================================
-        //  State
-        // ===================================
-
-    void ClearState()
-    {
-        lastHealthPercent   = -1f;
-        // timeSinceLastDamage = -1f;
-    }
-
     void ResetActor()
     {
-        damageable.Invulnerable = false;
-
-        damageable.Health = damageable.MaxHealth;
-
         if (owner is IControllable controllable)
             controllable.Inactive = true;
 
-        damageable.Health = damageable.MaxHealth;
-    }
+        mortal.Invulnerable = false;
 
-        // ===================================
-        //  Execution
-        // ===================================
+    }
 
     void SpawnActor()
     {            
         // owner.Emit.Local(Request.Teleport, new TeleportEvent(spawnPosition));
     }
-
-    void ProcessHealthThresholds()
-    {
-        float currentPercent = damageable.Health / damageable.MaxHealth;
-        
-        foreach (var threshold in definition.Lifecycle.HealthThresholds)
-        {
-            bool wasActive   = activeThresholds.Contains(threshold);
-            bool isActive    = currentPercent <= threshold.Percentage;
-            
-            if (isActive && !wasActive)
-            {
-                if (threshold.Trigger is HealthThresholdTrigger.OnEnter or HealthThresholdTrigger.OnCross)
-                    TriggerThreshold(threshold);
-                activeThresholds.Add(threshold);
-            }
-            else if (!isActive && wasActive)
-            {
-                if (threshold.Trigger is HealthThresholdTrigger.OnExit or HealthThresholdTrigger.OnCross)
-                    TriggerThreshold(threshold);
-                activeThresholds.Remove(threshold);
-            }
-        }
-        
-        lastHealthPercent = currentPercent;
-    }
-
-    void TriggerThreshold(HealthThreshold threshold)
-    {
-        foreach (var effect in threshold.Effects)
-            owner.Emit.Local(Request.Create, new EffectDeclarationEvent(owner, effect));
-    }
-    
-    void ProcessHealthChangeAlerts()
-    {
-        float currentPercent = damageable.Health / damageable.MaxHealth;
-
-        if (Mathf.Abs(currentPercent - lastHealthPercent) > 0.01f)
-        {
-            owner.Emit.Local( Publish.Changed, new HealthEvent(owner, damageable.Health, damageable.MaxHealth, lastHealthPercent, currentPercent));
-            lastHealthPercent = currentPercent;
-        }
-    }
-
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void HandleDamageEvent(Message<Publish, DamageEvent> message)
-    {
-        
-    }
-
 
     // ===============================================================================
 
@@ -320,7 +224,7 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
 public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 {
     readonly Actor              owner;
-    readonly IDamageable        damageable;
+    readonly IMortal            mortal;
     readonly ActorDefinition    definition;
 
         // -----------------------------------
@@ -336,7 +240,7 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
     public LifecycleDyingState(Actor owner,ActorDefinition definition)
     {
         this.owner      = owner;
-        this.damageable = owner as IDamageable;
+        this.mortal     = owner as IMortal;
         this.definition = definition;
 
         animationRequestHandler = new(owner.Emit, HandleAnimationPlayback);
@@ -396,7 +300,7 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
     void DisableDamage()
     {
-        damageable.Invulnerable = true;
+        mortal.Invulnerable = true;
     }
 
     void AlertDeath()
@@ -475,7 +379,7 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
 {
     readonly Actor              owner;
-    readonly IDamageable        damageable;
+    readonly IMortal            mortal;
     readonly ActorDefinition    definition;
     
         // -----------------------------------
@@ -487,7 +391,7 @@ public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
     public LifecycleDeadState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
-        this.damageable = owner as IDamageable;
+        this.mortal     = owner as IMortal;
         this.definition = definition;
     }
     
@@ -590,25 +494,11 @@ public class LifeCycleContext
     public AnimationRequest DeathAnimation  { get; set; }
 }
 
-public class HealthThreshold
-{
-    public string EventName                 { get; init; }
-    public float Percentage                 { get; init; }
-    public HealthThresholdTrigger Trigger   { get; init; }
-    public List<Effect> Effects             { get; init; } = new();
-}
 
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public enum HealthThresholdTrigger
-{
-    OnEnter,
-    OnExit,
-    OnCross,
-}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events                                         

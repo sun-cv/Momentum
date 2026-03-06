@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine;
 
 
@@ -31,6 +32,7 @@ public interface IStateProcessor<TController, TValue>
 public interface IHandler                       { bool Handle();            }   // claims and stops. One handler in the chain responds, the rest are skipped.
 public interface IProcessor<T>                  { T Process(T value);       }   // transforming. Takes a value, returns a modified value, passes it along.
 public interface IResolver                      { void Resolve();           }   // terminal. Takes a request, produces a side effect, doesn't return a value
+public interface IConsumer<T>                   { void Consume(T request);  }   // consumes what it can handle and leaves the remainder for the next
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    
@@ -108,29 +110,37 @@ public static class Layers
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-public interface IDepthSorted       {}
-public interface IDepthColliding    {}
-
-public interface IDefined
-{
-    ActorDefinition Definition             { get; }
-}
+public interface IDepthSorted               {}
+public interface IDepthColliding            {}
 
 public interface IControllable
 {
     bool Inactive                           { get; set; }
 }
-public interface IDamageable            
-{           
+
+public interface IMortal
+{
     bool Invulnerable                       { get; set; }
     bool Impervious                         { get; set; }
-    float Health                            { get; set; }
+    float Health                            { get; }
     float MaxHealth                         { get; }
-}           
+}
+
+public interface IArmored
+{
+    float Armor                             { get; }
+    float MaxArmor                          { get; }
+}
+
+public interface IShielded
+{
+    float Shield                            { get; }
+    float MaxShield                         { get; }
+}
 
 public interface ICaster            
 {           
-    float Mana                              { get; set; }
+    float Mana                              { get; }
     float MaxMana                           { get; }
 }           
 
@@ -146,8 +156,6 @@ public interface IMovable
 public interface IAttacker          
 {           
     bool CanAttack                          { get; }
-    float Attack                            { get; }
-    float AttackMultiplier                  { get; }
 }           
 
 public interface IDefender          
@@ -208,7 +216,7 @@ public interface ILiving
     bool Dead                               { get; }
 }
 
-public interface ICorpse : IDefined
+public interface ICorpse
 {
     Corpse.State Condition                  { get; }
 }
@@ -222,17 +230,25 @@ public interface IIdle
 
 
 public interface IActor         : IDepthSorted, IDepthColliding {}
-public interface IAgent         : IActor, IControllable, ILiving, IDefined {}
+public interface IAgent         : IActor, IMortal, IControllable, ILiving {}
 public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IDirectional, IOrientable { }
 
-public interface IHero          : IMovableActor, IPhysicsBody, IAttacker, ICaster, IDefender, IAimable, IDamageable, IAfflictable { }
-public interface IEnemy         : IMovableActor, IPhysicsBody, IControllable, IAttacker, IDamageable, IAfflictable { }
-public interface IDummy         : IAgent, IDamageable, IAfflictable {}
-public interface IMovableDummy  : IMovableActor, IPhysicsBody, IDamageable, IAfflictable {}
+public interface IHero          : IShielded, IArmored, IMovableActor, IPhysicsBody, IAttacker, ICaster, IDefender, IAimable, IAfflictable { }
+public interface IEnemy         : IMovableActor, IPhysicsBody, IControllable, IAttacker, IAfflictable { }
+public interface IDummy         : IAgent, IAfflictable {}
+public interface IMovableDummy  : IMovableActor, IPhysicsBody, IAfflictable {}
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public enum Route 
+{
+    Direct,
+    Distributed,
+    Broadcast, 
+}
+
 
 public enum Request
 {
@@ -359,4 +375,11 @@ public enum Capability
     Rotation,
     ItemUse,
     MenuAccess,
+}
+
+public enum ThresholdTrigger
+{
+    OnEnter,
+    OnExit,
+    OnCross,
 }

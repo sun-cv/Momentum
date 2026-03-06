@@ -59,9 +59,9 @@ public static class BridgeFactory
         return Instantiate(actor, prefabName);
     }
 
-    public static Bridge Create(IDefined actor)
+    public static Bridge Create(Actor actor)
     {
-        return Instantiate((Actor)actor, actor.Definition.Name);
+        return Instantiate(actor, actor.Definition.Name);
     }
 
     static Bridge Instantiate(Actor actor, string prefabName)

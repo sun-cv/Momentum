@@ -42,7 +42,7 @@ public class Dummy : Agent, IDummy
 }
 
 
-public class DummyCorpse : Actor, IDefined, ICorpse
+public class DummyCorpse : Actor, ICorpse
 {
     public Presence             Presence            { get; set; }
     public Corpse               Corpse              { get; set; }
@@ -57,6 +57,5 @@ public class DummyCorpse : Actor, IDefined, ICorpse
         Presence    = new(this);
         Corpse      = new(this);
         Animation   = new(this);
-
     }
 }

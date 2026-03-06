@@ -47,17 +47,11 @@ public class DamageSystem : RegisteredService, IServiceStep
 
     void ProcessDamage(DamageContext context, DamageComponent component)
     {
-        if (!IsDamageable(context.Target, out var damageable))
+        if (!IsDamageable(context.Target, out var mortal))
             return;
 
         CalculateMitigation(context);
-        ApplyDamage(damageable, component.Damage);
         NotifyActor(context);
-    }
-
-    void ApplyDamage(IDamageable target, Damage damage)
-    {
-        target.Health -= damage.Amount;
     }
 
     void CalculateMitigation(DamageContext context)
@@ -87,11 +81,11 @@ public class DamageSystem : RegisteredService, IServiceStep
     //  Predicates
     // ===============================================================================
 
-    bool IsDamageable(Actor target, out IDamageable actor)
+    bool IsDamageable(Actor target, out IMortal actor)
     {
-        if (target is IDamageable damageable && !damageable.Invulnerable && !damageable.Impervious)
+        if (target is IMortal mortal && !mortal.Invulnerable && !mortal.Impervious)
         {
-            actor = damageable;
+            actor = mortal;
             return true;
         }
 
@@ -114,7 +108,10 @@ public class DamageSystem : RegisteredService, IServiceStep
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
+        
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                  Enums                                                 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 public enum DamageType
 {
     Fire,
@@ -127,29 +124,10 @@ public enum DamageType
 }
 
 
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Classes                                               
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-
-
-public readonly struct Damage
-{
-    public float Amount                     { get; init; }
-    public DamageType Type                  { get; init; }
-
-    public Damage(float amount, DamageType type)
-    {
-        Amount  = amount;
-        Type    = type;
-    }
-}
-
-
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
 
 public readonly struct DamageComponent
 {

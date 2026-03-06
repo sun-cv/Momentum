@@ -14,8 +14,7 @@ public class HeroDefinition : ActorDefinition
             MaxHealth               = 100,
             MaxMana                 = 100,
             Speed                   = 5,
-            Strength                = 1,
-            Attack                  = 15,
+            Strength                = 15,
         };
 
         Physics                     = new()
