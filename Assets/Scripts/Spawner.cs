@@ -64,7 +64,7 @@ public class SingleSpawner : Spawner, IServiceStep
         if (actor == null)
             return;
 
-        if (actor is ILiving entity && entity.Dead)
+        if (actor is IMortal entity && entity.Dead)
         {
             actor = null;
             timer.Restart(entry.RespawnDelay);
@@ -172,7 +172,7 @@ public class TimedSpawner : Spawner, IServiceStep
 
     void Cull(string actor, List<Actor> list)
     {
-        int removed = list.RemoveAll(instance => instance is ILiving entity && entity.Dead);
+        int removed = list.RemoveAll(instance => instance is IMortal entity && entity.Dead);
 
         if (removed > 0)
         {

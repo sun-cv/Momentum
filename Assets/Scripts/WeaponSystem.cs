@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -16,7 +17,7 @@ public class WeaponSystem : Service, IServiceTick
 
     // -----------------------------------
 
-    readonly GlobalEventHandler<Message<Response, HitboxIdEvent>> hitboxEvents;
+    readonly GlobalEventHandler<Message<Response, HitboxAPI>> hitboxAPI;
 
         // -----------------------------------
 
@@ -45,16 +46,16 @@ public class WeaponSystem : Service, IServiceTick
         validator       = new(this);
         
         owner           = agent;
-        hitboxEvents    = new(HandleHitboxResponse);
+        hitboxAPI       = new(HandleHitboxAPI);
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        owner.Emit.Link.Local<Publish, CommandPipelinesEvent>       (HandleCommandPipelineUpdates);
-        owner.Emit.Link.Local<Publish, EffectInstanceEvent>         (HandleEffectNonCancelableLockCount);
-        owner.Emit.Link.Local<Publish, LockPublishEvent>            (HandleLocksUpdate);
-        owner.Emit.Link.Local<Publish, EquipmentChangeEvent>        (HandleEquipmentChange);
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);
+        owner.Emit.Link.Local<CommandPipelinesEvent>(HandleCommandPipelineUpdates);
+        owner.Emit.Link.Local<EffectEvent>          (HandleEffectNonCancelableLockCount);
+        owner.Emit.Link.Local<LockUpdateEvent>      (HandleLocksUpdate);
+        owner.Emit.Link.Local<EquipmentChangeEvent> (HandleEquipmentChange);
+        owner.Emit.Link.Local<PresenceStateEvent>   (HandlePresenceStateEvent);
 
     }
 
@@ -188,7 +189,6 @@ public class WeaponSystem : Service, IServiceTick
 
     bool TryActivateInterruptWeapon()
     {
-
         foreach (var command in buffer.Values)
         {
             var weapon = GetDefaultWeapon(command);
@@ -247,8 +247,8 @@ public class WeaponSystem : Service, IServiceTick
                 break;  
         }
         
-        StoreAllCommandIDs(active, instance.Action.Trigger);
-        StoreInputSnapshot(active, instance.Action.Trigger);
+        StoreAllCommandIDs      (active, instance.Action.Trigger);
+        StoreInputIntentSnapshot(active, instance.Action.Trigger);
 
         if (instance.Action.LockTriggerAction)
             LockAllCommands(active, instance.Action.Trigger);
@@ -261,7 +261,7 @@ public class WeaponSystem : Service, IServiceTick
     void EquipWeapon(WeaponAction Action)
     {
         instance = new WeaponInstance(owner, Action);
-        owner.Emit.Local(Publish.Equipped, new WeaponInstanceEvent(owner, instance));
+        owner.Emit.Local(new WeaponInstanceEvent(Publish.Equipped, owner, instance));
     }
 
     void EnableWeapon()
@@ -292,7 +292,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void UnequipWeapon()
     {
-        owner.Emit.Local(Publish.Unequipped, new WeaponInstanceEvent(owner, instance));
+        owner.Emit.Local(new WeaponInstanceEvent(Publish.Unequipped,owner, instance));
         ClearInstance();        
     }
 
@@ -315,7 +315,7 @@ public class WeaponSystem : Service, IServiceTick
     {
         if (buffer.TryGetValue(trigger, out var command))
         {
-            bool isNew = !instance.State.OwnedCommands.Contains(command.RuntimeID);
+            bool isNew = !instance.State.OwnedCommands.Contains(command.RuntimeId);
             return isNew;
         }
         return false;
@@ -335,7 +335,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void ConsumeCommand(Command command)
     {
-        owner.Emit.Local(Request.Consume, new CommandEvent(command));
+        owner.Emit.Local(new CommandEvent(Request.Consume, command));
     }
 
     void ConsumeAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -349,7 +349,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void StoreCommandID(Command command)
     {
-        instance.State.OwnedCommands.Add(command.RuntimeID);
+        instance.State.OwnedCommands.Add(command.RuntimeId);
     }
 
     void StoreAllCommandIDs(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -361,7 +361,7 @@ public class WeaponSystem : Service, IServiceTick
         }
     }
 
-    void StoreInputSnapshot(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
+    void StoreInputIntentSnapshot(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
     {
         foreach (var action in actions)
         {
@@ -372,7 +372,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void LockCommand(Command command)
     {
-        owner.Emit.Local(Request.Lock, new CommandEvent(command));
+        owner.Emit.Local(new CommandEvent(Request.Lock, command));
     }
 
     void LockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -386,7 +386,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void UnlockCommand(Command command)
     {
-        owner.Emit.Local(Request.Unlock, new CommandEvent(command));
+        owner.Emit.Local(new CommandEvent(Request.Unlock, command));
     }
 
     void UnlockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -444,6 +444,7 @@ public class WeaponSystem : Service, IServiceTick
             instance.State.AvailableControls.Remove(control);
     }
 
+
     // ===============================================================================
     //  Effect Management
     // ===============================================================================
@@ -453,7 +454,7 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-                owner.Emit.Local(Request.Create, new EffectDeclarationEvent(instance, effect));
+                owner.Emit.Local(Request.Create, new EffectAPI(instance, effect));
         }
     }
 
@@ -462,7 +463,7 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable)
-                owner.Emit.Local(Request.Cancel, new EffectInstanceEvent(instance));
+                owner.Emit.Local(Request.Cancel, new EffectAPI(instance));
         }
     }
 
@@ -471,7 +472,7 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                owner.Emit.Local(Request.Cancel, new EffectInstanceEvent(instance));
+                owner.Emit.Local(Request.Cancel, new EffectAPI(instance));
         }
     }
 
@@ -481,6 +482,64 @@ public class WeaponSystem : Service, IServiceTick
             return trigger.Trigger == instance.State.Phase;
 
         return instance.State.Phase == WeaponPhase.Enable;
+    }
+
+    // ============================================================================
+    //  Direction Management
+    // ============================================================================
+
+    public void RequestDirection(WeaponAction action)
+    {
+
+        if (!(action.Direction.Enabled && action.Direction.SetTrigger == instance.State.Phase))
+            return;
+
+        Direction source = action.Direction.Source switch 
+        {
+            DirectionSource.Aim             => instance.State.Intent.Aim,
+            DirectionSource.Facing          => instance.State.Intent.Facing,
+            DirectionSource.Direction       => instance.State.Intent.Direction,
+            DirectionSource.LastDirection   => instance.State.Intent.LastDirection,
+            _ => instance.State.Intent.Direction,
+        };
+
+        owner.Emit.Local(new ForcedFacingEvent(Request.Set, source));
+    }
+
+    public void ClearDirection(WeaponAction action)
+    {
+        if (!(action.Direction.Enabled && action.Direction.ClearTrigger == instance.State.Phase))
+            return;
+
+        owner.Emit.Local(new ForcedFacingEvent(Request.Clear, Vector2.zero));
+    }
+
+
+    // ============================================================================
+    //  Movement Management
+    // ============================================================================
+
+    public void RequestMovement(WeaponAction action)
+    {
+        foreach (var definition in action.MovementDefinitions)
+        {
+            if (definition.Phase  != instance.State.Phase)
+                continue;
+
+            definition.InputIntent = instance.State.Intent;
+
+            owner.Emit.Local(new MovementEvent(owner, definition));
+        }
+    }
+
+    public void ClearMovementFromPhase(WeaponPhase scopeToClear)
+    {
+        owner.Emit.Local(new ClearMovementScopeEvent(Request.Clear, owner, (int)scopeToClear));
+    }
+    
+    public void ClearMovementFromOwner()
+    {
+        owner.Emit.Local(new ClearMovementScopeEvent(Request.Clear, owner, -1));
     }
 
     // ============================================================================
@@ -500,47 +559,39 @@ public class WeaponSystem : Service, IServiceTick
                     CreateDamagePackage(),
                     CreateForcePackage()
                 };
-                hitboxEvents.Send(Request.Create, new HitboxDeclarationEvent(owner, hitboxDefinition, packages));
+                hitboxAPI.Send(Request.Create, new HitboxAPI(owner, hitboxDefinition, packages));
             }
         }
     }
 
     public void DestroyHitboxes(WeaponInstance instance)
     {
-        foreach (var hitboxId in instance.State.OwnedHitboxes)
-            Emit.Global(Request.Destroy, new HitboxIdEvent(hitboxId));
-    }
 
-    // ============================================================================
-    // Movement Management
-    // ============================================================================
+        Debug.Log(instance.State.OwnedHitboxes.Count);
 
-    public void RequestMovement(WeaponAction action)
-    {
-        foreach (var definition in action.MovementDefinitions)
+        foreach (var hitbox in instance.State.OwnedHitboxes)
         {
-            if (definition.Phase  != instance.State.Phase)
-                continue;
-
-            definition.InputIntent = instance.State.Intent;
-
-            owner.Emit.Local(Request.Create, new MovementEvent(owner, definition));
+            Debug.Log(hitbox.definition.Form.Name);
+            Emit.Global(Request.Destroy, hitbox);
         }
     }
 
-    public void ClearMovementFromPhase(WeaponPhase scopeToClear)
+    void HandleHitboxAPI(Message<Response, HitboxAPI> message)
     {
-        owner.Emit.Local(Request.Clear, new ClearMovementScopeEvent(owner, (int)scopeToClear));
-    }
-    
-    public void ClearMovementFromOwner()
-    {
-        owner.Emit.Local(Request.Clear, new ClearMovementScopeEvent(owner, -1));
+        if (message.Action != Response.Success)
+            return;
+
+        if (message.Payload.owner != owner)
+            return;
+
+        instance?.State.OwnedHitboxes.Add(message.Payload);
     }
 
     // ============================================================================
     // Animation System
     // ============================================================================
+
+        // Rework required blanket call to animation API?
 
     public void RequestAnimation(WeaponAction action)
     {
@@ -555,17 +606,44 @@ public class WeaponSystem : Service, IServiceTick
         if (animation is null)
             return;
 
-        var request = new AnimationRequest(animation)
+        instance.State.AnimationRequest = new AnimationRequest(animation);
+        instance.State.AnimationRequest.Play();
+        
+        if (action.HoldAnimationUntilReleased)
         {
-            overrides = AnimatorParameter.InputIntentSnapshot[typeof(IAimable)](instance.State.Intent)
-        };
+            instance.State.AnimationRequest.options.HoldUntilReleased = true;
+        }
 
-        owner.Emit.Local(Request.Start, new AnimationRequestEvent(request));
+        if (action.LockAimDuringPlayback)
+        {
+            instance.State.AnimationRequest.overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IAimable)](instance.State.Intent));
+        }
+
+        if (action.LockDirectionDuringPlayback)
+        {
+            instance.State.AnimationRequest.overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IMovableActor)](instance.State.Intent));
+        }
+        
+
+        owner.Emit.Local(Request.Start, new AnimationAPI(instance.State.AnimationRequest));
     }
 
 
+    public void RequestAnimationClear(WeaponAction action)
+    {
+        if (!action.HoldAnimationUntilReleased)
+            return;
+
+        if (instance.State.AnimationRequest == null)
+            return;
+
+
+        instance.State?.AnimationRequest.Stop();
+        owner.Emit.Local(Request.Stop, new AnimationAPI(instance.State.AnimationRequest));
+    }
+
     // ============================================================================
-    // Damage Package
+    //  Package
     // ============================================================================
 
     DamagePackage CreateDamagePackage()
@@ -594,42 +672,42 @@ public class WeaponSystem : Service, IServiceTick
     //  Events
     // ============================================================================
 
-    void HandleCommandPipelineUpdates(Message<Publish, CommandPipelinesEvent> message)
+    void HandleCommandPipelineUpdates(CommandPipelinesEvent message)
     {
-        active = message.Payload.Active;
-        buffer = message.Payload.Buffer;
+        active = message.Active;
+        buffer = message.Buffer;
     }
 
-    void HandleEffectNonCancelableLockCount(Message<Publish, EffectInstanceEvent> message)
+    void HandleEffectNonCancelableLockCount(EffectEvent message)
     {
-        var effect = message.Payload.Instance.Effect;
+        var instance = message.Instance;
     
-        if (!IsDefinitiveAttackDisable(effect))
+        if (!IsDefinitiveAttackDisable(instance.Effect))
             return;
     
-        switch (message.Action)
+        switch (instance.State)
         {
-            case Publish.Activated:
+            case EffectInstance.EffectState.Active:
                 NonCancelableAttackLocks++;
                 break;
-            case Publish.Canceled:
-            case Publish.Deactivated:
+            case EffectInstance.EffectState.Canceled:
+            case EffectInstance.EffectState.Completed:
                 NonCancelableAttackLocks--;
                 break;
         }
     }
 
-    void HandleLocksUpdate(Message<Publish, LockPublishEvent> message)
+    void HandleLocksUpdate(LockUpdateEvent message)
     {
-        locks = message.Payload.Locks;
+        locks = message.Locks;
     }
 
-    void HandleEquipmentChange(Message<Publish, EquipmentChangeEvent> message)
+    void HandleEquipmentChange(EquipmentChangeEvent message)
     {
-        if (message.Payload.Equipment is not Weapon weapon)
+        if (message.Equipment is not Weapon weapon)
             return;
 
-        switch(message.Action)
+        switch(message.Type)
         {
             case Publish.Equipped:
                 foreach (var action in weapon.Definition.Actions)
@@ -643,14 +721,9 @@ public class WeaponSystem : Service, IServiceTick
         }
     }
     
-    void HandleHitboxResponse(Message<Response, HitboxIdEvent> response)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        instance?.State.OwnedHitboxes.Add(response.Payload.HitboxId);
-    }
-
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
-    {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -665,8 +738,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void PublishTransition()
     {
-        owner.Emit.Local(Publish.Transitioned, new WeaponInstanceEvent(owner, instance));
-        owner.Emit.Local(Publish.Transitioned, new WeaponInstanceEvent(owner, instance));
+        owner.Emit.Local(new WeaponInstanceEvent(Publish.Transitioned, owner, instance));
     }
 
 
@@ -684,6 +756,9 @@ public class WeaponSystem : Service, IServiceTick
             return false;
 
         if (!validator.CanActivate(weapon))
+            return false;
+
+        if (weapon.Name == instance?.Action.Name)
             return false;
 
         return true;
@@ -718,6 +793,9 @@ public class WeaponSystem : Service, IServiceTick
             return false;
 
         if (!validator.CanActivate(weapon, skipContextCheck: true))
+            return false;
+
+        if (weapon.Name == instance.Action.Name)
             return false;
 
         return true;
@@ -821,34 +899,33 @@ public class WeaponSystem : Service, IServiceTick
     
         // if (owner is Hero hero)
         // {
-        // if (instance != null && instance.State.Phase == WeaponPhase.Enable)
-        // {
-        //     Log.Debug( $" {instance.State.Phase} {hero.Effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !hero.Disabled)}");
-        //     Log.Debug( $" {instance.State.Phase} Disabled: {hero.Disabled}");
-        //     Log.Debug( $" {instance.State.Phase} Locked aim x {hero.LockedAim.Cardinal.x}");
-        //     Log.Debug( $" {instance.State.Phase} Locked aim y {hero.LockedAim.Cardinal.y}");
-        // }
-
-        // if (instance != null && instance.State.Phase == WeaponPhase.Charging)
-        // {
-
-        //     foreach (var effect in hero.Effects.Effects)
+        //     if (instance != null && instance.State.Phase == WeaponPhase.Enable)
         //     {
-        //         Log.Debug($"Active effect: {effect.Effect.Name} | DisableRotate: {(effect.Effect is IDisableRotate r ? r.DisableRotate : false)}");
+        //         Log.Debug( $" {instance.State.Phase} {hero.Effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !hero.Disabled)}");
+        //         Log.Debug( $" {instance.State.Phase} Disabled: {hero.Disabled}");
+        //         Log.Debug( $" {instance.State.Phase} Locked aim x {hero.ResolvedAim.Cardinal.x}");
+        //         Log.Debug( $" {instance.State.Phase} Locked aim y {hero.ResolvedAim.Cardinal.y}");
         //     }
 
-        //     Log.Debug( $" {instance.State.Phase} {hero.Effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !hero.Disabled)}");
-        //     Log.Debug( $" {instance.State.Phase} Disabled: {hero.Disabled}");
-        //     Log.Debug( $" {instance.State.Phase} Locked aim x {hero.LockedAim.Cardinal.x}");
-        //     Log.Debug( $" {instance.State.Phase} Locked aim y {hero.LockedAim.Cardinal.y}");
-        // }
+        //     if (instance != null && instance.State.Phase == WeaponPhase.Charging)
+        //     {
+
+        //         foreach (var effect in hero.Effects.Effects)
+        //         {
+        //             Log.Debug($"Active effect: {effect.Effect.Name} | DisableRotate: {(effect.Effect is IDisableRotate r ? r.DisableRotate : false)}");
+        //         }
+
+        //         Log.Debug( $" {instance.State.Phase} {hero.Effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !hero.Disabled)}");
+        //         Log.Debug( $" {instance.State.Phase} Disabled: {hero.Disabled}");
+        //         Log.Debug( $" {instance.State.Phase} Locked aim x {hero.ResolvedAim.Cardinal.x}");
+        //         Log.Debug( $" {instance.State.Phase} Locked aim y {hero.ResolvedAim.Cardinal.y}");
+        //     }
         // }
     }
 
     public override void Dispose()
     {
-        hitboxEvents.Dispose();
-
+        hitboxAPI.Dispose();
         Services.Lane.Deregister(this);
     }
 
@@ -868,15 +945,17 @@ public class WeaponSystem : Service, IServiceTick
 //                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct WeaponInstanceEvent
+public readonly struct WeaponInstanceEvent : IMessage
 {
     public readonly Agent Owner             { get; init; }
     public readonly WeaponInstance Instance { get; init; }
+    public readonly Publish Type            { get; init; }
 
-    public WeaponInstanceEvent(Agent owner, WeaponInstance instance)
+    public WeaponInstanceEvent(Publish type, Agent owner, WeaponInstance instance)
     {
         Owner       = owner;
         Instance    = instance;
+        Type        = type;
     }
 }
 
@@ -931,6 +1010,7 @@ public class ChargingPhaseHandler : IWeaponPhaseHandler
         controller.UpdateAvailableControls();
 
         controller.RequestEffects   (instance.Action);
+        controller.RequestDirection (instance.Action);
         controller.RequestMovement  (instance.Action);
         controller.RequestHitboxes  (instance.Action);
         controller.RequestAnimation (instance.Action);
@@ -963,6 +1043,7 @@ public class FirePhaseHandler : IWeaponPhaseHandler
         controller.UpdateAvailableControls();
 
         controller.RequestEffects   (instance.Action);
+        controller.RequestDirection (instance.Action);
         controller.RequestMovement  (instance.Action);
         controller.RequestHitboxes  (instance.Action);
         controller.RequestAnimation (instance.Action);
@@ -1000,6 +1081,7 @@ public class FireEndPhaseHandler : IWeaponPhaseHandler
         controller.UpdateAvailableControls();
 
         controller.RequestEffects   (instance.Action);
+        controller.RequestDirection (instance.Action);
         controller.RequestMovement  (instance.Action);
         controller.RequestHitboxes  (instance.Action);
         controller.RequestAnimation (instance.Action);
@@ -1034,7 +1116,8 @@ public class DisablePhaseHandler : IWeaponPhaseHandler
         
         controller.CancelOnReleaseEffects(instance);
         controller.DestroyHitboxes(instance);
-
+        controller.ClearDirection (instance.Action);
+        controller.RequestAnimationClear(instance.Action);
         controller.ClearMovementFromOwner();
     }
     public void Tick(WeaponInstance instance, WeaponSystem controller)

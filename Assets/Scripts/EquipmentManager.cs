@@ -21,7 +21,7 @@ public class EquipmentManager : Service
         slots[EquipmentSlotType.OffHand ] = new() { SlotType = EquipmentSlotType.OffHand    };
         slots[EquipmentSlotType.Dash    ] = new() { SlotType = EquipmentSlotType.Dash       };
 
-        owner.Emit.Link.Local<Message<Request, EquipEvent>>(HandleEquipEvent);
+        owner.Emit.Link.Local<EquipEvent>(HandleEquipEvent);
     }
 
     // ===============================================================================
@@ -64,7 +64,7 @@ public class EquipmentManager : Service
         
         slot.Equip(item);
 
-        owner.Emit.Local(Publish.Equipped, new EquipmentChangeEvent(owner, item, item.SlotType));
+        owner.Emit.Local(new EquipmentChangeEvent(Publish.Equipped, owner, item, item.SlotType));
 
         DebugLog();
     }
@@ -75,7 +75,7 @@ public class EquipmentManager : Service
         
         slot.Equip(item);
 
-        owner.Emit.Local(Publish.Equipped, new EquipmentChangeEvent(owner, item, item.SlotType));
+        owner.Emit.Local(new EquipmentChangeEvent(Publish.Equipped, owner, item, item.SlotType));
 
         DebugLog();
     }    
@@ -87,7 +87,7 @@ public class EquipmentManager : Service
         var item = slot.Unequip();
 
         if (item != null)
-            owner.Emit.Local(Publish.Unequipped, new EquipmentChangeEvent(owner, item, item.SlotType));
+            owner.Emit.Local(new EquipmentChangeEvent(Publish.Unequipped, owner, item, item.SlotType));
         
         DebugLog();
         return item;
@@ -95,9 +95,9 @@ public class EquipmentManager : Service
 
     // ===============================================================================
 
-    void HandleEquipEvent(Message<Request, EquipEvent> message)
+    void HandleEquipEvent(EquipEvent message)
     {
-        EquipOrSwap(message.Payload.Equipment);
+        EquipOrSwap(message.Equipment);
     }
 
     // ===============================================================================
@@ -178,7 +178,7 @@ public class EquipmentSlot
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct EquipEvent
+public readonly struct EquipEvent : IMessage
 {
     public readonly Actor Owner              { get; init; }
     public readonly Equipment Equipment      { get; init; }
@@ -191,16 +191,18 @@ public readonly struct EquipEvent
 }
 
 
-public readonly struct EquipmentChangeEvent
+public readonly struct EquipmentChangeEvent : IMessage
 {
     public readonly Actor Owner              { get; init; }
     public readonly Equipment Equipment      { get; init; }
     public readonly EquipmentSlotType Slot   { get; init; }
+    public readonly Publish Type             { get; init; }
 
-    public EquipmentChangeEvent(Actor owner, Equipment equipment, EquipmentSlotType slot)
+    public EquipmentChangeEvent(Publish type, Actor owner, Equipment equipment, EquipmentSlotType slot)
     {
         Owner       = owner;
         Equipment   = equipment;
         Slot        = slot;
+        Type        = type;
     }
 }

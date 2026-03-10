@@ -12,8 +12,16 @@ public class MovableDummyDefinition : ActorDefinition
         Stats                       = new()
         {
             MaxHealth               = 100,
-            MaxMana                 = 100,
+            MaxEnergy               = 100,
             Speed                   = 5,
+        };
+
+        Resource                    = new()
+        {
+            Health                  = new()
+            {
+                AlertOnChange       = true,
+            },
         };
 
         Physics                     = new()
@@ -23,7 +31,7 @@ public class MovableDummyDefinition : ActorDefinition
             BleedThreshold          = 0f,
             BleedRatio              = 0f,
             PushResistance          = 0f,
-            MomentumThreshold       = 1f,
+            MomentumThreshold       = 25f,
         };
         
         Presence                    = new()

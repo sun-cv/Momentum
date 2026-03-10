@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -32,7 +33,7 @@ public class IntentSystem : Service, IServiceTick
         command .Initialize(this);
         input   .Initialize(this);
 
-        owner.Emit.Link.LocalBinding<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
+        owner.Emit.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -47,9 +48,9 @@ public class IntentSystem : Service, IServiceTick
     //  Events
     // ===============================================================================
     
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -85,29 +86,63 @@ public class InputIntent : IDirectionSource, IDisposable
 
         // -----------------------------------
 
+    readonly List<ForcedFacingEvent> queue = new();
+    
+    TimePredicate facingDiagonal;
+        // -----------------------------------
+
+
     Direction aim               = new(Vector2.down);
     Direction facing            = new(Vector2.down);
     Direction direction         = new(Vector2.down);
     Direction lastDirection     = new(Vector2.down);
-
-    TimePredicate facingDiagonal;
+    Direction forcedDirection   = new(Vector2.zero);
 
     // ===============================================================================
 
     public void Initialize(IntentSystem intent)
     {
         this.intent         = intent;
-        facingDiagonal      = new TimePredicate(() => IsMovingDiagonal());
+        facingDiagonal      = new TimePredicate(TimerUnit.Time, () => IsMovingDiagonal());
+
+        this.intent.Owner.Emit.Link.Local<ForcedFacingEvent>(HandleForcedFacingEvent);
     }
+
+    // ===============================================================================
 
     public void Tick()
     {
+        ProcessQueue();
+
         UpdateDirection();
         UpdateFacing();
         UpdateAim();
     } 
 
+    
+
     // ===============================================================================
+
+
+    public void ProcessQueue()
+    {
+        foreach(var command in queue)
+        {
+            ProcessForcedDirection(command);
+        }
+
+        queue.Clear();
+    }
+
+    void ProcessForcedDirection(ForcedFacingEvent message)
+    {
+        forcedDirection = message.Type switch
+        {
+            Request.Set   => message.Direction,
+            Request.Clear => Vector2.zero,
+            _             => forcedDirection
+        };
+    }
 
     void UpdateDirection()
     {
@@ -120,10 +155,17 @@ public class InputIntent : IDirectionSource, IDisposable
             input = input.normalized;
 
         direction = input;
+
     }
 
     void UpdateFacing()
     {
+        if (forcedDirection.HasValue)
+        {            
+            facing = Orientation.NormalizeVectorToCardinal(forcedDirection);
+            return;
+        }
+
         if (direction.Vector.sqrMagnitude < 0.0001f)
             return;
 
@@ -163,11 +205,20 @@ public class InputIntent : IDirectionSource, IDisposable
     {
         return new()
         {
-            Aim                = Aim,
-            Facing             = Facing,
-            Direction          = Direction,
-            LastDirection      = LastDirection,
+            Aim                 = Aim,
+            Facing              = Facing,
+            Direction           = Direction,
+            LastDirection       = LastDirection,
         };
+    }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
+    void HandleForcedFacingEvent(ForcedFacingEvent message)
+    {
+        queue.Add(message);
     }
 
     // ===============================================================================
@@ -182,6 +233,36 @@ public class InputIntent : IDirectionSource, IDisposable
     public Direction Direction          => direction;
     public Direction LastDirection      => lastDirection;
 }
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                               Interfaces                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public interface IDirectionSource
+{
+    Direction Aim               { get; }
+    Direction Facing            { get; }
+    Direction Direction         { get; }
+    Direction LastDirection     { get; }
+}
+
+public enum DirectionSource
+{
+    Aim,
+    Facing,
+    Direction,
+    LastDirection
+}
+
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Structs                                                   
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
 public readonly struct Direction
@@ -200,29 +281,40 @@ public readonly struct Direction
     public Cardinal AsCardinal              => Orientation.CardinalFrom(vector);
     public Intercardinal AsIntercardinal    => Orientation.IntercardinalFrom(vector);
 
-    public bool IsZero                      => vector.sqrMagnitude < 0.0001f;
-    public float Angle                      => Mathf.Atan2(vector.y, vector.x) * Mathf.Rad2Deg;
-
     public float X                          => vector.x;
     public float Y                          => vector.y;
+    public float Angle                      => Mathf.Atan2(vector.y, vector.x) * Mathf.Rad2Deg;
+
+    public bool IsZero                      => vector.sqrMagnitude < 0.0001f;
+    public bool HasValue                    => !IsZero;
 
     public static implicit operator Vector2(Direction direction)    => direction.vector;
     public static implicit operator Direction(Vector2 vector)       => new(vector);
 }
 
-
-public interface IDirectionSource
-{
-    Direction Aim               { get; }
-    Direction Facing            { get; }
-    Direction Direction         { get; }
-    Direction LastDirection     { get; }
-}
-
-public readonly struct InputIntentSnapshot
+public readonly struct InputIntentSnapshot : IDirectionSource
 {
     public Direction Aim                { get; init; }
     public Direction Facing             { get; init; }
     public Direction Direction          { get; init; }
     public Direction LastDirection      { get; init; }
+    public Direction CommandDirection   { get; init; }
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
+public readonly struct ForcedFacingEvent : IMessage
+{
+    public Vector2 Direction            { get; init; }
+    public Request Type                 { get; init; }
+
+    public ForcedFacingEvent(Request type, Vector2 direction)
+    {
+        Direction = direction;
+        Type      = type;
+    }
 }

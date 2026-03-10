@@ -8,10 +8,10 @@ using System.Collections.Generic;
 
 public abstract class ActorDefinition : Definition
 {
-    public StatsDefinition  Stats                       { get; init; }
+    public StatsDefinition Stats                        { get; init; }
+    public ResourceDefinition Resource                  { get; init; }
     public PhysicsDefinition Physics                    { get; init; }
     public PresenceDefinition Presence                  { get; init; }
-    public ResourceDefinition Resource                  { get; init; }
     public LifecycleDefinition Lifecycle                { get; init; }
     public AnimationDefinition Animations               { get; init; }
 };  
@@ -26,9 +26,10 @@ public class StatsDefinition : Definition
     public float MaxHealth                              { get; init; }
     public float MaxArmor                               { get; init; }
     public float MaxShield                              { get; init; }
-    public float MaxMana                                { get; init; }
+    public float MaxEnergy                              { get; init; }
     public float Strength                               { get; init; }
     public float Speed                                  { get; init; }
+    public float Impact                                 { get; init; }
 }
 
 
@@ -51,14 +52,12 @@ public class ResourceDefinition : Definition
     public ResourceConfig Health                        { get; init; }
     public ResourceConfig Armor                         { get; init; }
     public ResourceConfig Shield                        { get; init; }
-    public ResourceConfig Mana                          { get; init; }
+    public ResourceConfig Energy                        { get; init; }
 }
 
 public class ResourceConfig
 {
-    public bool                     Enabled             { get; init; }
     public bool                     AlertOnChange       { get; init; }
-    public bool                     EnableThresholds    { get; init; }
     public List<ResourceThreshold>  Thresholds          { get; init; }
 }
 
@@ -158,16 +157,12 @@ public class PhysicsDefinition
 {
     /// <summary> Mass of the entity. Affects momentum transfer ratios and solver-based collision response. </summary>
     public float Mass                                   { get; init; }
-
     /// <summary> Minimum impact magnitude required before bleed force is applied back onto this entity. Prevents bounce on casual contact. </summary>
     public float BleedThreshold                         { get; init; }
-
     /// <summary> Fraction of non-transferred force that bleeds back onto this entity on impact. 0 = no bleed, 1 = full bleed. </summary>
     public float BleedRatio                             { get; init; }
-
     /// <summary> Reduces incoming transfer force from Actor contacts. 0 = full force received, 1 = immovable. </summary>
     public float PushResistance                         { get; init; }
-
     /// <summary> Minimum impact magnitude required before this entity responds to Actor contact forces. </summary>
     public float MomentumThreshold                      { get; init; }
 

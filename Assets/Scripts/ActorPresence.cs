@@ -33,8 +33,8 @@ public class Presence : Service, IServiceLoop
         owner       = actor;
         definition  = actor.Definition;
 
-        owner.Emit.Link.Local<Message<Request, PresenceTargetEvent>>(HandlePresenceTargetEvent);
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);
+        owner.Emit.Link.Local<PresenceTargetEvent>(HandlePresenceTargetEvent);
+        owner.Emit.Link.Local<PresenceStateEvent> (HandlePresenceStateEvent);
 
         InitializeStateHandlers();
         EnterHandler();
@@ -119,14 +119,14 @@ public class Presence : Service, IServiceLoop
     //  Events
     // ===============================================================================
         
-    void HandlePresenceTargetEvent(Message<Request, PresenceTargetEvent> message)
+    void HandlePresenceTargetEvent(PresenceTargetEvent message)
     {
-        target = message.Payload.Target;
+        target = message.Target;
     }
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Disposal: Dispose(); break;
         }
@@ -184,7 +184,6 @@ public class PresenceEnteringState : StateHandler<Presence, Presence.State>
 
     public override void Enter(Presence controller)
     {   
-        PublishStateChange();
     }
 
     public override void Update(Presence controller)
@@ -198,11 +197,6 @@ public class PresenceEnteringState : StateHandler<Presence, Presence.State>
     }
 
     // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new PresenceStateEvent(owner, Presence.State.Entering));
-    }
 }
 
 
@@ -228,7 +222,6 @@ public class PresencePresentState : StateHandler<Presence, Presence.State>
     public override void Enter(Presence controller)
     {   
         SetCurrentTarget(controller);
-        PublishStateChange();
     }
 
     public override void Update(Presence controller)
@@ -248,14 +241,6 @@ public class PresencePresentState : StateHandler<Presence, Presence.State>
         controller.Current = Presence.Target.Present;
     }
 
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new PresenceStateEvent(owner, Presence.State.Present));
-    }
 }
 
 
@@ -280,7 +265,6 @@ public class PresenceExitingState : StateHandler<Presence, Presence.State>
 
     public override void Enter(Presence controller)
     {   
-        PublishStateChange();
     }
 
     public override void Update(Presence controller)
@@ -302,15 +286,6 @@ public class PresenceExitingState : StateHandler<Presence, Presence.State>
     bool CanBeAbsent()
     {
         return definition.Presence.CanBeSetAbsent;
-    }
-
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new PresenceStateEvent(owner, Presence.State.Exiting));
     }
 }
 
@@ -337,7 +312,6 @@ public class PresenceAbsentState : StateHandler<Presence, Presence.State>
     public override void Enter(Presence controller)
     {   
         SetCurrentTarget(controller);
-        PublishStateChange();
     }
 
     public override void Update(Presence controller)
@@ -357,14 +331,6 @@ public class PresenceAbsentState : StateHandler<Presence, Presence.State>
         controller.Current = Presence.Target.Absent;
     }
 
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new PresenceStateEvent(owner, Presence.State.Absent));
-    }
 }
 
 
@@ -389,8 +355,6 @@ public class PresenceDisposalState : StateHandler<Presence, Presence.State>
 
     public override void Enter(Presence controller)
     {   
-        PublishStateChange();
-
         owner.Emit.Dispose();
     
         Object.Destroy(owner.Bridge.View);
@@ -403,15 +367,6 @@ public class PresenceDisposalState : StateHandler<Presence, Presence.State>
     public override void Exit(Presence controller)
     {
     }
-
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new PresenceStateEvent(owner, Presence.State.Disposal));
-    }
 }
 
 
@@ -419,7 +374,7 @@ public class PresenceDisposalState : StateHandler<Presence, Presence.State>
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct PresenceTargetEvent
+public readonly struct PresenceTargetEvent : IMessage
 {
     public readonly Presence.Target Target  { get; init; }
 
@@ -430,7 +385,7 @@ public readonly struct PresenceTargetEvent
 }
 
 
-public readonly struct PresenceStateEvent
+public readonly struct PresenceStateEvent : IMessage
 {
     public readonly Actor Owner             { get; init; }
     public readonly Presence.State State    { get; init; }

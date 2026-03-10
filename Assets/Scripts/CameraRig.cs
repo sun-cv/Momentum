@@ -599,7 +599,7 @@ public class DeadzoneCameraBehavior : ICameraBehavior
 
     bool ShouldOpenDeadzone()
     {
-        return cachedTarget.Idle.Timer.CurrentTime > idleTimeThreshold && timer.CurrentTime > deadzoneTimeThreshold;
+        return cachedTarget.Idle.ClockWatch.CurrentTime > idleTimeThreshold && timer.CurrentTime > deadzoneTimeThreshold;
     }
 
     bool IsNearTarget(Vector2 current, Vector2 target)

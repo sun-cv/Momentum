@@ -26,7 +26,7 @@ public class Corpse : Service, IServiceStep
     {
         owner = actor;
     
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
+        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
 
         InitializeStateHandlers();
         EnterHandler();
@@ -75,22 +75,23 @@ public class Corpse : Service, IServiceStep
     void TransitionState(State newState)
     {
         state = newState;
-        PublishState();
     }
 
     void EnterHandler()
     {
         if (stateHandlers.TryGetValue(state, out var handler))
             handler.Enter(this);
+    
+        PublishState();
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -100,7 +101,7 @@ public class Corpse : Service, IServiceStep
 
     void PublishState()
     {
-        owner.Emit.Local(Publish.Transitioning, new CorpseEvent(owner, state));
+        owner.Emit.Local(new CorpseEvent(owner, state));
     }
 
 
@@ -144,7 +145,6 @@ public class CorpseFreshState : IStateHandler<Corpse>
 
     public void Enter(Corpse controller)
     {   
-        PublishStateChange();
     }
 
     public void Update(Corpse controller)
@@ -154,13 +154,6 @@ public class CorpseFreshState : IStateHandler<Corpse>
 
     public void Exit(Corpse controller)
     {
-    }
-
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new CorpseStateEvent(owner, Corpse.State.Fresh));
     }
 }
 
@@ -186,7 +179,6 @@ public class CorpseDecayingState : IStateHandler<Corpse>
 
     public void Enter(Corpse controller)
     {   
-        PublishStateChange();
     }
 
     public void Update(Corpse controller)
@@ -196,13 +188,6 @@ public class CorpseDecayingState : IStateHandler<Corpse>
 
     public void Exit(Corpse controller)
     {
-    }
-
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new CorpseStateEvent(owner, Corpse.State.Decaying));
     }
 }
 
@@ -229,7 +214,6 @@ public class CorpseConsumedState : IStateHandler<Corpse>
 
     public void Enter(Corpse controller)
     {   
-        PublishStateChange();
     }
 
     public void Update(Corpse controller)
@@ -239,13 +223,6 @@ public class CorpseConsumedState : IStateHandler<Corpse>
 
     public void Exit(Corpse controller)
     {
-    }
-
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new CorpseStateEvent(owner, Corpse.State.Consumed));
     }
 }
 
@@ -271,7 +248,6 @@ public class CorpseRemainsState : IStateHandler<Corpse>
 
     public void Enter(Corpse controller)
     {   
-        PublishStateChange();
     }
 
     public void Update(Corpse controller)
@@ -283,12 +259,6 @@ public class CorpseRemainsState : IStateHandler<Corpse>
     {
     }
 
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new CorpseStateEvent(owner, Corpse.State.Remains));
-    }
 }
 
 
@@ -313,24 +283,16 @@ public class CorpseDisposalState : IStateHandler<Corpse>
 
     public void Enter(Corpse controller)
     {   
-        PublishStateChange();
     }
 
     public void Update(Corpse controller)
     {
-        owner.Emit.Local(Request.Transition, new LifecycleTargetEvent(Lifecycle.State.Disposal));
+        owner.Emit.Local(new LifecycleTargetEvent(Lifecycle.State.Disposal));
     }
 
     public void Exit(Corpse controller)
     {
         
-    }
-
-    // ===============================================================================
-
-    void PublishStateChange()
-    {
-        owner.Emit.Local(Publish.Transitioned, new CorpseStateEvent(owner, Corpse.State.Disposal));
     }
 }
 
@@ -339,7 +301,7 @@ public class CorpseDisposalState : IStateHandler<Corpse>
 //                                         Events                                         
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct CorpseEvent
+public readonly struct CorpseEvent : IMessage
 {
     public readonly Actor Owner             { get; init; }
     public readonly Corpse.State State      { get; init; }
@@ -351,7 +313,7 @@ public readonly struct CorpseEvent
     }
 }
 
-public readonly struct CorpseStateEvent
+public readonly struct CorpseStateEvent : IMessage
 {
     public readonly Actor Owner             { get; init; }
     public readonly Corpse.State State    { get; init; }

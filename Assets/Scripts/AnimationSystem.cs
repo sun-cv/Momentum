@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 
 
@@ -15,7 +14,7 @@ public class AnimationSystem : Service, IServiceLoop
 
     // -----------------------------------
 
-    readonly List<Message<Request, AnimationRequestEvent>> queue = new();
+    readonly List<Message<Request, AnimationAPI>> queue = new();
 
     // ===============================================================================
 
@@ -29,9 +28,9 @@ public class AnimationSystem : Service, IServiceLoop
 
         animator    = new(owner);
 
-        owner.Emit.Link.Local<Message<Request, AnimationRequestEvent>>  (HandleAnimationRequest);        
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
-    }
+        owner.Emit.Link.Local<Message<Request, AnimationAPI>>(HandleAnimationRequest);        
+        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+    } 
 
     // ===============================================================================
 
@@ -48,21 +47,34 @@ public class AnimationSystem : Service, IServiceLoop
             return;
 
         foreach (var message in queue)
-            ProcessAnimationRequest(message);
+        {
+            RouteMessage(message);
+        }
 
         queue.Clear();
     }
 
-    void ProcessAnimationRequest(Message<Request, AnimationRequestEvent> message)
+    void RouteMessage(Message<Request, AnimationAPI> message)
+    {
+        var request = message.Payload.AnimationRequest;
+
+        switch(message.Payload.AnimationRequest.options.Request)
+        {
+            case Request.Play: ProcessAnimationRequest(message);    break;
+            case Request.Stop: RequestAnimationChange(request);     break;
+        }        
+    }
+
+    void ProcessAnimationRequest(Message<Request, AnimationAPI> message)
     {
         var request = message.Payload.AnimationRequest;
 
         if (!request.IsValid)
             Resolve(request);
 
-        RequestAnimation(request);
+        RequestAnimationChange(request);
 
-        owner.Emit.Local(message.Id, Response.Completed, new AnimationRequestEvent(request));
+        owner.Emit.Local(message.Id, Response.Completed, new AnimationAPI(request));
     }
 
     AnimationRequest Resolve(AnimationRequest request)
@@ -110,9 +122,9 @@ public class AnimationSystem : Service, IServiceLoop
         request.data.Duration   = animator.RequestAnimationDuration(request.data.Animation);
     }
 
-    void RequestAnimation(AnimationRequest request)
+    void RequestAnimationChange(AnimationRequest request)
     {
-        animator.RequestAnimation(request);
+        animator.RequestAnimationChange(request);
     }
 
         // REWORK REQUIRED FOR CONTEXT
@@ -125,14 +137,14 @@ public class AnimationSystem : Service, IServiceLoop
     //  Events
     // ===============================================================================
 
-    void HandleAnimationRequest(Message<Request, AnimationRequestEvent> message)
+    void HandleAnimationRequest(Message<Request, AnimationAPI> message)
     {
         queue.Add(message);
     }
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -158,15 +170,15 @@ public class AnimationSystem : Service, IServiceLoop
 
 public class AnimationRequest
 {
-    public AnimationIntent              intent;
-    public AnimationContext             context;
-    public AnimationOptions             options;
-    public AnimationData                data;
-    public AnimatorParameter.Override[] overrides;
+    public AnimationIntent                  intent;
+    public AnimationContext                 context;
+    public AnimationOptions                 options;
+    public AnimationData                    data;
+    public List<AnimatorParameter.Override> overrides;
 
     public bool IsValid         => data.Animation   != null;
     public bool HasContext      => context          != null;
-    public bool HasOverrides    => overrides        != null && overrides.Length > 0;
+    public bool HasOverrides    => overrides        != null && overrides.Count > 0;
 
     public AnimationRequest(string name)
     {
@@ -174,6 +186,7 @@ public class AnimationRequest
         this.context        = new();
         this.options        = new() { AllowInterrupt = true };
         this.data           = new();
+        this.overrides      = new();
 
         data.Animation  = name;
     }
@@ -184,12 +197,25 @@ public class AnimationRequest
         this.context        = context;
         this.options        = new() { AllowInterrupt = true };
         this.data           = new();
+        this.overrides      = new();
+    }
+
+    public void Play()
+    {
+        options.Request = Request.Play;
+    }
+
+    public void Stop()
+    {
+        options.Request = Request.Stop;
     }
 }
 
 public class AnimationOptions
 {
-    public bool AllowInterrupt                      { get; init; }
+    public Request Request                          { get; set; }
+    public bool AllowInterrupt                      { get; set; }
+    public bool HoldUntilReleased                   { get; set; }
 }
 
 public class AnimationContext
@@ -225,11 +251,11 @@ public enum AnimationIntent
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct AnimationRequestEvent
+public class AnimationAPI : Payload
 {
     public AnimationRequest AnimationRequest        { get; init; }
 
-    public AnimationRequestEvent(AnimationRequest request)
+    public AnimationAPI(AnimationRequest request)
     {
         AnimationRequest = request;
     }

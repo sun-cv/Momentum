@@ -18,7 +18,7 @@ public class TriggerLocks : RegisteredService, IInitialize
 
     public void Initialize()
     {
-        Link.Global<Message<Request, LockEvent>>(HandleLockRequest);
+        Link.Global<LockEvent>(HandleLockRequest);
     }
 
     // ===============================================================================
@@ -51,37 +51,30 @@ public class TriggerLocks : RegisteredService, IInitialize
     //  Events
     // ===============================================================================
 
-    void HandleLockRequest(Message<Request, LockEvent> message)
+    void HandleLockRequest(LockEvent message)
     {
-        Response response = Response.Declined;       
-
-        switch(message.Action)
+        switch(message.Request)
         {
             case Request.Lock:                
                     if (!acceptingLocks)
                         break;
-                    AddLock(message.Payload.Action, message.Payload.Origin);
-                    response = Response.Accepted;
+                    AddLock(message.Action, message.Origin);
                 break;
 
             case Request.Unlock:
-                    RemoveLock(message.Payload.Action, message.Payload.Origin);
-                    response = Response.Accepted;
+                    RemoveLock(message.Action, message.Origin);
                 break;
             
             case Request.Enable:
                     SetAcceptingLocks(true);
-                    response = Response.Accepted;
                 break;
             
             case Request.Disable:
                     SetAcceptingLocks(false);
-                    response = Response.Accepted;
                 break;
         }
 
-        Emit.Global<LockResponseEvent>(new(message.Id, response));
-        Emit.Global(Publish.Changed, new LockPublishEvent(Snapshot.ReadOnly(locks)));
+        Emit.Global(new LockUpdateEvent(Snapshot.ReadOnly(locks)));
     }
 
 
@@ -102,36 +95,26 @@ public class TriggerLocks : RegisteredService, IInitialize
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct LockEvent
+public readonly struct LockEvent : IMessage
 {
-    public Capability Action { get; init; }
-    public string Origin     { get; init; }
+    public readonly Capability Action       { get; init; }
+    public readonly string     Origin       { get; init; }
+    public readonly Request    Request      { get; init; }
 
-    public LockEvent(Capability action, string origin)
+    public LockEvent(Capability action, string origin, Request request)
     {
         Action  = action;
         Origin  = origin;
+        Request = request;
     }
 }
 
-public readonly struct LockPublishEvent
+public readonly struct LockUpdateEvent : IMessage
 {
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get;}
 
-    public LockPublishEvent(IReadOnlyDictionary<Capability, IReadOnlyList<string>> locks)
+    public LockUpdateEvent(IReadOnlyDictionary<Capability, IReadOnlyList<string>> locks)
     {
         Locks   = locks;
-    }
-}
-
-public readonly struct LockResponseEvent: ISystemEvent
-{
-    public readonly Guid Id             { get; }
-    public readonly Response Response   { get; }
-
-    public LockResponseEvent(Guid id, Response response)
-    {
-        Id          = id;
-        Response    = response;
     }
 }

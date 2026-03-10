@@ -17,7 +17,7 @@ public class SpawnController : Controller
     {
         Anchor = new SpawnAnchor(definition, gameObject);
 
-        Emit.Global<Message<Request, SpawnerEvent>>(new(Request.Create, new SpawnerEvent(Anchor.Owner)));
+        Emit.Global(new SpawnerEvent(Request.Create, Anchor.Owner));
     }
 
     public void OnDestroy()
@@ -25,7 +25,7 @@ public class SpawnController : Controller
         if (Anchor == null) 
             return;
 
-        Emit.Global<Message<Request, SpawnerEvent>>(new(Request.Destroy, new SpawnerEvent(Anchor.Owner)));
+        Emit.Global(new SpawnerEvent(Request.Destroy, Anchor.Owner));
 
         Anchor = null;
     }

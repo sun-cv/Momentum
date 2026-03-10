@@ -119,7 +119,7 @@ public class ShieldBraceDisable : Effect, ICancelable, ITrigger, IDuration, IDur
 {
     public bool Cancelable                      { get; init; }
 
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
+    public WeaponPhase Trigger                  { get; init; }
     public float Duration                       { get; init; }
     public int DurationFrames                   { get; init; }
 
@@ -132,20 +132,20 @@ public class ShieldBraceAim : Effect, ICancelable, ITrigger, IDurationFrames
 {
     public bool Cancelable                      { get; init; }
 
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
+    public WeaponPhase Trigger                  { get; init; } 
     public int DurationFrames                   { get; init; }
 }
 
 public class SwordMobility : Effect, IType, ITrigger, IDurationFrames, IModifiable
 {
     public EffectType Type                      { get; init; }
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
+    public WeaponPhase Trigger                  { get; init; } 
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }
-    public float ModifyTarget                   { get; init; } = 0;
-    public float ModifyTimespan                 { get; init; } = -1;
-    public float ModifyDurationFrames           { get; init; } = -1;
+    public float ModifyTarget                   { get; init; }
+    public float ModifyTimespan                 { get; init; }  
+    public float ModifyDurationFrames           { get; init; } 
 }
 
 public class ShieldMobility : Effect, ICancelable, IType, ITrigger, IDurationFrames, ICancelableOnRelease, IModifiable
@@ -154,13 +154,13 @@ public class ShieldMobility : Effect, ICancelable, IType, ITrigger, IDurationFra
     public bool CancelOnRelease                 { get; init; }
 
     public EffectType Type                      { get; init; }
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
+    public WeaponPhase Trigger                  { get; init; }
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }
-    public float ModifyTarget                   { get; init; } = 0;
-    public float ModifyTimespan                 { get; init; } = -1;
-    public float ModifyDurationFrames           { get; init; } = -1;
+    public float ModifyTarget                   { get; init; }
+    public float ModifyTimespan                 { get; init; }
+    public float ModifyDurationFrames           { get; init; }
 }
 
 public class DashDisable : Effect, ICancelable, IDurationFrames, IDisableRules, IActionLock
@@ -189,11 +189,12 @@ public class WeaponMobility : Effect, ICancelable, IType, ITrigger, IDurationFra
     public bool Cancelable                      { get; init; }
     
     public EffectType Type                      { get; init; }
-    public WeaponPhase Trigger                  { get; init; } = WeaponPhase.None;
+    public WeaponPhase Trigger                  { get; init; } 
     public int DurationFrames                   { get; init; }
 
     public float Modifier                       { get; init; }
-    public float ModifyTarget                   { get; init; } = 0;
-    public float ModifyTimespan                 { get; init; } = -1;
-    public float ModifyDurationFrames           { get; init; } = -1;
+    public float ModifyTarget                   { get; init; }
+    public float ModifyTimespan                 { get; init; }
+    public float ModifyDurationFrames           { get; init; }
 }
+

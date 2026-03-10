@@ -16,15 +16,17 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 
         hero = factory.Spawn(Vector3.zero);
 
-        hero.Emit.Local(Request.Equip, new EquipEvent(hero, new Sword()) );
-        hero.Emit.Local(Request.Equip, new EquipEvent(hero, new Shield()));
-        hero.Emit.Local(Request.Equip, new EquipEvent(hero, new Dash())  );
+        hero.Emit.Local(new EquipEvent(hero, new Sword()) );
+        hero.Emit.Local(new EquipEvent(hero, new Shield()));
+        hero.Emit.Local(new EquipEvent(hero, new Dash())  );
 
         Services.Get<CameraRig>().SetCameraTarget(new ActorCameraTarget(hero));
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
         
         DebugLogSetup();
+
+        hero.Emit.Link.Local<AnimatorEvent>(Logs);
     }
 
     // ===============================================================================
@@ -39,6 +41,10 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 
     }
 
+    public void Logs(AnimatorEvent message)
+    {
+    }
+
     // ===============================================================================
 
 
@@ -50,7 +56,7 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Logging.For(LogSystem.Engine)           .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);

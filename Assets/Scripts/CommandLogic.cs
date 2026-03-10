@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,10 +8,10 @@ public class CommandSystem : Service
     Actor owner;
     IntentSystem intent;
 
-        // -----------------------------------
+    // -----------------------------------
 
-    Dictionary<Capability, Command> active = new();
-    Dictionary<Capability, Command> buffer = new();
+    readonly Dictionary<Capability, Command> active = new();
+    readonly Dictionary<Capability, Command> buffer = new();
 
     // ===============================================================================
 
@@ -21,7 +20,7 @@ public class CommandSystem : Service
         this.intent = intent;
         this.owner  = intent.Owner;
 
-        owner.Emit.Link.Local<Request, CommandEvent>(HandleCommandRequest);
+        owner.Emit.Link.Local<CommandEvent>(HandleCommandRequest);
         Broadcast();
     }
 
@@ -76,6 +75,7 @@ public class CommandSystem : Service
     var toRemove = buffer.Values
         .Where(command => !command.Locked && command.Button.released && command.Button.releasedframeCount.CurrentFrame > Config.Input.BUFFER_WINDOW_FRAMES)
         .ToList();
+
         foreach (var command in toRemove)
             buffer.Remove(command.Action);
 
@@ -106,18 +106,18 @@ public class CommandSystem : Service
     //  Events
     // ===============================================================================
 
-    void HandleCommandRequest(Message<Request, CommandEvent> message)
+    void HandleCommandRequest(CommandEvent instance)
     {
-        switch (message.Action)
+        switch (instance.Type)
         {
             case Request.Consume:
-                ConsumeCommand(message.Payload.Command);
+                ConsumeCommand(instance.Command);
                 break;
             case Request.Lock:
-                LockCommand(message.Payload.Command);
+                LockCommand(instance.Command);
                 break;
             case Request.Unlock:
-                UnlockCommand(message.Payload.Command);
+                UnlockCommand(instance.Command);
                 break;
         }
 
@@ -128,14 +128,14 @@ public class CommandSystem : Service
         //  Emitters
         // ===================================
 
-    void Broadcast() => owner.Emit.Local(Publish.Changed, new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+    void Broadcast() => owner.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
 
     // ===============================================================================
     //  Helpers
     // ===============================================================================
 
-    void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Lock();
-    void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeID == command.RuntimeID).Value.Unlock();
+    void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeId == command.RuntimeId).Value.Lock();
+    void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeId == command.RuntimeId).Value.Unlock();
 
     // ===============================================================================
 
@@ -211,17 +211,19 @@ public static partial class IntentMap
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct CommandEvent
+public readonly struct CommandEvent : IMessage
 {
-    public Command Command { get; init; }
+    public Command Command  { get; init; }
+    public Request Type     { get; init; }
 
-    public CommandEvent(Command command)
+    public CommandEvent(Request type, Command command)
     {
         Command = command;
+        Type    = type;
     }
 }
 
-public readonly struct CommandPipelinesEvent
+public readonly struct CommandPipelinesEvent : IMessage
 {
     public IReadOnlyDictionary<Capability, Command> Active { get; init; }
     public IReadOnlyDictionary<Capability, Command> Buffer { get; init; }

@@ -41,12 +41,13 @@ public interface IConsumer<T>                   { void Consume(T request);  }   
 
 public abstract class Definition
 { 
-    public string ID                            { get; set; }
+    public string Id                            { get; set; }
     public string Name                          { get; set; }
 }
 
+public class Payload                            { public Guid Id                        { get; init; } = Guid.NewGuid();}
 
-public class Runtime                            { public Guid RuntimeID                 { get; init; } = Guid.NewGuid();}
+public class Runtime                            { public Guid RuntimeId                 { get; init; } = Guid.NewGuid();}
 public class Instance           : Runtime       {}
 
 public class Zone               : Runtime       { public string Name                    { get; set;  }
@@ -118,31 +119,55 @@ public interface IControllable
     bool Inactive                           { get; set; }
 }
 
-public interface IMortal
+public interface IMortal : IHealth
 {
+    bool Alive                              { get; }
+    bool Dead                               { get; }
+
     bool Invulnerable                       { get; set; }
     bool Impervious                         { get; set; }
+}
+
+public interface IHealth
+{
     float Health                            { get; }
     float MaxHealth                         { get; }
 }
 
-public interface IArmored
+public interface IHealthRegen
+{
+    float HealthRegen                       { get; }
+}
+
+
+public interface IArmor
 {
     float Armor                             { get; }
     float MaxArmor                          { get; }
 }
 
-public interface IShielded
+public interface IShield
 {
     float Shield                            { get; }
     float MaxShield                         { get; }
 }
 
+public interface IShieldRegen
+{
+    float ShieldRegen                       { get; }
+}
+
 public interface ICaster            
 {           
-    float Mana                              { get; }
-    float MaxMana                           { get; }
+    float Energy                            { get; }
+    float MaxEnergy                         { get; }
+    float EnergyRegen                       { get; }
 }           
+
+public interface IEnergyRegen
+{
+    float EnergyRegen                       { get; }
+}
 
 public interface IMovable           
 {           
@@ -158,30 +183,34 @@ public interface IAttacker
     bool CanAttack                          { get; }
 }           
 
-public interface IDefender          
-{               
-    bool Parrying                           { get; }
+public interface IParryable
+{
+    TimePredicate Parrying                  { get; }
+}
+
+public interface IBlockable
+{
     bool Blocking                           { get; }
-}           
+}
 
 public interface IDirectional           
 {   
     Direction Direction                     { get; }
     Direction LastDirection                 { get; }
-    Direction LockedDirection               { get; }
+    Direction ResolvedDirection             { get; }
 }           
 
 public interface IOrientable            
 {        
     Direction Facing                        { get; }
-    Direction LockedFacing                  { get; }
+    Direction ResolvedFacing                { get; }
     bool CanRotate                          { get; }
 }
 
 public interface IAimable
 {
     Direction Aim                           { get; }
-    Direction LockedAim                     { get; }
+    Direction ResolvedAim                   { get; }
 }
 
 public interface IDynamic
@@ -191,6 +220,7 @@ public interface IDynamic
     Vector2 Control                         { get; set; }
     float Mass                              { get; }
     float Friction                          { get; }
+    float Impact                            { get; }
 }
 
 public interface IPhysicsBody
@@ -210,12 +240,6 @@ public interface IAfflictable
     // Frozen, Poisoned, Slowed, Burning, etc.
 }
 
-public interface ILiving
-{
-    bool Alive                              { get; }
-    bool Dead                               { get; }
-}
-
 public interface ICorpse
 {
     Corpse.State Condition                  { get; }
@@ -223,20 +247,64 @@ public interface ICorpse
 
 public interface IIdle
 {
-    
     TimePredicate IsIdle                    { get; }
 }
 
 
+public interface IActor :
+    IDepthSorted,
+    IDepthColliding
+{ }
 
-public interface IActor         : IDepthSorted, IDepthColliding {}
-public interface IAgent         : IActor, IMortal, IControllable, ILiving {}
-public interface IMovableActor  : IAgent, IIdle, IMovable, IDynamic, IDirectional, IOrientable { }
+public interface IAgent :
+    IActor,
+    IMortal,
+    IControllable
+{ }
 
-public interface IHero          : IShielded, IArmored, IMovableActor, IPhysicsBody, IAttacker, ICaster, IDefender, IAimable, IAfflictable { }
-public interface IEnemy         : IMovableActor, IPhysicsBody, IControllable, IAttacker, IAfflictable { }
-public interface IDummy         : IAgent, IAfflictable {}
-public interface IMovableDummy  : IMovableActor, IPhysicsBody, IAfflictable {}
+public interface IMovableActor :
+    IAgent,
+    IMovable,
+    IDynamic,
+    IDirectional,
+    IOrientable,
+    IIdle
+{ }
+
+public interface IHero :
+    // Core
+    IMovableActor, IPhysicsBody,
+    // Combat
+    IAttacker, IParryable, IBlockable, IAimable,
+    // Resources
+    IHealthRegen, IShield, IShieldRegen, IArmor, ICaster, IEnergyRegen,
+    // Status
+    IAfflictable
+{ }
+
+public interface IEnemy :
+    // Core
+    IMovableActor, IPhysicsBody, IControllable,
+    // Combat
+    IAttacker,
+    // Status
+    IAfflictable
+{ }
+
+public interface IDummy :
+    // Core
+    IAgent,
+    // Status
+    IAfflictable
+{ }
+
+public interface IMovableDummy :
+    // Core
+    IMovableActor, IPhysicsBody,
+    // Status
+    IAfflictable
+{ }
+
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 
@@ -271,6 +339,7 @@ public enum Request
     Transition,
     Dispose,
     Equip,
+    Play,
 }
 
 public enum Response
@@ -288,42 +357,28 @@ public enum Response
 
 public enum Publish
 {
-    Creating,
     Created,
-    Destroying,
     Destroyed,
 
-    Enabling,
     Enabled,
-    Disabling,
     Disabled,
 
-    Starting,
     Started,
-    Ending,
     Ended,
 
-    Triggering,
     Triggered,
-    Firing,
     Fired,
 
-    Activating,
     Activated,
-    Deactivating,
     Deactivated,
 
-    Canceling,
     Canceled,
-    Releasing,
     Released,
 
     Equipped,
     Unequipped,
 
-    Changing,
     Changed,
-    Transitioning,
     Transitioned,
 }
 

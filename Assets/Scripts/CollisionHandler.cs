@@ -14,7 +14,7 @@ public class CollisionHandler : RegisteredService, IServiceTick
 
     public CollisionHandler()
     {
-        Link.Global<Message<Request, CollisionHandlerEvent>>(HandleCollisionEvent);
+        Link.Global<CollisionHandlerEvent>(HandleCollisionEvent);
     }
 
     // ===============================================================================
@@ -30,12 +30,12 @@ public class CollisionHandler : RegisteredService, IServiceTick
     {
         foreach( var context in collisionQueue)
         {
-            Emit.Global(Request.Create, new CollisionEvent(context));
+            Emit.Global(new CollisionEvent(context));
         }
         
         foreach( var context in contactQueue)
         {
-            Emit.Global(Request.Create, new ContactEvent(context));
+            Emit.Global(new ContactEvent(context));
         }
 
         collisionQueue  .Clear();
@@ -51,8 +51,7 @@ public class CollisionHandler : RegisteredService, IServiceTick
     float CalculateImpactForce(Actor owner, Vector2 normal)
     {
         if (owner is IDynamic dynamic)
-            return Mathf.Max(0, Vector2.Dot(dynamic.Momentum, -normal));
-
+            return Mathf.Max(0, Vector2.Dot(dynamic.Velocity, -normal));
         return 0f;
     }
 
@@ -61,10 +60,8 @@ public class CollisionHandler : RegisteredService, IServiceTick
     // ===============================================================================
 
 
-    void HandleCollisionEvent(Message<Request, CollisionHandlerEvent> message)
+    void HandleCollisionEvent(CollisionHandlerEvent instance)
     {
-        var instance = message.Payload;
-
         switch(GetType(instance.Collision))
         {
             case CollisionType.Actor:            
@@ -172,7 +169,7 @@ public enum CollisionType
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct CollisionHandlerEvent
+public readonly struct CollisionHandlerEvent : IMessage
 {
     public Actor            Source      { get; init; }
     public CollisionPhase   Phase       { get; init; }

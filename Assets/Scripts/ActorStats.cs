@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 
 
@@ -24,7 +23,7 @@ public class ActorStats : Stats
             stats.Add(stat.Name, value);
         }
 
-        owner.Emit.Link.LocalBinding<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
+        owner.Emit.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -32,22 +31,31 @@ public class ActorStats : Stats
     // ===============================================================================
 
     public float MaxHealth          => this[nameof(MaxHealth)];
+    public float HealthRegen        => this[nameof(HealthRegen)];
+
     public float MaxArmor           => this[nameof(MaxArmor)];
+
     public float MaxShield          => this[nameof(MaxShield)];
-    public float MaxMana            => this[nameof(MaxMana)];
+    public float ShieldRegen        => this[nameof(ShieldRegen)];
+
+    public float MaxEnergy          => this[nameof(MaxEnergy)];
+    public float EnergyRegen        => this[nameof(EnergyRegen)];
+
     public float Strength           => this[nameof(Strength)];
     public float StrengthMultiplier => this[nameof(StrengthMultiplier)];
+    
     public float Speed              => this[nameof(Speed)];
     public float SpeedMultiplier    => this[nameof(SpeedMultiplier)];
 
+    public float Impact             => this[nameof(Impact)];
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;

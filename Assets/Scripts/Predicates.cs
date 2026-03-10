@@ -104,6 +104,7 @@ public class LazyPredicate
 
 }
 
+
 public class TimePredicate : Service, IServiceLoop
 {
     private readonly bool           resetOnFalse;
@@ -112,20 +113,25 @@ public class TimePredicate : Service, IServiceLoop
 
     private readonly Func<bool>     condition;
 
+    private readonly TimerUnit unit;
+
+    private readonly ClockWatch     clock;
+    private readonly FrameWatch     frame;
         // -----------------------------------
 
     private bool value              = false;
-    private readonly ClockWatch     timer;
 
     // ===============================================================================
 
-    public TimePredicate(Func<bool> condition, bool resetOnFalse = true)
+    public TimePredicate(TimerUnit unit, Func<bool> condition, bool resetOnFalse = true)
     {
         Services.Lane.Register(this);
 
+        this.unit           = unit;
         this.condition      = condition;
         this.resetOnFalse   = resetOnFalse;
-        this.timer          = new ClockWatch();
+        this.clock          = new ClockWatch();
+        this.frame          = new FrameWatch();
     }
 
     // ===============================================================================
@@ -137,16 +143,31 @@ public class TimePredicate : Service, IServiceLoop
         if (currentCondition && !value)
         {
             value = true;
-            timer.Start();
+            StartTimers();
         }
         else if (!currentCondition && value)
         {
             value = false;
-            
+
             if (resetOnFalse)
-                timer.Reset();
+                ResetTimers();
         }
     }
+
+    private void StartTimers()
+    {
+        if (UseClock) clock.Start();
+        if (UseFrame) frame.Start();
+    }
+
+    private void ResetTimers()
+    {
+        if (UseClock) clock.Reset();
+        if (UseFrame) frame.Reset();
+    }
+
+    private bool UseClock => unit == TimerUnit.Time || unit == TimerUnit.TimeAndFrame;
+    private bool UseFrame => unit == TimerUnit.Frame || unit == TimerUnit.TimeAndFrame;
 
     // ===============================================================================
 
@@ -155,12 +176,16 @@ public class TimePredicate : Service, IServiceLoop
         Services.Lane.Deregister(this);
     }
 
-    public static implicit operator bool(TimePredicate b) => b.value;
-    public bool Value       => value;
-    public float Duration   => timer.CurrentTime;
-    public ClockWatch Timer => timer;
+    public static implicit operator bool(TimePredicate time) => time.value;
+    public bool Value               => value;
+    public float Duration           => clock.CurrentTime;
+    public int Frame                => frame.CurrentFrame;
+    public ClockWatch ClockWatch    => clock;
+    public FrameWatch FrameWatch    => frame;
     
     public UpdatePriority Priority => ServiceUpdatePriority.SystemLoop;
 }
+
+
 
 

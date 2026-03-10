@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 
 
@@ -34,7 +33,7 @@ public class Lifecycle : Service, IServiceLoop
         owner       = actor;
         definition  = actor.Definition;
 
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
+        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
 
         InitializeState();
         InitializeStateHandlers();
@@ -89,13 +88,14 @@ public class Lifecycle : Service, IServiceLoop
     void TransitionState(State newState)
     {
         instance.State.Condition = newState;
-        PublishState();
     }
 
     void EnterHandler()
     {
         if (stateHandlers.TryGetValue(instance.State.Condition, out var handler))
             handler.Enter(this);
+
+        PublishState();
     }
 
     void EnterLifecycle()
@@ -108,9 +108,9 @@ public class Lifecycle : Service, IServiceLoop
     //  Events
     // ===============================================================================
 
-     void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+     void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -120,8 +120,9 @@ public class Lifecycle : Service, IServiceLoop
 
     void PublishState()
     {
-        owner.Emit.Local(Publish.Transitioning, new LifecycleEvent(owner, instance.State.Condition));
+        owner.Emit.Local(new LifecycleEvent(owner, instance.State.Condition));
     }
+    
     // ===============================================================================
 
     void Register(State state, StateHandler<Lifecycle, State> handler)
@@ -208,7 +209,7 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
 
     void SpawnActor()
     {            
-        // owner.Emit.Local(Request.Teleport, new TeleportEvent(spawnPosition));
+        // owner.Emit.Local(new TeleportEvent(spawnPosition));
     }
 
     // ===============================================================================
@@ -229,7 +230,7 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
         // -----------------------------------
 
-    readonly LocalEventHandler<Message<Response, AnimationRequestEvent>> animationRequestHandler;
+    readonly LocalEventHandler<Message<Response, AnimationAPI>> animationRequestHandler;
 
         // -----------------------------------
 
@@ -243,8 +244,8 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
         this.mortal     = owner as IMortal;
         this.definition = definition;
 
-        animationRequestHandler = new(owner.Emit, HandleAnimationPlayback);
-        owner.Emit.Link.Local<Message<Publish, AnimatorPlaybackEvent>>(HandleAnimationPlaybackFinished);
+        animationRequestHandler = new(owner.Emit, HandleAnimationAPI);
+        owner.Emit.Link.Local<AnimatorEvent>(HandleAnimatorEvent);
     }
     
     // ===============================================================================
@@ -305,14 +306,14 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
     void AlertDeath()
     {
-        owner.Emit.Local(Publish.Triggered, new ActorDeathEvent(owner));
+        owner.Emit.Local(new ActorDeathEvent(owner));
     }
 
     void ApplyOnDeathEffects()
     {
         foreach (var effect in definition.Lifecycle.OnDeathEffects)
         {
-            owner.Emit.Local(Request.Create, new EffectDeclarationEvent(owner, effect));
+            owner.Emit.Local(Request.Create, new EffectAPI(owner, effect));
         }
     }
 
@@ -330,20 +331,23 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
             },
         };
 
-        animationRequestHandler.Send(Request.Start, new AnimationRequestEvent(request));
+        animationRequestHandler.Send(Request.Start, new AnimationAPI(request));
     }
 
-    void HandleAnimationPlayback(Message<Response, AnimationRequestEvent> response)
+    void HandleAnimationAPI(Message<Response, AnimationAPI> response)
     {
         deathAnimation = response.Payload.AnimationRequest;
     }
 
-    void HandleAnimationPlaybackFinished(Message<Publish, AnimatorPlaybackEvent> message)
+    void HandleAnimatorEvent(AnimatorEvent message)
     {
+        if (message.Type != Publish.Ended)
+            return;
+
         if (deathAnimation == null)
             return;
 
-        if (deathAnimation.data.Animation == message.Payload.Name)
+        if (deathAnimation.data.Animation == message.Name)
             Transition.Invoke(Lifecycle.State.Dead);
     }
 
@@ -429,12 +433,12 @@ public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
 
     void RequestCorpseSpawn()
     {
-        Emit.Global(Request.Create, new CorpseRequestEvent(new() { Owner = owner, Animation = context.DeathAnimation, KillingBlow = context.KillingBlow}));
+        Emit.Global(new CorpseRequest(owner, context.KillingBlow, context.DeathAnimation));
     }
 
     void ExitPresence()
     {
-        owner.Emit.Local(Request.Transition, new PresenceTargetEvent(Presence.Target.Absent));
+        owner.Emit.Local(new PresenceTargetEvent(Presence.Target.Absent));
     }
 
     // ===============================================================================
@@ -504,25 +508,7 @@ public class LifeCycleContext
 //                                         Events                                         
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct HealthEvent
-{
-    public readonly Actor Owner             { get; init; }
-    public readonly float Health            { get; init; }
-    public readonly float MaxHealth         { get; init; }
-    public readonly float CurrentPercent    { get; init; }
-    public readonly float LastPercent       { get; init; }
-
-    public HealthEvent(Actor owner, float health, float maxHealth, float current, float last)
-    {
-        Owner           = owner;
-        Health          = health;
-        MaxHealth       = maxHealth;
-        CurrentPercent  = current;
-        LastPercent     = last;
-    }
-}
-
-public readonly struct LifecycleEvent
+public readonly struct LifecycleEvent : IMessage
 {
     public readonly Actor Owner             { get; init; }
     public readonly Lifecycle.State State   { get; init; }
@@ -534,7 +520,7 @@ public readonly struct LifecycleEvent
     }
 }
 
-public readonly struct LifecycleTargetEvent
+public readonly struct LifecycleTargetEvent : IMessage
 {
     public readonly Lifecycle.State Target  { get; init; }
 
@@ -543,7 +529,8 @@ public readonly struct LifecycleTargetEvent
         Target = target;
     }
 }
-public readonly struct ActorDeathEvent
+
+public readonly struct ActorDeathEvent : IMessage
 {
     public readonly Actor Owner             { get; init; }
 

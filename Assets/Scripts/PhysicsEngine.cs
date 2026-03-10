@@ -216,7 +216,7 @@ public class ForceApplicationResolver : IPhysicsResolver
 
     public ForceApplicationResolver(PhysicsEngine engine)
     {
-        Link.Global<Message<Request, ForceEvent>>(HandleEvent);
+        Link.Global<ForceEvent>(HandleEvent);
     }
 
     public void Resolve()
@@ -245,13 +245,13 @@ public class ForceApplicationResolver : IPhysicsResolver
 
     void ProcessForce(ForceContext context, Force force)
     {
-        if (context.Target is not IPhysicsBody body) 
+        if (context.Target is not IPhysicsBody targetBody) 
             return;
 
-        if (context.Target is not IDynamic dynamic) 
+        if (context.Target is not IDynamic target) 
             return;
 
-        if (body.ImmuneToForce) 
+        if (targetBody.ImmuneToForce) 
             return;
 
         var physicsDefinition = context.Target.Definition.Physics;
@@ -262,15 +262,22 @@ public class ForceApplicationResolver : IPhysicsResolver
         var normal = (context.Target.Bridge.View.transform.position - context.Source.Bridge.View.transform.position).normalized;
 
         float resistance     = physicsDefinition.PushResistance;
-        Vector2 appliedForce = (1f - resistance) * force.Magnitude * normal / dynamic.Mass;
+        Vector2 appliedForce = (1f - resistance) * force.Magnitude * normal / target.Mass;
 
-        body.Force += appliedForce;
+        if (context.Source is Hero) Log.Debug("Hero.Magnitude",     () => force.Magnitude);
+        if (context.Source is Hero) Log.Debug("Hero.Applied",       () => appliedForce.magnitude);
+
+        if (context.Source is not Hero) Log.Debug("Other.Mass",     () => target.Mass);
+
+        targetBody.Force += appliedForce;
     }
 
-    void HandleEvent(Message<Request, ForceEvent> message)
+    void HandleEvent(ForceEvent message)
     {
-        queue.Add(message.Payload.Context);
+        queue.Add(message.Context);
     }
+
+    readonly Logger Log = new(LogSystem.ContactResolver, LogLevel.Debug);
 }
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -283,7 +290,7 @@ public class ActorContactResolver : IPhysicsResolver
 
     public ActorContactResolver(PhysicsEngine engine)
     {
-        Link.Global<Message<Request, ContactEvent>>(HandleEvent);
+        Link.Global<ContactEvent>(HandleEvent);
     }
 
     public void Resolve()
@@ -317,27 +324,33 @@ public class ActorContactResolver : IPhysicsResolver
 
     void ApplyTransfer(ContactContext context, Contact contact)
     {
-        if (context.Source is not IDynamic ownerDynamic) 
+        if (context.Source is not IDynamic source) 
             return;
 
-        if (context.Source is not IPhysicsBody otherBody) 
+        if (context.Target is not IPhysicsBody targetBody) 
             return;
 
-        if (context.Source is not IDynamic otherDynamic) 
+        if (context.Target is not IDynamic target) 
             return;
 
-        if (otherBody.ImmuneToForce) 
+        if (targetBody.ImmuneToForce) 
             return;
 
-        var otherPhysics    = context.Target.Definition.Physics;
-        float ownerStrength = context.Source.Definition.Stats.Strength;
-        float impact        = contact.Force.Magnitude * ownerStrength;
+        var targetPhysics   = context.Target.Definition.Physics;
+        float impact        = contact.Force.Magnitude * source.Impact;
 
-        if (impact < otherPhysics.MomentumThreshold) return;
+        if (impact < targetPhysics.MomentumThreshold) 
+            return;
 
-        float massRatio      = ownerDynamic.Mass / (ownerDynamic.Mass + otherDynamic.Mass);
-        float transferRatio  = massRatio * (1f - otherPhysics.PushResistance);
-        Vector2 appliedForce = transferRatio * impact * -contact.Collision.Normal / otherDynamic.Mass;
+        float massRatio      = source.Mass / (source.Mass + target.Mass);
+        float transferRatio  = massRatio * (1f - targetPhysics.PushResistance);
+        Vector2 appliedForce = transferRatio * impact * -contact.Collision.Normal / target.Mass;
+
+        if (context.Source is Hero) Log.Debug("Hero.Magnitude",     () => contact.Force.Magnitude);
+        if (context.Source is Hero) Log.Debug("Hero.Impact",        () => impact);
+        if (context.Source is Hero) Log.Debug("Hero.Applied",       () => appliedForce.magnitude);
+
+        if (context.Source is not Hero) Log.Debug("Other.Mass",     () => targetPhysics.Mass);
 
         if (context.Source is IPhysicsBody ownerBody && !ownerBody.ImmuneToForce)
         {
@@ -345,17 +358,22 @@ public class ActorContactResolver : IPhysicsResolver
 
             if (impact >= ownerPhysics.BleedThreshold)
             {
-                ownerBody.Force += ownerPhysics.BleedRatio * impact * contact.Collision.Normal / ownerDynamic.Mass;
+                ownerBody.Force += ownerPhysics.BleedRatio * impact * contact.Collision.Normal / source.Mass;
             }
         }
 
-        otherBody.Force = appliedForce;
+        targetBody.Force = appliedForce;
     }
 
-    void HandleEvent(Message<Request, ContactEvent> message)
+
+    void HandleEvent(ContactEvent message)
     {
-        queue.Add(message.Payload.Context);
+        queue.Add(message.Context);
     }
+
+    // ===============================================================================
+
+    Logger Log = new(LogSystem.ContactResolver, LogLevel.Debug);
 }
 
 
@@ -369,7 +387,7 @@ public class SurfaceContactResolver : IPhysicsResolver
 
     public SurfaceContactResolver(PhysicsEngine engine)
     {
-        Link.Global<Message<Request, CollisionEvent>>(HandleSurfaceEvent);
+        Link.Global<CollisionEvent>(HandleSurfaceEvent);
     }
 
     public void Resolve()
@@ -444,9 +462,9 @@ public class SurfaceContactResolver : IPhysicsResolver
         }
     }
 
-    void HandleSurfaceEvent(Message<Request, CollisionEvent> message)
+    void HandleSurfaceEvent(CollisionEvent message)
     {
-        queue.Add(message.Payload.Context);
+        queue.Add(message.Context);
     }
 }
 
@@ -456,7 +474,7 @@ public class SurfaceContactResolver : IPhysicsResolver
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-public readonly struct ForceEvent
+public readonly struct ForceEvent : IMessage
 {
     public ForceContext Context { get; init; }
 
@@ -466,7 +484,7 @@ public readonly struct ForceEvent
     }
 }
 
-public readonly struct ContactEvent
+public readonly struct ContactEvent : IMessage
 {
     public ContactContext Context { get; init; }
 
@@ -476,7 +494,7 @@ public readonly struct ContactEvent
     }
 }
 
-public readonly struct CollisionEvent
+public readonly struct CollisionEvent : IMessage
 {
     public CollisionContext Context { get; init; }
 

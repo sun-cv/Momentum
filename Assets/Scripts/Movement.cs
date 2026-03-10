@@ -47,10 +47,9 @@ public class Movement : Service, IServiceTick
 
         modifierHandler     = new(agent);
 
-        owner.Emit.Link.Local<Message<Request, MovementEvent>>          (HandleMovementDirective);
-        owner.Emit.Link.Local<Message<Request, ClearMovementScopeEvent>>(HandleMovementClear);
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
-
+        owner.Emit.Link.Local<MovementEvent>          (HandleMovementDirective);
+        owner.Emit.Link.Local<ClearMovementScopeEvent>(HandleMovementClear);
+        owner.Emit.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
 
         SetSpeed();
         SetMass();
@@ -197,30 +196,28 @@ public class Movement : Service, IServiceTick
     // ===============================================================================
     
 
-    void HandleMovementDirective(Message<Request, MovementEvent> message)
+    void HandleMovementDirective(MovementEvent message)
     {
-        AddDirective(message.Payload.Owner, message.Payload.Definition);
+        AddDirective(message.Owner, message.Definition);
     }
 
-    void HandleMovementClear(Message<Request, ClearMovementScopeEvent> message)
-    {
-        var payload = message.Payload;
-
-        switch (message.Action, payload)
+    void HandleMovementClear(ClearMovementScopeEvent message)
+    {;
+        switch (message.Type, message)
         {
             case (Request.Clear, { Owner: not null, Scope: not -1 }):
-                RemoveDirective(payload.Owner, payload.Scope);
+                RemoveDirective(message.Owner, message.Scope);
                 break;
 
             case (Request.Clear, { Owner: not null }):
-                RemoveAllDirectives(payload.Owner);
+                RemoveAllDirectives(message.Owner);
                 break;
         }
     }
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -259,8 +256,6 @@ public class Movement : Service, IServiceTick
 
     void DebugLog()
     {
-        Log.Debug("Movement.Speed",     () => speed);  
-        Log.Debug("Movement.Control",   () => control);
         Log.Debug("Movement.Modifier",  () => modifier);
         Log.Trace("Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Instances.Select(instance => instance.Effect.Name))}");
         Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Instances.Count);
@@ -285,7 +280,7 @@ public class Movement : Service, IServiceTick
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct MovementEvent
+public readonly struct MovementEvent : IMessage
 {
     public readonly object Owner                    { get; init; }
     public readonly MovementDefinition Definition   { get; init; }
@@ -297,15 +292,17 @@ public readonly struct MovementEvent
     }
 }
 
-public readonly struct ClearMovementScopeEvent
+public readonly struct ClearMovementScopeEvent : IMessage
 {
     public readonly object Owner                { get; init; }
     public readonly int Scope                   { get; init; }
+    public readonly Request Type                { get; init; }
 
-    public ClearMovementScopeEvent(object owner, int scope)
+    public ClearMovementScopeEvent(Request type, object owner, int scope)
     {
         Owner   = owner;
         Scope   = scope;
+        Type    = type;
     }
 }
 

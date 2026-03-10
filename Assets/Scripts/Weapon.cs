@@ -18,118 +18,129 @@ public class WeaponAction       : Definition
     // IDENTITY
     // ============================================================================
     
-    /// <summary>The capabilities required to activate this weapon</summary>
+    // <summary>The capabilities required to activate this weapon</summary>
     public List<Capability> Trigger                 { get; init; } = new();
-    /// <summary>What causes this weapon to fire</summary>
+    // <summary>What causes this weapon to fire</summary>
     public WeaponActivation Activation              { get; init; } = WeaponActivation.OnPress;
-    /// <summary>What causes this weapon to terminate </summary>
+    // <summary>What causes this weapon to terminate </summary>
     public WeaponTermination Termination            { get; init; } = WeaponTermination.AfterFire;
-    /// <summary>How this weapon becomes available for activation</summary>
+    // <summary>How this weapon becomes available for activation</summary>
     public WeaponAvailability Availability          { get; init; } = WeaponAvailability.OnPhase;
-    /// <summary>Default weapon mapping for this action (used for Availability.Default)</summary>
+    // <summary>Default weapon mapping for this action (used for Availability.Default)</summary>
     public Capability DefaultWeapon                 { get; init; } = Capability.None;
 
     // ============================================================================
-    // CONTROL SYSTEM - What weapons become available
+    //  Control System
     // ============================================================================
     
-    /// <summary>Weapons that become available during Charging phase</summary>
+    // <summary>Weapons that become available during Charging phase</summary>
     public List<string> AddControlOnCharge          { get; init; } = new();
-    /// <summary>Weapons that become available during Fire phase</summary>
+    // <summary>Weapons that become available during Fire phase</summary>
     public List<string> AddControlOnFire            { get; init; } = new();
-    /// <summary>Weapons that become available during FireEnd phase</summary>
+    // <summary>Weapons that become available during FireEnd phase</summary>
     public List<string> AddControlOnFireEnd         { get; init; } = new();
-    /// <summary>Weapons that are removed from availability during Charging phase</summary>
+    // <summary>Weapons that are removed from availability during Charging phase</summary>
     public List<string> RemoveControlOnCharge       { get; init; } = new();
-    /// <summary>Weapons that are removed from availability during Fire phase</summary>
+    // <summary>Weapons that are removed from availability during Fire phase</summary>
     public List<string> RemoveControlOnFire         { get; init; } = new();
-    /// <summary>Weapons that are removed from availability during FireEnd phase</summary>
+    // <summary>Weapons that are removed from availability during FireEnd phase</summary>
     public List<string> RemoveControlOnFireEnd      { get; init; } = new();
-    /// <summary>Automatic weapon chain - available during FireEnd/ControlWindow</summary>
+    // <summary>Automatic weapon chain - available during FireEnd/ControlWindow</summary>
     public string SwapOnFire                        { get; init; }
 
     public bool ForceReleaseOnSwap                  { get; init; }
     // ============================================================================
-    // CHAIN ANCHORING
+    //  Chain Anchoring
     // ============================================================================
     
-    /// <summary> Root inputs that anchor this weapon chain. If any of these are released, the weapon terminates</summary>
+    // <summary> Root inputs that anchor this weapon chain. If any of these are released, the weapon terminates</summary>
     public List<Capability> RequiredHeldTriggers    { get; init; } = new();
 
     // ============================================================================
-    // INTERRUPTION & CANCELING
+    //  Interruption and Cancelling
     // ============================================================================
     
-    /// <summary>Can this weapon interrupt other weapons?</summary>
+    // <summary>Can this weapon interrupt other weapons?</summary>
     public bool CanInterrupt                        { get; init; }
-    /// <summary>Can this weapon cancel through disable effects?</summary>
+    // <summary>Can this weapon cancel through disable effects?</summary>
     public bool CanCancelDisables                   { get; init; }
 
     // ============================================================================
-    // TRIGGER LOCKS
+    //  Trigger Locks
     // ============================================================================
     
-    /// <summary>Should this weapon lock its trigger inputs while active?</summary>
+    // <summary>Should this weapon lock its trigger inputs while active?</summary>
     public bool LockTriggerAction                   { get; init; }
-    /// <summary>Should this weapon respect trigger lock requests from effects?</summary>
+    // <summary>Should this weapon respect trigger lock requests from effects?</summary>
     public bool AcceptTriggerLockRequests           { get; init; }
 
     // ============================================================================
-    // TIMING
+    //  Timing
     // ============================================================================
     
-    /// <summary>Control window duration (in seconds) for combo continuation</summary>
+    // <summary>Control window duration (in seconds) for combo continuation</summary>
     public float ControlWindow                      { get; init; }
-    /// <summary>Cooldown after weapon completes</summary>
+    // <summary>Cooldown after weapon completes</summary>
     public float Cooldown                           { get; init; }
-    /// <summary>Charge time in seconds</summary>
+    // <summary>Charge time in seconds</summary>
     public float ChargeTime                         { get; init; }
-    /// <summary>Charge time in frames (takes priority over ChargeTime if set)</summary>
+    // <summary>Charge time in frames (takes priority over ChargeTime if set)</summary>
     public int ChargeTimeFrames                     { get; init; }
-    /// <summary>Fire phase duration in Seconds</summary>
+    // <summary>Fire phase duration in Seconds</summary>
     public float FireDuration                       { get; init; }
-    /// <summary>Fire phase duration in frames (takes priority over ChargeTime if set)</summary>
+    // <summary>Fire phase duration in frames (takes priority over ChargeTime if set)</summary>
     public int FireDurationFrames                   { get; init; }
 
     // ============================================================================
-    // CHARGE BEHAVIOR
+    //  Charge Behavior
     // ============================================================================
     
-    /// <summary>OnRelease triggers: minimum charge percentage required to fire (0.0 to 1.0)</summary>
+    // <summary>OnRelease triggers: minimum charge percentage required to fire (0.0 to 1.0)</summary>
     public float MinimumChargeToFire                { get; init; }
-    /// <summary>For OnRelease triggers: force fire when max charge is reached </summary>
+    // <summary>For OnRelease triggers: force fire when max charge is reached </summary>
     public bool ForceMaxChargeRelease               { get; init; }
 
-    /// ============================================================================
-    /// MOVEMENT COMMANDS
-    /// ============================================================================
+    // ============================================================================
+    //  Movement Commands
+    // ============================================================================
 
     public List<MovementDefinition> 
                                 MovementDefinitions { get; init; } = new();
 
-    /// ============================================================================
-    /// WEAPON CONFIGURATION
-    /// ============================================================================
+    // ============================================================================
+    //  Weapon Configuration
+    // ============================================================================
 
-    /// <summary>Custom predicates - intended for player context</summary>
+    // <summary>Custom predicates - intended for player context</summary>
     public WeaponTriggerCondition Condition         { get; init; } = new();
-    /// <summary>List of effects applied by weapon</summary>
+    // <summary>List of effects applied by weapon</summary>
     public List<Effect> Effects                     { get; init; } = new();
 
-    /// ============================================================================
-    /// Hitboxes
-    /// ============================================================================
+    // ============================================================================
+    //  Hitboxes
+    // ============================================================================
     
     public List<HitboxDefinition> Hitboxes          { get; init; } = new();
 
-    /// ============================================================================
-    /// Animations
-    /// ============================================================================
+    // ============================================================================
+    //  Animations
+    // ============================================================================
 
-    /// <summary>Lock aim using provided InputIntentSnapshot in animation request context</summary>
+    // <summary>Lock aim using provided InputIntentSnapshot in animation request context</summary>
     public bool LockAimDuringPlayback               { get; init; }
+    public bool LockDirectionDuringPlayback         { get; init; }
+    public bool HoldAnimationUntilReleased          { get; init; }
+
     public WeaponAnimations Animations              { get; init; } = new();
+
+    // ============================================================================
+    //  Actor
+    // ============================================================================
+
+    public CommandDirection Direction               { get; init; } = new();
 }
+
+
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -151,16 +162,24 @@ public class WeaponDefinition : Definition
 
 public class WeaponTriggerCondition
 {
-    public Func<Actor, bool> Activate   { get; init; }
-    public Func<Actor, bool> Cancel     { get; init; }
-}
+    public Func<Actor, bool> Activate               { get; init; }
+    public Func<Actor, bool> Cancel                 { get; init; }
+}           
 
-public class WeaponAnimations
-{
-    public string OnCharge              { get; init; }
-    public string OnFire                { get; init; }
-    public string OnFireEnd             { get; init; }
-    public string OnCancel              { get; init; }
+public class WeaponAnimations           
+{           
+    public string OnCharge                          { get; init; }
+    public string OnFire                            { get; init; }
+    public string OnFireEnd                         { get; init; }
+    public string OnCancel                          { get; init; }
+}           
+
+public class CommandDirection           
+{           
+    public bool Enabled                             { get; init; }
+    public DirectionSource Source                   { get; init; }
+    public WeaponPhase SetTrigger                   { get; init; }
+    public WeaponPhase ClearTrigger                 { get; init; }
 }
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                             Weapon Instance                                                   
@@ -251,7 +270,7 @@ public class WeaponState
         // -----------------------------------
         
     public HashSet<Guid> OwnedCommands          { get; set; } = new();
-    public HashSet<Guid> OwnedHitboxes          { get; set; } = new();
+    public HashSet<HitboxAPI> OwnedHitboxes     { get; set; } = new();
 
         // -----------------------------------
 
@@ -261,6 +280,8 @@ public class WeaponState
 
     public bool HasFired                        { get; set; }
     public bool ReadyToRelease                  { get; set; }
+
+    public AnimationRequest AnimationRequest    { get; set; }
 
     // ===============================================================================
 
@@ -353,7 +374,7 @@ public enum WeaponPhase
     Disable,
 }
 
-/// <summary>What causes this weapon to fire?</summary>
+// <summary>What causes this weapon to fire?</summary>
 public enum WeaponActivation
 {
     OnPress,          // Fires immediately on activation
@@ -362,7 +383,7 @@ public enum WeaponActivation
     WhileHeld,        // Continuously active while held
 }
 
-/// <summary>What causes this weapon to terminate?</summary>
+// <summary>What causes this weapon to terminate?</summary>
 public enum WeaponTermination
 {
     AfterFire,        // Ends after fire phase completes
@@ -371,7 +392,7 @@ public enum WeaponTermination
     Manual,           // Only ends when explicitly interrupted
 }
 
-/// <summary>How does this weapon become available/activatable?</summary>
+// <summary>How does this weapon become available/activatable?</summary>
 public enum WeaponAvailability
 {
     Default,          // Available as default weapon for an input
@@ -379,11 +400,4 @@ public enum WeaponAvailability
     OnHeld,           // Auto-activates when parent active + input held
 }
 
-public enum DirectionSource
-{
-    Movement,
-    Intent,
-    CardinalIntent,
-    Facing,
-}
 

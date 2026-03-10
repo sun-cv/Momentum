@@ -12,8 +12,16 @@ public class DummyDefinition : ActorDefinition
         Stats                       = new()
         {
             MaxHealth               = 100,
-            MaxMana                 = 100,
+            MaxEnergy               = 100,
             Speed                   = 0,
+        };
+
+        Resource                    = new()
+        {
+            Health                  = new()
+            {
+                AlertOnChange       = true,
+            },
         };
 
         Physics                     = new()

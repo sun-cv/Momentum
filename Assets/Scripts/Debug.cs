@@ -167,6 +167,7 @@ public enum LogSystem
     
     // Physics & Movement
     Physics,
+    ContactResolver,
     Collision,
     MovementEngine,
     Movement,
@@ -185,6 +186,8 @@ public enum LogSystem
     Input,
     Command,
     Direction,
+    Resource,
+
     
     // Gameplay Systems
     Stats,

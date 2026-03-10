@@ -1,25 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
-public class EffectRegister : Service
+public class EffectRegister : Service, IServiceTick
 {
+
     readonly Actor owner;
 
-        // -----------------------------------
+    // -----------------------------------
 
-    readonly List<EffectInstance> effects = new();
+    readonly List<(Request, EffectAPI)> queue   = new();
+    readonly List<EffectInstance> effects       = new();
 
     // ===============================================================================
 
     public EffectRegister(Actor actor)
     {
         owner = actor;
-        owner.Emit.Link.Local<Request, EffectDeclarationEvent>      (HandleEffectRequest);
-        owner.Emit.Link.Local<Request, EffectInstanceEvent>         (HandleEffectCancellation);
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>> (HandlePresenceStateEvent);
+        owner.Emit.Link.Local<Message<Request, EffectAPI>>(HandleEffectAPI);
+        owner.Emit.Link.Local<PresenceStateEvent>        (HandlePresenceStateEvent);
+
+        Services.Lane.Register(this);
     } 
 
     // ===============================================================================
@@ -58,13 +62,41 @@ public class EffectRegister : Service
     
     // ===============================================================================
 
-    public void RegisterEffect(Runtime runtime, Effect effect)
+    public void Tick()
     {
-        var instance = new EffectInstance(runtime, effect);
+        ProcessQueues();
+    }
 
-        instance.OnApply   += () => owner.Emit.Local(Publish.Activated,   new EffectInstanceEvent(instance));
-        instance.OnClear   += () => owner.Emit.Local(Publish.Deactivated, new EffectInstanceEvent(instance));
-        instance.OnCancel  += () => owner.Emit.Local(Publish.Canceled,    new EffectInstanceEvent(instance));
+    void ProcessQueues()
+    {
+        foreach(var (request, effect) in queue)
+        {
+            ProcessRequest(request, effect);
+        }
+        
+        queue.Clear();
+    }
+
+    void ProcessRequest(Request request, EffectAPI effect)
+    {
+        switch(request)
+        {
+            case Request.Create: RegisterEffect(effect); break;
+            case Request.Cancel: CancelEffect(effect);   break;
+        }
+    }
+
+
+
+    // ===============================================================================
+
+    public void RegisterEffect(EffectAPI request)
+    {
+        var instance = new EffectInstance(request.Runtime, request.Effect);
+
+        instance.OnApply   += () => owner.Emit.Local(new EffectEvent(instance));
+        instance.OnClear   += () => owner.Emit.Local(new EffectEvent(instance));
+        instance.OnCancel  += () => owner.Emit.Local(new EffectEvent(instance));
         
         RegisterTriggerLock(instance);
         RegisterDebugLog(instance);
@@ -89,11 +121,12 @@ public class EffectRegister : Service
             
         foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => owner.Emit.Local(Request.Lock,   new LockEvent(action, instance.Effect.Name));
-            instance.OnClear   += () => owner.Emit.Local(Request.Unlock, new LockEvent(action, instance.Effect.Name));
-            instance.OnCancel  += () => owner.Emit.Local(Request.Unlock, new LockEvent(action, instance.Effect.Name));
+            instance.OnApply   += () => owner.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Lock));
+            instance.OnClear   += () => owner.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
+            instance.OnCancel  += () => owner.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
         }
     }
+
 
     void RegisterDebugLog(EffectInstance instance)
     {
@@ -102,29 +135,26 @@ public class EffectRegister : Service
         instance.OnCancel  += () => Log.Trace($"Canceling Effect {instance.Effect.Name}");
     }
 
-    public void CancelEffect(Effect effect)
+    public void CancelEffect(EffectAPI request)
     {
-        if (effect is ICancelable instance && instance.Cancelable)
-            effects.FirstOrDefault(instance => instance.Effect.RuntimeID == effect.RuntimeID)?.Cancel();
+        if (request.Instance.Effect is ICancelable effect && effect.Cancelable)
+        {
+            effects.FirstOrDefault(instance => instance.RuntimeId == request.Instance.RuntimeId)?.Cancel();
+        }
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-    void HandleEffectRequest(Message<Request, EffectDeclarationEvent> message)
+    void HandleEffectAPI(Message<Request, EffectAPI> message)
     {                    
-        RegisterEffect(message.Payload.Runtime, message.Payload.Effect);
+        queue.Add((message.Action, message.Payload));
     }
 
-    void HandleEffectCancellation(Message<Request, EffectInstanceEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        CancelEffect(message.Payload.Instance.Effect);
-    }
-
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
-    {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -139,7 +169,10 @@ public class EffectRegister : Service
     public override void Dispose()
     {
         effects.Clear();
+        Services.Lane.Deregister(this);
     }
+
+    public UpdatePriority Priority => ServiceUpdatePriority.EffectRegister;
 
     public List<EffectInstance> Effects => effects;
 }
@@ -151,10 +184,17 @@ public class EffectRegister : Service
 
 public class EffectInstance : Instance
 {
+    public enum EffectState { Active, Completed, Canceled }
+
+        // -----------------------------------
+
     public Runtime  Owner;
     public Effect   Effect;
 
         // -----------------------------------
+
+    public EffectState State { get; private set; }
+
 
     public Action OnApply;
     public Action OnClear;
@@ -176,8 +216,8 @@ public class EffectInstance : Instance
 
     public void Initialize()
     {
-        timer.OnTimerStart  += OnApply;
-        timer.OnTimerStop   += OnClear;
+        timer.OnTimerStart  += () => { State = EffectState.Active;      OnApply?.Invoke(); };
+        timer.OnTimerStop   += () => { State = EffectState.Completed;   OnClear?.Invoke(); };
 
         timer.Start();
     }
@@ -197,6 +237,7 @@ public class EffectInstance : Instance
 
     public void Cancel()
     {
+        State = EffectState.Canceled;
         timer.Cancel();
         OnCancel?.Invoke();
     }
@@ -222,7 +263,7 @@ public class EffectCache : IDisposable
         // -----------------------------------
 
     readonly List<EffectInstance> activeEffects = new();
-    readonly EventBinding<Message<Publish, EffectInstanceEvent>> binding;
+    readonly EventBinding<EffectEvent> binding;
 
     // ===============================================================================
 
@@ -231,29 +272,29 @@ public class EffectCache : IDisposable
         this.emit   = emit;
         this.filter = filter;
 
-        this.emit.Link.Local<Message<Publish, EffectInstanceEvent>>(HandleEffectPublish);
+        binding = this.emit.Link.Local<EffectEvent>(HandleEffectPublish);
     }
 
     // ===============================================================================
 
-    public void HandleEffectPublish(Message<Publish, EffectInstanceEvent> message)
+    public void HandleEffectPublish(EffectEvent message)
     {
-        var instance = message.Payload.Instance;
+        var instance = message.Instance;
 
         if (filter != null && !filter(instance))
             return;
 
-        switch(message.Action)
+        switch(instance.State)
         {
-            case Publish.Activated:
+            case EffectInstance.EffectState.Active:
                 activeEffects.Add(instance);
                 OnApply?.Invoke(instance);
                 break;
-            case Publish.Canceled:
+            case EffectInstance.EffectState.Canceled:
                 if (activeEffects.Remove(instance))
                     OnCancel?.Invoke(instance);
                 break;
-            case Publish.Deactivated:               
+            case EffectInstance.EffectState.Completed:               
                 if (activeEffects.Remove(instance))
                     OnClear?.Invoke(instance);
                 break;
@@ -265,7 +306,7 @@ public class EffectCache : IDisposable
 
     public void Bind(LocalEventbus eventbus)
     {
-        eventbus.Subscribe<Message<Publish, EffectInstanceEvent> >(HandleEffectPublish);
+        eventbus.Subscribe<EffectEvent>(HandleEffectPublish);
     }
 
     public IReadOnlyList<EffectInstance> Instances => activeEffects.ToList();
@@ -277,25 +318,33 @@ public class EffectCache : IDisposable
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct EffectDeclarationEvent
-{
-    public Effect Effect                    { get; init; }
-    public Runtime Runtime                  { get; init; }
 
-    public EffectDeclarationEvent(Runtime runtime, Effect effect)
+public class EffectEvent : IMessage
+{
+    public EffectInstance Instance  { get; set; }
+
+    public EffectEvent(EffectInstance instance)
     {
-        Effect  = effect;
-        Runtime = runtime;
+        Instance = instance;
     }
 }
 
-public readonly struct EffectInstanceEvent
+public class EffectAPI : Payload
 {
-    public EffectInstance Instance          { get; init; }
+    public Effect    Effect         { get; init; }
+    public Runtime   Runtime        { get; init; }
 
-    public EffectInstanceEvent(EffectInstance instance)
+    public EffectInstance Instance  { get; set; }
+
+    public EffectAPI(Runtime id, Effect effect)
     {
-        Instance    = instance;
+        Runtime = id;
+        Effect  = effect;   
     }
-}
+    
+    public EffectAPI(EffectInstance instance)
+    {
+        Instance = instance;
+    }
 
+}

@@ -17,7 +17,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         // -----------------------------------
 
-    readonly List<AnimationRequest> animatorRequests;
+    readonly List<AnimationRequest> queue;
 
     readonly Dictionary<int, AnimatorParameter.Override> overrides;
     readonly Dictionary<int, Action<Animator, Actor>> tickHandlers;
@@ -48,7 +48,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         validParameters     = new();
         clipDurations       = new();
 
-        animatorRequests    = new();
+        queue               = new();
 
         overrides           = new();
         tickHandlers        = new();
@@ -59,16 +59,16 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         BuildHandlers();
 
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>     (HandlePresenceStateEvent);
+        owner.Emit.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
     }
 
     // ===============================================================================
     //  Public API
     // ===============================================================================
 
-    public void RequestAnimation(AnimationRequest request)
+    public void RequestAnimationChange(AnimationRequest request)
     {
-        animatorRequests.Add(request);
+        queue.Add(request);
     }
 
     public void RequestAnimationTrigger(string trigger)
@@ -143,20 +143,26 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         PlayAnimation(request);
 
+        SendAnimatorPlaybackEvent(Publish.Started, request);
+
         SetTransitionTimer(request);
     }
 
     void ProcessAnimatorRequests()
     {
-        if (animatorRequests.Count == 0)
+        if (queue.Count == 0)
             return;
 
-        foreach (var request in animatorRequests)
+        foreach (var request in queue)
         {
-            ProcessAnimation(request);
+            switch(request.options.Request)
+            {
+                case Request.Play: ProcessAnimation(request);   break;
+                case Request.Stop: ClearAnimation(request);     break;
+            }
         }
 
-        animatorRequests.Clear();
+        queue.Clear();
     }
 
     void CacheClipDurations()
@@ -226,20 +232,52 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         if (clipDurations.TryGetValue(request.data.Animation, out float duration))
         {
             transitionTimer = new ClockTimer(duration);
-            transitionTimer.OnTimerStop += () => animator.SetLayerWeight(LAYER_ACTION, 0f);
-            transitionTimer.OnTimerStop += () => allowInterrupt = true;
-            transitionTimer.OnTimerStop += () => owner.Emit.Local(Publish.Ended, new AnimatorPlaybackEvent(request.data.Animation));
+            transitionTimer.OnTimerStop += () => ClearAnimation(request);
             transitionTimer.Start();
         }
+    }
+
+    void ClearAnimation(AnimationRequest request)
+    {
+        if (!IsStateActive(LAYER_ACTION, request.data.Animation))
+        {
+            return;
+        }
+        ClearAnimatorState();
+        
+        SendAnimatorPlaybackEvent(Publish.Ended, request);
+    }
+
+    void ClearAnimatorState()
+    {
+        animator.Play("Idle", LAYER_ACTION, 0f);
+        animator.SetLayerWeight(LAYER_ACTION, 0f);
+        allowInterrupt = true;
+    }
+
+    bool IsStateActive(int layer, string stateName)
+    {
+        return animator.GetCurrentAnimatorStateInfo(layer).IsName(stateName);
+    }
+
+    void SendAnimatorPlaybackEvent(Publish type, AnimationRequest request)
+    {
+        owner.Emit.Local(new AnimatorEvent(type, request.data.Animation));
+    }
+
+    string GetCurrentAnimationName(int layer)
+    {
+        var clipInfo = animator.GetCurrentAnimatorClipInfo(layer);
+        return clipInfo.Length > 0 ? clipInfo[0].clip.name : null;
     }
 
     // ============================================================================
     //  Events
     // ============================================================================
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;
@@ -297,18 +335,17 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct AnimatorPlaybackEvent
+public readonly struct AnimatorEvent : IMessage
 {
-    public readonly string Name         { get; init; }
+    public readonly string Name  { get; init; }
+    public readonly Publish Type { get; init; }
 
-    public AnimatorPlaybackEvent(string name)
+    public AnimatorEvent(Publish type, string name)
     {
         Name = name;
+        Type = type;
     }
 }
-
-
-
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -341,12 +378,12 @@ public static class AnimatorParameter
     public static Override Bool (int param, bool value)  => new() { Parameter = param, Bool  = value, Type = Override.ParamType.Bool  };
     public static Override Int  (int param, int value)   => new() { Parameter = param, Int   = value, Type = Override.ParamType.Int   };
 
-    public static int LockedAimX            = Animator.StringToHash(nameof(LockedAimX));
-    public static int LockedAimY            = Animator.StringToHash(nameof(LockedAimY));
-    public static int LockedCardinalAimX    = Animator.StringToHash(nameof(LockedCardinalAimX));
-    public static int LockedCardinalAimY    = Animator.StringToHash(nameof(LockedCardinalAimY));
-    public static int LockedFacingX         = Animator.StringToHash(nameof(LockedFacingX));
-    public static int LockedFacingY         = Animator.StringToHash(nameof(LockedFacingY));
+    public static int ResolvedAimX          = Animator.StringToHash(nameof(ResolvedAimX));
+    public static int ResolvedAimY          = Animator.StringToHash(nameof(ResolvedAimY));
+    public static int ResolvedCardinalAimX  = Animator.StringToHash(nameof(ResolvedCardinalAimX));
+    public static int ResolvedCardinalAimY  = Animator.StringToHash(nameof(ResolvedCardinalAimY));
+    public static int ResolvedFacingX       = Animator.StringToHash(nameof(ResolvedFacingX));
+    public static int ResolvedFacingY       = Animator.StringToHash(nameof(ResolvedFacingY));
     public static int Alive                 = Animator.StringToHash(nameof(Alive));
     public static int Dead                  = Animator.StringToHash(nameof(Dead));
     public static int Inactive              = Animator.StringToHash(nameof(Inactive));
@@ -357,12 +394,12 @@ public static class AnimatorParameter
 
     public static Dictionary<string, int> Library = new()
     {
-        { nameof(LockedAimX),               LockedAimX          },
-        { nameof(LockedAimY),               LockedAimY          },
-        { nameof(LockedCardinalAimX),       LockedCardinalAimX  },
-        { nameof(LockedCardinalAimY),       LockedCardinalAimY  },
-        { nameof(LockedFacingX),            LockedFacingX       },
-        { nameof(LockedFacingY),            LockedFacingY       },
+        { nameof(ResolvedAimX),               ResolvedAimX          },
+        { nameof(ResolvedAimY),               ResolvedAimY          },
+        { nameof(ResolvedCardinalAimX),       ResolvedCardinalAimX  },
+        { nameof(ResolvedCardinalAimY),       ResolvedCardinalAimY  },
+        { nameof(ResolvedFacingX),            ResolvedFacingX       },
+        { nameof(ResolvedFacingY),            ResolvedFacingY       },
         { nameof(Alive),                    Alive               },
         { nameof(Dead),                     Dead                },
         { nameof(Inactive),                 Inactive            },
@@ -376,31 +413,31 @@ public static class AnimatorParameter
     {
         { typeof(IAimable), new Entry[]
             {
-                new() { Rate = ServiceRate.Tick, Parameter = LockedAimX,         Handler = (animator, owner) => animator.SetFloat(LockedAimX,            ((IAimable)owner).LockedAim.X)          },
-                new() { Rate = ServiceRate.Tick, Parameter = LockedAimY,         Handler = (animator, owner) => animator.SetFloat(LockedAimY,            ((IAimable)owner).LockedAim.Y)          },
-                new() { Rate = ServiceRate.Tick, Parameter = LockedCardinalAimX, Handler = (animator, owner) => animator.SetFloat(LockedCardinalAimX,    ((IAimable)owner).LockedAim.Cardinal.x) },
-                new() { Rate = ServiceRate.Tick, Parameter = LockedCardinalAimY, Handler = (animator, owner) => animator.SetFloat(LockedCardinalAimY,    ((IAimable)owner).LockedAim.Cardinal.y) },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedAimX,          Handler = (animator, owner) => animator.SetFloat(ResolvedAimX,            ((IAimable)owner).ResolvedAim.X)          },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedAimY,          Handler = (animator, owner) => animator.SetFloat(ResolvedAimY,            ((IAimable)owner).ResolvedAim.Y)          },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedCardinalAimX,  Handler = (animator, owner) => animator.SetFloat(ResolvedCardinalAimX,    ((IAimable)owner).ResolvedAim.Cardinal.x) },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedCardinalAimY,  Handler = (animator, owner) => animator.SetFloat(ResolvedCardinalAimY,    ((IAimable)owner).ResolvedAim.Cardinal.y) },
             }
         },
         { typeof(IMovableActor), new Entry[]
             {
-                new() { Rate = ServiceRate.Loop, Parameter = LockedFacingX,      Handler = (animator, owner) => animator.SetFloat(LockedFacingX,         ((IMovableActor)owner).LockedFacing.X)  },
-                new() { Rate = ServiceRate.Loop, Parameter = LockedFacingY,      Handler = (animator, owner) => animator.SetFloat(LockedFacingY,         ((IMovableActor)owner).LockedFacing.Y)  },
-                new() { Rate = ServiceRate.Loop, Parameter = Inactive,           Handler = (animator, owner) => animator.SetBool(Inactive,               ((IMovableActor)owner).Inactive)        },
-                new() { Rate = ServiceRate.Loop, Parameter = Disabled,           Handler = (animator, owner) => animator.SetBool(Disabled,               ((IMovableActor)owner).Disabled)        },
-                new() { Rate = ServiceRate.Loop, Parameter = IsMoving,           Handler = (animator, owner) => animator.SetBool(IsMoving,               ((IMovableActor)owner).IsMoving)        },
+                new() { Rate = ServiceRate.Loop, Parameter = ResolvedFacingX,       Handler = (animator, owner) => animator.SetFloat(ResolvedFacingX,         ((IMovableActor)owner).ResolvedFacing.X)  },
+                new() { Rate = ServiceRate.Loop, Parameter = ResolvedFacingY,       Handler = (animator, owner) => animator.SetFloat(ResolvedFacingY,         ((IMovableActor)owner).ResolvedFacing.Y)  },
+                new() { Rate = ServiceRate.Loop, Parameter = Inactive,              Handler = (animator, owner) => animator.SetBool(Inactive,               ((IMovableActor)owner).Inactive)        },
+                new() { Rate = ServiceRate.Loop, Parameter = Disabled,              Handler = (animator, owner) => animator.SetBool(Disabled,               ((IMovableActor)owner).Disabled)        },
+                new() { Rate = ServiceRate.Loop, Parameter = IsMoving,              Handler = (animator, owner) => animator.SetBool(IsMoving,               ((IMovableActor)owner).IsMoving)        },
             }
         },
-        { typeof(ILiving), new Entry[]
+        { typeof(IMortal), new Entry[]
             {
-                new() { Rate = ServiceRate.Tick, Parameter = Alive,              Handler = (animator, owner) => animator.SetBool(Alive,                  ((ILiving)owner).Alive)                 },
-                new() { Rate = ServiceRate.Tick, Parameter = Dead,               Handler = (animator, owner) => animator.SetBool(Dead,                   ((ILiving)owner).Dead)                  },
+                new() { Rate = ServiceRate.Tick, Parameter = Alive,                 Handler = (animator, owner) => animator.SetBool(Alive,                  ((IMortal)owner).Alive)                 },
+                new() { Rate = ServiceRate.Tick, Parameter = Dead,                  Handler = (animator, owner) => animator.SetBool(Dead,                   ((IMortal)owner).Dead)                  },
             }
         },
         { typeof(IIdle), new Entry[]
             {
-                new() { Rate = ServiceRate.Loop, Parameter = Idle,               Handler = (animator, owner) => animator.SetBool(Idle,                   ((IIdle)owner).IsIdle)                  },
-                new() { Rate = ServiceRate.Loop, Parameter = IdleTime,           Handler = (animator, owner) => animator.SetFloat(IdleTime,              ((IIdle)owner).IsIdle.Duration)         },
+                new() { Rate = ServiceRate.Loop, Parameter = Idle,                  Handler = (animator, owner) => animator.SetBool(Idle,                   ((IIdle)owner).IsIdle)                  },
+                new() { Rate = ServiceRate.Loop, Parameter = IdleTime,              Handler = (animator, owner) => animator.SetFloat(IdleTime,              ((IIdle)owner).IsIdle.Duration)         },
             }
         },
     };
@@ -409,16 +446,16 @@ public static class AnimatorParameter
     {
         { typeof(IAimable), snapshot => new[]
             {
-                Float(LockedAimX,         snapshot.Aim.X),
-                Float(LockedAimY,         snapshot.Aim.Y),
-                Float(LockedCardinalAimX, snapshot.Aim.Cardinal.x),
-                Float(LockedCardinalAimY, snapshot.Aim.Cardinal.y),
+                Float(ResolvedAimX,         snapshot.Aim.X),
+                Float(ResolvedAimY,         snapshot.Aim.Y),
+                Float(ResolvedCardinalAimX, snapshot.Aim.Cardinal.x),
+                Float(ResolvedCardinalAimY, snapshot.Aim.Cardinal.y),
             }
         },
         { typeof(IMovableActor), snapshot => new[]
             {
-                Float(LockedFacingX, snapshot.Facing.X),
-                Float(LockedFacingY, snapshot.Facing.Y),
+                Float(ResolvedFacingX, snapshot.Facing.X),
+                Float(ResolvedFacingY, snapshot.Facing.Y),
             }
         },
     };

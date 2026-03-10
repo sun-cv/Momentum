@@ -129,7 +129,8 @@ public class LocalEventbus : IDisposable
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public interface IEvent {};
-public interface ISystemEvent : IEvent { public Guid Id { get; } }
+public interface IMessage       : IEvent {}
+public interface IMessageAPI    : IEvent { public Guid Id { get; } }
 
 public interface IEventBinding<T> 
 {
@@ -207,11 +208,6 @@ public class Emit : IDisposable
     {
         Bus.Raise(message);
     }
-
-    public void Local<TAction>(Guid id, TAction action) 
-    {
-        Bus.Raise(new EmptyMessage<TAction>(id, action));
-    }    
 
     public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
     {
@@ -295,7 +291,7 @@ public class Link
 //                                       Utilities
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class GlobalEventHandler<TResponse> : IDisposable where TResponse : ISystemEvent
+public class GlobalEventHandler<TResponse> : IDisposable where TResponse : IMessageAPI
 {
     
     readonly Action<TResponse> onResponse;
@@ -318,9 +314,14 @@ public class GlobalEventHandler<TResponse> : IDisposable where TResponse : ISyst
     //  Public API
     // ===============================================================================
 
-    public void Send<TAction, TPayload>(TAction action, TPayload payload)
+    public void Send<TAction, TPayload>(TAction action, TPayload payload) where TPayload : Payload
     {
-        var message = new Message<TAction, TPayload>(action, payload);
+        Forward(payload.Id, action, payload);
+    }
+
+    public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
+    {
+        var message = new Message<TAction, TPayload>(id, action, payload);
         pendingIds.Add(message.Id);
         EventBus<Message<TAction, TPayload>>.Raise(message);
     }
@@ -345,11 +346,11 @@ public class GlobalEventHandler<TResponse> : IDisposable where TResponse : ISyst
 
     // ===============================================================================
 
-
     public int PendingCount => pendingIds.Count;
 }
 
-public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISystemEvent
+
+public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMessageAPI
 {
     readonly Emit emit;
 
@@ -376,9 +377,9 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISyst
     //  Public API
     // ===============================================================================
 
-    public void Send<TAction, TPayload>(TAction action, TPayload payload)
+    public void Send<TAction, TPayload>(TAction action, TPayload payload) where TPayload : Payload
     {
-        Forward(Guid.NewGuid(), action, payload);
+        Forward(payload.Id, action, payload);
     }
 
     public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
@@ -396,7 +397,10 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISyst
         onResponse(response);
     }
 
-    public void Clear() => pendingIds.Clear();
+    public void Clear()
+    {
+        pendingIds.Clear();
+    }
 
     public void Dispose()
     {
@@ -404,7 +408,6 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISyst
     }
     
     // ===============================================================================
-
 
     public int PendingCount => pendingIds.Count;
 }
@@ -415,7 +418,7 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : ISyst
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-public readonly struct Message<TAction, TPayload> : ISystemEvent
+public readonly struct Message<TAction, TPayload> : IMessageAPI
 {
     public Guid Id              { get; }
     public TPayload Payload     { get; }
@@ -433,17 +436,5 @@ public readonly struct Message<TAction, TPayload> : ISystemEvent
         Id          = id;
         Action      = action;
         Payload     = payload;
-    }
-}
-
-public readonly struct EmptyMessage<TAction> : ISystemEvent
-{
-    public Guid Id              { get; }
-    public TAction Action       { get; }
-
-    public EmptyMessage(Guid id, TAction action)
-    {
-        Id          = id;
-        Action      = action;
     }
 }

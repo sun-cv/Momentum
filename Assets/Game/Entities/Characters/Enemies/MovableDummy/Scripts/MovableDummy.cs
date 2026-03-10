@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class MovableDummy : Agent, IMovableDummy
 {
+    public Resources            Resource            { get; private set; }
     public Movement             Movement            { get; private set; }
     public Presence             Presence            { get; private set; }
     public Lifecycle            Lifecycle           { get; private set; }
@@ -13,11 +14,13 @@ public class MovableDummy : Agent, IMovableDummy
     //  Accessors
     //========================================
 
-    public float MaxHealth                          { get; set; }
-    public float Health                             { get; set; }
+    public float Health                             => Resource.Health; 
+    public float MaxHealth                          => Definition.Stats.MaxHealth;
 
-    public float Speed                              { get; set; }
-    public float SpeedMultiplier                    { get; set; }
+    public float Speed                              { get; }
+    public float SpeedMultiplier                    { get; }
+
+    public float Impact                             { get; } = 1;
 
     //========================================
     //  State
@@ -42,13 +45,13 @@ public class MovableDummy : Agent, IMovableDummy
     public Direction Facing                         { get; set; }
     public Direction Direction                      { get; set; }
     public Direction LastDirection                  { get; set; }
+    public Direction CommandDirection               { get; set; }
     
-    public Direction LockedFacing                   { get; set; }
-    public Direction LockedDirection                { get; set; }
+    public Direction ResolvedFacing                 { get; set; }
+    public Direction ResolvedDirection              { get; set; }
 
     public float Friction                           => Definition.Physics.Friction;
     public float Mass                               => Definition.Physics.Mass;
-
 
     public Vector2 Velocity                         { get; set; }
     public Vector2 Control                          { get; set; }
@@ -65,10 +68,10 @@ public class MovableDummy : Agent, IMovableDummy
     public void Initialize(ActorDefinition definition)
     {
         Definition  = definition;
-        MaxHealth   = definition.Stats.MaxHealth;
 
         Emit        = new();
 
+        Resource    = new(this);
         Movement    = new(this);
         Animation   = new(this);
         Presence    = new(this);

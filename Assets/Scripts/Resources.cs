@@ -10,108 +10,41 @@ public class Resources
 
         // -----------------------------------
 
-    readonly List<IResourceConsumer> distributed;
-    readonly Dictionary<Type, IResourceConsumer> consumers;
-
-        // -----------------------------------
-
-    readonly List<ResourcePackage> queue;
+    readonly Dictionary<Type, IResourceHandler> handlers = new();
 
     // ===============================================================================
     
     public Resources(Actor actor)
     {
         owner = actor;
-
-        Link.Global<Message<Request, ResourcePackage>>(HandleResourceRequest);
-
         CreateConsumers();
     }
 
     void CreateConsumers()
     {
-        if (owner.Definition.Resource.Shield.Enabled)   Register(new ShieldConsumer(this), distributer: true);
-        if (owner.Definition.Resource.Armor.Enabled)    Register(new ArmorConsumer (this), distributer: true);
-        if (owner.Definition.Resource.Health.Enabled)   Register(new HealthConsumer(this), distributer: true);
-        if (owner.Definition.Resource.Mana.Enabled)     Register(new ManaConsumer  (this), distributer: false);
+        if (owner is IHealth)   Register(new HealthHandler(this));
+        if (owner is IArmor)    Register(new ArmorHandler (this));
+        if (owner is IShield)   Register(new ShieldHandler(this));
+        if (owner is ICaster)   Register(new EnergyHandler(this));
     }   
 
     // ===============================================================================
 
-    public void Tick()
-    {
-        ProcessQueue();
-    }
-
-    // ===============================================================================
-
-    void ProcessQueue()
-    {
-        foreach (var package in queue)
-        {
-            Process(package);
-        }
-    }
-
-    void Process(ResourcePackage request)
-    {
-        switch (request.Route)
-        {
-            case Route.Direct:      ProcessDirect     (request); break;
-            case Route.Broadcast:   ProcessBroadcast  (request); break;
-            case Route.Distributed: ProcessDistributed(request); break;
-        }
-    }
-
-    void ProcessDirect(ResourcePackage request)
-    {
-        consumers[request.Target]?.Consume(request.Component);
-    }
-
-    void ProcessBroadcast(ResourcePackage request)
-    {
-        foreach (var consumer in consumers.Values)
-            consumer.Consume(request.Component);
-    }
-
-    void ProcessDistributed(ResourcePackage request)
-    {
-        foreach (var consumer in distributed)
-        {
-            if (consumer.CanConsume(request.Component))
-                consumer.Consume(request.Component);
-
-            if (request.Component.Consumed) break;
-        }
-    }
-
-    T Get<T>() where T : IResourceConsumer 
+    T Get<T>() where T : IResourceHandler 
     { 
-        consumers.TryGetValue(typeof(T), out IResourceConsumer consumer); 
+        handlers.TryGetValue(typeof(T), out IResourceHandler consumer); 
         return (T)consumer; 
     }
 
-    void Register(IResourceConsumer consumer, bool distributer = false)
+    void Register(IResourceHandler handler)
     {
-        if (distributer)
-            distributed.Add(consumer);
-
-        consumers[consumer.GetType()] = consumer;
+        handlers[handler.GetType()] = handler;
     }
 
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void HandleResourceRequest(Message<Request, ResourcePackage> message)
-    {
-        queue.Add(message.Payload);
-    }
-
-    public float Shield => Get<ShieldConsumer>().Shield;
-    public float Armor  => Get<ArmorConsumer>().Armor;
-    public float Health => Get<HealthConsumer>().Health;
-    public float Mana   => Get<ManaConsumer>  ().Mana;
+    public float Health => Get<HealthHandler>().Health;
+    public float Armor  => Get<ArmorHandler> ().Armor;
+    public float Shield => Get<ShieldHandler>().Shield;
+    public float Energy => Get<EnergyHandler>().Energy;
 
     public Actor Owner => owner;
 }
@@ -126,18 +59,13 @@ public class Resources
 
 public interface IResourceAction { public float Amount { get; init; } }
 
+public interface IResourceHandler {}
 
-public interface IResourceConsumer : IConsumer<ResourceComponent>
-{
-    bool CanConsume(ResourceComponent request);
-}
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Structs                                                   
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public readonly struct Heal : IResourceAction
+public readonly struct Heal : IMessage, IResourceAction
 {
     public float Amount                     { get; init; }
 
@@ -147,7 +75,18 @@ public readonly struct Heal : IResourceAction
     }
 }
 
-public readonly struct Repair : IResourceAction
+public readonly struct Wound : IMessage, IResourceAction
+{
+    public float Amount                     { get; init; }
+
+    public Wound(float amount)
+    {
+        Amount = amount;
+    }
+}
+
+
+public readonly struct Repair : IMessage, IResourceAction
 {
     public float Amount                     { get; init; }
 
@@ -157,29 +96,18 @@ public readonly struct Repair : IResourceAction
     }
 }
 
-public readonly struct Charge : IResourceAction
+public readonly struct Fracture : IMessage, IResourceAction
 {
     public float Amount                     { get; init; }
 
-    public Charge(float amount)
+    public Fracture(float amount)
     {
         Amount = amount;
     }
 }
 
-public readonly struct Damage : IResourceAction
-{
-    public float Amount                     { get; init; }
-    public DamageType Type                  { get; init; }
 
-    public Damage(float amount, DamageType type)
-    {
-        Amount  = amount;
-        Type    = type;
-    }
-}
-
-public readonly struct Restore : IResourceAction
+public readonly struct Restore : IMessage, IResourceAction
 {
     public float Amount                     { get; init; }
 
@@ -189,185 +117,286 @@ public readonly struct Restore : IResourceAction
     }
 }
 
-public readonly struct Cast : IResourceAction
+public readonly struct Dissipate : IMessage, IResourceAction
 {
     public float Amount                     { get; init; }
 
-    public Cast(float amount)
+    public Dissipate(float amount)
     {
         Amount = amount;
     }
 }
 
-public readonly struct HealthReset      : IResourceAction { public float Amount { get; init; } }
-public readonly struct ArmorReset       : IResourceAction { public float Amount { get; init; } }
-public readonly struct ShieldReset      : IResourceAction { public float Amount { get; init; } }
-public readonly struct ManaReset        : IResourceAction { public float Amount { get; init; } }
-public readonly struct ResourceReset    : IResourceAction { public float Amount { get; init; } }
 
-public class ResourceComponent
+public readonly struct Expend : IMessage, IResourceAction
 {
-    public IResourceAction  Action          { get; set; }
-    public float            Remaining       { get; set; }
-    public bool             Consumed        { get; set; }
+    public float Amount                     { get; init; }
 
-    public ResourceComponent(IResourceAction action)
+    public Expend(float amount)
     {
-        Action      = action;
-        Remaining   = action.Amount;
-        Consumed    = false;
+        Amount = amount;
     }
 }
 
-public class ResourcePackage
+public readonly struct Recharge : IMessage, IResourceAction
 {
-    public ResourceComponent Component          { get; init; }
-    public Route             Route              { get; init; }
-    public Type              Target             { get; init; }
-    
-    public ResourcePackage(ResourceComponent component, Route route, Type target = null)
-    {
-        Component   = component;
-        Route       = route;
-        Target      = target;
-    }
+    public float Amount                     { get; init; }
 
-    
+    public Recharge(float amount)
+    {
+        Amount = amount;
+    }
 }
 
 
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                         Events
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+public readonly struct HealthReset      : IMessage, IResourceAction { public float Amount { get; init; } }
+public readonly struct ArmorReset       : IMessage, IResourceAction { public float Amount { get; init; } }
+public readonly struct ShieldReset      : IMessage, IResourceAction { public float Amount { get; init; } }
+public readonly struct EnergyReset      : IMessage, IResourceAction { public float Amount { get; init; } }
+public readonly struct ResourceReset    : IMessage, IResourceAction { public float Amount { get; init; } }
+
+public readonly struct HealthEvent : IMessage
+{
+    public readonly Actor Owner             { get; init; }
+    public readonly float Health            { get; init; }
+    public readonly float MaxHealth         { get; init; }
+    public readonly float CurrentPercent    { get; init; }
+    public readonly float LastPercent       { get; init; }
+
+    public HealthEvent(Actor owner, float health, float maxHealth, float current, float last)
+    {
+        Owner           = owner;
+        Health          = health;
+        MaxHealth       = maxHealth;
+        CurrentPercent  = current;
+        LastPercent     = last;
+    }
+}
+
+public readonly struct ArmorEvent : IMessage
+{
+    public readonly Actor Owner             { get; init; }
+    public readonly float Armor             { get; init; }
+    public readonly float MaxArmor          { get; init; }
+    public readonly float CurrentPercent    { get; init; }
+    public readonly float LastPercent       { get; init; }
+
+    public ArmorEvent(Actor owner, float armor, float maxArmor, float current, float last)
+    {
+        Owner           = owner;
+        Armor           = armor;
+        MaxArmor        = maxArmor;
+        CurrentPercent  = current;
+        LastPercent     = last;
+    }
+}
+
+public readonly struct ShieldEvent : IMessage
+{
+    public readonly Actor Owner             { get; init; }
+    public readonly float Shield            { get; init; }
+    public readonly float MaxShield         { get; init; }
+    public readonly float CurrentPercent    { get; init; }
+    public readonly float LastPercent       { get; init; }
+
+    public ShieldEvent(Actor owner, float shield, float maxShield, float current, float last)
+    {
+        Owner           = owner;
+        Shield          = shield;
+        MaxShield       = maxShield;
+        CurrentPercent  = current;
+        LastPercent     = last;
+    }
+}
+
+public readonly struct EnergyEvent : IMessage
+{
+    public readonly Actor Owner             { get; init; }
+    public readonly float Energy            { get; init; }
+    public readonly float MaxEnergy         { get; init; }
+    public readonly float CurrentPercent    { get; init; }
+    public readonly float LastPercent       { get; init; }
+
+    public EnergyEvent(Actor owner, float energy, float maxEnergy, float current, float last)
+    {
+        Owner           = owner;
+        Energy          = energy;
+        MaxEnergy       = maxEnergy;
+        CurrentPercent  = current;
+        LastPercent     = last;
+    }
+}
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                        Handlers
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Shield                                                      
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class ShieldConsumer : IResourceConsumer
+public class ResourceHandler : Service, IServiceLoop, IResourceHandler
 {
-    readonly Actor actor;           
-    readonly Resources resources;
-    readonly ResourceMonitor monitor;
+    protected readonly Actor        actor;
+    protected readonly Resources    resources;
 
         // -----------------------------------
 
-    float shield;
+    readonly ResourceMonitor        monitor;
+
+        // -----------------------------------
+
+    protected readonly List<IResourceAction> queue = new();
+
+        // -----------------------------------
+
+    protected Func<float>   max         = () => 0f;
+    protected Func<float>   regen       = () => 0f;
+
+    protected RegenHandler  regeneration;
+
+        // -----------------------------------
+
+    float value;
 
     // ===============================================================================
 
-    public ShieldConsumer(Resources resources)
+    public ResourceHandler(Resources resources, ResourceConfig config)
     {
-        this.resources   = resources;
-        this.actor       = resources.Owner;
-        this.monitor     = new ResourceMonitor(actor, actor.Definition.Resource.Shield, OnShieldAlert);
+        this.resources  = resources;
+        this.actor      = resources.Owner;
+        this.monitor    = new ResourceMonitor(actor, config, OnAlert);
     }
 
     // ===============================================================================
 
-    public void Consume(ResourceComponent component)
+    public void Loop()
     {
-        switch(component.Action)
+        Regenerate();
+        ProcessQueue();
+        Monitor();
+    }
+
+    // ===============================================================================
+
+    void Regenerate()
+    {
+        if (regeneration == null) 
+            return;
+
+        float amount = regeneration.Tick();
+
+        if (amount > 0) 
+            Increase(amount);
+    }
+
+    void ProcessQueue()
+    {
+        if (queue.Count == 0) 
+            return;
+
+        foreach (var action in queue)
         {
-            case Charge:         ProcessCharge(component); break;
-            case Damage:         if (Damageable() && ApplicableDamage(component)) ProcessDamage(component); break;
-            case ShieldReset:    ProcessReset ();        break;
-            case ResourceReset:  ProcessReset ();        break;
+            ProcessAction(action);
         }
 
-        monitor.Evaluate(shield, MaxShield);
+        queue.Clear();
+    }
+
+    void Monitor()
+    {
+        monitor.Evaluate(value, Max);
     }
 
     // ===============================================================================
 
-    void ProcessCharge(ResourceComponent component)
+    protected virtual void ProcessAction(IResourceAction action)                            { }
+    protected virtual void OnAlert(float current, float max, float previous, float percent) { }
+
+    // ===============================================================================
+
+    protected void Increase(float amount)
     {
-        ApplyCharge((Charge)component.Action);
+        value = Mathf.Min(value + amount, Max);
     }
 
-    void ApplyCharge(Charge instance)
+    protected void Decrease(float amount)
     {
-        shield = Mathf.Min(shield + instance.Amount, MaxShield);
+        value = Mathf.Max(0f, value - amount);
     }
 
-    void ProcessDamage(ResourceComponent component)
+    protected void Reset()               
     {
-        float absorbed       = Mathf.Min(shield, component.Remaining);
-        component.Remaining -= absorbed;
-        component.Consumed   = component.Remaining <= 0;
-        ApplyDamage(absorbed);
+        value = Max;
     }
 
-    void ApplyDamage(float amount)
+    protected void Queue<T>(T message) where T : IResourceAction
     {
-        shield = Mathf.Max(0f, shield - amount);
+        queue.Add(message);
+    }
+    
+
+    // ===============================================================================
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
     }
 
-    void ProcessReset()
+    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
+    public float Value              => value;
+    public float Max                => max();
+}
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Health                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class HealthHandler : ResourceHandler
+{
+    readonly IMortal mortal;
+
+    // ===============================================================================
+
+    public HealthHandler(Resources resources) : base(resources, resources.Owner.Definition.Resource.Health)
     {
+        mortal              = actor as IMortal;
+
+        max                 = () => mortal.MaxHealth;
+
+        if (actor is IHealthRegen instance)
+        {
+            regeneration    = new RegenHandler(() => instance.HealthRegen);
+        }
+        
+        actor.Emit.Link.Local<Heal>         (Queue);
+        actor.Emit.Link.Local<Wound>        (Queue);
+        actor.Emit.Link.Local<HealthReset>  (Queue);
+        actor.Emit.Link.Local<ResourceReset>(Queue);
+
         Reset();
     }
 
-    void Reset()
-    {
-        shield = MaxShield;
-    }
-
-    // ===============================================================================
-    //  Events
     // ===============================================================================
 
-    void OnShieldAlert(float current, float max, float previous, float percent)
+    protected override void ProcessAction(IResourceAction action)
     {
-        // actor.Emit.Local(Publish.Changed, new ShieldEvent(actor, current, max, previous, percent));
-    }
-
-    // ===============================================================================
-    //  Predicates
-    // ===============================================================================
-
-    public bool CanConsume(ResourceComponent component)
-    {
-        if (component.Consumed) 
-            return false;
-
-        return component.Action is Charge or Damage or ShieldReset or ResourceReset;
-    }
-
-    public bool Damageable()
-    {
-        return !Mortal.Invulnerable;
-    }
-
-    public bool ApplicableDamage(ResourceComponent component)
-    {
-        if (!applicableTypes.Contains(((Damage)component.Action).Type))
-            return false;
-
-        return true;
+        switch (action)
+        {
+            case Heal        instance: Increase(instance.Amount); break;
+            case Wound       instance: Decrease(instance.Amount); break;
+            case HealthReset:          Reset();                   break;
+            case ResourceReset:        Reset();                   break;
+        }
     }
 
     // ===============================================================================
 
-    static readonly HashSet<DamageType> applicableTypes = new()
+    protected override void OnAlert(float current, float max, float previous, float percent)
     {
-        DamageType.Fire,
-        DamageType.Frost,
-        DamageType.Shock,
-        DamageType.Explosion,
-    };
+        actor.Emit.Local(Publish.Changed, new HealthEvent(actor, current, max, previous, percent));
+    }
 
+    // ===============================================================================
 
-    public float Shield             => shield;
-    public float MaxShield          => Shielded.MaxShield;
-    public IMortal Mortal           => actor as IMortal;
-    public IShielded Shielded       => actor as IShielded;
-    public float ShieldhPercent     => shield / MaxShield;
+    public float Health => Value;
 }
 
 
@@ -375,332 +404,159 @@ public class ShieldConsumer : IResourceConsumer
         //                                  Armor                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class ArmorConsumer : IResourceConsumer
+public class ArmorHandler : ResourceHandler
 {
-    readonly Actor actor;           
-    readonly Resources resources;
-    readonly ResourceMonitor monitor;
-
-        // -----------------------------------
-
-    float armor;
+    readonly IArmor armored;
 
     // ===============================================================================
 
-    public ArmorConsumer(Resources resources)
+    public ArmorHandler(Resources resources) : base(resources, resources.Owner.Definition.Resource.Armor)
     {
-        this.resources   = resources;
-        this.actor       = resources.Owner;
-        this.monitor     = new ResourceMonitor(actor, actor.Definition.Resource.Armor, OnArmorAlert);
-    }
+        armored = actor as IArmor;
 
-    // ===============================================================================
+        max     = () => armored.MaxArmor;
 
-    public void Consume(ResourceComponent component)
-    {
-        switch(component.Action)
-        {
-            case Repair:        ProcessRepair(component);   break;
-            case Damage:        if (Damageable() && ApplicableDamage(component)) ProcessDamage(component); break;
-            case ArmorReset:    ProcessReset ();            break;
-            case ResourceReset: ProcessReset ();            break;
-        }
+        actor.Emit.Link.Local<Repair>       (Queue);
+        actor.Emit.Link.Local<Fracture>     (Queue);
+        actor.Emit.Link.Local<ArmorReset>   (Queue);
+        actor.Emit.Link.Local<ResourceReset>(Queue);
 
-        monitor.Evaluate(armor, MaxArmor);
-    }
-
-    // ===============================================================================
-
-    void ProcessRepair(ResourceComponent component)
-    {
-        ApplyRepair((Repair)component.Action);
-    }
-
-    void ApplyRepair(Repair instance)
-    {
-        armor = Mathf.Min(armor + instance.Amount, MaxArmor);
-    }
-
-    void ProcessDamage(ResourceComponent component)
-    {
-        float absorbed       = Mathf.Min(armor, component.Remaining);
-        component.Remaining -= absorbed;
-        component.Consumed   = component.Remaining <= 0;
-        ApplyDamage(absorbed);
-    }
-
-    void ApplyDamage(float amount)
-    {
-        armor = Mathf.Max(0f, armor - amount);
-    }
-
-    void ProcessReset()
-    {
         Reset();
     }
 
-    void Reset()
-    {
-        armor = MaxArmor;
-    }
-
-    // ===============================================================================
-    //  Events
     // ===============================================================================
 
-    void OnArmorAlert(float current, float max, float previous, float percent)
+    protected override void ProcessAction(IResourceAction action)
     {
-        // actor.Emit.Local(Publish.Changed, new ShieldEvent(actor, current, max, previous, percent));
-    }
-
-    // ===============================================================================
-    //  Predicates
-    // ===============================================================================
-
-    public bool CanConsume(ResourceComponent component)
-    {
-        if (component.Consumed) 
-            return false;
-
-        return component.Action is Repair or Damage or ArmorReset or ResourceReset;
-    }
-
-    public bool Damageable()
-    {
-        return !Mortal.Invulnerable;
-    }
-
-    public bool ApplicableDamage(ResourceComponent component)
-    {
-        if (!applicableTypes.Contains(((Damage)component.Action).Type))
-            return false;
-
-        return true;
+        switch (action)
+        {
+            case Repair      instance: Increase(instance.Amount); break;
+            case Fracture    instance: Decrease(instance.Amount); break;
+            case ArmorReset:           Reset();                   break;
+            case ResourceReset:        Reset();                   break;
+        }
     }
 
     // ===============================================================================
 
-    static readonly HashSet<DamageType> applicableTypes = new()
+    protected override void OnAlert(float current, float max, float previous, float percent)
     {
-        DamageType.Fire,
-        DamageType.Frost,
-        DamageType.Shock,
-        DamageType.Explosion,
-    };
+        actor.Emit.Local(Publish.Changed, new ArmorEvent(actor, current, max, previous, percent));
+    }
 
+    // ===============================================================================
 
-    public float Armor              => armor;
-    public float MaxArmor           => Armored.MaxArmor;
-    public IMortal Mortal           => actor as IMortal;
-    public IArmored Armored         => actor as IArmored;
-    public float ShieldPercent      => armor / MaxArmor;
+    public float Armor => Value;
+}
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Shield                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class ShieldHandler : ResourceHandler
+{
+    readonly IShield shielded;
+
+    // ===============================================================================
+
+    public ShieldHandler(Resources resources) : base(resources, resources.Owner.Definition.Resource.Shield)
+    {
+        shielded            = actor as IShield;
+
+        max                 = () => shielded.MaxShield;
+
+        if (actor is IShieldRegen instance)
+        {
+            regeneration    = new RegenHandler(() => instance.ShieldRegen);
+        }
+
+        actor.Emit.Link.Local<Restore>      (Queue);
+        actor.Emit.Link.Local<Dissipate>    (Queue);
+        actor.Emit.Link.Local<ShieldReset>  (Queue);
+        actor.Emit.Link.Local<ResourceReset>(Queue);
+        actor.Emit.Link.Local<ResourceReset>(Queue);
+
+        Reset();
+    }
+
+    // ===============================================================================
+
+    protected override void ProcessAction(IResourceAction action)
+    {
+        switch (action)
+        {
+            case Restore     instance: Increase(instance.Amount); break;
+            case Dissipate   instance: Decrease(instance.Amount); break;
+            case ShieldReset:          Reset();                   break;
+            case ResourceReset:        Reset();                   break;
+        }
+    }
+
+    // ===============================================================================
+
+    protected override void OnAlert(float current, float max, float previous, float percent)
+    {
+        actor.Emit.Local(Publish.Changed, new ShieldEvent(actor, current, max, previous, percent));
+    }
+
+    // ===============================================================================
+
+    public float Shield => Value;
 }
 
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Health                                                      
+        //                                 Energy                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class HealthConsumer : IResourceConsumer
+public class EnergyHandler : ResourceHandler
 {
-    readonly Actor actor;           
-    readonly Resources resources;
-    readonly ResourceMonitor monitor;
-
-        // -----------------------------------
-
-    float health;
+    readonly ICaster caster;
 
     // ===============================================================================
 
-    public HealthConsumer(Resources resources)
+    public EnergyHandler(Resources resources) : base(resources, resources.Owner.Definition.Resource.Energy)
     {
-        this.resources   = resources;
-        this.actor       = resources.Owner;
-        this.monitor     = new ResourceMonitor(actor, actor.Definition.Resource.Health, OnHealthAlert);
-    }
+        caster              = actor as ICaster;
 
-    // ===============================================================================
+        max                 = () => caster.MaxEnergy;
 
-    public void Consume(ResourceComponent request)
-    {
-        switch(request.Action)
+        if (actor is IEnergyRegen instance)
         {
-            case Heal:           ProcessHeal  (request); break;
-            case Damage:         ProcessDamage(request); break;
-            case HealthReset:    ProcessReset ();        break;
-            case ResourceReset:  ProcessReset ();        break;
+            regeneration    = new RegenHandler(() => instance.EnergyRegen);
         }
 
-        monitor.Evaluate(health, MaxHealth);
-    }
+        actor.Emit.Link.Local<Recharge>     (Queue);
+        actor.Emit.Link.Local<Expend>       (Queue);
+        actor.Emit.Link.Local<EnergyReset>  (Queue);
+        actor.Emit.Link.Local<ResourceReset>(Queue);
 
-    // ===============================================================================
-
-    void ProcessHeal(ResourceComponent component)
-    {
-        ApplyHeal((Heal)component.Action);
-    }
-
-    void ApplyHeal(Heal instance)
-    {
-        health = Mathf.Min(health + instance.Amount, MaxHealth);
-    }
-
-    void ProcessDamage(ResourceComponent component)
-    {
-        if (IsDamageable())
-            ApplyDamage((Damage)component.Action);
-    }
-
-    void ApplyDamage(Damage instance)
-    {
-        health = Mathf.Max(0f, health - instance.Amount);
-    }
-
-    void ProcessReset()
-    {
         Reset();
     }
 
-    void Reset()
+    // ===============================================================================
+
+    protected override void ProcessAction(IResourceAction action)
     {
-        health = MaxHealth;
-    }
-
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void OnHealthAlert(float current, float max, float previous, float percent)
-    {
-        actor.Emit.Local(Publish.Changed, new HealthEvent(actor, current, max, previous, percent));
-    }
-
-    // ===============================================================================
-    //  Predicates
-    // ===============================================================================
-
-    public bool CanConsume(ResourceComponent request)
-    {
-        if (request.Consumed) 
-            return false;
-
-        return request.Action is Heal or Damage or HealthReset or ResourceReset;
-    }
-
-    public bool IsDamageable()
-    {
-        return !Damageable.Invulnerable;
-    }
-
-    // ===============================================================================
-
-    public float Health             => health;
-    public float MaxHealth          => Damageable.MaxHealth;
-    public IMortal Damageable       => actor as IMortal;
-    public float HealthPercent      => health / MaxHealth;
-}
-
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                  Mana                                                      
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class ManaConsumer : IResourceConsumer
-{
-    readonly Actor actor;           
-    readonly Resources resources;
-    readonly ResourceMonitor monitor;
-
-        // -----------------------------------
-
-    float mana;
-
-    // ===============================================================================
-
-    public ManaConsumer(Resources resources)
-    {
-        this.resources   = resources;
-        this.actor       = resources.Owner;
-        this.monitor     = new ResourceMonitor(actor, actor.Definition.Resource.Mana, OnManaAlert);
-    }
-
-    // ===============================================================================
-
-    public void Consume(ResourceComponent request)
-    {
-        switch(request.Action)
+        switch (action)
         {
-            case Restore:       ProcessRestore  (request); break;
-            case Cast:          ProcessCast     (request); break;
-            case ManaReset:     ProcessReset    ();        break;
-            case ResourceReset: ProcessReset    ();        break;
+            case Recharge  instance: Increase(instance.Amount); break;
+            case Expend    instance: Decrease(instance.Amount); break;
+            case EnergyReset:        Reset();                   break;
+            case ResourceReset:      Reset();                   break;
         }
-
-        monitor.Evaluate(mana, MaxMana);
     }
 
     // ===============================================================================
 
-    void ProcessRestore(ResourceComponent component)
+    protected override void OnAlert(float current, float max, float previous, float percent)
     {
-        ApplyRestore((Restore)component.Action);
-    }
-
-    void ApplyRestore(Restore instance)
-    {
-        mana = Mathf.Min(mana + instance.Amount, MaxMana);
-    }
-
-    void ProcessCast(ResourceComponent component)
-    {
-
-        ApplyCast((Cast)component.Action);
-    }
-
-    void ApplyCast(Cast instance)
-    {
-        mana = Mathf.Max(0f, mana - instance.Amount);
-    }
-
-    void ProcessReset()
-    {
-        Reset();
-    }
-
-    void Reset()
-    {
-        mana = MaxMana;
-    }
-
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
-
-    void OnManaAlert(float current, float max, float previous, float percent)
-    {
-        // actor.Emit.Local(Publish.Changed, new ManaEvent(actor, current, max, previous, percent));
-    }
-
-    // ===============================================================================
-    //  Predicates
-    // ===============================================================================
-
-    public bool CanConsume(ResourceComponent request)
-    {
-        if (request.Consumed) 
-            return false;
-
-        return request.Action is Restore or Cast or ManaReset or ResourceReset;
+        actor.Emit.Local(Publish.Changed, new EnergyEvent(actor, current, max, previous, percent));
     }
 
     // ===============================================================================
 
-    public float Mana               => mana;
-    public float MaxMana            => Caster.MaxMana;
-    public ICaster Caster           => actor as ICaster;
-    public float ManaPercent        => mana / MaxMana;
+    public float Energy => Value;
 }
 
 
@@ -733,7 +589,7 @@ public class ResourceMonitor
     {
         float percent = current / max;
 
-        if (config.EnableThresholds)
+        if (config.Thresholds.Count > 0)
             EvaluateThresholds(percent);
 
         if (config.AlertOnChange)
@@ -778,7 +634,7 @@ public class ResourceMonitor
     void TriggerThreshold(ResourceThreshold threshold)
     {
         foreach (var effect in threshold.Effects)
-            actor.Emit.Local(Request.Create, new EffectDeclarationEvent(actor, effect));
+            actor.Emit.Local(Request.Create, new EffectAPI(actor, effect));
     }
 
     // ===============================================================================
@@ -795,43 +651,25 @@ public class ResourceMonitor
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                        Factories
+//                                         Helpers
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public static class Apply
+public class RegenHandler
 {
-    public static ResourcePackage Heal(float amount)
-        => new(new(new Heal(amount)), Route.Direct, typeof(HealthConsumer));
+    readonly Func<float> regen;
 
-    public static ResourcePackage Repair(float amount)
-        => new(new(new Repair(amount)), Route.Direct, typeof(ArmorConsumer));
+    public RegenHandler(Func<float> regen)
+    {
+        this.regen      = regen;
+    }
 
-    public static ResourcePackage Charge(float amount)
-        => new(new(new Charge(amount)), Route.Direct, typeof(ShieldConsumer));
+    public float Tick()
+    {
+        if (!Enabled) 
+            return 0;
 
-    public static ResourcePackage Damage(float amount, DamageType type)
-        => new(new(new Damage(amount, type)), Route.Distributed);
+        return regen() * Clock.DeltaTime;
+    }
 
-    public static ResourcePackage Cast(float amount)
-        => new(new(new Cast(amount)), Route.Direct, typeof(ManaConsumer));
-
-    public static ResourcePackage Restore(float amount)
-        => new(new(new Restore(amount)), Route.Direct, typeof(ManaConsumer));
-
-    
-    public static ResourcePackage HealthReset()
-        => new(new(new HealthReset()), Route.Direct, typeof(HealthConsumer));
-
-    public static ResourcePackage ArmorReset()
-        => new(new(new ArmorReset()), Route.Direct, typeof(ArmorConsumer));
-
-    public static ResourcePackage ShieldReset()
-        => new(new(new ShieldReset()), Route.Direct, typeof(ShieldConsumer));
-
-    public static ResourcePackage ManaReset()
-        => new(new(new ManaReset()), Route.Direct, typeof(ManaConsumer));
-
-    public static ResourcePackage ResourcesReset()
-        => new(new(new ResourceReset()), Route.Broadcast);
-
+    public bool Enabled => regen() > 0;
 }

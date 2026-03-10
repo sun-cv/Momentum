@@ -1,4 +1,3 @@
-using Mono.Cecil;
 using UnityEngine;
 
 
@@ -9,36 +8,51 @@ public class Hero : Player, IHero
     //  Systems
     // ===============================================================================
     
-    public IntentSystem         Intent              { get; set; }
-    public HeroState            State               { get; set; }
-    public ActorStats           Stats               { get; set; }
-    public Resources            Resource            { get; set; }
-    public EquipmentManager     Equipment           { get; set; }
-    public WeaponSystem         Weapons             { get; set; }
-    public Movement             Movement            { get; set; }
-    public EffectRegister       Effects             { get; set; }
-    public Presence             Presence            { get; set; }
-    public Lifecycle            Lifecycle           { get; set; }
-    public AnimationSystem      Animation           { get; set; }
+    public IntentSystem         Intent              { get; private set; }
+    public HeroState            State               { get; private set; }
+    public ActorStats           Stats               { get; private set; }
+    public Resources            Resource            { get; private set; }
+    public EquipmentManager     Equipment           { get; private set; }
+    public WeaponSystem         Weapons             { get; private set; }
+    public Movement             Movement            { get; private set; }
+    public EffectRegister       Effects             { get; private set; }
+    public Presence             Presence            { get; private set; }
+    public Lifecycle            Lifecycle           { get; private set; }
+    public AnimationSystem      Animation           { get; private set; }
+
 
 
     // ===============================================================================
-    //  Accessors
+    //  Resource
     // ===============================================================================
 
-    public float Health                             { get => Resource.Health;                                               }
-    public float MaxHealth                          { get => Stats.MaxHealth;                                               }
-    public float Armor                              { get => Resource.Armor;                                                }
-    public float MaxArmor                           { get => Stats.MaxArmor;                                                }
-    public float Shield                             { get => Resource.Shield;                                               }
-    public float MaxShield                          { get => Stats.MaxShield;                                               }
-    public float Mana                               { get => Resource.Mana;                                                 }
-    public float MaxMana                            { get => Stats.MaxMana;                                                 }
-    public float Strength                           { get => Stats.Strength;                                                }
-    public float StrengthMultiplier                 { get => Stats.StrengthMultiplier;                                      }
-    public float Speed                              { get => Stats.Speed;                                                   }
-    public float SpeedMultiplier                    { get => Stats.SpeedMultiplier;                                         }
+    public float Health                             => Resource.Health;         
+    public float Armor                              => Resource.Armor;          
+    public float Shield                             => Resource.Shield;         
+    public float Energy                             => Resource.Energy;           
 
+    // ===============================================================================
+    //  Stats
+    // ===============================================================================
+
+    public float MaxHealth                          => Stats.MaxHealth;         
+    public float HealthRegen                        => Stats.HealthRegen;       
+    
+    public float MaxArmor                           => Stats.MaxArmor;          
+    
+    public float MaxShield                          => Stats.MaxShield;         
+    public float ShieldRegen                        => Stats.ShieldRegen;       
+    
+    public float MaxEnergy                          => Stats.MaxEnergy;           
+    public float EnergyRegen                        => Stats.EnergyRegen;         
+    
+    public float Strength                           => Stats.Strength;          
+    public float StrengthMultiplier                 => Stats.StrengthMultiplier;
+   
+    public float Speed                              => Stats.Speed;             
+    public float SpeedMultiplier                    => Stats.SpeedMultiplier;   
+
+    public float Impact                             => Stats.Impact;
 
     // ===============================================================================
     //  State
@@ -50,7 +64,6 @@ public class Hero : Player, IHero
 
     public bool ImmuneToForce                       => State.ImmuneToForce;
 
-
     public bool Alive                               => State.Alive;
     public bool Dead                                => State.Dead;
     
@@ -59,7 +72,7 @@ public class Hero : Player, IHero
 
     public bool Constrained                         { get => State.Constrained;         set => State.Constrained    = value;}
 
-    public bool Parrying                            => State.Parrying;
+    public TimePredicate Parrying                   => State.Parrying;
     public bool Blocking                            => State.Blocking;
 
     public bool CanMove                             => State.CanMove;
@@ -71,12 +84,12 @@ public class Hero : Player, IHero
     public Direction Direction                      => State.Direction;
     public Direction LastDirection                  => State.LastDirection;
 
-    public Direction LockedAim                      => State.LockedAim;
-    public Direction LockedFacing                   => State.LockedFacing;
-    public Direction LockedDirection                => State.LockedDirection;
+    public Direction ResolvedAim                    => State.ResolvedAim;
+    public Direction ResolvedFacing                 => State.ResolvedFacing;
+    public Direction ResolvedDirection              => State.ResolvedDirection;
 
-    public float Friction                           { get => State.Friction;                                                }
-    public float Mass                               { get => Definition.Physics.Mass;                                       }
+    public float Mass                               => Definition.Physics.Mass;
+    public float Friction                           => Definition.Physics.Friction;
 
     public Vector2 Momentum                         => State.Momentum;
 
@@ -99,6 +112,7 @@ public class Hero : Player, IHero
 
         Intent      = new(this);
         Stats       = new(this);
+        Resource    = new(this);
         Equipment   = new(this);
         Weapons     = new(this);
         Movement    = new(this);

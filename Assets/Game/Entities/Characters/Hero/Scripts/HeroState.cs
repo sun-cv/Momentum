@@ -1,4 +1,5 @@
 
+using Mono.Cecil;
 using UnityEngine;
 
 
@@ -9,10 +10,19 @@ public class HeroState : State
 {
     readonly Hero               owner;
 
+        // -----------------------------------
+
     readonly IntentSystem       intent;
     readonly EffectRegister     effects;
     readonly Movement           movement;
     readonly Lifecycle          lifecycle;
+
+        // -----------------------------------
+
+    TimePredicate   idle;
+    TimePredicate   parry;
+
+        // -----------------------------------
 
     bool inactive               = false;
     bool stunned                = false;
@@ -31,7 +41,7 @@ public class HeroState : State
 
     Vector2 normal              = Vector2.zero;
 
-    TimePredicate   idle;
+    // ===============================================================================
 
     public bool Inactive                            { get => inactive;          set => inactive         = value; }
 
@@ -40,7 +50,7 @@ public class HeroState : State
 
     public bool ImmuneToForce                       => effects.Has<DashForceImmunity>((effect) => effect is not null);
 
-    public bool Parrying                            => effects.Has<ShieldParryWindow>((effect) => effect is not null);
+    public TimePredicate Parrying                   => parry ?? new(TimerUnit.Frame, () => effects.Has<ShieldParryWindow>((effect) => effect is not null));
     public bool Blocking                            => effects.Has<ShieldBlockWindow>((effect) => effect is not null);
 
     public bool Disabled                            => Inactive || Stunned; // || other cc 
@@ -57,9 +67,9 @@ public class HeroState : State
     public Direction Direction                      => intent.Input.Direction;
     public Direction LastDirection                  => intent.Input.LastDirection;
     
-    public Direction LockedAim                      { get { if (CanRotate) { hasLockedAim       = false; return intent.Input.Aim;       }; if (!hasLockedAim)       { cachedLockedAim       = intent.Input.Aim;       hasLockedAim       = true; }; return cachedLockedAim;       }}
-    public Direction LockedFacing                   { get { if (CanRotate) { hasLockedFacing    = false; return intent.Input.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Input.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
-    public Direction LockedDirection                { get { if (CanRotate) { hasLockedDirection = false; return intent.Input.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Input.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
+    public Direction ResolvedAim                    { get { if (CanRotate) { hasLockedAim       = false; return intent.Input.Aim;       }; if (!hasLockedAim)       { cachedLockedAim       = intent.Input.Aim;       hasLockedAim       = true; }; return cachedLockedAim;       }}
+    public Direction ResolvedFacing                 { get { if (CanRotate) { hasLockedFacing    = false; return intent.Input.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Input.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
+    public Direction ResolvedDirection              { get { if (CanRotate) { hasLockedDirection = false; return intent.Input.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Input.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
 
     public Vector2 Velocity                         { get => velocity;          set => velocity         = value; }
     public Vector2 Control                          { get => control;           set => control          = value; }
@@ -68,13 +78,11 @@ public class HeroState : State
     public Vector2 Momentum                         => movement.Momentum;
 
     public Vector2 Normal                           { get => normal;            set => normal           = value; }
-
-    public float Friction                           => owner.Definition.Physics.Friction;
-
+ 
     public bool Alive                               => lifecycle.IsAlive;
     public bool Dead                                => lifecycle.IsDead;
     public bool IsMoving                            => CanMove && (Velocity != Vector2.zero || Direction != Vector2.zero);
-    public TimePredicate IsIdle                     => idle ??= new (() => !IsMoving);
+    public TimePredicate IsIdle                     => idle ??= new (TimerUnit.Time, () => !IsMoving);
 
     //
     //  Cache values:
@@ -92,12 +100,12 @@ public class HeroState : State
         intent      = hero.Intent;
         lifecycle   = hero.Lifecycle;
 
-        owner.Emit.Link.Local<Message<Publish, PresenceStateEvent>>(HandlePresenceStateEvent);
+        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
-    void HandlePresenceStateEvent(Message<Publish, PresenceStateEvent> message)
+    void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-        switch (message.Payload.State)
+        switch (message.State)
         {
             case Presence.State.Entering: Enable();  break;
             case Presence.State.Exiting:  Disable(); break;

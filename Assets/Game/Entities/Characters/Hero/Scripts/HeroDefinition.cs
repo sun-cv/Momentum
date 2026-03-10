@@ -12,9 +12,30 @@ public class HeroDefinition : ActorDefinition
         Stats                       = new()
         {
             MaxHealth               = 100,
-            MaxMana                 = 100,
+            MaxEnergy               = 100,
             Speed                   = 5,
-            Strength                = 15,
+            Strength                = 10,
+            Impact                  = 10,
+        };
+
+        Resource                    = new()
+        {
+            Health                  = new()
+            {
+                AlertOnChange       = true,
+            },
+            Armor                   = new()
+            {
+                AlertOnChange       = true,
+            },
+            Shield                  = new()
+            {
+                AlertOnChange       = true,
+            },
+            Energy                  = new()
+            {
+                AlertOnChange       = true,
+            }
         };
 
         Physics                     = new()
@@ -22,7 +43,7 @@ public class HeroDefinition : ActorDefinition
             Mass                    = 20,
             Friction                = Settings.Physics.FRICTION,
             BleedRatio              = 0.2f,
-            BleedThreshold          = 50f,
+            BleedThreshold          = 2000f,
             PushResistance          = 0f,
             MomentumThreshold       = 0f,
         };

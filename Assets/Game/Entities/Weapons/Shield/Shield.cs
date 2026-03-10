@@ -42,7 +42,7 @@ public class ShieldParry : DamagingWeapon
         Availability                = WeaponAvailability.Default;
         RequiredHeldTriggers        = new() { Capability.Attack2 };
         ChargeTimeFrames            = 1;
-        FireDurationFrames          = 10;
+        FireDurationFrames          = 4;
         AddControlOnFireEnd         = new() { "ShieldBlock" };
         CanInterrupt                = true;
         CanCancelDisables           = true;
@@ -52,7 +52,7 @@ public class ShieldParry : DamagingWeapon
             new ShieldParryWindow()
             {   
                 Name                = "ShieldParryWindow",
-                DurationFrames      = 60,
+                DurationFrames      = 20,
             },
 
             new ShieldMobility()
@@ -108,6 +108,7 @@ public class ShieldBlock : DamagingWeapon
         RequiredHeldTriggers        = new() { Capability.Attack2 };
         AcceptTriggerLockRequests   = false;
         FireDuration                = 9999;
+        HoldAnimationUntilReleased  = true;
         AddControlOnFire            = new() 
         { 
             "ShieldAim",
@@ -123,7 +124,6 @@ public class ShieldBlock : DamagingWeapon
                 Duration            = 9999,
                 Cancelable          = true,
                 CancelOnRelease     = true,
-
             },
 
             new ShieldBraceDisable()
@@ -160,31 +160,51 @@ public class ShieldBlock : DamagingWeapon
                 ModifyTimespan      = 2,
             }
         };
+
+        Direction = new()
+        {
+                Enabled             = true,
+                Source              = DirectionSource.Aim,
+                SetTrigger          = WeaponPhase.Charging,
+                ClearTrigger        = WeaponPhase.Disable,
+        };
+
         Hitboxes = new()
         {
             new()
             {
+                Name                = "HB_ShieldBlock",
                 Form                = new()
                 {
                     Prefab          = "HB_ShieldBlock",
                     Offset          = new(){ x = 0, y = 0 },
 
                 },
+
                 Behavior            = new()
                 {
+                    TrackAim        = true,
                     Type            = HitboxBehavior.Attached,
                     AllowMultiHit   = false,
                 },
+
                 Direction           = new()
                 {
-                    Scope           = HitboxDirectionScope.Cardinal
+                    Scope           = HitboxDirectionScope.Intercardinal,
+                    Constraint      = HitboxTrackingConstraint.AdjacentOrdinal,
                 },
+                
                 Lifetime            = new()
                 {
                     FrameStart      = 1,
                     Phase           = WeaponPhase.Fire,
                 },
             },
+        };
+
+        Animations = new()
+        {
+            OnFire = "ShieldBlock",
         };
     }
 }

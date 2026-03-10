@@ -15,7 +15,7 @@ public class Inventory
 
     public void Add(ItemDefinition definition, int quantity = 1)
     {
-        var existing = items.FirstOrDefault(item => item.Definition.ID == definition.ID && item.Quantity < definition.MaxStackSize);
+        var existing = items.FirstOrDefault(item => item.Definition.Id == definition.Id && item.Quantity < definition.MaxStackSize);
             
         if (existing != null)
         {

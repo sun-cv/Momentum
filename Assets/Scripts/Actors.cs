@@ -60,7 +60,7 @@ public static class Actors
 
         public static Actor GetID(Guid guid)
         {
-            return actors.FirstOrDefault(Actor => Actor.RuntimeID == guid);
+            return actors.FirstOrDefault(Actor => Actor.RuntimeId == guid);
         }
 
         public static List<Actor> Actors => actors;

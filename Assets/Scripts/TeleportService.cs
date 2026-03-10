@@ -13,7 +13,7 @@ public class TeleportService : RegisteredService, IServiceLoop
 
     public TeleportService()
     {
-        binding = Link.Global<Message<Request, TeleportEvent>>(HandleTeleportRequest);
+        binding = Link.Global<TeleportEvent>(HandleTeleportRequest);
     }
 
     // ===============================================================================
@@ -60,9 +60,9 @@ public class TeleportService : RegisteredService, IServiceLoop
     //  Events
     // ===============================================================================
     
-    void HandleTeleportRequest(Message<Request, TeleportEvent> message)
+    void HandleTeleportRequest(TeleportEvent message)
     {
-        requests.Add(message.Payload);
+        requests.Add(message);
     }
 
     // ===============================================================================
@@ -91,7 +91,7 @@ public class TeleportService : RegisteredService, IServiceLoop
 
     readonly Logger Log = new(LogSystem.Teleport, LogLevel.Debug);
 
-    readonly EventBinding<Message<Request, TeleportEvent>> binding;
+    readonly EventBinding<TeleportEvent> binding;
 
     public override void Dispose()
     {
@@ -107,7 +107,7 @@ public class TeleportService : RegisteredService, IServiceLoop
 }
 
 
-public readonly struct TeleportEvent
+public readonly struct TeleportEvent : IMessage
 {
     public string Name          { get; init; }
     public string Location      { get; init; }

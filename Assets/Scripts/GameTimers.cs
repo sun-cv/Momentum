@@ -240,7 +240,7 @@ public abstract class Timer : IDisposable
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public enum TimerMode { Up, Down }
-public enum TimerUnit { Time, Frame }
+public enum TimerUnit { Time, Frame, TimeAndFrame }
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Classes                                                    
@@ -330,3 +330,7 @@ public class DualCountdown : GenericTimer
     public DualCountdown(int frames) : base(TimerMode.Down, frames) {}
     public DualCountdown(float time) : base(TimerMode.Down, time)   {}
 }
+
+
+
+

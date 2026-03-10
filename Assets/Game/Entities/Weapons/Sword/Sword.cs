@@ -109,6 +109,14 @@ public class SwordStrike : DamagingWeapon
             }
         };
 
+        Direction = new()
+        {
+                Enabled             = true,
+                Source              = DirectionSource.Aim,
+                SetTrigger          = WeaponPhase.Fire,
+                ClearTrigger        = WeaponPhase.Disable,
+        };
+
         Hitboxes = new()
         {
             new()

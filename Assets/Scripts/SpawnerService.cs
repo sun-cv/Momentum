@@ -18,7 +18,7 @@ public class SpawnerService : RegisteredService, IServiceLoop
 
     public SpawnerService()
     {
-        Link.Global<Message<Request, SpawnerEvent>>(HandleSpawnerEventRequest);
+        Link.Global<SpawnerEvent>(HandleSpawnerEventRequest);
     }
 
     // ===============================================================================
@@ -101,9 +101,9 @@ public class SpawnerService : RegisteredService, IServiceLoop
     //  Events
     // ===============================================================================
 
-    void HandleSpawnerEventRequest(Message<Request, SpawnerEvent> message)
+    void HandleSpawnerEventRequest(SpawnerEvent message)
     {   
-        requests.Add(new() { Action = message.Action, SpawnPoint = message.Payload.SpawnPoint });
+        requests.Add(new() { Action = message.Type, SpawnPoint = message.SpawnPoint });
     }
 
     // ===============================================================================
@@ -118,7 +118,7 @@ public class SpawnerService : RegisteredService, IServiceLoop
 
     readonly Logger Log = new(LogSystem.Spawners, LogLevel.Debug);
 
-    readonly EventBinding<Message<Request, TeleportEvent>> binding;
+    readonly EventBinding<TeleportEvent> binding;
 
     public override void Dispose()
     {
@@ -150,12 +150,14 @@ public struct SpawnerRequest
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-public readonly struct SpawnerEvent
+public readonly struct SpawnerEvent : IMessage
 {
-    public readonly SpawnPoint SpawnPoint  { get; }
+    public readonly SpawnPoint SpawnPoint   { get; }
+    public readonly Request Type            { get; }
 
-    public SpawnerEvent(SpawnPoint spawnPoint)
+    public SpawnerEvent(Request type, SpawnPoint spawnPoint)
     {
-        SpawnPoint = spawnPoint;
+        SpawnPoint  = spawnPoint;
+        Type        = type;
     }
 }

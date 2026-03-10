@@ -156,6 +156,37 @@ public static class Orientation
         
         return Settings.Movement.FACING_SWITCH_DELAY;
     }
+
+    public static Intercardinal[] AdjacentIntercardinals(Vector2 direction)
+    {
+        var root  = IntercardinalFrom(direction);
+        int index = (int)root;
+        int count = System.Enum.GetValues(typeof(Intercardinal)).Length;
+
+        var prev = (Intercardinal)((index - 1 + count) % count);
+        var next = (Intercardinal)((index + 1) % count);
+
+        return new[] { prev, root, next };
+    }
+
+    public static Intercardinal ClosestOf(Vector2 aim, Intercardinal[] candidates)
+    {
+        Intercardinal best = candidates[0];
+        float bestDot = Vector2.Dot(aim, ToVector(candidates[0]));
+
+        foreach (var candidate in candidates)
+        {
+            float dot = Vector2.Dot(aim, ToVector(candidate));
+
+            if (dot > bestDot)
+            {
+                bestDot = dot;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
 }
 
 

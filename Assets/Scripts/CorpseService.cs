@@ -64,11 +64,18 @@ public class CorpseService : RegisteredService, IServiceLoop
     //                                     Classes
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseRequest
+public class CorpseRequest : IMessage
 {
     public Actor Owner                          { get; init; }
     public KillingBlow KillingBlow              { get; init; }
     public AnimationRequest Animation           { get; init; }
+
+    public CorpseRequest(Actor owner, KillingBlow blow, AnimationRequest request)
+    {
+        Owner       = owner;
+        KillingBlow = blow;
+        Animation   = request;
+    }
 }
 
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -85,14 +92,4 @@ public enum DeathType
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public readonly struct CorpseRequestEvent
-{
-    public CorpseRequest CorpseRequest          { get; init; }
-
-    public CorpseRequestEvent(CorpseRequest request)
-    {
-        CorpseRequest = request;
-    }
-}
 

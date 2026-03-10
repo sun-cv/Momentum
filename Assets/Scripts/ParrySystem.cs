@@ -1,0 +1,170 @@
+using System.Collections.Generic;
+
+
+
+public class ParrySystem : Service, IServiceLoop
+{
+    
+    List<DamageContext> queue = new();
+
+        // -----------------------------------
+
+    // ===============================================================================
+
+    public ParrySystem()
+    {
+        Link.Global<DamageEvent>(HandleParryEvent);
+        Services.Lane.Register(this);
+    }
+
+    // ===============================================================================
+
+    public void Loop()
+    {
+        ProcessQueue();
+    }
+
+    // ===============================================================================
+
+    void ProcessQueue()
+    {
+        foreach (var instance in queue)
+        {
+            ProcessParry(instance);
+        }
+    
+        queue.Clear();
+    }
+
+    void ProcessParry(DamageContext context)
+    {
+
+        switch(IsParrying(context.Target))
+        {
+            case true:  ResolveSuccessfulParry(context);   break;
+            case false: ResolveFailedParry(context);      break;
+        }
+
+        SendProcessDamage(context);
+    }
+
+    void ResolveSuccessfulParry(DamageContext context)
+    {
+        switch(IsPerfectParry(context))
+        {
+            case false: Parry(context);         break;
+            case true:  PerfectParry(context);  break;
+        }
+
+        SetParriedContext(context);
+    }
+
+        // REWORK REQUIRED once status effect handler is built out.
+
+    void PerfectParry(DamageContext context)
+    {
+        // ApplyStagger(context.Target, context.Source, context.Package.Config.Parry.StaggerDuration);
+        RechargeEnergy(context.Target, context.Package.Config.Parry.PerfectParryReward);
+    }
+
+    void Parry(DamageContext context)
+    {
+
+    }
+
+    void ResolveFailedParry(DamageContext context)
+    {
+    }
+
+    void SetParriedContext(DamageContext context)
+    {
+        context.Result.Parried = true;
+    }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
+    void HandleParryEvent(DamageEvent message)
+    {
+        queue.Add(message.Context);
+    }
+
+    void SendProcessDamage(DamageContext context)
+    {
+        Emit.Global(new ProcessDamage(context));
+    }
+
+    void RechargeEnergy(Actor target, float amount)
+    {
+        target.Emit.Local(new Recharge(amount));
+    }
+
+
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
+    bool IsPerfectParry(DamageContext context)
+    {
+        return ((IParryable)context.Target).Parrying.Frame <= context.Package.Config.Parry.PerfectParryWindow;
+    }
+
+    bool IsParrying(Actor target)
+    {
+        return target is IParryable instance && instance.Parrying;
+    }
+
+
+    // ===============================================================================
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
+    }
+
+    public UpdatePriority Priority => ServiceUpdatePriority.ParrySystem;
+
+}
+
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                               Interfaces                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Structs                                                   
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct ParryEvent : IMessage
+{
+    public DamageContext Context            { get; init; }
+
+    public ParryEvent(DamageContext context)
+    {
+        Context = context;
+    }
+}
+
+
+// Data declared Parry presentation for animation? REWORK REQUIRED
+
+// public class AttackPresentation
+// {
+//     public bool     ShowParryWindow     { get; init; }
+//     public float    ParryWindowStart    { get; init; }
+//     public float    ParryWindowEnd      { get; init; }
+// }

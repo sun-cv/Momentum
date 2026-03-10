@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor.Rendering.LookDev;
-using UnityEngine;
 
 
 
@@ -12,7 +10,7 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 
     public void Initialize()
     {
-        Link.Global<Message<Request, TriggerEvent>>(HandleTriggerEvent);
+        Link.Global<TriggerEvent>(HandleTriggerEvent);
     }
 
     // ===============================================================================
@@ -37,7 +35,7 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
         switch (trigger.Package)
         {
             case DamagePackage package:
-                Emit.Global(Request.Create, new CombatEvent(
+                Emit.Global(new DamageEvent(
                     new DamageContext(
                         trigger.Source, 
                         trigger.Target,
@@ -45,7 +43,7 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
                     )));
                 break;
             case ForcePackage package:
-                Emit.Global(Request.Create, new ForceEvent(
+                Emit.Global(new ForceEvent(
                     new ForceContext(
                         trigger.Source,
                         trigger.Target,
@@ -59,9 +57,9 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
     // Helpers
     // ===============================================================================
 
-    void HandleTriggerEvent(Message<Request, TriggerEvent> message)
+    void HandleTriggerEvent(TriggerEvent message)
     {
-        pendingTriggers.Enqueue(message.Payload);
+        pendingTriggers.Enqueue(message);
     }
 
     // ===============================================================================
@@ -79,7 +77,7 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public readonly struct TriggerEvent      
+public readonly struct TriggerEvent : IMessage
 {       
     public Actor Source                         { get; init; }
     public Actor Target                         { get; init; }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class GizmoTools
 {
-    static float fillAlpha = Settings.Debug.GIZMO_ALPHA;
+    static readonly float fillAlpha = Settings.Debug.GIZMO_ALPHA;
 
     public static void DrawCollider(Collider2D collider, bool filled = false)
     {
