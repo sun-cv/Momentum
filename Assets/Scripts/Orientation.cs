@@ -118,6 +118,11 @@ public static class Orientation
         return Quaternion.Euler(0, 0, angle);
     }
 
+    public static Direction DirectionFromAngle(float degrees)
+    {
+        return new Direction(new Vector2(Mathf.Cos(degrees * Mathf.Deg2Rad), Mathf.Sin(degrees * Mathf.Deg2Rad)));
+    }
+
     public static Vector2 NormalizeVectorToCardinal(Vector2 vector)
     {
         return ToVector(CardinalFrom(vector)); 

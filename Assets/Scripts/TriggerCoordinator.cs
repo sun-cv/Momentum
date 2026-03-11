@@ -34,14 +34,6 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
     {
         switch (trigger.Package)
         {
-            case DamagePackage package:
-                Emit.Global(new DamageEvent(
-                    new DamageContext(
-                        trigger.Source, 
-                        trigger.Target,
-                        package
-                    )));
-                break;
             case ForcePackage package:
                 Emit.Global(new ForceEvent(
                     new ForceContext(

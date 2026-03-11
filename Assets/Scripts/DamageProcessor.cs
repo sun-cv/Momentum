@@ -2,10 +2,9 @@ using System.Collections.Generic;
 
 
 
-public class DamageProcessor: Service, IServiceLoop
+public class DamageProcessor : RegisteredService, IServiceLoop
 {
-
-
+    
     readonly List<DamageContext> queue = new();
 
         // -----------------------------------
@@ -15,8 +14,7 @@ public class DamageProcessor: Service, IServiceLoop
 
     public DamageProcessor()
     {
-        Link.Global<ProcessDamage>(HandleProcessDamage);
-
+        Link.Global<DamageEvent>(HandleDamageEvent);
         Services.Lane.Register(this);
     }
 
@@ -33,92 +31,59 @@ public class DamageProcessor: Service, IServiceLoop
     {
         foreach (var context in queue)
         {
-            ProcessDamage(context);
+            ProcessDamageContext(context);
         }
     
         queue.Clear();
     }
 
-    void ProcessDamage(DamageContext context)
+    void ProcessDamageContext(DamageContext context)
     {
-        HandleEffects(context);        
+        if (IsParryable(context))   { SendParryRequest(context);  return; }
+                                      SendProcessDamage(context);
     }
 
-
-    void HandleEffects(DamageContext context)
+    void SendParryRequest(DamageContext context)
     {
-        foreach(var component in context.Package.Components)
-        {
-            ApplyEffects(context, component.Effects);            
-        }        
+        Emit.Global(new ParryEvent(context));
     }
 
-    void ApplyEffects(DamageContext context, List<Effect> effects)
+    void SendProcessDamage(DamageContext context)
     {
-        foreach (var effect in effects)
-        {
-            ApplyEffect(context.Source, context.Target, effect);
-            StoreEffect(context, effect);
-        }
+        Emit.Global(new CalculateDamage(context));
     }
 
-    void ApplyEffect(Actor source, Actor target, Effect effect)
-    {
-        target.Emit.Local(Request.Create, new EffectAPI(source, effect));
-    }
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
 
-    void StoreEffect(DamageContext context, Effect effect)
-    {
-        context.Result.AppliedEffects.Add(effect);
-    }
-
-    void HandleProcessDamage(ProcessDamage message)
+    void HandleDamageEvent(DamageEvent message)
     {
         queue.Add(message.Context);
     }
 
 
-     // ===============================================================================
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
+
+    bool IsParryable(DamageContext context)
+    {
+        return context.Package.Config.Parry.Enabled && context.Target is IParryable actor && actor.Parrying;
+    }
+
+    // ===============================================================================
 
     public override void Dispose()
     {
         Services.Lane.Deregister(this);
     }
 
-    public UpdatePriority Priority => ServiceUpdatePriority.ParrySystem;
+    public UpdatePriority Priority => ServiceUpdatePriority.DamageProcessor;
 
 }
 
-
-
-
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                      Declarations
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                               Interfaces                                                      
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Classes                                                    
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Structs                                                   
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public readonly struct ProcessDamage : IMessage
-{
-    public DamageContext Context            { get; init; }
-
-    public ProcessDamage(DamageContext context)
-    {
-        Context = context;
-    }
-}

@@ -101,6 +101,7 @@ public class Hero : Player, IHero
     public bool IsMoving                            => State.IsMoving;
     public TimePredicate IsIdle                     => State.IsIdle;
 
+    public bool ShieldEquipped                      => State.ShieldEquipped;
 
     // ===============================================================================
 

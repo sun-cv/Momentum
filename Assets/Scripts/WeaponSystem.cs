@@ -34,7 +34,7 @@ public class WeaponSystem : Service, IServiceTick
     IReadOnlyDictionary<Capability, IReadOnlyList<string>>  locks;
 
     public int NonCancelableAttackLocks { get; set; } = 0;
-
+    public bool AimEnabled              { get; set; }
     // ===============================================================================
 
     public WeaponSystem(Agent agent)
@@ -57,6 +57,7 @@ public class WeaponSystem : Service, IServiceTick
         owner.Emit.Link.Local<EquipmentChangeEvent> (HandleEquipmentChange);
         owner.Emit.Link.Local<PresenceStateEvent>   (HandlePresenceStateEvent);
 
+        AimEnabled = agent is IAimable;
     }
 
 
@@ -90,6 +91,7 @@ public class WeaponSystem : Service, IServiceTick
         if (HasActiveWeapon())
             AdvanceWeaponState();
 
+        ProcessAim();
         ProcessWeaponActivation();
 
         DebugLog();
@@ -151,6 +153,24 @@ public class WeaponSystem : Service, IServiceTick
         if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
             handler.Exit(instance, this);
     }
+
+        // ===================================
+        //  Aim
+        // ===================================
+
+    void ProcessAim()
+    {
+        if (!AimEnabled || !HasActiveWeapon()) 
+           return;
+
+        WeaponAimProcessor.Process(instance, Owner, Time.deltaTime, out bool facingChanged);
+
+        if (facingChanged)
+            RequestDirection(instance.Action);
+
+        UpdateHitboxAngle();
+    }
+
 
 
         // ===================================
@@ -252,6 +272,9 @@ public class WeaponSystem : Service, IServiceTick
 
         if (instance.Action.LockTriggerAction)
             LockAllCommands(active, instance.Action.Trigger);
+
+        if (owner is IAimable)
+            WeaponAimProcessor.InitialiseAim(instance, Owner);
     }
 
         // ===================================
@@ -490,20 +513,24 @@ public class WeaponSystem : Service, IServiceTick
 
     public void RequestDirection(WeaponAction action)
     {
-
-        if (!(action.Direction.Enabled && action.Direction.SetTrigger == instance.State.Phase))
-            return;
-
-        Direction source = action.Direction.Source switch 
+        if (!AimEnabled)
         {
-            DirectionSource.Aim             => instance.State.Intent.Aim,
-            DirectionSource.Facing          => instance.State.Intent.Facing,
-            DirectionSource.Direction       => instance.State.Intent.Direction,
-            DirectionSource.LastDirection   => instance.State.Intent.LastDirection,
-            _ => instance.State.Intent.Direction,
-        };
+            if (!(action.Direction.Enabled && action.Direction.SetTrigger == instance.State.Phase))
+                return;
+        }
 
-        owner.Emit.Local(new ForcedFacingEvent(Request.Set, source));
+    var intent = action.Aim.Enabled ? instance.State.LiveIntent : instance.State.Intent;
+
+    instance.State.LastFacingDirection = action.Direction.Source switch
+    {
+        DirectionSource.Aim             => action.Aim.Enabled ? Orientation.DirectionFromAngle(instance.State.CurrentAimAngle): intent.Aim,
+        DirectionSource.Facing          => intent.Facing,
+        DirectionSource.Direction       => intent.Direction,
+        DirectionSource.LastDirection   => intent.LastDirection,
+        _                               => intent.Direction,
+    };
+
+        owner.Emit.Local(new ForcedFacingEvent(Request.Set, instance.State.LastFacingDirection));
     }
 
     public void ClearDirection(WeaponAction action)
@@ -566,14 +593,8 @@ public class WeaponSystem : Service, IServiceTick
 
     public void DestroyHitboxes(WeaponInstance instance)
     {
-
-        Debug.Log(instance.State.OwnedHitboxes.Count);
-
         foreach (var hitbox in instance.State.OwnedHitboxes)
-        {
-            Debug.Log(hitbox.definition.Form.Name);
             Emit.Global(Request.Destroy, hitbox);
-        }
     }
 
     void HandleHitboxAPI(Message<Response, HitboxAPI> message)
@@ -585,6 +606,21 @@ public class WeaponSystem : Service, IServiceTick
             return;
 
         instance?.State.OwnedHitboxes.Add(message.Payload);
+    }
+
+    void UpdateHitboxAngle()
+    {
+        foreach (var hitbox in instance.State.OwnedHitboxes)
+        {
+            if (hitbox.definition.Behavior.TrackAim)
+            {
+                Emit.Global(new HitboxDirectionUpdate
+                {
+                    HitboxId = hitbox.hitboxId,
+                    AimAngle = instance.State.CurrentAimAngle
+                });
+            }
+        }
     }
 
     // ============================================================================

@@ -96,9 +96,10 @@ public static class ServiceUpdatePriority
 
     public static UpdatePriority HitboxManager              = new(UpdatePhase.Logic,    50);
     public static UpdatePriority TriggerCoordinator         = new(UpdatePhase.Logic,    55);  
-    public static UpdatePriority Combat                     = new(UpdatePhase.Logic,    60);
-    public static UpdatePriority CombatInterpreter          = new(UpdatePhase.Logic,    61);
-    public static UpdatePriority ParrySystem                = new(UpdatePhase.Logic,    62);
+    public static UpdatePriority DamageProcessor            = new(UpdatePhase.Logic,    60);
+    public static UpdatePriority ParrySystem                = new(UpdatePhase.Logic,    61);
+    public static UpdatePriority DamageCalculator           = new(UpdatePhase.Logic,    62);
+    public static UpdatePriority DamageResolver             = new(UpdatePhase.Logic,    63);
     public static UpdatePriority Damage                     = new(UpdatePhase.Logic,    65);
 
     public static UpdatePriority CollisionHandler           = new(UpdatePhase.Physics,  10);

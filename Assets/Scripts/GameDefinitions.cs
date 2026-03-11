@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using UnityEngine;
 
 
@@ -95,11 +94,28 @@ public class Controller         : MonoBehaviour {}
 
 public static class Layers
 {
-    public static readonly int Player       = LayerMask.NameToLayer("Player");
-    public static readonly int Enemy        = LayerMask.NameToLayer("Enemy");
-    public static readonly int NPC          = LayerMask.NameToLayer("NPC");
-    public static readonly int Prop         = LayerMask.NameToLayer("Prop");
-    public static readonly int Environment  = LayerMask.NameToLayer("Environment");
+    public static readonly int Default              = LayerMask.NameToLayer("Default");
+    public static readonly int TransparentFX        = LayerMask.NameToLayer("TransparentFX");
+    public static readonly int IgnoreRaycast        = LayerMask.NameToLayer("IgnoreRaycast");
+    public static readonly int Water                = LayerMask.NameToLayer("Water");
+    public static readonly int UI                   = LayerMask.NameToLayer("UI");
+    public static readonly int Player               = LayerMask.NameToLayer("Player");
+    public static readonly int Enemy                = LayerMask.NameToLayer("Enemy");
+    public static readonly int NPC                  = LayerMask.NameToLayer("NPC");
+    public static readonly int Prop                 = LayerMask.NameToLayer("Prop");
+    public static readonly int Environment          = LayerMask.NameToLayer("Environment");
+    public static readonly int Hitbox_Player        = LayerMask.NameToLayer("Hitbox_Player");
+    public static readonly int Hitbox_Enemy         = LayerMask.NameToLayer("Hitbox_Enemy");
+    public static readonly int Hitbox_NPC           = LayerMask.NameToLayer("Hitbox_NPC");
+    public static readonly int Hitbox_Prop          = LayerMask.NameToLayer("Hitbox_Prop");
+    public static readonly int Hitbox_Environment   = LayerMask.NameToLayer("Hitbox_Environment");
+    public static readonly int Hurtbox_Player       = LayerMask.NameToLayer("Hurtbox_Player");
+    public static readonly int Hurtbox_Enemy        = LayerMask.NameToLayer("Hurtbox_Enemy");
+    public static readonly int Hurtbox_NPC          = LayerMask.NameToLayer("Hurtbox_NPC");
+    public static readonly int Hurtbox_Prop         = LayerMask.NameToLayer("Hurtbox_Prop");
+    public static readonly int Hurtbox_Environment  = LayerMask.NameToLayer("Hurtbox_Environment");
+    public static readonly int Deflect_Player       = LayerMask.NameToLayer("Deflect_Player");
+    public static readonly int Deflect_Enemy        = LayerMask.NameToLayer("Deflect_Enemy");
 }
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -155,6 +171,11 @@ public interface IShield
 public interface IShieldRegen
 {
     float ShieldRegen                       { get; }
+}
+
+public interface IShielded : IShield, IShieldRegen
+{
+    bool ShieldEquipped                     { get; }
 }
 
 public interface ICaster            
@@ -275,7 +296,7 @@ public interface IHero :
     // Core
     IMovableActor, IPhysicsBody,
     // Combat
-    IAttacker, IParryable, IBlockable, IAimable,
+    IAttacker, IParryable, IBlockable, IAimable, IShielded,
     // Resources
     IHealthRegen, IShield, IShieldRegen, IArmor, ICaster, IEnergyRegen,
     // Status

@@ -117,6 +117,12 @@ public class WeaponAction       : Definition
     public List<Effect> Effects                     { get; init; } = new();
 
     // ============================================================================
+    //  Aiming
+    // ============================================================================
+    
+    public WeaponAim Aim                            { get; init; } = new();
+
+    // ============================================================================
     //  Hitboxes
     // ============================================================================
     
@@ -180,6 +186,21 @@ public class CommandDirection
     public DirectionSource Source                   { get; init; }
     public WeaponPhase SetTrigger                   { get; init; }
     public WeaponPhase ClearTrigger                 { get; init; }
+}
+
+public class WeaponAim
+{
+    public bool Enabled                             { get; init; }
+        // <summary>Free | Cardinal | Intercardinal | Locked </summary>
+    public AimMode Mode                             { get; init; }
+    // <summary>Degrees per second. 0 = instant </summary>
+    public float RotationRateDegs                   { get; init; }
+    // <summary>Dead zone before committing a new snap target (snap modes only) </summary>
+    public float HysteresisAngle                    { get; init; }
+    // <summary>Half-arc you can sweep AFTER aim is established. 0 = unlimited </summary>
+    public float ArcLimitDegs                       { get; init; }
+    // <summary>Freeze aim angle at fire start, release on FireEnd </summary>
+    public bool LockOnFire                          { get; init; }
 }
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                             Weapon Instance                                                   
@@ -261,6 +282,13 @@ public class WeaponState
         // -----------------------------------
 
     public InputIntentSnapshot Intent           { get; set; }
+    public InputIntentSnapshot LiveIntent       { get; set; }
+
+    public float CurrentAimAngle                { get; set; }
+    public float TargetAimAngle                 { get; set; }
+    public float AnchorAimAngle                 { get; set; }
+
+    public Direction LastFacingDirection        { get; set; }
 
         // -----------------------------------
 
@@ -272,6 +300,8 @@ public class WeaponState
     public HashSet<Guid> OwnedCommands          { get; set; } = new();
     public HashSet<HitboxAPI> OwnedHitboxes     { get; set; } = new();
 
+        // -----------------------------------
+        
         // -----------------------------------
 
     public FrameWatch PhaseFrames               { get; set; } = new();

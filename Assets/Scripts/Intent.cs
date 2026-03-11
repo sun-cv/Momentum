@@ -163,6 +163,7 @@ public class InputIntent : IDirectionSource, IDisposable
         if (forcedDirection.HasValue)
         {            
             facing = Orientation.NormalizeVectorToCardinal(forcedDirection);
+            Debug.Log(facing.Vector);
             return;
         }
 
@@ -292,13 +293,13 @@ public readonly struct Direction
     public static implicit operator Direction(Vector2 vector)       => new(vector);
 }
 
+
 public readonly struct InputIntentSnapshot : IDirectionSource
 {
     public Direction Aim                { get; init; }
     public Direction Facing             { get; init; }
     public Direction Direction          { get; init; }
     public Direction LastDirection      { get; init; }
-    public Direction CommandDirection   { get; init; }
 }
 
 

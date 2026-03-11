@@ -7,22 +7,41 @@ public class HitboxController : Controller
 {
     readonly Color gizmoColor = Settings.Debug.GIZMO_COLOR;
 
-    public Guid HitboxId     { get; private set; }
-    public HitboxManager Manager { get; private set; }
+    public Guid HitboxId                { get; private set; }
+    public HitboxManager Manager        { get; private set; }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
         var actor = GetActor(collision);
-        
-        if (actor != null) 
-            Manager.OnHitDetected(HitboxId, actor, CollisionPhase.Enter);
+
+        if (actor == null) 
+            return;
+
+        if (collision.gameObject.layer == Layers.Deflect_Player || collision.gameObject.layer == Layers.Deflect_Enemy)
+        {
+            var hitbox = collision.GetComponent<HitboxController>();
+            Manager.OnHitDetected(HitboxId, actor, CollisionPhase.Enter, hitbox.HitboxId);
+            return;
+        }
+
+        Manager.OnHitDetected(HitboxId, actor, CollisionPhase.Enter);
     }
 
     void OnTriggerStay2D(Collider2D collision)
     {
         var actor = GetActor(collision);
-        if (actor != null) 
-            Manager.OnHitDetected(HitboxId, actor, CollisionPhase.Stay);
+
+        if (actor == null) 
+            return;
+
+        if (collision.gameObject.layer == Layers.Deflect_Player || collision.gameObject.layer == Layers.Deflect_Enemy)
+        {
+            var hitbox = collision.GetComponent<HitboxController>();
+            Manager.OnHitDetected(HitboxId, actor, CollisionPhase.Stay, hitbox.HitboxId);
+            return;
+        }
+
+        Manager.OnHitDetected(HitboxId, actor, CollisionPhase.Stay);
     }
 
     void OnTriggerExit2D(Collider2D collision)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
@@ -10,14 +11,17 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     // -----------------------------------
 
-    readonly List<(Request, HitboxAPI)> queue = new();
-    readonly Dictionary<Guid, HitboxInstance> activeHitboxes = new();
+    readonly List<(Request, HitboxAPI)> queue                   = new();
+    readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
+    readonly List<PendingHit> pendingHits                       = new();
+
 
     // ============================================================================
 
     public void Initialize()
     {
         Link.Global<Message<Request, HitboxAPI>>(HandleHitboxAPI);
+        Link.Global<HitboxDirectionUpdate>(HandleDirectionUpdate);
     }
 
     // ===============================================================================
@@ -26,6 +30,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     {
         ProcessQueued();
         ProcessActive();
+        ProcessHits();
 
         DebugLog();
     }
@@ -46,8 +51,8 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     {
         switch (request)
         {
-            case Request.Create: CreateHitbox(instance); break;
-            case Request.Destroy: ProcessDestroyRequest(instance); break;
+            case Request.Create:  CreateHitbox(instance);           break;
+            case Request.Destroy: ProcessDestroyRequest(instance);  break;
         }
     }
 
@@ -76,9 +81,6 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         if (IsActivationFrame(instance))
             ActivateHitbox(instance);
 
-        if (instance.Definition.Behavior.TrackAim)
-            TrackHitboxToAim(instance);
-
         if (instance.Definition.Lifetime.Type == HitboxLifetime.Conditional)
             CheckConditionalHitbox(instance);
 
@@ -98,36 +100,6 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
             instance.Hitbox.SetActive(true);
     }
 
-    void TrackHitboxToAim(HitboxInstance instance)
-    {
-        var constraint = instance.Definition.Direction.Constraint;
-
-        if (constraint == HitboxTrackingConstraint.None)
-        {
-            var aim = (instance.Owner as IAimable).Aim;
-            instance.Hitbox.transform.rotation = Orientation.ToRotation(aim);
-            return;
-        }
-
-        if (constraint == HitboxTrackingConstraint.AdjacentOrdinal)
-        {
-            var root = Orientation.IntercardinalFrom(instance.SpawnDirection);
-
-            if (instance.CurrentFrame < instance.Definition.Behavior.AimLockPeriod)
-            {
-                instance.Hitbox.transform.rotation = Orientation.ToRotation(Orientation.ToVector(root));
-                return;
-            }
-
-            var currentAim = (instance.Owner as IAimable).Aim.Intercardinal;
-            var validDirs = Orientation.AdjacentIntercardinals(instance.SpawnDirection);
-            var clamped = Orientation.ClosestOf(currentAim, validDirs);
-            var bestDot = Vector2.Dot(currentAim, Orientation.ToVector(clamped));
-            var result = bestDot >= 0f ? clamped : root;
-
-            instance.Hitbox.transform.rotation = Orientation.ToRotation(Orientation.ToVector(result));
-        }
-    }
 
     bool CheckConditionalHitbox(HitboxInstance instance)
     {
@@ -137,6 +109,32 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     void DeactivateHitbox(HitboxInstance instance)
     {
         instance.Hitbox.SetActive(false);
+    }
+
+    void ProcessHits()
+    {
+        var grouped = pendingHits.GroupBy(hitbox => (hitbox.Attacker.Owner, hitbox.Target));
+
+        foreach (var group in grouped)
+        {
+            var deflect = group.FirstOrDefault(hitbox => hitbox.Defender != null);
+            var body    = group.FirstOrDefault(hitbox => hitbox.Defender == null);
+
+            if (deflect != null)
+            {
+                SendDamagePackage(deflect.Attacker, deflect.Target, HitboxResult.Blocked);
+                SendOtherPackages(deflect.Attacker, deflect.Target);
+
+            }
+            else if (body != null)
+            {
+                SendDamagePackage(body.Attacker, body.Target, HitboxResult.Hit);
+                SendOtherPackages(body.Attacker, body.Target);
+
+            }
+        }
+
+        pendingHits.Clear();
     }
 
     // ===================================
@@ -248,16 +246,31 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     //  Hit Detection
     // ===================================
 
-    public void OnHitDetected(Guid hitboxId, Actor target, CollisionPhase phase)
+    public void OnHitDetected(Guid attackerId, Actor target, CollisionPhase phase)
     {
-        if (!activeHitboxes.TryGetValue(hitboxId, out var instance))
+        if (!activeHitboxes.TryGetValue(attackerId, out var attacker)) 
             return;
 
-        if (!ShouldHit(instance, target, phase))
+        if (!ShouldHit(attacker, target, phase)) 
             return;
 
-        RecordHit(instance, target);
-        SendHitboxPackages(instance, target);
+        RecordHit(attacker, target);
+        pendingHits.Add(new PendingHit(attacker, target, null));
+    }
+
+    public void OnHitDetected(Guid attackerId, Actor target, CollisionPhase phase, Guid defenderId)
+    {
+        if (!activeHitboxes.TryGetValue(attackerId, out var attacker)) 
+            return;
+
+        if (!activeHitboxes.TryGetValue(defenderId, out var defender)) 
+            return;
+
+        if (!ShouldHit(attacker, target, phase)) 
+            return;
+
+        RecordHit(attacker, target);
+        pendingHits.Add(new PendingHit(attacker, target, defender));
     }
 
     public void OnHitExited(Guid hitboxId, Actor target)
@@ -293,12 +306,25 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
             instance.NextHitTime[target] = Clock.Time + instance.Definition.Behavior.MultiHitInterval;
     }
 
-    void SendHitboxPackages(HitboxInstance instance, Actor target)
+    void SendOtherPackages(HitboxInstance instance, Actor target)
     {
         foreach (var package in instance.Packages)
         {
+            if (package is DamagePackage)
+                continue;
+
             SendPackage(instance.Owner, target, package);
         }
+    }
+
+    void SendDamagePackage(HitboxInstance instance, Actor target, HitboxResult result)
+    {
+        var package = (DamagePackage)instance.Packages.First(package => package is DamagePackage);
+        var context = new DamageContext(instance.Owner, target, package);
+        context.Result.Blocked = result == HitboxResult.Blocked;
+        context.Result.Parried = result == HitboxResult.Parried;
+
+        Emit.Global(new DamageEvent(context));
     }
 
     void SendPackage(Actor source, Actor target, object package)
@@ -321,11 +347,19 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         queue.Add((message.Action, message.Payload));
     }
 
-
     void PublishHitbox(HitboxAPI instance)
     {
         Emit.Global(instance.Id, Response.Success, instance);
     }
+
+    void HandleDirectionUpdate(HitboxDirectionUpdate update)
+    {
+        if (!activeHitboxes.TryGetValue(update.HitboxId, out var instance))
+            return;
+
+        instance.Hitbox.transform.rotation = Quaternion.Euler(0f, 0f, update.AimAngle);
+    }
+
 
     // ===============================================================================
     //  Predicates
@@ -391,75 +425,93 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 //                                 Classes                                                    
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+record PendingHit(HitboxInstance Attacker, Actor Target, HitboxInstance Defender);
+
+
 public class HitboxDefinition : Definition
 {
-    public HitboxFormDefinition Form { get; init; }
-    public HitboxBehaviorDefinition Behavior { get; init; }
-    public HitboxDirectionDefinition Direction { get; init; }
-    public HitboxLifetimeDefinition Lifetime { get; init; }
+    public HitboxFormDefinition Form                { get; init; }
+    public HitboxBehaviorDefinition Behavior        { get; init; }
+    public HitboxDirectionDefinition Direction      { get; init; }
+    public HitboxLifetimeDefinition Lifetime        { get; init; }
 }
 
 public class HitboxFormDefinition : Definition
 {
-    public string Prefab { get; init; }
-    public Vector3 Offset { get; init; }
+    public string Prefab                            { get; init; }
+    public Vector3 Offset                           { get; init; }
 }
 
 public class HitboxBehaviorDefinition : Definition
 {
-    public HitboxBehavior Type { get; init; }
+    public HitboxBehavior Type                      { get; init; }
+    public HitboxRole Role                          { get; init; }
 
-    public bool TrackAim { get; init; }
-    public int AimLockPeriod { get; init; }
+    public bool TrackAim                            { get; init; }
+    public int AimLockPeriod                        { get; init; }
 
-    public bool AllowMultiHit { get; init; }
-    public float MultiHitInterval { get; init; }
-    // Projectile
-    public float ProjectileSpeed { get; init; }
-    public Vector3 ProjectileDirection { get; init; }
+    public bool AllowMultiHit                       { get; init; }
+    public float MultiHitInterval                   { get; init; }
+    // Projectile               
+    public float ProjectileSpeed                    { get; init; }
+    public Vector3 ProjectileDirection              { get; init; }
 }
 
 public class HitboxDirectionDefinition : Definition
 {
-    public HitboxDirectionSource Type { get; init; }
-    public HitboxDirectionScope Scope { get; init; }
-    public Vector2 Explicit { get; set; }
-    public InputIntentSnapshot Input { get; set; }
+    public HitboxDirectionSource Type               { get; init; }
+    public HitboxDirectionScope Scope               { get; init; }
+    public Vector2 Explicit                         { get; set;  }
+    public InputIntentSnapshot Input                { get; set;  }
 
-    public HitboxTrackingConstraint Constraint { get; init; }
+    public HitboxTrackingConstraint Constraint      { get; init; }
 }
 
 
 public class HitboxLifetimeDefinition : Definition
 {
-    public HitboxLifetime Type { get; init; }
-    public int FrameStart { get; init; }
-    public int FrameEnd { get; init; }
-    public bool PersistPastSource { get; init; }
+    public HitboxLifetime Type                      { get; init; }
+    public int FrameStart                           { get; init; }
+    public int FrameEnd                             { get; init; }
+    public bool PersistPastSource                   { get; init; }
 
-    public WeaponPhase Phase { get; init; }
+    public WeaponPhase Phase                        { get; init; }
 
-    public Func<Actor, bool> ConditionalRelease { get; init; }
+    public Func<Actor, bool> ConditionalRelease     { get; init; }
 }
 
 public class HitboxInstance : Instance
 {
-    public Actor Owner { get; init; }
-    public GameObject Hitbox { get; set; }
-    public HitboxDefinition Definition { get; init; }
+    public Actor Owner                              { get; init; }
+    public GameObject Hitbox                        { get; set;  }
+    public HitboxDefinition Definition              { get; init; }
 
-    public int CurrentFrame { get; set; }
-    public List<object> Packages { get; init; }
-    public Vector2 SpawnDirection { get; set; }
+    public int CurrentFrame                         { get; set;  }
+    public List<object> Packages                    { get; init; }
+    public Vector2 SpawnDirection                   { get; set;  }
 
-    public HashSet<Actor> HitActors { get; } = new();
-    public Dictionary<Actor, float> NextHitTime { get; } = new();
+    public HashSet<Actor> HitActors                 { get;       } = new();
+    public Dictionary<Actor, float> NextHitTime     { get;       } = new();
 }
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                  Enums                                                 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public enum HitboxResult
+{
+    Hit,
+    Blocked,
+    Parried,    
+}
+
+public enum HitboxRole
+{
+    Attack,
+    Shield,
+    Parry,
+}
 
 public enum HitboxBehavior
 {
@@ -512,4 +564,10 @@ public class HitboxAPI : Payload
         this.definition = definition;
         this.packages = packages ?? new();
     }
+}
+
+public class HitboxDirectionUpdate : IMessage
+{
+    public Guid   HitboxId  { get; init; }
+    public float  AimAngle  { get; init; }
 }

@@ -34,62 +34,62 @@ public class ShieldParry : DamagingWeapon
 {
     public ShieldParry()
     {
-        Name                        = "ShieldParry";
-        DefaultWeapon               = Capability.Attack2;
-        Trigger                     = new() { Capability.Attack2 };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.AfterFire;
-        Availability                = WeaponAvailability.Default;
-        RequiredHeldTriggers        = new() { Capability.Attack2 };
-        ChargeTimeFrames            = 1;
-        FireDurationFrames          = 4;
-        AddControlOnFireEnd         = new() { "ShieldBlock" };
-        CanInterrupt                = true;
-        CanCancelDisables           = true;
-        Cooldown                    = .2f;
-        Effects = new()
-        {
-            new ShieldParryWindow()
+        Name                                = "ShieldParry";
+        DefaultWeapon                       = Capability.Attack2;
+        Trigger                             = new() { Capability.Attack2 };
+        Activation                          = WeaponActivation.OnPress;
+        Termination                         = WeaponTermination.AfterFire;
+        Availability                        = WeaponAvailability.Default;
+        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        ChargeTimeFrames                    = 1;
+        FireDurationFrames                  = 4;
+        AddControlOnFireEnd                 = new() { "ShieldBlock" };
+        CanInterrupt                        = true;
+        CanCancelDisables                   = true;
+        Cooldown                            = .2f;
+        Effects = new()     
+        {       
+            new ShieldParryWindow()     
+            {           
+                Name                        = "ShieldParryWindow",
+                DurationFrames              = 20,
+            },      
+    
+            new ShieldMobility()        
+            {       
+                Name                        = "ShieldParrySlow",
+                Type                        = EffectType.Speed,
+                Trigger                     = WeaponPhase.Fire,
+                DurationFrames              = 5,
+                Modifier                    = .50f,
+            },  
+        };  
+        Hitboxes = new()    
+        {   
+            new()   
             {   
-                Name                = "ShieldParryWindow",
-                DurationFrames      = 20,
-            },
-
-            new ShieldMobility()
-            {
-                Name                = "ShieldParrySlow",
-                Type                = EffectType.Speed,
-                Trigger             = WeaponPhase.Fire,
-                DurationFrames      = 5,
-                Modifier            = .50f,
-            },
-        }; 
-        Hitboxes = new()
-        {
-            new()
-            {
-                Form                    = new()
-                {
-                    Prefab              = "HB_ShieldParry",
-                    Offset              = new(){ x = 0, y = 0 },
-
-                },
-                Behavior                = new()
-                {
-                    Type                = HitboxBehavior.Attached,
-                    AllowMultiHit       = false,
-                },
-                Direction               = new()
-                {
-                    Scope               = HitboxDirectionScope.Cardinal
-                },
-                Lifetime                = new()
-                {
-                    Type                = HitboxLifetime.FrameBased, 
-                    FrameStart          = 1,
-                    FrameEnd            = 10,
-                    Phase               = WeaponPhase.Fire,
-                    PersistPastSource   = true,
+                Form                        = new()
+                {   
+                    Prefab                  = "HB_ShieldParry",
+                    Offset                  = new(){ x = 0, y = 0 },
+    
+                },  
+                Behavior                    = new()
+                {   
+                    Type                    = HitboxBehavior.Attached,
+                    AllowMultiHit           = false,
+                },  
+                Direction                   = new()
+                {   
+                    Scope                   = HitboxDirectionScope.Cardinal
+                },  
+                Lifetime                    = new()
+                {   
+                    Type                    = HitboxLifetime.FrameBased, 
+                    FrameStart              = 1,
+                    FrameEnd                = 10,
+                    Phase                   = WeaponPhase.Fire,
+                    PersistPastSource       = true,
                 },
             },
         };
@@ -100,154 +100,162 @@ public class ShieldBlock : DamagingWeapon
 {
     public ShieldBlock()
     {
-        Name                        = "ShieldBlock";
-        Trigger                     = new() { Capability.Attack2 };
-        Activation                  = WeaponActivation.WhileHeld;
-        Termination                 = WeaponTermination.OnRelease;
-        Availability                = WeaponAvailability.OnHeld;
-        RequiredHeldTriggers        = new() { Capability.Attack2 };
-        AcceptTriggerLockRequests   = false;
-        FireDuration                = 9999;
-        HoldAnimationUntilReleased  = true;
-        AddControlOnFire            = new() 
-        { 
-            "ShieldAim",
-            "ShieldCharge",
-            "ShieldBash"
-        };
+        Name                                = "ShieldBlock";
+        Trigger                             = new() { Capability.Attack2 };
+        Activation                          = WeaponActivation.WhileHeld;
+        Termination                         = WeaponTermination.OnRelease;
+        Availability                        = WeaponAvailability.OnHeld;
+        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        AcceptTriggerLockRequests           = false;
+        FireDuration                        = 9999;
+        HoldAnimationUntilReleased          = true;
 
-        Effects = new()
-        {
-            new ShieldBlockWindow()
-            {
-                Name                = "ShieldBlockWindow",
-                Duration            = 9999,
-                Cancelable          = true,
-                CancelOnRelease     = true,
-            },
+        Aim                                 = new()
+        {       
+            Enabled                         = true,
+            Mode                            = AimMode.Intercardinal,
+            RotationRateDegs                = 180,
+            HysteresisAngle                 = 15,
+            ArcLimitDegs                    = 45,
+        };      
 
-            new ShieldBraceDisable()
-            {   
-                Name                = "ShieldBlockDisable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = false,
-                DurationFrames      = 20,
-                DisableAttack       = true,
-                DisableRotate       = true,
-            },
+        AddControlOnFire                    = new() 
+        {       
+            "ShieldAim",        
+            "ShieldCharge",     
+            "ShieldBash"        
+        };      
 
-            new ShieldBraceDisable()
-            {   
-                Name                = "ShieldBlockDisableHeld",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = true,
-                CancelOnRelease     = true,
-                Duration            = 9999,
-                DisableAttack       = true,
-                DisableRotate       = true,
-            },
+        Effects = new()     
+        {       
+            new ShieldBlockWindow()     
+            {       
+                Name                        = "ShieldBlockWindow",
+                Duration                    = 9999,
+                Cancelable                  = true,
+                CancelOnRelease             = true,
+            },      
 
-            new ShieldMobility()
-            {
-                Name                = "ShieldBlockSlow",
-                Type                = EffectType.Grip,
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = true,
-                CancelOnRelease     = true,
-                DurationFrames      = 9999,
-                Modifier            = .50f,
-                ModifyTarget        = .25f,
-                ModifyTimespan      = 2,
-            }
-        };
+            new ShieldBraceDisable()        
+            {           
+                Name                        = "ShieldBlockDisable",
+                Trigger                     = WeaponPhase.Fire,
+                Cancelable                  = false,
+                DurationFrames              = 20,
+                DisableAttack               = true,
+            },      
 
-        Direction = new()
-        {
-                Enabled             = true,
-                Source              = DirectionSource.Aim,
-                SetTrigger          = WeaponPhase.Charging,
-                ClearTrigger        = WeaponPhase.Disable,
-        };
+            new ShieldBraceDisable()        
+            {           
+                Name                        = "ShieldBlockDisableHeld",
+                Trigger                     = WeaponPhase.Fire,
+                Cancelable                  = true,
+                CancelOnRelease             = true,
+                Duration                    = 9999,
+                DisableAttack               = true,
+            },      
 
-        Hitboxes = new()
-        {
-            new()
-            {
-                Name                = "HB_ShieldBlock",
-                Form                = new()
-                {
-                    Prefab          = "HB_ShieldBlock",
-                    Offset          = new(){ x = 0, y = 0 },
+            new ShieldMobility()        
+            {       
+                Name                        = "ShieldBlockSlow",
+                Type                        = EffectType.Grip,
+                Trigger                     = WeaponPhase.Fire,
+                Cancelable                  = true,
+                CancelOnRelease             = true,
+                DurationFrames              = 9999,
+                Modifier                    = .50f,
+                ModifyTarget                = .25f,
+                ModifyTimespan              = 2,
+            }       
+        };      
 
-                },
+        Direction = new()       
+        {       
+                Enabled                     = true,
+                Source                      = DirectionSource.Aim,
+                SetTrigger                  = WeaponPhase.Charging,
+                ClearTrigger                = WeaponPhase.Disable,
+        };      
 
-                Behavior            = new()
-                {
-                    TrackAim        = true,
-                    Type            = HitboxBehavior.Attached,
-                    AllowMultiHit   = false,
-                },
+        Hitboxes = new()        
+        {       
+            new()       
+            {       
+                Name                        = "HB_ShieldBlock",
+                Form                        = new()
+                {       
+                    Prefab                  = "HB_ShieldBlock",
+                    Offset                  = new(){ x = 0, y = 0 },
 
-                Direction           = new()
-                {
-                    Scope           = HitboxDirectionScope.Intercardinal,
-                    Constraint      = HitboxTrackingConstraint.AdjacentOrdinal,
-                },
-                
-                Lifetime            = new()
-                {
-                    FrameStart      = 1,
-                    Phase           = WeaponPhase.Fire,
-                },
-            },
-        };
+                },      
 
-        Animations = new()
-        {
-            OnFire = "ShieldBlock",
-        };
-    }
-}
+                Behavior                    = new()
+                {       
+                    TrackAim                = true,
+                    Type                    = HitboxBehavior.Attached,
+                    AllowMultiHit           = false,
+                },      
 
-public class ShieldAim : DamagingWeapon
-{
-    public ShieldAim()
-    {
-        Name                        = "ShieldAim";
-        Trigger                     = new() { Capability.Attack2, Capability.Modifier };
-        Activation                  = WeaponActivation.WhileHeld;
-        Termination                 = WeaponTermination.OnRootRelease;
-        Availability                = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers        = new() { Capability.Attack2 };
-        FireDuration                = 9999;
-        AddControlOnFire            = new() { "ShieldFire" };
-        AddControlOnFireEnd         = new() { "ShieldBlock" };
-        CanCancelDisables           = true;
+                Direction                   = new()
+                {       
+                    Scope                   = HitboxDirectionScope.Intercardinal,
+                    Constraint              = HitboxTrackingConstraint.AdjacentOrdinal,
+                },      
 
-        Effects = new()
-        {
-            new ShieldBraceAim()
-            {
-                Trigger             = WeaponPhase.Fire,
-                Name                = "ShieldAiming",
-                Cancelable          = true,
-                DurationFrames      = 9999,
-            },
-            new SwordSwingDisable()
-            {   
-                Name                = "ShieldAimDisable",
-                Cancelable          = false,
-                DurationFrames      = 5,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                RequestActionLock   = true,
-            },
-            new SwordSwingDisable()
-            {
-                Name                = "ShieldAimDisableCancelable",
-                Cancelable          = true,
-                DurationFrames      = 9999,
-                DisableRotate       = true,
+                Lifetime                    = new()
+                {       
+                    FrameStart              = 1,
+                    Phase                   = WeaponPhase.Fire,
+                },  
+            },  
+        };  
+
+        Animations = new()  
+        {   
+            OnFire = "ShieldBlock", 
+        };  
+    }   
+}   
+
+public class ShieldAim : DamagingWeapon 
+{   
+    public ShieldAim()  
+    {   
+        Name                                = "ShieldAim";
+        Trigger                             = new() { Capability.Attack2, Capability.Modifier };
+        Activation                          = WeaponActivation.WhileHeld;
+        Termination                         = WeaponTermination.OnRootRelease;
+        Availability                        = WeaponAvailability.OnPhase;
+        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        FireDuration                        = 9999;
+        AddControlOnFire                    = new() { "ShieldFire" };
+        AddControlOnFireEnd                 = new() { "ShieldBlock" };
+        CanCancelDisables                   = true;
+
+        Effects = new()     
+        {       
+            new ShieldBraceAim()        
+            {       
+                Trigger                     = WeaponPhase.Fire,
+                Name                        = "ShieldAiming",
+                Cancelable                  = true,
+                DurationFrames              = 9999,
+            },      
+            new SwordSwingDisable()     
+            {           
+                Name                        = "ShieldAimDisable",
+                Cancelable                  = false,
+                DurationFrames              = 5,
+                DisableAttack               = true,
+                DisableRotate               = true,
+                RequestActionLock           = true,
+            },      
+            new SwordSwingDisable()     
+            {       
+                Name                        = "ShieldAimDisableCancelable",
+                Cancelable                  = true,
+                DurationFrames              = 9999,
+                DisableRotate               = true,
             }
         };
     }
@@ -257,36 +265,36 @@ public class ShieldFire : DamagingWeapon
 {
     public ShieldFire()
     {
-        Name                        = "ShieldFire";
-        Trigger                      = new() { Capability.Attack2, Capability.Modifier, Capability.Attack1 };
-        Activation                  = WeaponActivation.OnRelease;
-        Termination                 = WeaponTermination.OnRootRelease;
-        Availability                = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers        = new() { Capability.Attack2 };
-        ChargeTimeFrames            = 20;
-        FireDuration                = 25;
-        ForceMaxChargeRelease       = true;
-        MinimumChargeToFire         = 0.3f;
-        AddControlOnFireEnd         = new() { "ShieldAim" };
-        Effects = new()
-        {
-            new SwordSwingDisable()
-            {   
-                Name                = "ShieldFireDisable",
-                Cancelable          = false,
-                DurationFrames      = 18,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-            },
-            new SwordSwingDisable()
-            {
-                Name                = "ShieldFireDisableCancelable",
-                Cancelable          = true,
-                DurationFrames      = 30,
-                DisableAttack       = true,
-                RequestActionLock   = true,
+        Name                                = "ShieldFire";
+        Trigger                             = new() { Capability.Attack2, Capability.Modifier, Capability.Attack1 };
+        Activation                          = WeaponActivation.OnRelease;
+        Termination                         = WeaponTermination.OnRootRelease;
+        Availability                        = WeaponAvailability.OnPhase;
+        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        ChargeTimeFrames                    = 20;
+        FireDuration                        = 25;
+        ForceMaxChargeRelease               = true;
+        MinimumChargeToFire                 = 0.3f;
+        AddControlOnFireEnd                 = new() { "ShieldAim" };
+        Effects = new()     
+        {       
+            new SwordSwingDisable()     
+            {           
+                Name                        = "ShieldFireDisable",
+                Cancelable                  = false,
+                DurationFrames              = 18,
+                DisableAttack               = true,
+                DisableRotate               = true,
+                DisableMove                 = true,
+                RequestActionLock           = true,
+            },      
+            new SwordSwingDisable()     
+            {       
+                Name                        = "ShieldFireDisableCancelable",
+                Cancelable                  = true,
+                DurationFrames              = 30,
+                DisableAttack               = true,
+                RequestActionLock           = true,
             }
         };
     }
@@ -296,35 +304,35 @@ public class ShieldBash : DamagingWeapon
 {
     public ShieldBash()
     {
-        Name                        = "ShieldBash";
-        Trigger                      = new() { Capability.Attack2, Capability.Attack1 };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.OnRootRelease;
-        Availability                = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers        = new() { Capability.Attack2 };
-        ChargeTimeFrames            = 5;
-        FireDuration                = 20;
-        AddControlOnFireEnd         = new() { "ShieldBlock" };
-        Effects = new()
-        {
-            new SwordSwingDisable()
-            {   
-                Name                = "ShieldBashDisable",
-                Cancelable          = false,
-                DurationFrames      = 15,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-            },
-            new SwordSwingDisable()
-            {
-                Name                = "ShieldBashDisableCancelable",
-                Cancelable          = true,
-                DurationFrames      = 25,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                RequestActionLock   = true,
+        Name                                = "ShieldBash";
+        Trigger                             = new() { Capability.Attack2, Capability.Attack1 };
+        Activation                          = WeaponActivation.OnPress;
+        Termination                         = WeaponTermination.OnRootRelease;
+        Availability                        = WeaponAvailability.OnPhase;
+        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        ChargeTimeFrames                    = 5;
+        FireDuration                        = 20;
+        AddControlOnFireEnd                 = new() { "ShieldBlock" };
+        Effects = new()     
+        {       
+            new SwordSwingDisable()     
+            {           
+                Name                        = "ShieldBashDisable",
+                Cancelable                  = false,
+                DurationFrames              = 15,
+                DisableAttack               = true,
+                DisableRotate               = true,
+                DisableMove                 = true,
+                RequestActionLock           = true,
+            },      
+            new SwordSwingDisable()     
+            {       
+                Name                        = "ShieldBashDisableCancelable",
+                Cancelable                  = true,
+                DurationFrames              = 25,
+                DisableAttack               = true,
+                DisableRotate               = true,
+                RequestActionLock           = true,
             }
         };
     }
@@ -336,42 +344,42 @@ public class ShieldCharge : DamagingWeapon
     {
 
         
-        Name                        = "ShieldCharge";
-        Trigger                      = new() { Capability.Attack2, Capability.Attack1 };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.OnRootRelease;
-        Availability                = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers        = new() { Capability.Attack2 };
-        ChargeTimeFrames            = 5;
-        FireDuration                = 20;
-        ControlWindow               = 0.3f;
-        SwapOnFire                  = "ShieldFire";
-        AddControlOnFireEnd         = new() { "ShieldBlock" };
-        Effects = new()
-        {
-            new ShieldMobility()
-            {
-                Trigger             = WeaponPhase.Fire,
-                Name                = "ShieldChargeMovement",
-                DurationFrames      = 30,
-                Cancelable          = true,
-            },
-            new SwordSwingDisable()
-            {   
-                Name                = "ShieldChargeDisable",
-                Cancelable          = false,
-                DurationFrames      = 20,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                RequestActionLock   = true,
-            },
-            new SwordSwingDisable()
-            {
-                Name                = "ShieldChargeDisableCancelable",
-                Cancelable          = true,
-                DurationFrames      = 35,
-                DisableAttack       = true,
-                RequestActionLock   = true,
+        Name                                = "ShieldCharge";
+        Trigger                             = new() { Capability.Attack2, Capability.Attack1 };
+        Activation                          = WeaponActivation.OnPress;
+        Termination                         = WeaponTermination.OnRootRelease;
+        Availability                        = WeaponAvailability.OnPhase;
+        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        ChargeTimeFrames                    = 5;
+        FireDuration                        = 20;
+        ControlWindow                       = 0.3f;
+        SwapOnFire                          = "ShieldFire";
+        AddControlOnFireEnd                 = new() { "ShieldBlock" };
+        Effects = new()     
+        {       
+            new ShieldMobility()        
+            {       
+                Trigger                     = WeaponPhase.Fire,
+                Name                        = "ShieldChargeMovement",
+                DurationFrames              = 30,
+                Cancelable                  = true,
+            },      
+            new SwordSwingDisable()     
+            {           
+                Name                        = "ShieldChargeDisable",
+                Cancelable                  = false,
+                DurationFrames              = 20,
+                DisableAttack               = true,
+                DisableRotate               = true,
+                RequestActionLock           = true,
+            },      
+            new SwordSwingDisable()     
+            {       
+                Name                        = "ShieldChargeDisableCancelable",
+                Cancelable                  = true,
+                DurationFrames              = 35,
+                DisableAttack               = true,
+                RequestActionLock           = true,
             }
         };
     }

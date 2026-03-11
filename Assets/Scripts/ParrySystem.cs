@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class ParrySystem : Service, IServiceLoop
 {
     
-    List<DamageContext> queue = new();
+    readonly List<DamageContext> queue = new();
 
         // -----------------------------------
 
@@ -41,8 +41,8 @@ public class ParrySystem : Service, IServiceLoop
 
         switch(IsParrying(context.Target))
         {
-            case true:  ResolveSuccessfulParry(context);   break;
-            case false: ResolveFailedParry(context);      break;
+            case true:  ResolveSuccessfulParry(context);    break;
+            case false: ResolveFailedParry(context);        break;
         }
 
         SendProcessDamage(context);
@@ -69,7 +69,7 @@ public class ParrySystem : Service, IServiceLoop
 
     void Parry(DamageContext context)
     {
-
+        // Noop currently - optional to add effect on parry. 
     }
 
     void ResolveFailedParry(DamageContext context)
@@ -78,7 +78,9 @@ public class ParrySystem : Service, IServiceLoop
 
     void SetParriedContext(DamageContext context)
     {
-        context.Result.Parried = true;
+        context.Result.Parried          = true;
+        context.Result.RemainingDamage  = 0;
+        context.Result.AppliedEffects   = null;
     }
 
     // ===============================================================================
@@ -92,7 +94,7 @@ public class ParrySystem : Service, IServiceLoop
 
     void SendProcessDamage(DamageContext context)
     {
-        Emit.Global(new ProcessDamage(context));
+        Emit.Global(new CalculateDamage(context));
     }
 
     void RechargeEnergy(Actor target, float amount)

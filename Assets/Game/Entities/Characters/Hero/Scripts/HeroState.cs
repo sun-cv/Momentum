@@ -1,4 +1,5 @@
 
+using System.Linq;
 using Mono.Cecil;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ public class HeroState : State
 
     readonly IntentSystem       intent;
     readonly EffectRegister     effects;
+    readonly EquipmentManager   equipment;
     readonly Movement           movement;
     readonly Lifecycle          lifecycle;
 
@@ -83,6 +85,9 @@ public class HeroState : State
     public bool Dead                                => lifecycle.IsDead;
     public bool IsMoving                            => CanMove && (Velocity != Vector2.zero || Direction != Vector2.zero);
     public TimePredicate IsIdle                     => idle ??= new (TimerUnit.Time, () => !IsMoving);
+
+    public bool ShieldEquipped                      => equipment.GetEquipped(EquipmentSlotType.OffHand) is Shield;
+
 
     //
     //  Cache values:
