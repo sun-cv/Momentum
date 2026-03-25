@@ -19,7 +19,6 @@ public class Lifecycle : Service, IServiceLoop
         // -----------------------------------
 
     LifecycleInstance                                       instance;
-    LifecycleInstance                                       previousInstance;
 
     // ===============================================================================
 

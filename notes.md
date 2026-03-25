@@ -11,7 +11,7 @@
 
 > ## **Rework Required**
 >
-
+Effect system - Conditions applicable - not commands
 
 # **To Do**
 

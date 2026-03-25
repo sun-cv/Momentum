@@ -12,7 +12,12 @@ public class HeroDefinition : ActorDefinition
         Stats                       = new()
         {
             MaxHealth               = 100,
+            MaxArmor                = 0,
+            MaxShield               = 100,
             MaxEnergy               = 100,
+            ShieldRegen             = 5,
+            EnergyRegen             = 5,
+            HealthRegen             = 5,
             Speed                   = 5,
             Strength                = 10,
             Impact                  = 10,

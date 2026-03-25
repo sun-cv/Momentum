@@ -15,7 +15,6 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         var factory = Factories.Get<HeroFactory>();
 
         hero = factory.Spawn(Vector3.zero);
-
         hero.Emit.Local(new EquipEvent(hero, new Sword()) );
         hero.Emit.Local(new EquipEvent(hero, new Shield()));
         hero.Emit.Local(new EquipEvent(hero, new Dash())  );
@@ -25,7 +24,6 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
         
         DebugLogSetup();
-
         hero.Emit.Link.Local<AnimatorEvent>(Logs);
     }
 
@@ -33,12 +31,15 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 
     public void Tick()
     {
-
+        if (hero is Hero actor)        
+        {
+            Log.Debug("locked facing x", () => actor.ResolvedFacing.X);
+            Log.Debug("locked facing y", () => actor.ResolvedFacing.Y);
+        }
     }
 
     public void Loop()
     {
-
     }
 
     public void Logs(AnimatorEvent message)

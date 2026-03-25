@@ -56,6 +56,7 @@ public class ParrySystem : Service, IServiceLoop
             case true:  PerfectParry(context);  break;
         }
 
+        SetDamageToZero(context);
         SetParriedContext(context);
     }
 
@@ -74,13 +75,20 @@ public class ParrySystem : Service, IServiceLoop
 
     void ResolveFailedParry(DamageContext context)
     {
+
     }
 
     void SetParriedContext(DamageContext context)
     {
-        context.Result.Parried          = true;
-        context.Result.RemainingDamage  = 0;
-        context.Result.AppliedEffects   = null;
+        context.Package.Result.Parried          = true;
+    }
+
+    void SetDamageToZero(DamageContext context)
+    {
+        foreach( var (component, result) in context.Package.Result.Components)
+        {
+            result.Damage = 0;
+        }
     }
 
     // ===============================================================================

@@ -501,7 +501,7 @@ public class WeaponSystem : Service, IServiceTick
 
     bool ShouldApplyEffect(Effect effect)
     {
-        if (effect is ITrigger trigger)
+        if (effect is ITrigger trigger) 
             return trigger.Trigger == instance.State.Phase;
 
         return instance.State.Phase == WeaponPhase.Enable;
@@ -513,22 +513,20 @@ public class WeaponSystem : Service, IServiceTick
 
     public void RequestDirection(WeaponAction action)
     {
-        if (!AimEnabled)
+
+        if (!(action.Direction.Enabled && action.Direction.SetTrigger == instance.State.Phase))
+            return;
+
+        var intent = action.Aim.Enabled ? instance.State.LiveIntent : instance.State.Intent;
+
+        instance.State.LastFacingDirection = action.Direction.Source switch
         {
-            if (!(action.Direction.Enabled && action.Direction.SetTrigger == instance.State.Phase))
-                return;
-        }
-
-    var intent = action.Aim.Enabled ? instance.State.LiveIntent : instance.State.Intent;
-
-    instance.State.LastFacingDirection = action.Direction.Source switch
-    {
-        DirectionSource.Aim             => action.Aim.Enabled ? Orientation.DirectionFromAngle(instance.State.CurrentAimAngle): intent.Aim,
-        DirectionSource.Facing          => intent.Facing,
-        DirectionSource.Direction       => intent.Direction,
-        DirectionSource.LastDirection   => intent.LastDirection,
-        _                               => intent.Direction,
-    };
+            DirectionSource.Aim             => action.Aim.Enabled ? Orientation.DirectionFromAngle(instance.State.CurrentAimAngle): intent.Aim,
+            DirectionSource.Facing          => intent.Facing,
+            DirectionSource.Direction       => intent.Direction,
+            DirectionSource.LastDirection   => intent.LastDirection,
+            _                               => intent.Direction,
+        };
 
         owner.Emit.Local(new ForcedFacingEvent(Request.Set, instance.State.LastFacingDirection));
     }
@@ -667,12 +665,11 @@ public class WeaponSystem : Service, IServiceTick
 
     public void RequestAnimationClear(WeaponAction action)
     {
-        if (!action.HoldAnimationUntilReleased)
-            return;
-
         if (instance.State.AnimationRequest == null)
             return;
-
+            
+        if (!action.HoldAnimationUntilReleased)
+            return;
 
         instance.State?.AnimationRequest.Stop();
         owner.Emit.Local(Request.Stop, new AnimationAPI(instance.State.AnimationRequest));

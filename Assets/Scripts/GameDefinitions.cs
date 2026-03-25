@@ -119,7 +119,7 @@ public static class Layers
 }
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                 Definition Declarations
+//                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -173,16 +173,15 @@ public interface IShieldRegen
     float ShieldRegen                       { get; }
 }
 
-public interface IShielded : IShield, IShieldRegen
+public interface IShieldEquipped : IShield, IShieldRegen
 {
     bool ShieldEquipped                     { get; }
 }
 
-public interface ICaster            
+public interface IEnergy            
 {           
     float Energy                            { get; }
     float MaxEnergy                         { get; }
-    float EnergyRegen                       { get; }
 }           
 
 public interface IEnergyRegen
@@ -267,7 +266,7 @@ public interface ICorpse
 }
 
 public interface IIdle
-{
+{       
     TimePredicate IsIdle                    { get; }
 }
 
@@ -296,9 +295,9 @@ public interface IHero :
     // Core
     IMovableActor, IPhysicsBody,
     // Combat
-    IAttacker, IParryable, IBlockable, IAimable, IShielded,
+    IAttacker, IParryable, IBlockable, IAimable, IShieldEquipped,
     // Resources
-    IHealthRegen, IShield, IShieldRegen, IArmor, ICaster, IEnergyRegen,
+    IHealthRegen, IShield, IShieldRegen, IArmor, IEnergy, IEnergyRegen,
     // Status
     IAfflictable
 { }
@@ -330,13 +329,6 @@ public interface IMovableDummy :
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Enums                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public enum Route 
-{
-    Direct,
-    Distributed,
-    Broadcast, 
-}
 
 
 public enum Request
@@ -403,18 +395,6 @@ public enum Publish
     Transitioned,
 }
 
-public enum Status
-{
-    Idle,
-    Enabling,
-    Enabled,
-    Cancelling,
-    Cancelled,
-    Interrupting,
-    Interrupted,
-    Disabling,
-    Disabled,
-}
 
 public enum InputCondition
 {
@@ -459,3 +439,4 @@ public enum ThresholdTrigger
     OnExit,
     OnCross,
 }
+

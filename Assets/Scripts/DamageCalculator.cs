@@ -1,3 +1,5 @@
+    
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,204 +8,98 @@ using UnityEngine;
 public class DamageCalculator : RegisteredService, IServiceLoop
 {    
     readonly List<DamageContext> queue = new();
-
-    // -----------------------------------
-
+    readonly List<(Func<Actor, bool>, IDamageCalculator)> calculators = new();
 
     // ===============================================================================
 
     public DamageCalculator()
     {
+        RegisterDamageCalculators();
+
+        Link.Global<CalculateDamage>(HandleDamageCalculatorEvent);
+
         Services.Lane.Register(this);
     }
 
     // ===============================================================================
-
 
     public void Loop()
     {
         ProcessQueue();
     }
 
+    // ===============================================================================
+
     void ProcessQueue()
     {
         foreach (var context in queue)
         {
-            ProcessContext(context);
+            ProcessContext    (context);
+            SendResolvedDamage(context);
         }
+
+        queue.Clear();
     }
 
     void ProcessContext(DamageContext context)
     {
+        foreach(var (predicate, calculator) in calculators)
+        {
+            if (!predicate(context.Target))
+                continue;
 
+            calculator.Calculate(context);
+        }
     }
-
-
-    // need to handle all 3 resources 
-    // if shield, if armor, health
-
-
-    
-    void CalculateDamage(DamageContext context)
-    {
-        
-    }
-
-
-
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
+    void HandleDamageCalculatorEvent(CalculateDamage message)
+    {
+        queue.Add(message.Context);
+    }
+
+    void SendResolvedDamage(DamageContext context)
+    {
+        Emit.Global(new ResolveDamage(context));
+    }
+
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
+
+    void RegisterDamageCalculators()
+    {
+        Register((actor) => actor is IShield, new ShieldCalculator());
+        Register((actor) => actor is IArmor,  new ArmorCalculator());
+        Register((actor) => actor is IHealth, new HealthCalculator());
+    }
+
+    void Register(Func<Actor, bool> func, IDamageCalculator calculator)
+    {
+        calculators.Add((func, calculator)); 
+    }
 
     // ===============================================================================
 
-    readonly Logger Log = new(LogSystem.Combat, LogLevel.Debug);
+    // readonly Logger Log = new(LogSystem.Combat, LogLevel.Debug);
 
     public override void Dispose()
     {
         Services.Lane.Deregister(this);
     }
 
-    public UpdatePriority Priority => ServiceUpdatePriority.DamageCalculator
+    public UpdatePriority Priority => ServiceUpdatePriority.DamageCalculator;
 }
 
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                      Declarations
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Classes                                                    
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public readonly struct Damage : IResourceAction
-{
-    public float Amount                     { get; init; }
-    public DamageType Type                  { get; init; }
-
-    public Damage(float amount, DamageType type)
-    {
-        Amount  = amount;
-        Type    = type;
-    }
-}
-
-public readonly struct DamageConfig
-{
-    public bool BypassArmor                 { get; init; } // Skips calc
-    public bool BypassShield                { get; init; } // Skips calc
-    public bool Unblockable                 { get; init; } // By equipped shield 
-}
-
-public readonly struct DamagePackageConfig
-{
-    public ParryConfig Parry                { get; init; }
-}
-
-public readonly struct ParryConfig
-{
-    public bool Enabled                     { get; init; }
-    public float ParryWindow                { get; init; }
-    public float PerfectParryWindow         { get; init; }
-
-    public float ParryReward                { get; init; }
-    public float PerfectParryReward         { get; init; }
-
-    public float StaggerDuration            { get; init; }
-}
-
-public readonly struct BlockConfig
-{
-    public bool Enabled                     { get; init; }
-}
-
-public readonly struct DamageComponent
-{
-    public Damage Damage                    { get; init; }
-    public DamageConfig Config              { get; init; }
-    public List<Effect> Effects             { get; init; }
-
-    public DamageComponent(Damage damage, DamageConfig config = default)
-    {
-        Damage      = damage;
-        Config      = config;
-        Effects     = new();
-    }
-}
-
-public readonly struct DamagePackage
-{
-    public List<DamageComponent> Components { get; init; }
-    public DamagePackageConfig Config       { get; init; }
-
-    public DamagePackage(List<DamageComponent> components, DamagePackageConfig config = default)
-    {
-        Components = components;
-        Config     = config;
-    }
-}
-
-public class DamageContext
-{
-    public Actor Target                     { get; init; }
-    public Actor Source                     { get; init; }
-    public DamagePackage Package            { get; init; }
-    public DamageResult Result              { get; init; }
-
-    public DamageContext(Actor target, Actor source, DamagePackage package)
-    {
-        Target      = target;
-        Source      = source;
-        Package     = package;
-        Result      = new();
-    }
- }
-
-public class DamageResult
-{
-    public float TotalDamage                { get; set; }
-    public float RemainingDamage            { get; set; }
-    public float ShieldDamage               { get; set; }
-    public float ArmorDamage                { get; set; }
-    public float HealthDamage               { get; set; }
-    public bool ShieldBroken                { get; set; }
-    public bool Parried                     { get; set; }
-    public bool Blocked                     { get; set; }
-    public bool Killed                      { get; set; }
-    public List<Effect> AppliedEffects      { get; set; } = new();
-}
-
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                  Enums                                                 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public enum DamageType
-{
-    Fire,       // Burns armor and health on dot, break effect DOT
-    Frost,      // slows, break effect: longer recharge on shield.
-    Shock,      // Increased damage to shield, break effect stun
-    Physical,   // regular damage
-    Explosion,  // break effect: knocback
-}
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-
-public readonly struct DamageEvent : IMessage
-{
-    public DamageContext Context            { get; init; }
-
-    public DamageEvent(DamageContext context)
-    {
-        Context = context; 
-    }
-}
 
 public readonly struct CalculateDamage : IMessage
 {
@@ -213,301 +109,326 @@ public readonly struct CalculateDamage : IMessage
     {
         Context = context; 
     }
-    
 }
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                        Processor
+//                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                               Interfaces                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public interface IDamageCalculator
 {
     void Calculate(DamageContext context);
 }
+ 
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Structs                                                   
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public struct DamageCalculationContext
+{
+    public Actor Target                 { get; set; }
+    public DamageRule Rule              { get; set; }
+    public DamageComponent Component    { get; set; }
+    public ComponentResult Result       { get; set; }
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                       Processors
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Shield
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
 public class ShieldCalculator : IDamageCalculator
 {
 
+    // ===============================================================================
+
     public void Calculate(DamageContext context)
     {
+        ProcessDamageComponents(context);
+    }
 
-        switch(HasEquippedShield(context.Target))
+    // ===============================================================================
+
+    void ProcessDamageComponents(DamageContext context)
+    {
+        foreach(var component in context.Package.Components)
         {
-            case true:  HandleActiveShield(context);  break;
-            case false: HandlePassiveShield(context); break;
+            ProcessComponent(context, component);
         }
+    }
+
+    void ProcessComponent(DamageContext context, DamageComponent component)
+    {
+        var calculationContext = CalculationContext(context, component);
+        
+        if (DamageGateProcessor(calculationContext))
+            return;
+
+        DamageRuleProcessor(calculationContext, Rules.Damage.Shield.PreProcess );
+        DamageCalculation  (calculationContext);
+        DamageRuleProcessor(calculationContext, Rules.Damage.Shield.PostProcess);
+    }
+
+    void DamageCalculation(DamageCalculationContext context)
+    {
+        var result                      = context.Result;
+        var rule                        = context.Rule;
+
+        var shield                      = Target(context).Shield;
+        var damage                      = result.Damage;   
+
+        var multiplier                  = rule.Multiplier;
+        var totalDamage                 = MathF.Round(damage * multiplier);
+
+        float absorbed                  = Mathf.Min(totalDamage, shield);
+
+        result.Shield                  += absorbed;
+    }
+
+    bool DamageGateProcessor(DamageCalculationContext context)
+    {
+        foreach (var gate in Rules.Damage.Shield.Gates)
+        {
+            if (gate.Condition(context))
+                return true;
+        }
+        return false;
     } 
-    
-    void HandleActiveShield(DamageContext context)
+
+    void DamageRuleProcessor(DamageCalculationContext context, List<RuleApplicationEntry> rules)
     {
-        if (!EquippedShieldBlockedDamage(context))
-            return;
-
-        if (!HasShieldRemaining(context.Target))
-            return;
-
-        CalculateShieldDamage(context);
-    }
-
-    void HandlePassiveShield(DamageContext context)
-    {
-        if (!HasShieldRemaining(context.Target))
-            return;
-
-        CalculateShieldDamage(context);
-    }
-
-    void CalculateShieldDamage(DamageContext context)
-    {
-        foreach (var component in context.Package.Components)
+        foreach (var rule in rules)
         {
-            CalculateDamage(context, component);
+            switch(rule.Condition(context))
+            {
+                case true:  rule.OnTrue (context);  break;
+                case false: rule.OnFalse(context);  break;
+            }
         }
     }
 
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
 
-    void CalculateDamage(DamageContext context, DamageComponent component)
+    DamageCalculationContext CalculationContext(DamageContext context, DamageComponent component)
     {
-        var target                  = context.Target as IShield;
-        var result                  = context.Result;
-        var rules                   = DamageRules.Get(component.Damage.Type).Shield;
-
-        var shieldHealth            = target.Shield;
-        var incomingDamage          = context.Result.RemainingDamage;
-
-        var damageMultiplier        = rules.Multiplier;
-        var totalDamage             = incomingDamage * damageMultiplier;
-
-        float absorbed              = Mathf.Min(totalDamage, shieldHealth);
-
-        result.ShieldDamage        += absorbed;
-
-        switch(rules.CannotAbsorb)
+        return new()
         {
-            case true:  result.RemainingDamage = totalDamage;               break;
-            case false: result.RemainingDamage = totalDamage - absorbed;    break;
-        }
-
-        result.ShieldBroken         = shieldHealth <= absorbed;
+            Rule        = Rules.Damage.Shield.Get(component.Mode, component.Damage.Element),
+            Target      = context.Target,
+            Component   = component,
+            Result      = context.Package.Result.Components[component],
+        };
     }
 
-
-   // ===============================================================================
-   //   Predicates
-   // ===============================================================================
-
-    bool HasShieldRemaining(Actor target)
+    IShield Target(DamageCalculationContext context)
     {
-        return target is IShield actor && actor.Shield > 0;
-    }
-
-    bool EquippedShieldBlockedDamage(DamageContext context)
-    {
-        return context.Result.Blocked;
-    }
-
-    bool HasEquippedShield(Actor target)
-    {
-        return target is IShielded actor && actor.ShieldEquipped;
+        return context.Target as IShield;
     }
 }
 
 
-public class Armorcalculator : IDamageCalculator
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Armor
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        
+public class ArmorCalculator : IDamageCalculator
 {
 
+    // ===============================================================================
+
     public void Calculate(DamageContext context)
     {
+        ProcessDamageComponents(context);
+    }
 
-        switch(HasEquippedShield(context.Target))
+    // ===============================================================================
+
+    void ProcessDamageComponents(DamageContext context)
+    {
+        foreach(var component in context.Package.Components)
         {
-            case true:  HandleActiveShield(context);  break;
-            case false: HandlePassiveShield(context); break;
+            ProcessComponent(context, component);
         }
+    }
+
+    void ProcessComponent(DamageContext context, DamageComponent component)
+    {
+        var calculationContext = CalculationContext(context, component);
+        
+        if (DamageGateProcessor(calculationContext))
+            return;
+
+        DamageRuleProcessor(calculationContext, Rules.Damage.Armor.PreProcess );
+        DamageCalculation  (calculationContext);
+        DamageRuleProcessor(calculationContext, Rules.Damage.Armor.PostProcess);
+    }
+
+    void DamageCalculation(DamageCalculationContext context)
+    {
+        var result                      = context.Result;
+        var rule                        = context.Rule;
+
+        var armor                      = Target(context).Armor;
+        var damage                      = result.Damage;   
+
+        var multiplier                  = rule.Multiplier;
+        var totalDamage                 = MathF.Round(damage * multiplier);
+
+        float absorbed                  = Mathf.Min(totalDamage, armor);
+
+        result.Armor                  += absorbed;
+    }
+
+    bool DamageGateProcessor(DamageCalculationContext context)
+    {
+        foreach (var gate in Rules.Damage.Armor.Gates)
+        {
+            if (gate.Condition(context))
+                return true;
+        }
+        return false;
     } 
-    
-    void HandleActiveShield(DamageContext context)
+
+    void DamageRuleProcessor(DamageCalculationContext context, List<RuleApplicationEntry> rules)
     {
-        if (!EquippedShieldBlockedDamage(context))
-            return;
-
-        if (!HasShieldRemaining(context.Target))
-            return;
-
-        CalculateShieldDamage(context);
-    }
-
-    void HandlePassiveShield(DamageContext context)
-    {
-        if (!HasShieldRemaining(context.Target))
-            return;
-
-        CalculateShieldDamage(context);
-    }
-
-    void CalculateShieldDamage(DamageContext context)
-    {
-        foreach (var component in context.Package.Components)
+        foreach (var rule in rules)
         {
-            CalculateDamage(context, component);
+            switch(rule.Condition(context))
+            {
+                case true:  rule.OnTrue (context);  break;
+                case false: rule.OnFalse(context);  break;
+            }
         }
     }
 
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
 
-    void CalculateDamage(DamageContext context, DamageComponent component)
+    DamageCalculationContext CalculationContext(DamageContext context, DamageComponent component)
     {
-        var target                  = context.Target as IShield;
-        var result                  = context.Result;
-        var rules                   = DamageRules.Get(component.Damage.Type).Shield;
-
-        var shieldHealth            = target.Shield;
-        var incomingDamage          = context.Result.RemainingDamage;
-
-        var damageMultiplier        = rules.Multiplier;
-        var totalDamage             = incomingDamage * damageMultiplier;
-
-        float absorbed              = Mathf.Min(totalDamage, shieldHealth);
-
-        result.ShieldDamage        += absorbed;
-
-        switch(rules.CannotAbsorb)
+        return new()
         {
-            case true:  result.RemainingDamage = totalDamage;               break;
-            case false: result.RemainingDamage = totalDamage - absorbed;    break;
-        }
-
-        result.ShieldBroken         = shieldHealth <= absorbed;
+            Rule        = Rules.Damage.Armor.Get(component.Mode, component.Damage.Element),
+            Target      = context.Target,
+            Component   = component,
+            Result      = context.Package.Result.Components[component],
+        };
     }
 
-
-   // ===============================================================================
-   //   Predicates
-   // ===============================================================================
-
-    bool HasShieldRemaining(Actor target)
+    IArmor Target(DamageCalculationContext context)
     {
-        return target is IShield actor && actor.Shield > 0;
-    }
-
-    bool EquippedShieldBlockedDamage(DamageContext context)
-    {
-        return context.Result.Blocked;
-    }
-
-    bool HasEquippedShield(Actor target)
-    {
-        return target is IShielded actor && actor.ShieldEquipped;
+        return context.Target as IArmor;
     }
 }
+    
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Health
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+    
 public class HealthCalculator : IDamageCalculator
 {
 
+    // ===============================================================================
+
     public void Calculate(DamageContext context)
     {
-        
-    } 
-    
-}
-
-public interface IMitigationProcessor
-{
-    float Process(DamageContext context);
-}
-
-
-public class ArmorMitigation : IMitigationProcessor
-{
-    public float Process(DamageContext context)
-    {
-        return 0f;
+        ProcessDamageComponents(context);
     }
-}
 
-public class ResistanceMitigation : IMitigationProcessor
-{
-    public float Process(DamageContext context)
+    // ===============================================================================
+
+    void ProcessDamageComponents(DamageContext context)
     {
-        return 0f;
-    }
-}
-
-public class KillingBlow {}
-
-
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                          Maps
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-
-public class DamageRule
-{
-    public ShieldRule Shield                { get; init; }
-    public ArmorRule  Armor                 { get; init; }
-    public HealthRule Health                { get; init; }
-
-    public static readonly DamageRule Default = new();
-}
-
-public readonly struct ShieldRule
-{
-    public bool Bypass                      { get; init; }
-    public float Multiplier                 { get; init; }
-    public bool CannotAbsorb                { get; init; }
-}
-
-public readonly struct ArmorRule
-{
-    public bool Bypass                      { get; init; }
-    public float Multiplier                 { get; init; }
-    public bool CannotAbsorb                { get; init; }
-}
-
-public readonly struct HealthRule
-{
-    public float Multiplier                 { get; init; }
-    public bool CannotAbsorb                { get; init; }
-}
-
-public static class DamageRules
-{
-    static readonly Dictionary<DamageType, DamageRule> rules = new()
-    {
-        [DamageType.Fire]       = new()
+        foreach(var component in context.Package.Components)
         {
-            Shield  = new(){ Multiplier                  = 2f    },
-            Armor   = new(){ CannotAbsorb                = true  },
-            Health  = new(){ CannotAbsorb                = true  }
-        },
-        [DamageType.Shock]      = new()
-        {
-            Shield  = new(){ Multiplier                  = 1.5f  },
-            Armor   = new(){  },
-            Health  = new(){  }
-        },
-        [DamageType.Frost]      = new()
-        {
-            Shield  = new(){ Multiplier                  = .75f  },
-            Armor   = new(){ Multiplier                  = .75f  },
-            Health  = new(){ Multiplier                  = 1f    }
-        },
-        [DamageType.Physical]   = new()
-        {
-            Shield  = new(){ Multiplier                  = 1f    },
-            Armor   = new(){ Multiplier                  = 1f    },
-            Health  = new(){ Multiplier                  = 1f    },
-        },
-        [DamageType.Explosion]  = new()
-        {
-            Shield  = new(){ Multiplier                  = 1f    },
-            Armor   = new(){ Multiplier                  = 1f    },
-            Health  = new(){ Multiplier                  = 1f    },
+            ProcessComponent(context, component);
         }
-    };
+    }
 
-    public static DamageRule Get(DamageType type) => rules.TryGetValue(type, out var rule) ? rule : new DamageRule();
+    void ProcessComponent(DamageContext context, DamageComponent component)
+    {
+        var calculationContext = CalculationContext(context, component);
+        
+        if (DamageGateProcessor(calculationContext))
+            return;
+
+        DamageRuleProcessor(calculationContext, Rules.Damage.Health.PreProcess );
+        DamageCalculation  (calculationContext);
+        DamageRuleProcessor(calculationContext, Rules.Damage.Health.PostProcess);
+    }
+
+    void DamageCalculation(DamageCalculationContext context)
+    {
+        var result                      = context.Result;
+        var rule                        = context.Rule;
+
+        var health                      = Target(context).Health;
+        var damage                      = result.Damage;   
+
+        var multiplier                  = rule.Multiplier;
+        var totalDamage                 = MathF.Round(damage * multiplier);
+
+        float absorbed                  = Mathf.Min(totalDamage, health);
+
+        result.Health                  += absorbed;
+    }
+
+    bool DamageGateProcessor(DamageCalculationContext context)
+    {
+        foreach (var gate in Rules.Damage.Health.Gates)
+        {
+            if (gate.Condition(context))
+                return true;
+        }
+        return false;
+    } 
+
+    void DamageRuleProcessor(DamageCalculationContext context, List<RuleApplicationEntry> rules)
+    {
+        foreach (var rule in rules)
+        {
+            switch(rule.Condition(context))
+            {
+                case true:  rule.OnTrue (context);  break;
+                case false: rule.OnFalse(context);  break;
+            }
+        }
+    }
+
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
+
+    DamageCalculationContext CalculationContext(DamageContext context, DamageComponent component)
+    {
+        return new()
+        {
+            Rule        = Rules.Damage.Health.Get(component.Mode, component.Damage.Element),
+            Target      = context.Target,
+            Component   = component,
+            Result      = context.Package.Result.Components[component],
+        };
+    }
+
+    IMortal Target(DamageCalculationContext context)
+    {
+        return context.Target as IMortal;
+    }
 }
+
+

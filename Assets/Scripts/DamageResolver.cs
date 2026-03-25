@@ -1,20 +1,20 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
 public class DamageResolver : RegisteredService, IServiceLoop
 {
     
-    readonly List<DamageContext> queue = new();
-
-        // -----------------------------------
-
+    readonly List<DamageContext> queue = new(); 
 
     // ===============================================================================
 
     public DamageResolver()
     {
-        Link.Global<DamageEvent>(HandleDamageEvent);
+
+        Link.Global<ResolveDamage>(HandleResolveDamageEvent);
+
         Services.Lane.Register(this);
     }
 
@@ -31,49 +31,47 @@ public class DamageResolver : RegisteredService, IServiceLoop
     {
         foreach (var context in queue)
         {
-            ProcessDamageContext(context);
+            ProcessContext(context);
         }
     
         queue.Clear();
     }
 
-    void ProcessDamageContext(DamageContext context)
+    void ProcessContext(DamageContext context)
     {
-        if (IsParryable(context))   { SendParryRequest(context);  return; }
-                                      SendProcessDamage(context);
+        foreach (var component in context.Package.Components)
+        {
+            ProcessComponent(context, component);
+        }
     }
 
-    void SendParryRequest(DamageContext context)
+    void ProcessComponent(DamageContext context, DamageComponent component)
     {
-        Emit.Global(new ParryEvent(context));
+
+        // if parried - block at parry system don't pass
+
+        // Send damage for each component to each resource.
+
+        // Send status effects to dot 
+
+
     }
 
-    void SendProcessDamage(DamageContext context)
-    {
-        Emit.Global(new CalculateDamage(context));
-    }
+
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-    void HandleDamageEvent(DamageEvent message)
+    void HandleResolveDamageEvent(ResolveDamage message)
     {
         queue.Add(message.Context);
     }
 
-
     // ===============================================================================
     //  Predicates
     // ===============================================================================
-
-    bool IsParryable(DamageContext context)
-    {
-        return context.Package.Config.Parry.Enabled && context.Target is IParryable actor && actor.Parrying;
-    }
-
-    // ===============================================================================
-
+    
     public override void Dispose()
     {
         Services.Lane.Deregister(this);
@@ -82,3 +80,23 @@ public class DamageResolver : RegisteredService, IServiceLoop
     public UpdatePriority Priority => ServiceUpdatePriority.DamageProcessor;
 
 }
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct ResolveDamage    : IMessage
+{
+    public DamageContext Context            { get; init; }
+
+    public ResolveDamage(DamageContext context)
+    {
+        Context = context; 
+    }
+}
+
+
+
+
+

@@ -91,10 +91,10 @@ public class SwordStrike : DamagingWeapon
             {
                 Damage              = new()
                 {
-                    Amount          = 10,
-                    Type            = DamageType.Physical,
+                    Amount          = 50,
+                    Element         = DamageElement.Physical,
                 },
-                Effects             = new(),
+                StatusEffects       = new(),
             }
         };
 
@@ -218,9 +218,9 @@ public class SwordCleave : DamagingWeapon
                 Damage              = new()
                 {
                     Amount          = 10,
-                    Type            = DamageType.Physical,
+                    Element         = DamageElement.Physical,
                 },
-                Effects             = new(),
+                StatusEffects       = new(),
             }
         };
 
@@ -335,9 +335,9 @@ public class SwordRend : DamagingWeapon
                 Damage              = new()
                 {
                     Amount          = 10,
-                    Type            = DamageType.Physical,
+                    Element         = DamageElement.Physical,
                 },
-                Effects             = new(),
+                StatusEffects       = new(),
             }
         };
 

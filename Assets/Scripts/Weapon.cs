@@ -10,7 +10,7 @@ public class WeaponAction       : Definition
     // DAMAGE
     // ============================================================================
     public float Damage                             { get; init; }
-    public DamageType DamageType                    { get; init; }
+    public DamageElement DamageElement              { get; init; }
     public List<DamageComponent> DamageComponents   { get; init; } = new();
     public List<ForceComponent> ForceComponents     { get; init; } = new();
 

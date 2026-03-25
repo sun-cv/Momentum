@@ -321,8 +321,9 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     {
         var package = (DamagePackage)instance.Packages.First(package => package is DamagePackage);
         var context = new DamageContext(instance.Owner, target, package);
-        context.Result.Blocked = result == HitboxResult.Blocked;
-        context.Result.Parried = result == HitboxResult.Parried;
+
+        context.Package.Result.Blocked = result == HitboxResult.Blocked;
+        context.Package.Result.Parried = result == HitboxResult.Parried;
 
         Emit.Global(new DamageEvent(context));
     }

@@ -12,9 +12,9 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
 
     public void Initialize()
     {
-        Register(new SurfaceContactResolver(this));
-        Register(new ActorContactResolver(this));
-        Register(new ForceApplicationResolver(this));
+        RegisterTest(new SurfaceContactResolver(this));
+        RegisterTest(new ActorContactResolver(this));
+        RegisterTest(new ForceApplicationResolver(this));
     }
 
     // ===============================================================================
@@ -23,9 +23,10 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
     {
         TickResolvers();
     }
+
     // ===============================================================================
 
-    void Register(IPhysicsResolver resolver)
+    void RegisterTest(IPhysicsResolver resolver)
     {
         resolvers.Add(resolver);
     }
@@ -35,7 +36,6 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
         foreach (var resolver in resolvers)
             resolver.Resolve();
     }
-
 
     // ===============================================================================
 

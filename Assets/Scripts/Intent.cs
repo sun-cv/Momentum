@@ -19,7 +19,7 @@ public class IntentSystem : Service, IServiceTick
     // SubSystems
     // Targeting    - intent not resolve
     
-    // ===============================================================================
+   // ===============================================================================
 
     public IntentSystem(Actor owner)
     {
@@ -155,18 +155,13 @@ public class InputIntent : IDirectionSource, IDisposable
             input = input.normalized;
 
         direction = input;
-
     }
 
     void UpdateFacing()
     {
         if (forcedDirection.HasValue)
-        {            
-            facing = Orientation.NormalizeVectorToCardinal(forcedDirection);
-            Debug.Log(facing.Vector);
             return;
-        }
-
+            
         if (direction.Vector.sqrMagnitude < 0.0001f)
             return;
 
@@ -229,10 +224,12 @@ public class InputIntent : IDirectionSource, IDisposable
         facingDiagonal.Dispose();
     }
 
+    
     public Direction Aim                => aim;
     public Direction Facing             => facing;
     public Direction Direction          => direction;
     public Direction LastDirection      => lastDirection;
+    public Direction ForcedDirection    => forcedDirection;
 }
 
 

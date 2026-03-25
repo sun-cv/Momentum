@@ -27,6 +27,9 @@ public class StatsDefinition : Definition
     public float MaxArmor                               { get; init; }
     public float MaxShield                              { get; init; }
     public float MaxEnergy                              { get; init; }
+    public float HealthRegen                            { get; init; } 
+    public float ShieldRegen                            { get; init; } 
+    public float EnergyRegen                            { get; init; } 
     public float Strength                               { get; init; }
     public float Speed                                  { get; init; }
     public float Impact                                 { get; init; }
@@ -58,7 +61,7 @@ public class ResourceDefinition : Definition
 public class ResourceConfig
 {
     public bool                     AlertOnChange       { get; init; }
-    public List<ResourceThreshold>  Thresholds          { get; init; }
+    public List<ResourceThreshold>  Thresholds          { get; init; } = new();
 }
 
 public class ResourceThreshold
@@ -81,7 +84,7 @@ public class LifecycleDefinition : Definition
     public RespawnBehavior  Respawn                     { get; init; }
     public CorpseBehavior   Corpse                      { get; init; }
     
-    public List<Effect> OnDeathEffects                  { get; init; }
+    public List<Effect> OnDeathEffects                  { get; init; } = new();
     public bool AlertOnDeath                            { get; init; }
 
 }

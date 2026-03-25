@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
@@ -31,31 +32,32 @@ public class DamageProcessor : RegisteredService, IServiceLoop
     {
         foreach (var context in queue)
         {
-            ProcessDamageContext(context);
+            ProcessContext(context);
         }
     
         queue.Clear();
     }
 
-    void ProcessDamageContext(DamageContext context)
+    void ProcessContext(DamageContext context)
     {
-        if (IsParryable(context))   { SendParryRequest(context);  return; }
-                                      SendProcessDamage(context);
+        if (IsParryable(context))   { SendParryRequest   (context);  return; }
+                                      SendCalculateDamage(context);
     }
+
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
 
     void SendParryRequest(DamageContext context)
     {
         Emit.Global(new ParryEvent(context));
     }
 
-    void SendProcessDamage(DamageContext context)
+    void SendCalculateDamage(DamageContext context)
     {
         Emit.Global(new CalculateDamage(context));
     }
-
-    // ===============================================================================
-    //  Events
-    // ===============================================================================
 
     void HandleDamageEvent(DamageEvent message)
     {
@@ -87,3 +89,13 @@ public class DamageProcessor : RegisteredService, IServiceLoop
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct DamageEvent : IMessage
+{
+    public DamageContext Context            { get; init; }
+
+    public DamageEvent(DamageContext context)
+    {
+        Context = context; 
+    }
+}

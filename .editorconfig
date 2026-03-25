@@ -1,4 +1,9 @@
 [*.cs]
 
+[Library/**.cs]
+generated_code = true
+
 # CS0108: Member hides inherited member; missing new keyword
 dotnet_diagnostic.CS0108.severity = none
+dotnet_diagnostic.CA1050.severity = none
+

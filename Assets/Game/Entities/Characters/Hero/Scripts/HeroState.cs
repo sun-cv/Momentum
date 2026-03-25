@@ -1,9 +1,4 @@
-
-using System.Linq;
-using Mono.Cecil;
 using UnityEngine;
-
-
 
 
 
@@ -69,9 +64,9 @@ public class HeroState : State
     public Direction Direction                      => intent.Input.Direction;
     public Direction LastDirection                  => intent.Input.LastDirection;
     
-    public Direction ResolvedAim                    { get { if (CanRotate) { hasLockedAim       = false; return intent.Input.Aim;       }; if (!hasLockedAim)       { cachedLockedAim       = intent.Input.Aim;       hasLockedAim       = true; }; return cachedLockedAim;       }}
-    public Direction ResolvedFacing                 { get { if (CanRotate) { hasLockedFacing    = false; return intent.Input.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Input.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
-    public Direction ResolvedDirection              { get { if (CanRotate) { hasLockedDirection = false; return intent.Input.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Input.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
+    public Direction ResolvedAim                    { get {                                                                                 if (CanRotate) { hasLockedAim       = false; return intent.Input.Aim;       }; if (!hasLockedAim)       { cachedLockedAim       = intent.Input.Aim;       hasLockedAim       = true; }; return cachedLockedAim;       }}
+    public Direction ResolvedFacing                 { get { if (intent.Input.ForcedDirection.HasValue) return intent.Input.ForcedDirection; if (CanRotate) { hasLockedFacing    = false; return intent.Input.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Input.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
+    public Direction ResolvedDirection              { get {                                                                                 if (CanRotate) { hasLockedDirection = false; return intent.Input.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Input.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
 
     public Vector2 Velocity                         { get => velocity;          set => velocity         = value; }
     public Vector2 Control                          { get => control;           set => control          = value; }
@@ -104,6 +99,7 @@ public class HeroState : State
         movement    = hero.Movement;
         intent      = hero.Intent;
         lifecycle   = hero.Lifecycle;
+        equipment   = hero.Equipment;
 
         owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     }

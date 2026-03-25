@@ -261,6 +261,7 @@ public class Movement : Service, IServiceTick
         Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Instances.Count);
         Log.Trace("Directive.Count",    () => directives.Count);
         Log.Trace("agent.CanMove",      () => movable.CanMove);
+        Log.Trace("agent.CanRotate",    () => movable.CanRotate);
     }
 
     public override void Dispose()

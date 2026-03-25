@@ -113,7 +113,7 @@
 //         //                                  Enums                                                 
 //         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-// public enum DamageType
+// public enum DamageElement
 // {
 //     Fire,
 //     Frost,
@@ -132,9 +132,9 @@
 // public readonly struct Damage : IResourceAction
 // {
 //     public float Amount                     { get; init; }
-//     public DamageType Type                  { get; init; }
+//     public DamageElement Type                  { get; init; }
 
-//     public Damage(float amount, DamageType type)
+//     public Damage(float amount, DamageElement type)
 //     {
 //         Amount  = amount;
 //         Type    = type;

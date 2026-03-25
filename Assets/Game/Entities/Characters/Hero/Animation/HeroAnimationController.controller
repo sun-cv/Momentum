@@ -40,8 +40,8 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Blend
     m_Mirror: 0
-  m_BlendParameter: LockedCardinalAimX
-  m_BlendParameterY: LockedCardinalAimY
+  m_BlendParameter: ResolvedCardinalAimX
+  m_BlendParameterY: ResolvedCardinalAimY
   m_MinThreshold: 0
   m_MaxThreshold: 1
   m_UseAutomaticThresholds: 1
@@ -187,8 +187,8 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Blend
     m_Mirror: 0
-  m_BlendParameter: LockedCardinalAimX
-  m_BlendParameterY: LockedCardinalAimY
+  m_BlendParameter: ResolvedCardinalAimX
+  m_BlendParameterY: ResolvedCardinalAimY
   m_MinThreshold: 0
   m_MaxThreshold: 1
   m_UseAutomaticThresholds: 1
@@ -299,7 +299,7 @@ AnimatorState:
   m_TimeParameter: 
 --- !u!1107 &-579378270460738489
 AnimatorStateMachine:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -335,7 +335,7 @@ AnimatorController:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: HeroAnimationController
-  serializedVersion: 5
+  serializedVersion: 6
   m_AnimatorParameters:
   - m_Name: Blend
     m_Type: 1
@@ -361,13 +361,13 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: LockedFacingX
+  - m_Name: ResolvedFacingX
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: LockedFacingY
+  - m_Name: ResolvedFacingY
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -385,25 +385,25 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: LockedAimX
+  - m_Name: ResolvedAimX
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: LockedAimY
+  - m_Name: ResolvedAimY
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: LockedCardinalAimX
+  - m_Name: ResolvedCardinalAimX
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: LockedCardinalAimY
+  - m_Name: ResolvedCardinalAimY
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -446,6 +446,7 @@ AnimatorController:
     m_IKPass: 0
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
+  m_EvaluateTransitionsOnStart: 0
 --- !u!1101 &299184431500525085
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -473,7 +474,7 @@ AnimatorStateTransition:
   m_CanTransitionToSelf: 1
 --- !u!1107 &485709526582639967
 AnimatorStateMachine:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -700,8 +701,8 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Blend
     m_Mirror: 0
-  m_BlendParameter: LockedCardinalAimX
-  m_BlendParameterY: LockedCardinalAimY
+  m_BlendParameter: ResolvedCardinalAimX
+  m_BlendParameterY: ResolvedCardinalAimY
   m_MinThreshold: 0
   m_MaxThreshold: 1
   m_UseAutomaticThresholds: 1
@@ -819,8 +820,8 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Blend
     m_Mirror: 0
-  m_BlendParameter: LockedFacingX
-  m_BlendParameterY: LockedFacingY
+  m_BlendParameter: ResolvedFacingX
+  m_BlendParameterY: ResolvedFacingY
   m_MinThreshold: 0
   m_MaxThreshold: 1
   m_UseAutomaticThresholds: 1

@@ -1,6 +1,4 @@
-using Unity.Mathematics;
 using UnityEngine;
-
 
 
 
@@ -12,7 +10,7 @@ public class HeroFactory : IRespawnFactory, ICorpseFactory
         var definition  = new HeroDefinition();
 
         var prefab      = Assets.Get(definition.Name);
-        var view        = Object.Instantiate(prefab, position, quaternion.identity);
+        var view        = Object.Instantiate(prefab, position, Quaternion.identity);
 
         var hero        = new Hero();
 
