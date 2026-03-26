@@ -277,7 +277,7 @@ public class ForceApplicationResolver : IPhysicsResolver
         queue.Add(message.Context);
     }
 
-    readonly Logger Log = new(LogSystem.ContactResolver, LogLevel.Debug);
+    readonly Logger Log = Logging.For(LogSystem.ContactResolver);
 }
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -373,7 +373,7 @@ public class ActorContactResolver : IPhysicsResolver
 
     // ===============================================================================
 
-    Logger Log = new(LogSystem.ContactResolver, LogLevel.Debug);
+    Logger Log = Logging.For(LogSystem.ContactResolver);
 }
 
 

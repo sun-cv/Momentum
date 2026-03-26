@@ -14,9 +14,9 @@ public class Resources
 
     // ===============================================================================
     
-    public Resources(Actor actor)
+    public Resources(Actor owner)
     {
-        owner = actor;
+        this.owner = owner;
 
         RegisterHandlers();
     }
@@ -42,6 +42,12 @@ public class Resources
         handlers[handler.GetType()] = handler;
     }
 
+    // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.Resources);
+
+    // ===============================================================================
+
     public float Health => Get<HealthHandler>().Health;
     public float Armor  => Get<ArmorHandler> ().Armor;
     public float Shield => Get<ShieldHandler>().Shield;
@@ -64,7 +70,7 @@ public class Resources
 
 public class ShieldHandler : Service, IServiceLoop, IResourceHandler
 {
-    readonly Actor              actor;
+    readonly Actor              owner;
     readonly Resources          resources;
 
         // -----------------------------------
@@ -85,18 +91,18 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
     public ShieldHandler(Resources resources)
     {
         this.resources  = resources;
-        this.actor      = resources.Owner;
-        this.monitor    = new ResourceMonitor(actor, actor.Definition.Resource.Shield, OnShieldAlert);
+        this.owner      = resources.Owner;
+        this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Shield, OnShieldAlert);
 
-        if (actor is IShieldRegen instance)
+        if (owner is IShieldRegen instance)
         {
             regeneration = new RegenHandler(() => instance.ShieldRegen);
         }
 
-        actor.Emit.Link.Local<Restore>      (Queue);
-        actor.Emit.Link.Local<Dissipate>    (Queue);
-        actor.Emit.Link.Local<HealthReset>  (Queue);
-        actor.Emit.Link.Local<ResourceReset>(Queue);
+        owner.Bus.Link.Local<Restore>      (Queue);
+        owner.Bus.Link.Local<Dissipate>    (Queue);
+        owner.Bus.Link.Local<HealthReset>  (Queue);
+        owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Services.Lane.Register(this);
 
@@ -178,7 +184,7 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
 
     void OnShieldAlert(float current, float max, float previous, float percent)
     {
-        actor.Emit.Local(Publish.Changed, new ShieldEvent(actor, current, max, previous, percent));
+        owner.Bus.Emit.Local(Publish.Changed, new ShieldEvent(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -197,9 +203,9 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
     public float Shield             => shield;
     public float MaxShield          => Shielded.MaxShield;
     public float ShieldPercent      => shield / MaxShield;
-    public IMortal Mortal           => actor as IMortal;
-    public IShield Shielded         => actor as IShield;
-    public IShieldEquipped Equipped => actor as IShieldEquipped;
+    public IMortal Mortal           => owner as IMortal;
+    public IShield Shielded         => owner as IShield;
+    public IShieldEquipped Equipped => owner as IShieldEquipped;
 }
 
 
@@ -209,7 +215,7 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
 
 public class ArmorHandler : Service, IServiceLoop, IResourceHandler
 {
-    readonly Actor              actor;
+    readonly Actor              owner;
     readonly Resources          resources;
 
         // -----------------------------------
@@ -229,13 +235,13 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
     public ArmorHandler(Resources resources)
     {
         this.resources  = resources;
-        this.actor      = resources.Owner;
-        this.monitor    = new ResourceMonitor(actor, actor.Definition.Resource.Armor, OnArmorAlert);
+        this.owner      = resources.Owner;
+        this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Armor, OnArmorAlert);
 
-        actor.Emit.Link.Local<Heal>         (Queue);
-        actor.Emit.Link.Local<Wound>        (Queue);
-        actor.Emit.Link.Local<HealthReset>  (Queue);
-        actor.Emit.Link.Local<ResourceReset>(Queue);
+        owner.Bus.Link.Local<Heal>         (Queue);
+        owner.Bus.Link.Local<Wound>        (Queue);
+        owner.Bus.Link.Local<HealthReset>  (Queue);
+        owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Services.Lane.Register(this);
 
@@ -306,7 +312,7 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
 
     void OnArmorAlert(float current, float max, float previous, float percent)
     {
-        actor.Emit.Local(Publish.Changed, new ArmorEvent(actor, current, max, previous, percent));
+        owner.Bus.Emit.Local(Publish.Changed, new ArmorEvent(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -325,8 +331,8 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
     public float Armor              => armor;
     public float MaxArmor           => Armored.MaxArmor;
     public float ArmorPercent       => armor / MaxArmor;
-    public IMortal Mortal           => actor as IMortal;
-    public IArmor Armored           => actor as IArmor;
+    public IMortal Mortal           => owner as IMortal;
+    public IArmor Armored           => owner as IArmor;
 }
 
 
@@ -336,7 +342,7 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
 
 public class HealthHandler : Service, IServiceLoop, IResourceHandler
 {
-    readonly Actor              actor;
+    readonly Actor              owner;
     readonly Resources          resources;
 
         // -----------------------------------
@@ -357,18 +363,18 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
     public HealthHandler(Resources resources)
     {
         this.resources  = resources;
-        this.actor      = resources.Owner;
-        this.monitor    = new ResourceMonitor(actor, actor.Definition.Resource.Health, OnHealthAlert);
+        this.owner      = resources.Owner;
+        this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Health, OnHealthAlert);
 
-        if (actor is IHealthRegen instance)
+        if (owner is IHealthRegen instance)
         {
             regeneration = new RegenHandler(() => instance.HealthRegen);
         }
 
-        actor.Emit.Link.Local<Heal>         (Queue);
-        actor.Emit.Link.Local<Wound>        (Queue);
-        actor.Emit.Link.Local<HealthReset>  (Queue);
-        actor.Emit.Link.Local<ResourceReset>(Queue);
+        owner.Bus.Link.Local<Heal>         (Queue);
+        owner.Bus.Link.Local<Wound>        (Queue);
+        owner.Bus.Link.Local<HealthReset>  (Queue);
+        owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Services.Lane.Register(this);
 
@@ -382,6 +388,8 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
         Regenerate();
         ProcessQueue();
         Monitor();
+
+        DebugLog();
     }
 
     // ===============================================================================
@@ -450,7 +458,7 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
 
     void OnHealthAlert(float current, float max, float previous, float percent)
     {
-        actor.Emit.Local(Publish.Changed, new HealthEvent(actor, current, max, previous, percent));
+
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -459,6 +467,11 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
     }
 
     // ===============================================================================
+
+    void DebugLog()
+    {
+        Logging.For(LogSystem.Resources).Trace($"{owner.GetType().Name}.Health", () => health, clean: true);
+    }
 
     public override void Dispose()
     {
@@ -469,7 +482,7 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
     public float Health             => health;
     public float MaxHealth          => Mortal.MaxHealth;
     public float HealthPercent      => health / MaxHealth;
-    public IMortal Mortal           => actor as IMortal;
+    public IMortal Mortal           => owner as IMortal;
 }
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -478,7 +491,7 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
 
 public class EnergyHandler : Service, IServiceLoop, IResourceHandler
 {
-    readonly Actor              actor;
+    readonly Actor              owner;
     readonly Resources          resources;
 
         // -----------------------------------
@@ -499,18 +512,18 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
     public EnergyHandler(Resources resources)
     {
         this.resources  = resources;
-        this.actor      = resources.Owner;
-        this.monitor    = new ResourceMonitor(actor, actor.Definition.Resource.Health, OnEnergyAlert);
+        this.owner      = resources.Owner;
+        this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Health, OnEnergyAlert);
 
-        if (actor is IEnergyRegen instance)
+        if (owner is IEnergyRegen instance)
         {
             regeneration = new RegenHandler(() => instance.EnergyRegen);
         }
 
-        actor.Emit.Link.Local<Recharge>     (Queue);
-        actor.Emit.Link.Local<Expend>       (Queue);
-        actor.Emit.Link.Local<EnergyReset>  (Queue);
-        actor.Emit.Link.Local<ResourceReset>(Queue);
+        owner.Bus.Link.Local<Recharge>     (Queue);
+        owner.Bus.Link.Local<Expend>       (Queue);
+        owner.Bus.Link.Local<EnergyReset>  (Queue);
+        owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Services.Lane.Register(this);
 
@@ -593,7 +606,7 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
 
     void OnEnergyAlert(float current, float max, float previous, float percent)
     {
-        actor.Emit.Local(Publish.Changed, new EnergyEvent(actor, current, max, previous, percent));
+        owner.Bus.Emit.Local(Publish.Changed, new EnergyEvent(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -612,8 +625,8 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
     public float Energy             => energy;
     public float MaxEnergy          => Energized.MaxEnergy;
     public float EnergyPercent      => energy / MaxEnergy;
-    public IMortal Mortal           => actor as IMortal;
-    public IEnergy Energized        => actor as IEnergy;
+    public IMortal Mortal           => owner as IMortal;
+    public IEnergy Energized        => owner as IEnergy;
 }
 
 
@@ -815,7 +828,7 @@ public readonly struct EnergyEvent : IMessage
 
 public class ResourceMonitor
 {
-    readonly Actor                      actor;
+    readonly Actor                      owner;
     readonly ResourceConfig             config;
     readonly HashSet<ResourceThreshold> active  = new();
 
@@ -824,9 +837,9 @@ public class ResourceMonitor
 
     // ===============================================================================
 
-    public ResourceMonitor(Actor actor, ResourceConfig config, Action<float, float, float, float> onAlert = null)
+    public ResourceMonitor(Actor owner, ResourceConfig config, Action<float, float, float, float> onAlert = null)
     {
-        this.actor   = actor;
+        this.owner   = owner;
         this.config  = config;
         this.onAlert = onAlert;
     }
@@ -894,7 +907,7 @@ public class ResourceMonitor
     {
         foreach (var effect in threshold.Effects)
         {
-            actor.Emit.Local(Request.Create, new EffectAPI(actor, effect));
+            owner.Bus.Emit.Local(Request.Create, new EffectAPI(owner, effect));
         }
     }
 

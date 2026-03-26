@@ -84,7 +84,7 @@ public class DamageCalculator : RegisteredService, IServiceLoop
 
     // ===============================================================================
 
-    // readonly Logger Log = new(LogSystem.Combat, LogLevel.Debug);
+    readonly Logger Log = Logging.For(LogSystem.Combat);
 
     public override void Dispose()
     {
@@ -194,6 +194,7 @@ public class ShieldCalculator : IDamageCalculator
         float absorbed                  = Mathf.Min(totalDamage, shield);
 
         result.Shield                  += absorbed;
+        result.BrokeShield              = shield <= absorbed;  
     }
 
     bool DamageGateProcessor(DamageCalculationContext context)
@@ -281,7 +282,7 @@ public class ArmorCalculator : IDamageCalculator
         var result                      = context.Result;
         var rule                        = context.Rule;
 
-        var armor                      = Target(context).Armor;
+        var armor                       = Target(context).Armor;
         var damage                      = result.Damage;   
 
         var multiplier                  = rule.Multiplier;
@@ -289,7 +290,8 @@ public class ArmorCalculator : IDamageCalculator
 
         float absorbed                  = Mathf.Min(totalDamage, armor);
 
-        result.Armor                  += absorbed;
+        result.Armor                   += absorbed;
+        result.BrokeArmor               = armor <= absorbed;
     }
 
     bool DamageGateProcessor(DamageCalculationContext context)
@@ -386,6 +388,7 @@ public class HealthCalculator : IDamageCalculator
         float absorbed                  = Mathf.Min(totalDamage, health);
 
         result.Health                  += absorbed;
+        result.BrokeHealth              = health <= absorbed;
     }
 
     bool DamageGateProcessor(DamageCalculationContext context)

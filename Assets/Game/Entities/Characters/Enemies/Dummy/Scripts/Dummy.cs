@@ -35,7 +35,7 @@ public class Dummy : Agent, IDummy
     {
         Definition  = definition;
 
-        Emit        = new();
+        Bus         = new();
 
         Resource    = new(this);
         Animation   = new(this);

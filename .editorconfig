@@ -1,9 +1,11 @@
+
+
 [*.cs]
+dotnet_diagnostic.CA1050.severity   = none
+dotnet_diagnostic.IDE0060.severity  = none
+dotnet_diagnostic.IDE0270.severity  = none
+dotnet_diagnostic.IDE0003.severity  = none
+
 
 [Library/**.cs]
-generated_code = true
-
-# CS0108: Member hides inherited member; missing new keyword
-dotnet_diagnostic.CS0108.severity = none
-dotnet_diagnostic.CA1050.severity = none
-
+          generated_code = true

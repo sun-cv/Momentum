@@ -116,7 +116,7 @@ public class SpawnerService : RegisteredService, IServiceLoop
 
     // ===============================================================================
 
-    readonly Logger Log = new(LogSystem.Spawners, LogLevel.Debug);
+    readonly Logger Log = Logging.For(LogSystem.Spawners);
 
     readonly EventBinding<TeleportEvent> binding;
 

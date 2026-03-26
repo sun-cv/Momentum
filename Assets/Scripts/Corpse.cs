@@ -26,7 +26,7 @@ public class Corpse : Service, IServiceStep
     {
         owner = actor;
     
-        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
 
         InitializeStateHandlers();
         EnterHandler();
@@ -101,7 +101,7 @@ public class Corpse : Service, IServiceStep
 
     void PublishState()
     {
-        owner.Emit.Local(new CorpseEvent(owner, state));
+        owner.Bus.Emit.Local(new CorpseEvent(owner, state));
     }
 
 
@@ -287,7 +287,7 @@ public class CorpseDisposalState : IStateHandler<Corpse>
 
     public void Update(Corpse controller)
     {
-        owner.Emit.Local(new LifecycleTargetEvent(Lifecycle.State.Disposal));
+        owner.Bus.Emit.Local(new LifecycleTargetEvent(Lifecycle.State.Disposal));
     }
 
     public void Exit(Corpse controller)

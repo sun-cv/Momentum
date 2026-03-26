@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
@@ -28,8 +29,8 @@ public class AnimationSystem : Service, IServiceLoop
 
         animator    = new(owner);
 
-        owner.Emit.Link.Local<Message<Request, AnimationAPI>>(HandleAnimationRequest);        
-        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        owner.Bus.Link.Local<Message<Request, AnimationAPI>>(HandleAnimationRequest);        
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     } 
 
     // ===============================================================================
@@ -58,6 +59,8 @@ public class AnimationSystem : Service, IServiceLoop
     {
         var request = message.Payload.AnimationRequest;
 
+        if (owner is IMovableDummy) Debug.Log($"Animation request routing {message.Action}");
+
         switch(message.Payload.AnimationRequest.options.Request)
         {
             case Request.Play: ProcessAnimationRequest(message);    break;
@@ -67,14 +70,16 @@ public class AnimationSystem : Service, IServiceLoop
 
     void ProcessAnimationRequest(Message<Request, AnimationAPI> message)
     {
+        if (owner is IMovableDummy) Debug.Log("Animation request Processing");
         var request = message.Payload.AnimationRequest;
 
         if (!request.IsValid)
             Resolve(request);
 
+        if (owner is IMovableDummy) Debug.Log("Animation request Processed");
         RequestAnimationChange(request);
 
-        owner.Emit.Local(message.Id, Response.Completed, new AnimationAPI(request));
+        owner.Bus.Emit.Local(message.Id, Response.Completed, new AnimationAPI(request));
     }
 
     AnimationRequest Resolve(AnimationRequest request)
@@ -83,6 +88,8 @@ public class AnimationSystem : Service, IServiceLoop
         var animation           = SelectAnimation(set, request);
 
         SetAnimationData(request, animation);
+
+        Debug.Log("Resolve");
 
         return request;
     }

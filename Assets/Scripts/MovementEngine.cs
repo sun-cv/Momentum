@@ -72,7 +72,7 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     // ===============================================================================
 
-    readonly Logger Log = new(LogSystem.MovementEngine, LogLevel.Debug );
+    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 
     public override void Dispose()
     {
@@ -90,7 +90,7 @@ public interface IMovementProcessor
 
 public class MovementCombineProcessor : IMovementProcessor
 {
-    readonly Logger Log = new(LogSystem.MovementEngine, LogLevel.Debug );
+    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 
 
     public void Process(Actor actor)
@@ -114,7 +114,7 @@ public class MovementCombineProcessor : IMovementProcessor
 
 public class MovementFrictionProcessor : IMovementProcessor
 {
-    readonly Logger Log = new(LogSystem.MovementEngine, LogLevel.Debug );
+    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 
         public void Process(Actor actor)
         {
@@ -141,7 +141,7 @@ public class MovementFrictionProcessor : IMovementProcessor
 
 public class MovementVelocityProcessor : IMovementProcessor
 {
-    readonly Logger Log = new(LogSystem.MovementEngine, LogLevel.Debug );
+    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 
     public void Process(Actor actor)
     {

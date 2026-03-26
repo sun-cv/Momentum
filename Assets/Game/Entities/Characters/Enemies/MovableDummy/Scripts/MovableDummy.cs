@@ -69,7 +69,7 @@ public class MovableDummy : Agent, IMovableDummy
     {
         Definition  = definition;
 
-        Emit        = new();
+        Bus         = new();
 
         Resource    = new(this);
         Movement    = new(this);

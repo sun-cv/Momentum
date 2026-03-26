@@ -33,8 +33,8 @@ public class Presence : Service, IServiceLoop
         owner       = actor;
         definition  = actor.Definition;
 
-        owner.Emit.Link.Local<PresenceTargetEvent>(HandlePresenceTargetEvent);
-        owner.Emit.Link.Local<PresenceStateEvent> (HandlePresenceStateEvent);
+        owner.Bus.Link.Local<PresenceTargetEvent>(HandlePresenceTargetEvent);
+        owner.Bus.Link.Local<PresenceStateEvent> (HandlePresenceStateEvent);
 
         InitializeStateHandlers();
         EnterHandler();
@@ -355,7 +355,7 @@ public class PresenceDisposalState : StateHandler<Presence, Presence.State>
 
     public override void Enter(Presence controller)
     {   
-        owner.Emit.Dispose();
+        owner.Bus.Dispose();
     
         Object.Destroy(owner.Bridge.View);
     }

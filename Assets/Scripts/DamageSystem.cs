@@ -91,11 +91,6 @@ public class ComponentResult
     public bool BrokeHealth                     { get; set; }
 }
 
-public class KillingBlow 
-{
-    public DamageContext Context                { get; init; }
-}
-
 
         // ===================================
         //  Configs
@@ -124,6 +119,23 @@ public readonly struct BlockConfig
 {
     public bool  Enabled                        { get; init; }
     public bool  Unblockable                    { get; init; }
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public readonly struct KillingBlow : IMessage  
+{
+    public DamageContext Context                { get; init; }
+    public DamageComponent Component            { get; init; }
+
+    public KillingBlow(DamageContext context, DamageComponent component)
+    {
+        Context     = context;
+        Component   = component;
+    }
 }
 
 

@@ -89,7 +89,7 @@ public class TeleportService : RegisteredService, IServiceLoop
 
     // ===============================================================================
 
-    readonly Logger Log = new(LogSystem.Teleport, LogLevel.Debug);
+    readonly Logger Log = Logging.For(LogSystem.Teleport);
 
     readonly EventBinding<TeleportEvent> binding;
 

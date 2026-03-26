@@ -59,7 +59,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         BuildHandlers();
 
-        owner.Emit.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
+        owner.Bus.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -262,7 +262,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     void SendAnimatorPlaybackEvent(Publish type, AnimationRequest request)
     {
-        owner.Emit.Local(new AnimatorEvent(type, request.data.Animation));
+        owner.Bus.Emit.Local(new AnimatorEvent(type, request.data.Animation));
     }
 
     string GetCurrentAnimationName(int layer)

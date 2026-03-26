@@ -20,7 +20,7 @@ public class CommandSystem : Service
         this.intent = intent;
         this.owner  = intent.Owner;
 
-        owner.Emit.Link.Local<CommandEvent>(HandleCommandRequest);
+        owner.Bus.Link.Local<CommandEvent>(HandleCommandRequest);
         Broadcast();
     }
 
@@ -128,7 +128,7 @@ public class CommandSystem : Service
         //  Emitters
         // ===================================
 
-    void Broadcast() => owner.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+    void Broadcast() => owner.Bus.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
 
     // ===============================================================================
     //  Helpers

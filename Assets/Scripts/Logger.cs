@@ -42,8 +42,9 @@ public static class Logging
 
 public class Logger
 {
-    private LogLevel                level;
-    private readonly LogSystem      system;
+    LogLevel                    level;
+    readonly LogSystem          system;
+    readonly HashSet<string>    trackedTags = new();
 
     // ===============================================================================
 
@@ -72,46 +73,81 @@ public class Logger
         level = newLevel;
     }
 
+    void Log(string message, LogLevel level)
+    {
+        if (!IsEnabled(level))
+            return;
+
+        UnityEngine.Debug.Log($"[{system}] {message}");
+    }
+
+    void Log(string tag, LogLevel level, Func<object> value, bool clean)
+    {
+        if (!IsEnabled(level))
+            return;
+        
+        var category = Category(level);
+
+        if (clean)
+            Clean(tag, category);     
+
+        Logwin.Log(tag, value(), category);
+    }
+
     public void Trace(string message)
     {
-        if (IsEnabled(LogLevel.Trace))
-            UnityEngine.Debug.Log($"[{system}] {message}");
+        Log(message, LogLevel.Trace);
     }
 
     public void Debug(string message)
     {
-        if (IsEnabled(LogLevel.Debug))
-            UnityEngine.Debug.Log($"[{system}] {message}");
+        Log(message, LogLevel.Debug);
     }
 
     public void Event(string message)
     {
-        if (IsEnabled(LogLevel.Event))
-            UnityEngine.Debug.Log($"[{system}] {message}");
+        Log(message, LogLevel.Event);
     }
 
     public void Admin(string message)
     {
-        if (IsEnabled(LogLevel.Admin))
-            UnityEngine.Debug.Log($"[{system}] {message}");
+        Log(message, LogLevel.Admin);
     }
 
     public void Error(string message)
     {
-        if (IsEnabled(LogLevel.Error))
-            UnityEngine.Debug.Log($"[{system}] {message}");
+        Log(message, LogLevel.Error);
     }
 
-    public void Trace(string tag, Func<object> value)
+    public void Trace(string tag, Func<object> value, bool clean = false)
     {
-        if (IsEnabled(LogLevel.Trace))
-            Logwin.Log(tag, value(), $"Trace: {system}");
+        Log(tag, LogLevel.Trace, value, clean);
     }
 
-    public void Debug(string tag, Func<object> value)
+    public void Debug(string tag, Func<object> value, bool clean = false)
     {
-        if (IsEnabled(LogLevel.Debug))
-            Logwin.Log(tag, value(), $"Debug: {system}");
+        Log(tag, LogLevel.Debug, value, clean);
+    }
+
+    public void Event(string tag, Func<object> value, bool clean = false)
+    {
+        Log(tag, LogLevel.Event, value, clean);
+    }
+
+    // ===============================================================================
+    //  Helpers
+    // ===============================================================================
+
+    void Clean(string tag, string category)       
+    {
+        if (trackedTags.Add(tag))
+            return;
+        Logwin.DeleteLog(tag, category);
+    }
+
+    string Category(LogLevel atLevel)
+    {
+        return $"{atLevel}: {system}";
     }
 
     // ===============================================================================
@@ -186,7 +222,7 @@ public enum LogSystem
     Input,
     Command,
     Direction,
-    Resource,
+    Resources,
 
     
     // Gameplay Systems

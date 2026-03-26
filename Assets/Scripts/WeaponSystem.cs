@@ -51,11 +51,11 @@ public class WeaponSystem : Service, IServiceTick
         InitializePhaseHandlers();
         InitializeActivationStrategies();
 
-        owner.Emit.Link.Local<CommandPipelinesEvent>(HandleCommandPipelineUpdates);
-        owner.Emit.Link.Local<EffectEvent>          (HandleEffectNonCancelableLockCount);
-        owner.Emit.Link.Local<LockUpdateEvent>      (HandleLocksUpdate);
-        owner.Emit.Link.Local<EquipmentChangeEvent> (HandleEquipmentChange);
-        owner.Emit.Link.Local<PresenceStateEvent>   (HandlePresenceStateEvent);
+        owner.Bus.Link.Local<CommandPipelinesEvent>(HandleCommandPipelineUpdates);
+        owner.Bus.Link.Local<EffectEvent>          (HandleEffectNonCancelableLockCount);
+        owner.Bus.Link.Local<LockUpdateEvent>      (HandleLocksUpdate);
+        owner.Bus.Link.Local<EquipmentChangeEvent> (HandleEquipmentChange);
+        owner.Bus.Link.Local<PresenceStateEvent>   (HandlePresenceStateEvent);
 
         AimEnabled = agent is IAimable;
     }
@@ -284,7 +284,7 @@ public class WeaponSystem : Service, IServiceTick
     void EquipWeapon(WeaponAction Action)
     {
         instance = new WeaponInstance(owner, Action);
-        owner.Emit.Local(new WeaponInstanceEvent(Publish.Equipped, owner, instance));
+        owner.Bus.Emit.Local(new WeaponInstanceEvent(Publish.Equipped, owner, instance));
     }
 
     void EnableWeapon()
@@ -315,7 +315,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void UnequipWeapon()
     {
-        owner.Emit.Local(new WeaponInstanceEvent(Publish.Unequipped,owner, instance));
+        owner.Bus.Emit.Local(new WeaponInstanceEvent(Publish.Unequipped,owner, instance));
         ClearInstance();        
     }
 
@@ -358,7 +358,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void ConsumeCommand(Command command)
     {
-        owner.Emit.Local(new CommandEvent(Request.Consume, command));
+        owner.Bus.Emit.Local(new CommandEvent(Request.Consume, command));
     }
 
     void ConsumeAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -395,7 +395,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void LockCommand(Command command)
     {
-        owner.Emit.Local(new CommandEvent(Request.Lock, command));
+        owner.Bus.Emit.Local(new CommandEvent(Request.Lock, command));
     }
 
     void LockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -409,7 +409,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void UnlockCommand(Command command)
     {
-        owner.Emit.Local(new CommandEvent(Request.Unlock, command));
+        owner.Bus.Emit.Local(new CommandEvent(Request.Unlock, command));
     }
 
     void UnlockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
@@ -477,7 +477,7 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-                owner.Emit.Local(Request.Create, new EffectAPI(instance, effect));
+                owner.Bus.Emit.Local(Request.Create, new EffectAPI(instance, effect));
         }
     }
 
@@ -486,7 +486,7 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable)
-                owner.Emit.Local(Request.Cancel, new EffectAPI(instance));
+                owner.Bus.Emit.Local(Request.Cancel, new EffectAPI(instance));
         }
     }
 
@@ -495,7 +495,7 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                owner.Emit.Local(Request.Cancel, new EffectAPI(instance));
+                owner.Bus.Emit.Local(Request.Cancel, new EffectAPI(instance));
         }
     }
 
@@ -517,6 +517,7 @@ public class WeaponSystem : Service, IServiceTick
         if (!(action.Direction.Enabled && action.Direction.SetTrigger == instance.State.Phase))
             return;
 
+
         var intent = action.Aim.Enabled ? instance.State.LiveIntent : instance.State.Intent;
 
         instance.State.LastFacingDirection = action.Direction.Source switch
@@ -528,7 +529,7 @@ public class WeaponSystem : Service, IServiceTick
             _                               => intent.Direction,
         };
 
-        owner.Emit.Local(new ForcedFacingEvent(Request.Set, instance.State.LastFacingDirection));
+        owner.Bus.Emit.Local(new ForcedFacingEvent(Request.Set, instance.State.LastFacingDirection));
     }
 
     public void ClearDirection(WeaponAction action)
@@ -536,7 +537,7 @@ public class WeaponSystem : Service, IServiceTick
         if (!(action.Direction.Enabled && action.Direction.ClearTrigger == instance.State.Phase))
             return;
 
-        owner.Emit.Local(new ForcedFacingEvent(Request.Clear, Vector2.zero));
+        owner.Bus.Emit.Local(new ForcedFacingEvent(Request.Clear, Vector2.zero));
     }
 
 
@@ -553,18 +554,18 @@ public class WeaponSystem : Service, IServiceTick
 
             definition.InputIntent = instance.State.Intent;
 
-            owner.Emit.Local(new MovementEvent(owner, definition));
+            owner.Bus.Emit.Local(new MovementEvent(owner, definition));
         }
     }
 
     public void ClearMovementFromPhase(WeaponPhase scopeToClear)
     {
-        owner.Emit.Local(new ClearMovementScopeEvent(Request.Clear, owner, (int)scopeToClear));
+        owner.Bus.Emit.Local(new ClearMovementScopeEvent(Request.Clear, owner, (int)scopeToClear));
     }
     
     public void ClearMovementFromOwner()
     {
-        owner.Emit.Local(new ClearMovementScopeEvent(Request.Clear, owner, -1));
+        owner.Bus.Emit.Local(new ClearMovementScopeEvent(Request.Clear, owner, -1));
     }
 
     // ============================================================================
@@ -659,7 +660,7 @@ public class WeaponSystem : Service, IServiceTick
         }
         
 
-        owner.Emit.Local(Request.Start, new AnimationAPI(instance.State.AnimationRequest));
+        owner.Bus.Emit.Local(Request.Start, new AnimationAPI(instance.State.AnimationRequest));
     }
 
 
@@ -672,7 +673,7 @@ public class WeaponSystem : Service, IServiceTick
             return;
 
         instance.State?.AnimationRequest.Stop();
-        owner.Emit.Local(Request.Stop, new AnimationAPI(instance.State.AnimationRequest));
+        owner.Bus.Emit.Local(Request.Stop, new AnimationAPI(instance.State.AnimationRequest));
     }
 
     // ============================================================================
@@ -771,7 +772,7 @@ public class WeaponSystem : Service, IServiceTick
 
     void PublishTransition()
     {
-        owner.Emit.Local(new WeaponInstanceEvent(Publish.Transitioned, owner, instance));
+        owner.Bus.Emit.Local(new WeaponInstanceEvent(Publish.Transitioned, owner, instance));
     }
 
 

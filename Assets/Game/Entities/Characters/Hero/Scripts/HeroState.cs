@@ -101,7 +101,7 @@ public class HeroState : State
         lifecycle   = hero.Lifecycle;
         equipment   = hero.Equipment;
 
-        owner.Emit.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     void HandlePresenceStateEvent(PresenceStateEvent message)

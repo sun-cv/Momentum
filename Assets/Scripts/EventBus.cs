@@ -37,7 +37,7 @@ public static class EventBus<T> where T : IEvent
     }
 
     public static T SubscribeOnce(Action triggerEvent)
-    {
+{
         T result = default;
         EventBinding<T> binding = null;
 
@@ -72,7 +72,7 @@ public static class EventBus<T> where T : IEvent
 }
 
 
-public class LocalEventbus : IDisposable
+public class LocalEventBus : IDisposable
 {
     private readonly Dictionary<Type, HashSet<object>> bindings = new();
 
@@ -116,6 +116,27 @@ public class LocalEventbus : IDisposable
     public void Dispose()
     {
         bindings.Clear();
+    }
+}
+
+
+public class Bus
+{
+    public Emit Emit;
+    public Link Link;
+
+    readonly LocalEventBus bus;
+
+    public Bus()
+    {
+        bus  = new();
+        Emit = new(bus);
+        Link = new(bus);
+    }
+
+    public void Dispose()
+    {
+        Emit.Dispose();
     }
 }
 
@@ -179,15 +200,13 @@ public class EventBinding<T> : IEventBinding<T> where T : IEvent
 
 public class Emit : IDisposable
 {
-    public LocalEventbus Bus    { get; }
-    public Link Link            { get; }
+    public LocalEventBus Bus    { get; }
 
     // ===============================================================================
 
-    public Emit()
+    public Emit(LocalEventBus bus)
     {
-        Bus     = new ();
-        Link    = new (Bus);
+        Bus     = bus;
     }
 
     // ===============================================================================
@@ -219,7 +238,6 @@ public class Emit : IDisposable
         EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(action, payload));
     }
 
-
     public static void Global<TMessage>(TMessage message) where TMessage : IEvent
     {
         EventBus<TMessage>.Raise(message);
@@ -233,15 +251,33 @@ public class Emit : IDisposable
         Bus.Dispose();
     }
 
+    public static class Bind
+    {
+        public static EventBinding<T> Global<T>(Action<T> handler) where T : IEvent
+        {
+            return EventBus<T>.Subscribe(handler);
+        }
+
+        public static EventBinding<Message<TAction, TPayload>> Global<TAction, TPayload>(Action<Message<TAction, TPayload>> handler)
+        {
+            return EventBus<Message<TAction, TPayload>>.Subscribe(handler);
+        }
+
+        public static void UnsubscribeGlobal<T>(EventBinding<T> binding) where T : IEvent
+        {
+            EventBus<T>.Unsubscribe(binding);
+        }
+    }
+
 }
 
 public class Link
 {
-    LocalEventbus Bus { get; }
+    LocalEventBus Bus { get; }
 
     // ===============================================================================
 
-    public Link(LocalEventbus bus)
+    public Link(LocalEventBus bus)
     {
         Bus = bus;
     }
@@ -284,7 +320,10 @@ public class Link
     {
         EventBus<T>.Unsubscribe(binding);
     }
+
 }
+
+
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -352,7 +391,7 @@ public class GlobalEventHandler<TResponse> : IDisposable where TResponse : IMess
 
 public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMessageAPI
 {
-    readonly Emit emit;
+    readonly Bus bus;
 
         // -----------------------------------
 
@@ -365,12 +404,12 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMess
 
     // ===============================================================================
 
-    public LocalEventHandler(Emit emit, Action<TResponse> onResponse)
+    public LocalEventHandler(Bus bus, Action<TResponse> onResponse)
     {
-        this.emit = emit;
+        this.bus = bus;
         this.onResponse = onResponse;
         
-        binding = emit.Link.Local<TResponse>(Receive);
+        binding = bus.Link.Local<TResponse>(Receive);
     }
 
     // ===============================================================================
@@ -386,7 +425,7 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMess
     {
         var message = new Message<TAction, TPayload>(id, action, payload);
         pendingIds.Add(message.Id);
-        emit.Local(message);
+        bus.Emit.Local(message);
     }
 
     void Receive(TResponse response)
@@ -404,7 +443,7 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMess
 
     public void Dispose()
     {
-        emit.Link.UnsubscribeLocal(binding);
+        bus.Link.UnsubscribeLocal(binding);
     }
     
     // ===============================================================================

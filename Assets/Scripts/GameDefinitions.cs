@@ -60,7 +60,7 @@ public class CameraPoint        : Zone          {}
 
 public class Entity             : Runtime       {}
 public class Actor              : Entity        { 
-                                                  public Emit   Emit                    { get; set;  }
+                                                  public Bus    Bus                     { get; set;  }
                                                   public Bridge Bridge                  { get; set;  }
                                                   public ActorDefinition Definition     { get; set;  }}
 

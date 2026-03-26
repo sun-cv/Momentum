@@ -47,9 +47,9 @@ public class Movement : Service, IServiceTick
 
         modifierHandler     = new(agent);
 
-        owner.Emit.Link.Local<MovementEvent>          (HandleMovementDirective);
-        owner.Emit.Link.Local<ClearMovementScopeEvent>(HandleMovementClear);
-        owner.Emit.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
+        owner.Bus.Link.Local<MovementEvent>          (HandleMovementDirective);
+        owner.Bus.Link.Local<ClearMovementScopeEvent>(HandleMovementClear);
+        owner.Bus.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
 
         SetSpeed();
         SetMass();

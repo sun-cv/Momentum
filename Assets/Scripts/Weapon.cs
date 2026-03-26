@@ -220,7 +220,7 @@ public class WeaponInstance : Instance
         Action  = action;
         State   = new()
         {
-            OwnedEffects = new(owner.Emit, (effect) => effect.Owner == this)
+            OwnedEffects = new(owner.Bus, (effect) => effect.Owner == this)
         };
     }
 

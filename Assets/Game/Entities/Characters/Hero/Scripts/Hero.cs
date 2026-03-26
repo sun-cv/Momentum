@@ -109,7 +109,7 @@ public class Hero : Player, IHero
     {
         Definition  = definition;
 
-        Emit        = new();
+        Bus         = new();
 
         Intent      = new(this);
         Stats       = new(this);

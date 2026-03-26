@@ -20,8 +20,8 @@ public class EffectRegister : Service, IServiceTick
     public EffectRegister(Actor actor)
     {
         owner = actor;
-        owner.Emit.Link.Local<Message<Request, EffectAPI>>(HandleEffectAPI);
-        owner.Emit.Link.Local<PresenceStateEvent>        (HandlePresenceStateEvent);
+        owner.Bus.Link.Local<Message<Request, EffectAPI>>(HandleEffectAPI);
+        owner.Bus.Link.Local<PresenceStateEvent>         (HandlePresenceStateEvent);
 
         Services.Lane.Register(this);
     } 
@@ -94,9 +94,9 @@ public class EffectRegister : Service, IServiceTick
     {
         var instance = new EffectInstance(request.Runtime, request.Effect);
 
-        instance.OnApply   += () => owner.Emit.Local(new EffectEvent(instance));
-        instance.OnClear   += () => owner.Emit.Local(new EffectEvent(instance));
-        instance.OnCancel  += () => owner.Emit.Local(new EffectEvent(instance));
+        instance.OnApply   += () => owner.Bus.Emit.Local(new EffectEvent(instance));
+        instance.OnClear   += () => owner.Bus.Emit.Local(new EffectEvent(instance));
+        instance.OnCancel  += () => owner.Bus.Emit.Local(new EffectEvent(instance));
         
         RegisterTriggerLock(instance);
         RegisterDebugLog(instance);
@@ -121,9 +121,9 @@ public class EffectRegister : Service, IServiceTick
             
         foreach (var action in effect.ActionLocks)
         {
-            instance.OnApply   += () => owner.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Lock));
-            instance.OnClear   += () => owner.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
-            instance.OnCancel  += () => owner.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
+            instance.OnApply   += () => owner.Bus.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Lock));
+            instance.OnClear   += () => owner.Bus.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
+            instance.OnCancel  += () => owner.Bus.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
         }
     }
 
@@ -250,7 +250,7 @@ public class EffectInstance : Instance
 
 public class EffectCache : IDisposable
 {
-    readonly Emit emit;
+    readonly Bus bus;
 
         // -----------------------------------
 
@@ -267,12 +267,12 @@ public class EffectCache : IDisposable
 
     // ===============================================================================
 
-    public EffectCache(Emit emit, Func<EffectInstance, bool> filter = null)
+    public EffectCache(Bus bus, Func<EffectInstance, bool> filter = null)
     {
-        this.emit   = emit;
+        this.bus    = bus;
         this.filter = filter;
 
-        binding = this.emit.Link.Local<EffectEvent>(HandleEffectPublish);
+        binding = this.bus.Link.Local<EffectEvent>(HandleEffectPublish);
     }
 
     // ===============================================================================
@@ -304,13 +304,13 @@ public class EffectCache : IDisposable
     // ===============================================================================
 
 
-    public void Bind(LocalEventbus eventbus)
+    public void Bind(LocalEventBus eventbus)
     {
         eventbus.Subscribe<EffectEvent>(HandleEffectPublish);
     }
 
     public IReadOnlyList<EffectInstance> Instances => activeEffects.ToList();
-    public void Dispose() => emit.Link.UnsubscribeLocal(binding);
+    public void Dispose() => bus.Link.UnsubscribeLocal(binding);
 }
 
 

@@ -44,8 +44,6 @@ public class ParrySystem : Service, IServiceLoop
             case true:  ResolveSuccessfulParry(context);    break;
             case false: ResolveFailedParry(context);        break;
         }
-
-        SendProcessDamage(context);
     }
 
     void ResolveSuccessfulParry(DamageContext context)
@@ -75,12 +73,12 @@ public class ParrySystem : Service, IServiceLoop
 
     void ResolveFailedParry(DamageContext context)
     {
-
+        SendProcessDamage(context);
     }
 
     void SetParriedContext(DamageContext context)
     {
-        context.Package.Result.Parried          = true;
+        context.Package.Result.Parried = true;
     }
 
     void SetDamageToZero(DamageContext context)
@@ -107,7 +105,7 @@ public class ParrySystem : Service, IServiceLoop
 
     void RechargeEnergy(Actor target, float amount)
     {
-        target.Emit.Local(new Recharge(amount));
+        target.Bus.Emit.Local(new Recharge(amount));
     }
 
 

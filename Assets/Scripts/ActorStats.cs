@@ -23,7 +23,7 @@ public class ActorStats : Stats
             stats.Add(stat.Name, value);
         }
 
-        owner.Emit.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
+        owner.Bus.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================

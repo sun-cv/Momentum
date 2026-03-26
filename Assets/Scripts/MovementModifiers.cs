@@ -29,7 +29,7 @@ public class MovementModifierHandler
 
     public MovementModifierHandler(Actor actor)
     {
-        cache = new(actor.Emit, (effectInstance) => effectInstance.Effect is IType instance && acceptedModifiers.Contains(instance.Type));
+        cache = new(actor.Bus, (effectInstance) => effectInstance.Effect is IType instance && acceptedModifiers.Contains(instance.Type));
 
         cache.OnApply   += CreateModifier;
         cache.OnCancel  += ClearModifier;

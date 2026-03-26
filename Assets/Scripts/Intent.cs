@@ -33,7 +33,7 @@ public class IntentSystem : Service, IServiceTick
         command .Initialize(this);
         input   .Initialize(this);
 
-        owner.Emit.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
+        owner.Bus.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -105,7 +105,7 @@ public class InputIntent : IDirectionSource, IDisposable
         this.intent         = intent;
         facingDiagonal      = new TimePredicate(TimerUnit.Time, () => IsMovingDiagonal());
 
-        this.intent.Owner.Emit.Link.Local<ForcedFacingEvent>(HandleForcedFacingEvent);
+        this.intent.Owner.Bus.Link.Local<ForcedFacingEvent>(HandleForcedFacingEvent);
     }
 
     // ===============================================================================

@@ -21,7 +21,7 @@ public class EquipmentManager : Service
         slots[EquipmentSlotType.OffHand ] = new() { SlotType = EquipmentSlotType.OffHand    };
         slots[EquipmentSlotType.Dash    ] = new() { SlotType = EquipmentSlotType.Dash       };
 
-        owner.Emit.Link.Local<EquipEvent>(HandleEquipEvent);
+        owner.Bus.Link.Local<EquipEvent>(HandleEquipEvent);
     }
 
     // ===============================================================================
@@ -64,7 +64,7 @@ public class EquipmentManager : Service
         
         slot.Equip(item);
 
-        owner.Emit.Local(new EquipmentChangeEvent(Publish.Equipped, owner, item, item.SlotType));
+        owner.Bus.Emit.Local(new EquipmentChangeEvent(Publish.Equipped, owner, item, item.SlotType));
 
         DebugLog();
     }
@@ -75,7 +75,7 @@ public class EquipmentManager : Service
         
         slot.Equip(item);
 
-        owner.Emit.Local(new EquipmentChangeEvent(Publish.Equipped, owner, item, item.SlotType));
+        owner.Bus.Emit.Local(new EquipmentChangeEvent(Publish.Equipped, owner, item, item.SlotType));
 
         DebugLog();
     }    
@@ -87,7 +87,7 @@ public class EquipmentManager : Service
         var item = slot.Unequip();
 
         if (item != null)
-            owner.Emit.Local(new EquipmentChangeEvent(Publish.Unequipped, owner, item, item.SlotType));
+            owner.Bus.Emit.Local(new EquipmentChangeEvent(Publish.Unequipped, owner, item, item.SlotType));
         
         DebugLog();
         return item;
