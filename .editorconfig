@@ -5,6 +5,7 @@ dotnet_diagnostic.CA1050.severity   = none
 dotnet_diagnostic.IDE0060.severity  = none
 dotnet_diagnostic.IDE0270.severity  = none
 dotnet_diagnostic.IDE0003.severity  = none
+dotnet_diagnostic.IDE0031.severity  = none
 
 
 [Library/**.cs]

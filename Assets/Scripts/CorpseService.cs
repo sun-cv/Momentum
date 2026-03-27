@@ -68,9 +68,9 @@ public class CorpseRequest : IMessage
 {
     public Actor Owner                          { get; init; }
     public KillingBlow KillingBlow              { get; init; }
-    public AnimationRequest Animation           { get; init; }
+    public AnimationAPI Animation           { get; init; }
 
-    public CorpseRequest(Actor owner, KillingBlow blow, AnimationRequest request)
+    public CorpseRequest(Actor owner, KillingBlow blow, AnimationAPI request)
     {
         Owner       = owner;
         KillingBlow = blow;

@@ -142,6 +142,8 @@ public class Logger
     {
         if (trackedTags.Add(tag))
             return;
+
+        trackedTags.Remove(tag);
         Logwin.DeleteLog(tag, category);
     }
 

@@ -17,7 +17,7 @@ public class WeaponSystem : Service, IServiceTick
 
     // -----------------------------------
 
-    readonly GlobalEventHandler<Message<Response, HitboxAPI>> hitboxAPI;
+    readonly GlobalEventHandler<Message<Response, HitboxAPI>> hitboxRequestHandler;
 
         // -----------------------------------
 
@@ -46,7 +46,7 @@ public class WeaponSystem : Service, IServiceTick
         validator       = new(this);
         
         owner           = agent;
-        hitboxAPI       = new(HandleHitboxAPI);
+        hitboxRequestHandler       = new(HandleHitboxAPI);
 
         InitializePhaseHandlers();
         InitializeActivationStrategies();
@@ -477,7 +477,14 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var effect in action.Effects)
         {
             if (ShouldApplyEffect(effect))
-                owner.Bus.Emit.Local(Request.Create, new EffectAPI(instance, effect));
+            {
+                var API = new EffectAPI(instance, effect)
+                {
+                    Request = Request.Create
+                };
+
+                owner.Bus.Emit.Local(API.Request, API);
+            }
         }
     }
 
@@ -486,7 +493,14 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable)
-                owner.Bus.Emit.Local(Request.Cancel, new EffectAPI(instance));
+            {
+                var API = new EffectAPI(instance)
+                {
+                    Request = Request.Cancel
+                };
+
+                owner.Bus.Emit.Local(API.Request, API);
+            }
         }
     }
 
@@ -495,7 +509,14 @@ public class WeaponSystem : Service, IServiceTick
         foreach (var instance in weaponInstance.State.OwnedEffects.Instances)
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable && instance.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
-                owner.Bus.Emit.Local(Request.Cancel, new EffectAPI(instance));
+            {
+                var API = new EffectAPI(instance)
+                {
+                    Request = Request.Cancel
+                };
+
+                owner.Bus.Emit.Local(API.Request, API);
+            }
         }
     }
 
@@ -585,26 +606,38 @@ public class WeaponSystem : Service, IServiceTick
                     CreateDamagePackage(),
                     CreateForcePackage()
                 };
-                hitboxAPI.Send(Request.Create, new HitboxAPI(owner, hitboxDefinition, packages));
+
+                var API = new HitboxAPI(owner, hitboxDefinition, packages)
+                {
+                    Request = Request.Create
+                };
+
+                hitboxRequestHandler.Forward(API.Id, API.Request, API);
             }
         }
     }
 
     public void DestroyHitboxes(WeaponInstance instance)
     {
-        foreach (var hitbox in instance.State.OwnedHitboxes)
-            Emit.Global(Request.Destroy, hitbox);
+        foreach (var API in instance.State.OwnedHitboxes)
+        {
+            API.Request = Request.Destroy; 
+
+            Emit.Global(API.Request, API);
+        }
     }
 
     void HandleHitboxAPI(Message<Response, HitboxAPI> message)
     {
-        if (message.Action != Response.Success)
+        var request = message.Payload;
+
+        if (request.Response != Response.Success)
             return;
 
-        if (message.Payload.owner != owner)
+        if (request.owner != owner)
             return;
 
-        instance?.State.OwnedHitboxes.Add(message.Payload);
+        instance?.State.OwnedHitboxes.Add(request);
     }
 
     void UpdateHitboxAngle()
@@ -641,39 +674,47 @@ public class WeaponSystem : Service, IServiceTick
         if (animation is null)
             return;
 
-        instance.State.AnimationRequest = new AnimationRequest(animation);
-        instance.State.AnimationRequest.Play();
-        
+        var API = new AnimationAPI(animation)
+        {
+            Request = Request.Play,
+        };
+
+
+        instance.State.AnimationAPI = API;
+
         if (action.HoldAnimationUntilReleased)
         {
-            instance.State.AnimationRequest.options.HoldUntilReleased = true;
+            API.Settings.HoldUntilReleased = true;
         }
 
         if (action.LockAimDuringPlayback)
         {
-            instance.State.AnimationRequest.overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IAimable)](instance.State.Intent));
+            API.Data.Overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IAimable)](instance.State.Intent));
         }
 
         if (action.LockDirectionDuringPlayback)
         {
-            instance.State.AnimationRequest.overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IMovableActor)](instance.State.Intent));
+            API.Data.Overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IMovableActor)](instance.State.Intent));
         }
         
 
-        owner.Bus.Emit.Local(Request.Start, new AnimationAPI(instance.State.AnimationRequest));
+        owner.Bus.Emit.Local(API.Request, API);
+        
     }
 
 
     public void RequestAnimationClear(WeaponAction action)
     {
-        if (instance.State.AnimationRequest == null)
+        if (instance.State.AnimationAPI == null)
             return;
             
         if (!action.HoldAnimationUntilReleased)
             return;
 
-        instance.State?.AnimationRequest.Stop();
-        owner.Bus.Emit.Local(Request.Stop, new AnimationAPI(instance.State.AnimationRequest));
+        var API = instance.State.AnimationAPI;
+
+        API.Request = Request.Stop;
+        owner.Bus.Emit.Local(API.Request, API);
     }
 
     // ============================================================================
@@ -877,10 +918,10 @@ public class WeaponSystem : Service, IServiceTick
         previousInstance = instance;
     }
 
-    void ResetState()
-    {
-        instance.State.Reset();
-    }
+    // void ResetState()
+    // {
+    //     instance.State.Reset();
+    // }
 
     void ClearInstance()
     {
@@ -959,7 +1000,7 @@ public class WeaponSystem : Service, IServiceTick
 
     public override void Dispose()
     {
-        hitboxAPI.Dispose();
+        hitboxRequestHandler.Dispose();
         Services.Lane.Deregister(this);
     }
 
@@ -1269,7 +1310,7 @@ public class WeaponCooldownInstance
 
 public class WeaponCooldown
 {
-    List<WeaponCooldownInstance> cooldowns = new();
+    readonly List<WeaponCooldownInstance> cooldowns = new();
 
     public void RegisterWeapon(WeaponAction weapon)
     {

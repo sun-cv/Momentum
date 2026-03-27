@@ -64,7 +64,7 @@ public class MovableDummyDefinition : ActorDefinition
             Death                   = new()
             {   
                 Enabled             = true,
-                Default             = "Dying"
+                Default             = "Death"
             },
         };
     }

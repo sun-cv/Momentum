@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 
 
@@ -57,39 +56,31 @@ public class AnimationSystem : Service, IServiceLoop
 
     void RouteMessage(Message<Request, AnimationAPI> message)
     {
-        var request = message.Payload.AnimationRequest;
+        var API = message.Payload;
 
-        if (owner is IMovableDummy) Debug.Log($"Animation request routing {message.Action}");
-
-        switch(message.Payload.AnimationRequest.options.Request)
+        switch(API.Request)
         {
-            case Request.Play: ProcessAnimationRequest(message);    break;
-            case Request.Stop: RequestAnimationChange(request);     break;
+            case Request.Play: ProcessAnimationRequest(API);    break;
+            case Request.Stop: RequestAnimationChange (API);    break;
         }        
     }
 
-    void ProcessAnimationRequest(Message<Request, AnimationAPI> message)
+    void ProcessAnimationRequest(AnimationAPI request)
     {
-        if (owner is IMovableDummy) Debug.Log("Animation request Processing");
-        var request = message.Payload.AnimationRequest;
-
         if (!request.IsValid)
             Resolve(request);
 
-        if (owner is IMovableDummy) Debug.Log("Animation request Processed");
         RequestAnimationChange(request);
 
-        owner.Bus.Emit.Local(message.Id, Response.Completed, new AnimationAPI(request));
+        owner.Bus.Emit.Local(request.Id, Response.Completed, request);
     }
 
-    AnimationRequest Resolve(AnimationRequest request)
+    AnimationAPI Resolve(AnimationAPI request)
     {
-        var set                 = SelectAnimationSet(request.intent);
+        var set                 = SelectAnimationSet(request.Intent);
         var animation           = SelectAnimation(set, request);
 
         SetAnimationData(request, animation);
-
-        Debug.Log("Resolve");
 
         return request;
     }
@@ -105,12 +96,12 @@ public class AnimationSystem : Service, IServiceLoop
         return selector(animations);
     }
 
-    string SelectAnimation(AnimationSet set, AnimationRequest request)
+    string SelectAnimation(AnimationSet set, AnimationAPI request)
     {
 
         if (request.HasContext)
         {
-            var contextual = ResolveContext(set, request.context);
+            var contextual = ResolveContext(set, request.Context);
             if (contextual != null)
             {
                 return contextual;
@@ -123,13 +114,13 @@ public class AnimationSystem : Service, IServiceLoop
         return set.Default;
     }
 
-    void SetAnimationData(AnimationRequest request, string animation)
+    void SetAnimationData(AnimationAPI request, string animation)
     {
-        request.data.Animation  = animation;
-        request.data.Duration   = animator.RequestAnimationDuration(request.data.Animation);
+        request.Data.Animation  = animation;
+        request.Data.Duration   = animator.RequestAnimationDuration(request.Data.Animation);
     }
 
-    void RequestAnimationChange(AnimationRequest request)
+    void RequestAnimationChange(AnimationAPI request)
     {
         animator.RequestAnimationChange(request);
     }
@@ -175,66 +166,53 @@ public class AnimationSystem : Service, IServiceLoop
     //                                     Classes
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class AnimationRequest
+public class AnimationAPI : API
 {
-    public AnimationIntent                  intent;
-    public AnimationContext                 context;
-    public AnimationOptions                 options;
-    public AnimationData                    data;
-    public List<AnimatorParameter.Override> overrides;
+    public AnimationIntent Intent                   { get; init; }
+    public AnimationContext Context                 { get; init; }
+    public AnimationSettings Settings               { get; init; }
+    public AnimationData Data                       { get; init; }
 
-    public bool IsValid         => data.Animation   != null;
-    public bool HasContext      => context          != null;
-    public bool HasOverrides    => overrides        != null && overrides.Count > 0;
+    // ===============================================================================
 
-    public AnimationRequest(string name)
+    public AnimationAPI(string name)
     {
-        this.intent         = new();
-        this.context        = new();
-        this.options        = new() { AllowInterrupt = true };
-        this.data           = new();
-        this.overrides      = new();
-
-        data.Animation  = name;
+        Settings           = new() { AllowInterrupt = true };
+        Data               = new() { Animation      = name };
     }
 
-    public AnimationRequest(AnimationIntent intent, AnimationContext context = null)
+    public AnimationAPI(AnimationIntent intent, AnimationContext context = null)
     {
-        this.intent         = intent;
-        this.context        = context;
-        this.options        = new() { AllowInterrupt = true };
-        this.data           = new();
-        this.overrides      = new();
+        Intent             = intent;
+        Context            = context;
+        Settings           = new() { AllowInterrupt = true };
+        Data               = new();
     }
 
-    public void Play()
-    {
-        options.Request = Request.Play;
-    }
+    // ===============================================================================
 
-    public void Stop()
-    {
-        options.Request = Request.Stop;
-    }
+    public bool IsValid         => Data.Animation   != null;
+    public bool HasContext      => Context          != null;
+    public bool HasOverrides    => Data.Overrides   != null && Data.Overrides.Count > 0;
 }
 
-public class AnimationOptions
+public class AnimationSettings
 {
-    public Request Request                          { get; set; }
-    public bool AllowInterrupt                      { get; set; }
-    public bool HoldUntilReleased                   { get; set; }
+    public bool AllowInterrupt                          { get; set; }
+    public bool HoldUntilReleased                       { get; set; }
 }
 
 public class AnimationContext
 {
-    public DamageComponent DamageComponent          { get; init; }
+    public KillingBlow KillingBlow                      { get; set; }
 };
 
 public class AnimationData
 {
-    public string Animation                         { get; set; }
-    public float Duration                           { get; set; }
-}
+    public string Animation                             { get; set; }
+    public float Duration                               { get; set; }
+    public List<AnimatorParameter.Override> Overrides   { get; set; } = new();
+};
 
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
     //                                      Enums
@@ -258,15 +236,6 @@ public enum AnimationIntent
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class AnimationAPI : Payload
-{
-    public AnimationRequest AnimationRequest        { get; init; }
-
-    public AnimationAPI(AnimationRequest request)
-    {
-        AnimationRequest = request;
-    }
-}
 
 public readonly struct AnimationTriggerEvent
 {    

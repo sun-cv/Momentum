@@ -12,7 +12,7 @@ public class EffectRegister : Service, IServiceTick
 
     // -----------------------------------
 
-    readonly List<(Request, EffectAPI)> queue   = new();
+    readonly List<EffectAPI> queue   = new();
     readonly List<EffectInstance> effects       = new();
 
     // ===============================================================================
@@ -54,7 +54,7 @@ public class EffectRegister : Service, IServiceTick
     {
         foreach (var instance in effects)
         {
-            if (instance.Effect is T effect)
+            if (instance.Effect is T)
                 return true; 
         }
         return false;
@@ -69,20 +69,20 @@ public class EffectRegister : Service, IServiceTick
 
     void ProcessQueues()
     {
-        foreach(var (request, effect) in queue)
+        foreach(var request in queue)
         {
-            ProcessRequest(request, effect);
+            ProcessRequest(request);
         }
         
         queue.Clear();
     }
 
-    void ProcessRequest(Request request, EffectAPI effect)
+    void ProcessRequest(EffectAPI request)
     {
-        switch(request)
+        switch(request.Request)
         {
-            case Request.Create: RegisterEffect(effect); break;
-            case Request.Cancel: CancelEffect(effect);   break;
+            case Request.Create: RegisterEffect(request); break;
+            case Request.Cancel: CancelEffect(request);   break;
         }
     }
 
@@ -149,7 +149,7 @@ public class EffectRegister : Service, IServiceTick
 
     void HandleEffectAPI(Message<Request, EffectAPI> message)
     {                    
-        queue.Add((message.Action, message.Payload));
+        queue.Add(message.Payload);
     }
 
     void HandlePresenceStateEvent(PresenceStateEvent message)
@@ -329,7 +329,7 @@ public class EffectEvent : IMessage
     }
 }
 
-public class EffectAPI : Payload
+public class EffectAPI : API
 {
     public Effect    Effect         { get; init; }
     public Runtime   Runtime        { get; init; }

@@ -83,6 +83,8 @@ public class Presence : Service, IServiceLoop
     {
         if (stateHandlers.TryGetValue(state, out var handler))
             handler.Enter(this);
+
+        PublishState();
     }
 
     void ExitHandler()
@@ -118,7 +120,12 @@ public class Presence : Service, IServiceLoop
     // ===============================================================================
     //  Events
     // ===============================================================================
-        
+    
+    void PublishState()
+    {
+        owner.Bus.Emit.Local(new PresenceStateEvent(owner, state));
+    }
+
     void HandlePresenceTargetEvent(PresenceTargetEvent message)
     {
         target = message.Target;
@@ -126,6 +133,7 @@ public class Presence : Service, IServiceLoop
 
     void HandlePresenceStateEvent(PresenceStateEvent message)
     {
+
         switch (message.State)
         {
             case Presence.State.Disposal: Dispose(); break;
@@ -146,11 +154,12 @@ public class Presence : Service, IServiceLoop
 
     void DebugLog()
     {
-        Log.Debug($"Presence.State.{owner.GetType().Name}", () => state);
+        Log.Debug($"Presence.State.{owner.GetType().Name}", () => state, clean: true);
     }
 
     public override void Dispose()
     {
+        Debug.Log("Dispose");
         Services.Lane.Deregister(this);
     }
 
@@ -355,17 +364,18 @@ public class PresenceDisposalState : StateHandler<Presence, Presence.State>
 
     public override void Enter(Presence controller)
     {   
-        owner.Bus.Dispose();
     
-        Object.Destroy(owner.Bridge.View);
     }
 
     public override void Update(Presence controller)
     {   
+        Exit(controller);
     }
 
     public override void Exit(Presence controller)
     {
+        owner.Bus.Dispose();
+        Object.Destroy(owner.Bridge.View);
     }
 }
 

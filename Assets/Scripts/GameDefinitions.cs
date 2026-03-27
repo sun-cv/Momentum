@@ -45,6 +45,9 @@ public abstract class Definition
 }
 
 public class Payload                            { public Guid Id                        { get; init; } = Guid.NewGuid();}
+public class API : Payload                      { public Request  Request               { get; set;  }
+                                                  public Response Response              { get; set;  }}
+
 
 public class Runtime                            { public Guid RuntimeId                 { get; init; } = Guid.NewGuid();}
 public class Instance           : Runtime       {}

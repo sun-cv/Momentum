@@ -17,7 +17,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         // -----------------------------------
 
-    readonly List<AnimationRequest> queue;
+    readonly List<AnimationAPI> queue;
 
     readonly Dictionary<int, AnimatorParameter.Override> overrides;
     readonly Dictionary<int, Action<Animator, Actor>> tickHandlers;
@@ -66,7 +66,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
     //  Public API
     // ===============================================================================
 
-    public void RequestAnimationChange(AnimationRequest request)
+    public void RequestAnimationChange(AnimationAPI request)
     {
         queue.Add(request);
     }
@@ -102,6 +102,23 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     // ===============================================================================
 
+    void ProcessAnimatorRequests()
+    {
+        if (queue.Count == 0)
+            return;
+
+        foreach (var request in queue)
+        {
+            switch(request.Request)
+            {
+                case Request.Play: ProcessAnimation(request);   break;
+                case Request.Stop: ClearAnimation(request);     break;
+            }
+        }
+
+        queue.Clear();
+    }
+
     void ProcessHandlers(Dictionary<int, Action<Animator, Actor>> handlers)
     {
         foreach (var (param, handler) in handlers)
@@ -123,15 +140,8 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         }
     }
 
-    void PlayAnimation(AnimationRequest request)
-    {   
-        animator.SetLayerWeight(LAYER_ACTION, 1f);
-        animator.Play(request.data.Animation, LAYER_ACTION, 0f);
 
-        playing = true;
-    }
-
-    void ProcessAnimation(AnimationRequest request)
+    void ProcessAnimation(AnimationAPI request)
     {
         if (playing && !allowInterrupt)
             return;
@@ -148,21 +158,13 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         SetTransitionTimer(request);
     }
 
-    void ProcessAnimatorRequests()
-    {
-        if (queue.Count == 0)
-            return;
+    void PlayAnimation(AnimationAPI request)
+    {   
+        
+        animator.SetLayerWeight(LAYER_ACTION, 1f);
+        animator.Play(request.Data.Animation, LAYER_ACTION, 0f);
 
-        foreach (var request in queue)
-        {
-            switch(request.options.Request)
-            {
-                case Request.Play: ProcessAnimation(request);   break;
-                case Request.Stop: ClearAnimation(request);     break;
-            }
-        }
-
-        queue.Clear();
+        playing = true;
     }
 
     void CacheClipDurations()
@@ -206,18 +208,18 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
     }
 
 
-    void SetInterrupt(AnimationRequest request)
+    void SetInterrupt(AnimationAPI request)
     {
-        allowInterrupt = request.options.AllowInterrupt;
+        allowInterrupt = request.Settings.AllowInterrupt;
     }
 
-    void SetOverrides(AnimationRequest request)
+    void SetOverrides(AnimationAPI request)
     {
         overrides.Clear();
 
         if (request.HasOverrides)
         {
-            foreach (var handler in request.overrides)
+            foreach (var handler in request.Data.Overrides)
                 overrides[handler.Parameter] = handler;
         }
     }
@@ -227,9 +229,9 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         transitionTimer?.Stop();
     }
 
-    void SetTransitionTimer(AnimationRequest request)
+    void SetTransitionTimer(AnimationAPI request)
     {
-        if (clipDurations.TryGetValue(request.data.Animation, out float duration))
+        if (clipDurations.TryGetValue(request.Data.Animation, out float duration))
         {
             transitionTimer = new ClockTimer(duration);
             transitionTimer.OnTimerStop += () => ClearAnimation(request);
@@ -237,9 +239,9 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         }
     }
 
-    void ClearAnimation(AnimationRequest request)
+    void ClearAnimation(AnimationAPI request)
     {
-        if (!IsStateActive(LAYER_ACTION, request.data.Animation))
+        if (!IsStateActive(LAYER_ACTION, request.Data.Animation))
         {
             return;
         }
@@ -260,9 +262,9 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         return animator.GetCurrentAnimatorStateInfo(layer).IsName(stateName);
     }
 
-    void SendAnimatorPlaybackEvent(Publish type, AnimationRequest request)
+    void SendAnimatorPlaybackEvent(Publish type, AnimationAPI request)
     {
-        owner.Bus.Emit.Local(new AnimatorEvent(type, request.data.Animation));
+        owner.Bus.Emit.Local(new AnimatorEvent(type, request.Data.Animation));
     }
 
     string GetCurrentAnimationName(int layer)

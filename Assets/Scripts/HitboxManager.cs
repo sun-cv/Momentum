@@ -11,7 +11,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     // -----------------------------------
 
-    readonly List<(Request, HitboxAPI)> queue                   = new();
+    readonly List<HitboxAPI> queue                   = new();
     readonly Dictionary<Guid, HitboxInstance> activeHitboxes    = new();
     readonly List<PendingHit> pendingHits                       = new();
 
@@ -39,20 +39,20 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     void ProcessQueued()
     {
-        foreach (var (request, pending) in queue)
+        foreach (var request in queue)
         {
-            ProcessHitbox(request, pending);
+            ProcessHitbox(request);
         }
 
         queue.Clear();
     }
 
-    void ProcessHitbox(Request request, HitboxAPI instance)
+    void ProcessHitbox(HitboxAPI request)
     {
-        switch (request)
+        switch (request.Request)
         {
-            case Request.Create:  CreateHitbox(instance);           break;
-            case Request.Destroy: ProcessDestroyRequest(instance);  break;
+            case Request.Create:  CreateHitbox(request);            break;
+            case Request.Destroy: ProcessDestroyRequest(request);   break;
         }
     }
 
@@ -141,40 +141,42 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     //  Construction
     // ===================================
 
-    void CreateHitbox(HitboxAPI pending)
+    void CreateHitbox(HitboxAPI request)
     {
-        pending.owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+        request.owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 
-        Vector2 intentVector = GetSpawnDirection(pending);
-        Quaternion intentRotation = Orientation.ToRotation(intentVector);
-        Vector3 spawnPosition = position + (intentRotation * pending.definition.Form.Offset);
+        Vector2 intentVector        = GetSpawnDirection(request);
+        Quaternion intentRotation   = Orientation.ToRotation(intentVector);
+        Vector3 spawnPosition       = position + (intentRotation * request.definition.Form.Offset);
 
-        var prefab = Assets.Get(pending.definition.Form.Prefab);
-        var hitbox = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
+        var prefab                  = Assets.Get(request.definition.Form.Prefab);
+        var hitbox                  = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
 
-        var instance = CreateInstance(pending);
-        instance.Hitbox = hitbox;
-        instance.SpawnDirection = intentVector;
+        var instance                = CreateInstance(request);
+        instance.Hitbox             = hitbox;
+        instance.SpawnDirection     = intentVector;
 
-        var controller = hitbox.AddComponent<HitboxController>();
+        var controller              = hitbox.AddComponent<HitboxController>();
+
         controller.Bind(this, instance.RuntimeId);
 
         ApplyHitboxBehavior(hitbox, instance);
 
         activeHitboxes.Add(instance.RuntimeId, instance);
 
-        pending.hitboxId = instance.RuntimeId;
+        request.hitboxId            = instance.RuntimeId;
+        request.Response            = Response.Success;
 
-        PublishHitbox(pending);
+        PublishHitbox(request);
     }
 
-    HitboxInstance CreateInstance(HitboxAPI pending)
+    HitboxInstance CreateInstance(HitboxAPI request)
     {
         HitboxInstance instance = new()
         {
-            Owner = pending.owner,
-            Definition = pending.definition,
-            Packages = pending.packages,
+            Owner       = request.owner,
+            Definition  = request.definition,
+            Packages    = request.packages,
         };
 
         return instance;
@@ -223,9 +225,9 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
         }
     }
 
-    void ProcessDestroyRequest(HitboxAPI instance)
+    void ProcessDestroyRequest(HitboxAPI request)
     {
-        var hitboxId = instance.hitboxId;
+        var hitboxId = request.hitboxId;
 
         if (ShouldProcessDestructionRequest(hitboxId))
             DestroyHitbox(hitboxId);
@@ -345,12 +347,12 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     void HandleHitboxAPI(Message<Request, HitboxAPI> message)
     {
-        queue.Add((message.Action, message.Payload));
+        queue.Add(message.Payload);
     }
 
-    void PublishHitbox(HitboxAPI instance)
+    void PublishHitbox(HitboxAPI request)
     {
-        Emit.Global(instance.Id, Response.Success, instance);
+        Emit.Global(request.Id, request.Response, request);
     }
 
     void HandleDirectionUpdate(HitboxDirectionUpdate update)
@@ -384,18 +386,18 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     // Helpers
     // ============================================================================
 
-    Vector2 GetSpawnDirection(HitboxAPI pending)
+    Vector2 GetSpawnDirection(HitboxAPI request)
     {
-        return pending.definition.Direction.Type switch
+        return request.definition.Direction.Type switch
         {
-            HitboxDirectionSource.Input => pending.definition.Direction.Scope switch
+            HitboxDirectionSource.Input => request.definition.Direction.Scope switch
             {
-                HitboxDirectionScope.Cardinal => pending.definition.Direction.Input.Aim.Cardinal,
-                HitboxDirectionScope.Intercardinal => pending.definition.Direction.Input.Aim.Intercardinal,
-                _ => pending.definition.Direction.Input.Aim.Intercardinal
+                HitboxDirectionScope.Cardinal => request.definition.Direction.Input.Aim.Cardinal,
+                HitboxDirectionScope.Intercardinal => request.definition.Direction.Input.Aim.Intercardinal,
+                _ => request.definition.Direction.Input.Aim.Intercardinal
             },
-            HitboxDirectionSource.Explicit => pending.definition.Direction.Explicit,
-            HitboxDirectionSource.OwnerFacing => pending.owner is IOrientable instance ? instance.Facing : Vector2.right,
+            HitboxDirectionSource.Explicit => request.definition.Direction.Explicit,
+            HitboxDirectionSource.OwnerFacing => request.owner is IOrientable instance ? instance.Facing : Vector2.right,
             _ => Vector2.right
         };
     }
@@ -552,7 +554,7 @@ public enum HitboxTrackingConstraint
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class HitboxAPI : Payload
+public class HitboxAPI : API
 {
     public Actor owner;
     public Guid hitboxId;
@@ -561,9 +563,9 @@ public class HitboxAPI : Payload
 
     public HitboxAPI(Actor owner, HitboxDefinition definition, List<object> packages)
     {
-        this.owner = owner;
+        this.owner      = owner;
         this.definition = definition;
-        this.packages = packages ?? new();
+        this.packages   = packages ?? new();
     }
 }
 

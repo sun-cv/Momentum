@@ -160,7 +160,6 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
         // -----------------------------------
 
     bool killingBlowReceived;
-    KillingBlow blow;
 
     // ===============================================================================
 
@@ -221,7 +220,7 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
         // -----------------------------------
 
-    AnimationRequest deathAnimation;
+    AnimationAPI deathAnimation;
     KillingBlow killingBlow;
 
     // ===============================================================================
@@ -255,8 +254,6 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
         if (HasOnDeathEffects())
             ApplyOnDeathEffects();
-
-        Debug.Log("Dying");
     }
     
     public override void Update(Lifecycle controller)
@@ -297,7 +294,12 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
     {
         foreach (var effect in definition.Lifecycle.OnDeathEffects)
         {
-            owner.Bus.Emit.Local(Request.Create, new EffectAPI(owner, effect));
+            var API = new EffectAPI(owner, effect)
+            {
+                Request = Request.Create
+            };
+
+            owner.Bus.Emit.Local(API.Request, API);
         }
     }
 
@@ -307,35 +309,32 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
     void RequestDeathAnimation()
     {
-        var request = new AnimationRequest(AnimationIntent.Death) 
+        var request = new AnimationAPI(AnimationIntent.Death) 
         {
-            options = new() 
+            Request  = Request.Play,
+            Settings = new() 
             { 
                 AllowInterrupt = false 
             },
         };
 
-        animationRequestHandler.Send(Request.Play, new AnimationAPI(request));
+        animationRequestHandler.Forward(request.Id, request.Request, request);
     }
 
     void HandleAnimationAPI(Message<Response, AnimationAPI> response)
     {
-        Debug.Log("Received handle");
-        deathAnimation = response.Payload.AnimationRequest;
-        Debug.Log(deathAnimation.data.Animation);
+        deathAnimation = response.Payload;
     }
 
     void HandleAnimatorEvent(AnimatorEvent message)
     {
-        Debug.Log(message.Name);
-
         if (message.Type != Publish.Ended)
             return;
 
         if (deathAnimation == null)
             return;
 
-        if (deathAnimation.data.Animation == message.Name)
+        if (deathAnimation.Data.Animation == message.Name)
             Transition.Invoke(Lifecycle.State.Dead);
     }
 
@@ -390,8 +389,6 @@ public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
 
     public override void Enter(Lifecycle controller)
     {
-
-        Debug.Log("Dead");
 
         if (CanBecomeCorpse())
         {

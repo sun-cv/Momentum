@@ -907,7 +907,12 @@ public class ResourceMonitor
     {
         foreach (var effect in threshold.Effects)
         {
-            owner.Bus.Emit.Local(Request.Create, new EffectAPI(owner, effect));
+            var API = new EffectAPI(owner, effect)
+            {
+                Request = Request.Create
+            };
+
+            owner.Bus.Emit.Local(API.Request, API);
         }
     }
 
