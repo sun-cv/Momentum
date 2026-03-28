@@ -3,10 +3,37 @@ using System.Collections.Generic;
 
 
 
+public class LoggingSystem : RegisteredService, IServiceUtil
+{
+    public void Util()
+    {
+        Logging.Tick();
+    }
+
+    // ===============================================================================
+
+    public override void Dispose()
+    {
+        Services.Lane.Deregister(this);
+    }
+
+    // ===============================================================================
+
+    public UpdatePriority Priority  => ServiceUpdatePriority.LoggingSystem;
+}
+
+
+
 public static class Logging
 {
     private static LogLevel globalLevel                     = LogLevel.Event;
     private static Dictionary<LogSystem, Logger> loggers    = new();
+
+    public static void Tick()
+    {
+        foreach (var logger in loggers.Values)
+            logger.BeginFrame();
+    }
 
     // ===============================================================================
     //  Public API
@@ -42,9 +69,12 @@ public static class Logging
 
 public class Logger
 {
-    LogLevel                    level;
-    readonly LogSystem          system;
-    readonly HashSet<string>    trackedTags = new();
+    LogLevel            level;
+    readonly LogSystem  system;
+    
+    Dictionary<string, string> currentTags  = new();
+    Dictionary<string, string> previousTags = new();
+
 
     // ===============================================================================
 
@@ -52,6 +82,25 @@ public class Logger
     {
         this.system     = system;
         this.level      = level;
+    }
+
+    // ===============================================================================
+
+    public void BeginFrame()
+    {
+
+        foreach (var (tag, category) in previousTags)
+        {
+            if (!currentTags.ContainsKey(tag))
+            {
+                Logwin.DeleteLog(tag, category);
+
+                UnityEngine.Debug.Log($"After delete, exists: {LogWinInternal.Logwin_Internal.sCatDico.ContainsKey(category) && LogWinInternal.Logwin_Internal.sCatDico[category].GetLog(tag) != null}");
+            
+            }
+        }
+        (previousTags, currentTags) = (currentTags, previousTags);
+        currentTags.Clear();
     }
 
     // ===============================================================================
@@ -85,11 +134,11 @@ public class Logger
     {
         if (!IsEnabled(level))
             return;
-        
+
         var category = Category(level);
 
         if (clean)
-            Clean(tag, category);     
+            currentTags[tag] = category;
 
         Logwin.Log(tag, value(), category);
     }
@@ -137,15 +186,6 @@ public class Logger
     // ===============================================================================
     //  Helpers
     // ===============================================================================
-
-    void Clean(string tag, string category)       
-    {
-        if (trackedTags.Add(tag))
-            return;
-
-        trackedTags.Remove(tag);
-        Logwin.DeleteLog(tag, category);
-    }
 
     string Category(LogLevel atLevel)
     {

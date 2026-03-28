@@ -200,6 +200,7 @@ public class AnimationSettings
 {
     public bool AllowInterrupt                          { get; set; }
     public bool HoldUntilReleased                       { get; set; }
+    public bool HoldOnPlaybackEnd                       { get; set; }
 }
 
 public class AnimationContext

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 
 
@@ -264,6 +263,7 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
     
     public override void Exit(Lifecycle controller)
     {
+        ExitPresence();
     }
     
     // ===============================================================================
@@ -314,7 +314,8 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
             Request  = Request.Play,
             Settings = new() 
             { 
-                AllowInterrupt = false 
+                AllowInterrupt      = false,
+                HoldOnPlaybackEnd   = true,
             },
         };
 
@@ -328,10 +329,10 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
     void HandleAnimatorEvent(AnimatorEvent message)
     {
-        if (message.Type != Publish.Ended)
-            return;
-
         if (deathAnimation == null)
+            return;
+ 
+        if (message.Type != Publish.Ended)
             return;
 
         if (deathAnimation.Data.Animation == message.Name)
@@ -343,6 +344,10 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
         killingBlow = message;
     }
 
+    void ExitPresence()
+    {
+        owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Absent));
+    }
     // ===============================================================================
     //  Predicates
     // ===============================================================================
@@ -406,7 +411,7 @@ public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
         if (CanRespawn())
             return;
 
-        ExitPresence();
+        // ExitPresence();
     }
 
     public override void Exit(Lifecycle controller)

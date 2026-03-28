@@ -59,7 +59,7 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         BuildHandlers();
 
-        owner.Bus.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -160,7 +160,6 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     void PlayAnimation(AnimationAPI request)
     {   
-        
         animator.SetLayerWeight(LAYER_ACTION, 1f);
         animator.Play(request.Data.Animation, LAYER_ACTION, 0f);
 
@@ -241,13 +240,15 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     void ClearAnimation(AnimationAPI request)
     {
-        if (!IsStateActive(LAYER_ACTION, request.Data.Animation))
-        {
-            return;
-        }
-        ClearAnimatorState();
-        
         SendAnimatorPlaybackEvent(Publish.Ended, request);
+
+        if (!IsStateActive(LAYER_ACTION, request.Data.Animation))
+            return;
+
+        if (request.Settings.HoldOnPlaybackEnd)
+            return;
+
+        ClearAnimatorState();
     }
 
     void ClearAnimatorState()

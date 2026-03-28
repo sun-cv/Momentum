@@ -75,9 +75,10 @@ public static class Settings
 public static class ServiceUpdatePriority
 {
     public static UpdatePriority TimerManager               = new(UpdatePhase.System,   10);
-    public static UpdatePriority SystemTick                 = new(UpdatePhase.System,   20);
-    public static UpdatePriority SystemLoop                 = new(UpdatePhase.System,   21);
-    public static UpdatePriority Services                   = new(UpdatePhase.System,   30);
+    public static UpdatePriority LoggingSystem              = new(UpdatePhase.System,   20);
+    public static UpdatePriority SystemTick                 = new(UpdatePhase.System,   30);
+    public static UpdatePriority SystemLoop                 = new(UpdatePhase.System,   31);
+    public static UpdatePriority Services                   = new(UpdatePhase.System,   40);
     public static UpdatePriority DevEnv                     = new(UpdatePhase.System,   50);
 
     public static UpdatePriority InputDriver                = new(UpdatePhase.Input,    10);

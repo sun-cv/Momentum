@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 
-public class Resources
+public class Resources : Service
 {
     readonly Actor owner;
 
@@ -17,6 +17,8 @@ public class Resources
     public Resources(Actor owner)
     {
         this.owner = owner;
+
+        owner.Bus.Link.Local<PresenceStateEvent> (HandlePresenceStateEvent);
 
         RegisterHandlers();
     }
@@ -42,9 +44,28 @@ public class Resources
         handlers[handler.GetType()] = handler;
     }
 
+    // ============================================================================
+    //  Events
+    // ============================================================================
+
+    void HandlePresenceStateEvent(PresenceStateEvent message)
+    {
+        switch (message.State)
+        {
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
+        }
+    }
+
     // ===============================================================================
 
     readonly Logger Log = Logging.For(LogSystem.Resources);
+
+    public override void Dispose()
+    {
+        
+    }
 
     // ===============================================================================
 
@@ -104,6 +125,8 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<HealthReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        
         Services.Lane.Register(this);
 
         Reset();
@@ -192,6 +215,16 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
+    void HandlePresenceStateEvent(PresenceStateEvent message)
+    {
+        switch (message.State)
+        {
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
+        }
+    }
+
     // ===============================================================================
 
     public override void Dispose()
@@ -243,6 +276,8 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<HealthReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        
         Services.Lane.Register(this);
 
         Reset();
@@ -320,6 +355,16 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
+    void HandlePresenceStateEvent(PresenceStateEvent message)
+    {
+        switch (message.State)
+        {
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
+        }
+    }
+
     // ===============================================================================
 
     public override void Dispose()
@@ -376,6 +421,8 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<HealthReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        
         Services.Lane.Register(this);
 
         Reset();
@@ -466,6 +513,16 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
+    void HandlePresenceStateEvent(PresenceStateEvent message)
+    {
+        switch (message.State)
+        {
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
+        }
+    }
+
     // ===============================================================================
 
     void DebugLog()
@@ -525,6 +582,8 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<EnergyReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
+        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+        
         Services.Lane.Register(this);
 
         Reset();
@@ -612,6 +671,16 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
     void Queue<T>(T message) where T : IResourceAction
     {
         queue.Add(message);
+    }
+
+    void HandlePresenceStateEvent(PresenceStateEvent message)
+    {
+        switch (message.State)
+        {
+            case Presence.State.Entering: Enable();  break;
+            case Presence.State.Exiting:  Disable(); break;
+            case Presence.State.Disposal: Dispose(); break;
+        }
     }
 
     // ===============================================================================
