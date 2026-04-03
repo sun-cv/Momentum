@@ -15,8 +15,6 @@ public class LivePredicate : Service, IServiceLoop
 
     public LivePredicate(Func<bool> evaluator)
     {
-        Services.Lane.Register(this);
-
         this.evaluator  = evaluator;
         value           = evaluator();
     }
@@ -43,17 +41,12 @@ public class LivePredicate : Service, IServiceLoop
         value = evaluator();
     }
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     // ===============================================================================
 
-
-    public static implicit operator bool(LivePredicate b) => b.value;
-    public bool IsAuto  => autoUpdateEnabled;
     public bool Value   => value;
+    public bool IsAuto  => autoUpdateEnabled;
+    public static implicit operator bool(LivePredicate b) => b.value;
+
     public UpdatePriority Priority => ServiceUpdatePriority.SystemLoop;
 }
 
@@ -125,8 +118,6 @@ public class TimePredicate : Service, IServiceLoop
 
     public TimePredicate(TimerUnit unit, Func<bool> condition, bool resetOnFalse = true)
     {
-        Services.Lane.Register(this);
-
         this.unit           = unit;
         this.condition      = condition;
         this.resetOnFalse   = resetOnFalse;
@@ -171,17 +162,12 @@ public class TimePredicate : Service, IServiceLoop
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    public static implicit operator bool(TimePredicate time) => time.value;
     public bool Value               => value;
     public float Duration           => clock.CurrentTime;
     public int Frame                => frame.CurrentFrame;
     public ClockWatch ClockWatch    => clock;
     public FrameWatch FrameWatch    => frame;
+    public static implicit operator bool(TimePredicate time) => time.value;
     
     public UpdatePriority Priority => ServiceUpdatePriority.SystemLoop;
 }

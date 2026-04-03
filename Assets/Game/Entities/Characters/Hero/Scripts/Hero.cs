@@ -20,8 +20,6 @@ public class Hero : Player, IHero
     public Lifecycle            Lifecycle           { get; private set; }
     public AnimationSystem      Animation           { get; private set; }
 
-
-
     // ===============================================================================
     //  Resource
     // ===============================================================================
@@ -109,8 +107,6 @@ public class Hero : Player, IHero
     {
         Definition  = definition;
 
-        Bus         = new();
-
         Intent      = new(this);
         Stats       = new(this);
         Resource    = new(this);
@@ -127,20 +123,4 @@ public class Hero : Player, IHero
     }
 }
 
-public class HeroCorpse : Actor, ICorpse
-{
-    public Presence             Presence            { get; set; }
-    public Corpse               Corpse              { get; set; }
-    public AnimationSystem      Animation           { get; set; }
-
-    public Corpse.State Condition                   => Corpse.Condition;
-
-    public void Initialize(ActorDefinition definition)
-    {
-        Definition  = definition;
-
-        Presence    = new(this);
-        Corpse      = new(this);
-        Animation   = new(this);
-    }
-}
+public class HeroCorpse {}

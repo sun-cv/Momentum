@@ -3,22 +3,21 @@ using System.Linq;
 
 
 
-public class CommandSystem : Service
+public class CommandSystem : ActorService, IServiceTick
 {
-    Actor owner;
-    IntentSystem intent;
+    readonly IntentSystem intent;
 
     // -----------------------------------
 
-    readonly Dictionary<Capability, Command> active = new();
-    readonly Dictionary<Capability, Command> buffer = new();
+    readonly Dictionary<Capability, Command> activeBuffer   = new();
+    readonly Dictionary<Capability, Command> inputBuffer    = new();
 
+    
     // ===============================================================================
 
-    public void Initialize(IntentSystem intent)
+    public CommandSystem(IntentSystem intent) : base(intent.Owner)
     {
         this.intent = intent;
-        this.owner  = intent.Owner;
 
         owner.Bus.Link.Local<CommandEvent>(HandleCommandRequest);
         Broadcast();
@@ -60,46 +59,46 @@ public class CommandSystem : Service
                 Intent = intent.Input.Snapshot()
             };
 
-            if (buffer.ContainsKey(capability))
-                buffer.Remove(capability);
+            if (inputBuffer.ContainsKey(capability))
+                inputBuffer.Remove(capability);
 
-            buffer[capability] = command;       
+            inputBuffer[capability] = command;       
         }
         return toCreate.Count > 0;
     }
 
     bool RemoveExpiredBufferCommands()
     {
-        if (buffer.Count == 0) return false;
+        if (inputBuffer.Count == 0) return false;
 
-    var toRemove = buffer.Values
+    var toRemove = inputBuffer.Values
         .Where(command => !command.Locked && command.Button.released && command.Button.releasedframeCount.CurrentFrame > Config.Input.BUFFER_WINDOW_FRAMES)
         .ToList();
 
         foreach (var command in toRemove)
-            buffer.Remove(command.Action);
+            inputBuffer.Remove(command.Action);
 
         return toRemove.Count > 0;
     }
 
     bool RemoveReleasedActiveCommands()
     {
-        if (active.Count == 0) return false;
+        if (activeBuffer.Count == 0) return false;
 
-        var toRemove = active.Values.Where(command => !command.Locked && command.Button.released).ToList();
+        var toRemove = activeBuffer.Values.Where(command => !command.Locked && command.Button.released).ToList();
 
         foreach (var command in toRemove)
-            active.Remove(command.Action);
+            activeBuffer.Remove(command.Action);
 
         return toRemove.Count > 0;
     }
 
     void ConsumeCommand(Command command)
     {   
-        var instance  = buffer.Values.Where(instance => instance.Action == command.Action).OrderBy(instance => instance.Button.pressedframeCount.CurrentFrame).First();
+        var instance  = inputBuffer.Values.Where(instance => instance.Action == command.Action).OrderBy(instance => instance.Button.pressedframeCount.CurrentFrame).First();
 
-        buffer.Remove(command.Action);
-        active[command.Action] = instance;
+        inputBuffer.Remove(command.Action);
+        activeBuffer[command.Action] = instance;
     }
 
     // ===============================================================================
@@ -128,22 +127,18 @@ public class CommandSystem : Service
         //  Emitters
         // ===================================
 
-    void Broadcast() => owner.Bus.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(active), Snapshot.ReadOnly(buffer)));
+    void Broadcast() => owner.Bus.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(activeBuffer), Snapshot.ReadOnly(inputBuffer)));
 
     // ===============================================================================
     //  Helpers
     // ===============================================================================
 
-    void LockCommand(Command command)    => active.FirstOrDefault(entry => entry.Value.RuntimeId == command.RuntimeId).Value.Lock();
-    void UnlockCommand(Command command)  => active.FirstOrDefault(entry => entry.Value.RuntimeId == command.RuntimeId).Value.Unlock();
+    void LockCommand(Command command)    => activeBuffer.FirstOrDefault(entry => entry.Value.RuntimeId == command.RuntimeId).Value.Lock();
+    void UnlockCommand(Command command)  => activeBuffer.FirstOrDefault(entry => entry.Value.RuntimeId == command.RuntimeId).Value.Unlock();
 
     // ===============================================================================
 
-
-    public override void Dispose()
-    {
-        // NO OP
-    }
+    public UpdatePriority Priority      => ServiceUpdatePriority.CommandSystem;
 }
 
 

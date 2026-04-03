@@ -42,6 +42,12 @@ public class AnimatorParameter
     public static int IsMoving              = Animator.StringToHash(nameof(IsMoving));
     public static int Idle                  = Animator.StringToHash(nameof(Idle));
     public static int IdleTime              = Animator.StringToHash(nameof(IdleTime));
+    public static int CorpseFresh           = Animator.StringToHash(nameof(CorpseFresh));
+    public static int CorpseDecaying        = Animator.StringToHash(nameof(CorpseDecaying));
+    public static int CorpseConsumed        = Animator.StringToHash(nameof(CorpseConsumed));
+    public static int CorpseRemains         = Animator.StringToHash(nameof(CorpseRemains));
+
+        public enum State { Fresh, Decaying, Consumed, Remains, Disposal }
 
     public static Dictionary<string, int> Library = new()
     {
@@ -64,31 +70,39 @@ public class AnimatorParameter
     {
         { typeof(IAimable), new Entry[]
             {
-                new() { Rate = ServiceRate.Tick, Parameter = ResolvedAimX,          Handler = (animator, owner) => animator.SetFloat(ResolvedAimX,          ((IAimable)owner).ResolvedAim.X)            },
-                new() { Rate = ServiceRate.Tick, Parameter = ResolvedAimY,          Handler = (animator, owner) => animator.SetFloat(ResolvedAimY,          ((IAimable)owner).ResolvedAim.Y)            },
-                new() { Rate = ServiceRate.Tick, Parameter = ResolvedCardinalAimX,  Handler = (animator, owner) => animator.SetFloat(ResolvedCardinalAimX,  ((IAimable)owner).ResolvedAim.Cardinal.x)   },
-                new() { Rate = ServiceRate.Tick, Parameter = ResolvedCardinalAimY,  Handler = (animator, owner) => animator.SetFloat(ResolvedCardinalAimY,  ((IAimable)owner).ResolvedAim.Cardinal.y)   },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedAimX,          Handler = (animator, owner) => animator.SetFloat(ResolvedAimX,          ((IAimable)owner).ResolvedAim.X)                    },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedAimY,          Handler = (animator, owner) => animator.SetFloat(ResolvedAimY,          ((IAimable)owner).ResolvedAim.Y)                    },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedCardinalAimX,  Handler = (animator, owner) => animator.SetFloat(ResolvedCardinalAimX,  ((IAimable)owner).ResolvedAim.Cardinal.x)           },
+                new() { Rate = ServiceRate.Tick, Parameter = ResolvedCardinalAimY,  Handler = (animator, owner) => animator.SetFloat(ResolvedCardinalAimY,  ((IAimable)owner).ResolvedAim.Cardinal.y)           },
             }
         },
         { typeof(IMovableActor), new Entry[]
             {
-                new() { Rate = ServiceRate.Loop, Parameter = ResolvedFacingX,       Handler = (animator, owner) => animator.SetFloat(ResolvedFacingX,       ((IMovableActor)owner).ResolvedFacing.X)    },
-                new() { Rate = ServiceRate.Loop, Parameter = ResolvedFacingY,       Handler = (animator, owner) => animator.SetFloat(ResolvedFacingY,       ((IMovableActor)owner).ResolvedFacing.Y)    },
-                new() { Rate = ServiceRate.Loop, Parameter = Inactive,              Handler = (animator, owner) => animator.SetBool(Inactive,               ((IMovableActor)owner).Inactive)            },
-                new() { Rate = ServiceRate.Loop, Parameter = Disabled,              Handler = (animator, owner) => animator.SetBool(Disabled,               ((IMovableActor)owner).Disabled)            },
-                new() { Rate = ServiceRate.Loop, Parameter = IsMoving,              Handler = (animator, owner) => animator.SetBool(IsMoving,               ((IMovableActor)owner).IsMoving)            },
+                new() { Rate = ServiceRate.Loop, Parameter = ResolvedFacingX,       Handler = (animator, owner) => animator.SetFloat(ResolvedFacingX,       ((IMovableActor)owner).ResolvedFacing.X)            },
+                new() { Rate = ServiceRate.Loop, Parameter = ResolvedFacingY,       Handler = (animator, owner) => animator.SetFloat(ResolvedFacingY,       ((IMovableActor)owner).ResolvedFacing.Y)            },
+                new() { Rate = ServiceRate.Loop, Parameter = Inactive,              Handler = (animator, owner) => animator.SetBool(Inactive,               ((IMovableActor)owner).Inactive)                    },
+                new() { Rate = ServiceRate.Loop, Parameter = Disabled,              Handler = (animator, owner) => animator.SetBool(Disabled,               ((IMovableActor)owner).Disabled)                    },
+                new() { Rate = ServiceRate.Loop, Parameter = IsMoving,              Handler = (animator, owner) => animator.SetBool(IsMoving,               ((IMovableActor)owner).IsMoving)                    },
             }
         },
         { typeof(IMortal), new Entry[]
             {
-                new() { Rate = ServiceRate.Tick, Parameter = Alive,                 Handler = (animator, owner) => animator.SetBool(Alive,                  ((IMortal)owner).Alive)                     },
-                new() { Rate = ServiceRate.Tick, Parameter = Dead,                  Handler = (animator, owner) => animator.SetBool(Dead,                   ((IMortal)owner).Dead)                      },
+                new() { Rate = ServiceRate.Tick, Parameter = Alive,                 Handler = (animator, owner) => animator.SetBool(Alive,                  ((IMortal)owner).Alive)                             },
+                new() { Rate = ServiceRate.Tick, Parameter = Dead,                  Handler = (animator, owner) => animator.SetBool(Dead,                   ((IMortal)owner).Dead)                              },
             }
         },
         { typeof(IIdle), new Entry[]
             {
-                new() { Rate = ServiceRate.Loop, Parameter = Idle,                  Handler = (animator, owner) => animator.SetBool(Idle,                   ((IIdle)owner).IsIdle)                      },
-                new() { Rate = ServiceRate.Loop, Parameter = IdleTime,              Handler = (animator, owner) => animator.SetFloat(IdleTime,              ((IIdle)owner).IsIdle.Duration)             },
+                new() { Rate = ServiceRate.Loop, Parameter = Idle,                  Handler = (animator, owner) => animator.SetBool(Idle,                   ((IIdle)owner).IsIdle)                              },
+                new() { Rate = ServiceRate.Loop, Parameter = IdleTime,              Handler = (animator, owner) => animator.SetFloat(IdleTime,              ((IIdle)owner).IsIdle.Duration)                     },
+            }
+        },
+        { typeof(ICorpse), new Entry[]
+            {
+                new() { Rate = ServiceRate.Loop, Parameter = CorpseFresh,           Handler = (animator, owner) => animator.SetBool(CorpseFresh,            ((ICorpse)owner).Condition == Decomposition.State.Fresh)   },
+                new() { Rate = ServiceRate.Loop, Parameter = CorpseDecaying,        Handler = (animator, owner) => animator.SetBool(CorpseDecaying,         ((ICorpse)owner).Condition == Decomposition.State.Decaying)},
+                new() { Rate = ServiceRate.Loop, Parameter = CorpseConsumed,        Handler = (animator, owner) => animator.SetBool(CorpseConsumed,         ((ICorpse)owner).Condition == Decomposition.State.Consumed)},
+                new() { Rate = ServiceRate.Loop, Parameter = CorpseRemains,         Handler = (animator, owner) => animator.SetBool(CorpseRemains,          ((ICorpse)owner).Condition == Decomposition.State.Remains) },
             }
         },
     };

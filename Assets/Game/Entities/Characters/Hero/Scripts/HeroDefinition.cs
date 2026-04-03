@@ -7,7 +7,7 @@ public class HeroDefinition : ActorDefinition
 {
     public HeroDefinition()
     {
-        Name                        = "Hero";
+        Name                        = nameof(Hero);
         
         Stats                       = new()
         {
@@ -59,33 +59,35 @@ public class HeroDefinition : ActorDefinition
         };
 
         Lifecycle                   = new()
-        {   
+        {
+            Spawn                   = new()
+            {
+                Corpse              = true
+            },
             Respawn                 = new()
             {
                 Enabled             = false
             },
+        };
 
-            Corpse                  = new()
+        Animations                  = new()
+        {
+            Spawn                   = new()
             {
-                Enabled             = true,
-                Name                = "HeroCorpse",
-                PersistDuration     = 5,
+                Enabled             = false,
+                Default             = "Spawn"
+            },
+
+            Death                   = new()
+            {
+                Enabled             = false,
+                Default             = "Death"
             },
         };
 
-        Animations              = new()
+        Rendering                   = new()
         {
-            Spawn               = new()
-            {
-                Enabled         = false,
-                Default         = "Spawn"
-            },
-
-            Death               = new()
-            {
-                Enabled         = false,
-                Default         = "Death"
-            },
+            DepthSortingTier        = SortTier.Entity,
         };
     }
 }

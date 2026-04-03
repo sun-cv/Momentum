@@ -19,14 +19,14 @@ public class DummyFactory : ICorpseFactory
         return dummy;
     }
     
-    public Actor SpawnCorpse(Actor owner, Vector3 position)
+    public Actor SpawnCorpse(Vector3 position)
     {
-        var definition  = new DummyDefinition();
-        var prefab      = Assets.Get(definition.Lifecycle.Corpse.Name);
-        var view        = Object.Instantiate(prefab, position, Quaternion.identity);
+        var definition      = new DummyCorpseDefinition();
+        var prefab          = Assets.Get(definition.Corpse.Name);
+        var view            = Object.Instantiate(prefab, position, Quaternion.identity);
 
-        Dummy dummy     = new();
-        dummy.Bridge    = new(dummy, view);
+        Corpse dummy        = new();
+        dummy.Bridge        = new(dummy, view);
 
         dummy.Initialize(definition);
 

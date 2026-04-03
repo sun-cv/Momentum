@@ -5,14 +5,10 @@ using System.Reflection;
 
 public class ActorStats : Stats
 {
-    readonly Actor owner;
-    
     // ===============================================================================
 
-    public ActorStats(Actor actor)
+    public ActorStats(Actor actor) : base(actor)
     {
-        owner = actor;
-        
         foreach (var stat in StatProperties)
         {
             var value = (float)stat.GetValue(actor.Definition.Stats);
@@ -22,8 +18,6 @@ public class ActorStats : Stats
 
             stats.Add(stat.Name, value);
         }
-
-        owner.Bus.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -50,27 +44,8 @@ public class ActorStats : Stats
     public float Impact             => this[nameof(Impact)];
 
     // ===============================================================================
-    //  Events
-    // ===============================================================================
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
-    // ===============================================================================
-
-    readonly Logger Log = Logging.For(LogSystem.Stats);
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
+    // readonly Logger Log = Logging.For(LogSystem.Stats);
 
     static readonly PropertyInfo[] StatProperties = typeof(StatsDefinition).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(prop => prop.PropertyType == typeof(float)).ToArray();
 }

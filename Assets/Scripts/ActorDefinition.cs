@@ -8,12 +8,14 @@ using System.Collections.Generic;
 
 public abstract class ActorDefinition : Definition
 {
-    public StatsDefinition Stats                        { get; init; }
-    public ResourceDefinition Resource                  { get; init; }
-    public PhysicsDefinition Physics                    { get; init; }
-    public PresenceDefinition Presence                  { get; init; }
-    public LifecycleDefinition Lifecycle                { get; init; }
-    public AnimationDefinition Animations               { get; init; }
+    public StatsDefinition Stats                        { get; init; } = new();
+    public ResourceDefinition Resource                  { get; init; } = new();
+    public PresenceDefinition Presence                  { get; init; } = new();
+    public LifecycleDefinition Lifecycle                { get; init; } = new();
+    public PhysicsDefinition Physics                    { get; init; } = new();
+    public CorpseDefinition Corpse                      { get; init; } = new();
+    public AnimationDefinition Animations               { get; init; } = new();
+    public RenderingDefinition Rendering                { get; init; } = new();
 };  
 
 
@@ -27,6 +29,7 @@ public class StatsDefinition : Definition
     public float MaxArmor                               { get; init; }
     public float MaxShield                              { get; init; }
     public float MaxEnergy                              { get; init; }
+    public float MaxIntegrity                           { get; init; }
     public float HealthRegen                            { get; init; } 
     public float ShieldRegen                            { get; init; } 
     public float EnergyRegen                            { get; init; } 
@@ -35,16 +38,6 @@ public class StatsDefinition : Definition
     public float Impact                                 { get; init; }
 }
 
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                        Presence
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class PresenceDefinition : Definition
-{
-    public bool CanBeSetAbsent                          { get; init; }
-    public bool CanBeCameraTarget                       { get; init; }
-}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                        Resource
@@ -56,6 +49,7 @@ public class ResourceDefinition : Definition
     public ResourceConfig Armor                         { get; init; }
     public ResourceConfig Shield                        { get; init; }
     public ResourceConfig Energy                        { get; init; }
+    public ResourceConfig Integrity                     { get; init; }
 }
 
 public class ResourceConfig
@@ -73,6 +67,15 @@ public class ResourceThreshold
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Presence
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class PresenceDefinition : Definition
+{
+    public bool CanBeSetAbsent                          { get; init; }
+    public bool CanBeCameraTarget                       { get; init; }
+}
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                        Lifecycle
@@ -82,11 +85,9 @@ public class LifecycleDefinition : Definition
 {
     public SpawnBehavior    Spawn                       { get; init; }
     public RespawnBehavior  Respawn                     { get; init; }
-    public CorpseBehavior   Corpse                      { get; init; }
     
     public List<Effect> OnDeathEffects                  { get; init; } = new();
     public bool AlertOnDeath                            { get; init; }
-
 }
 
 
@@ -96,7 +97,7 @@ public class LifecycleDefinition : Definition
 
 public class SpawnBehavior : Definition
 {
-    
+    public bool Corpse                                  { get; init; }
 }
 
 
@@ -117,16 +118,34 @@ public class RespawnBehavior : Definition
         //                                 Corpse                                                       
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseBehavior : Definition
+public class CorpseDefinition : Definition
 {
-    public bool Enabled                                 { get; init; }
+    public int MaxOccupancy                             { get; init; }
+
     public float FreshDuration                          { get; init; }
     public float DecayDuration                          { get; init; }
     public float ConsumeDuration                        { get; init; }
     public float RemainsDuration                        { get; init; }
-    public float PersistDuration                        { get; init; }
+}
 
-    public bool AllowMultiConsume                       { get; init; }
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Physics
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class PhysicsDefinition
+{
+    /// <summary> Mass of the entity. Affects momentum transfer ratios and solver-based collision response. </summary>
+    public float Mass                                   { get; init; }
+    /// <summary> Minimum impact magnitude required before bleed force is applied back onto this entity. Prevents bounce on casual contact. </summary>
+    public float BleedThreshold                         { get; init; }
+    /// <summary> Fraction of non-transferred force that bleeds back onto this entity on impact. 0 = no bleed, 1 = full bleed. </summary>
+    public float BleedRatio                             { get; init; }
+    /// <summary> Reduces incoming transfer force from Actor contacts. 0 = full force received, 1 = immovable. </summary>
+    public float PushResistance                         { get; init; }
+    /// <summary> Minimum impact magnitude required before this entity responds to Actor contact forces. </summary>
+    public float MomentumThreshold                      { get; init; }
+
+    public float Friction                               { get; init; } = Settings.Physics.FRICTION;
 }
 
 
@@ -151,24 +170,12 @@ public class AnimationSet : Definition
     public Dictionary<string, string>   ByLocation      { get; init; }
 }
 
+
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                         Physics
+//                                      Rendering
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-
-public class PhysicsDefinition
+public class RenderingDefinition : Definition
 {
-    /// <summary> Mass of the entity. Affects momentum transfer ratios and solver-based collision response. </summary>
-    public float Mass                                   { get; init; }
-    /// <summary> Minimum impact magnitude required before bleed force is applied back onto this entity. Prevents bounce on casual contact. </summary>
-    public float BleedThreshold                         { get; init; }
-    /// <summary> Fraction of non-transferred force that bleeds back onto this entity on impact. 0 = no bleed, 1 = full bleed. </summary>
-    public float BleedRatio                             { get; init; }
-    /// <summary> Reduces incoming transfer force from Actor contacts. 0 = full force received, 1 = immovable. </summary>
-    public float PushResistance                         { get; init; }
-    /// <summary> Minimum impact magnitude required before this entity responds to Actor contact forces. </summary>
-    public float MomentumThreshold                      { get; init; }
-
-    public float Friction                               { get; init; } = Settings.Physics.FRICTION;
+    public SortTier DepthSortingTier                    { get; init; }
 }
-

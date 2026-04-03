@@ -14,11 +14,26 @@ using UnityEngine;
 public interface IInitialize                    { public void Initialize(); }
 public interface IBind                          { public void Bind();       } 
 
+
+public interface IStateHandler
+{
+    void Enter      ();
+    void Update     ();
+    void Exit       ();
+}
+
 public interface IStateHandler<TController>
 {    
     void Enter      (TController controller);
     void Update     (TController controller);
     void Exit       (TController controller);
+}
+
+public interface IStateProcessor
+{
+    void Enter      ();
+    void Update     ();
+    void Exit       ();
 }
 
 public interface IStateProcessor<TController, TValue>
@@ -44,12 +59,12 @@ public abstract class Definition
     public string Name                          { get; set; }
 }
 
-public class Payload                            { public Guid Id                        { get; init; } = Guid.NewGuid();}
+public class Payload                            { public Guid Id                        { get; init; }  = Guid.NewGuid();}
 public class API : Payload                      { public Request  Request               { get; set;  }
                                                   public Response Response              { get; set;  }}
 
 
-public class Runtime                            { public Guid RuntimeId                 { get; init; } = Guid.NewGuid();}
+public class Runtime                            { public Guid RuntimeId                 { get; init; }  = Guid.NewGuid();}
 public class Instance           : Runtime       {}
 
 public class Zone               : Runtime       { public string Name                    { get; set;  }
@@ -63,7 +78,7 @@ public class CameraPoint        : Zone          {}
 
 public class Entity             : Runtime       {}
 public class Actor              : Entity        { 
-                                                  public Bus    Bus                     { get; set;  }
+                                                  public Bus    Bus                     { get; set;  }  = new();
                                                   public Bridge Bridge                  { get; set;  }
                                                   public ActorDefinition Definition     { get; set;  }}
 
@@ -138,7 +153,7 @@ public interface IControllable
     bool Inactive                           { get; set; }
 }
 
-public interface IMortal : IHealth
+public interface IMortal : IDamageable
 {
     bool Alive                              { get; }
     bool Dead                               { get; }
@@ -146,6 +161,8 @@ public interface IMortal : IHealth
     bool Invulnerable                       { get; set; }
     bool Impervious                         { get; set; }
 }
+
+public interface IDamageable : IHealth      {}
 
 public interface IHealth
 {
@@ -157,7 +174,6 @@ public interface IHealthRegen
 {
     float HealthRegen                       { get; }
 }
-
 
 public interface IArmor
 {
@@ -265,14 +281,15 @@ public interface IAfflictable
 
 public interface ICorpse
 {
-    Corpse.State Condition                  { get; }
+    Decomposition.State Condition           { get; }
+    float Integrity                         { get; }
+    float MaxIntegrity                      { get; }
 }
 
 public interface IIdle
 {       
     TimePredicate IsIdle                    { get; }
 }
-
 
 public interface IActor :
     IDepthSorted,

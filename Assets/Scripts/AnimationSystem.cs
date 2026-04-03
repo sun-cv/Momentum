@@ -3,9 +3,8 @@ using System.Collections.Generic;
 
 
 
-public class AnimationSystem : Service, IServiceLoop
+public class AnimationSystem : ActorService, IServiceLoop
 {
-    readonly Actor owner;
     readonly AnimationDefinition animations;
 
     // -----------------------------------
@@ -18,12 +17,8 @@ public class AnimationSystem : Service, IServiceLoop
 
     // ===============================================================================
 
-    public AnimationSystem(Actor actor)
+    public AnimationSystem(Actor actor) : base(actor)
     {
-
-        Services.Lane.Register(this);
-
-        owner       = actor;
         animations  = actor.Definition.Animations;
 
         animator    = new(owner);
@@ -140,24 +135,9 @@ public class AnimationSystem : Service, IServiceLoop
         queue.Add(message);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
     // ===============================================================================
 
     readonly Logger Log = Logging.For(LogSystem.Animation);
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
 
     public UpdatePriority Priority      => ServiceUpdatePriority.AnimationSystem;
 }

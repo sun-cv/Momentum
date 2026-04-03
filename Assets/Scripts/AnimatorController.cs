@@ -5,9 +5,8 @@ using UnityEngine;
 
 
 
-public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceStep, IDisposable
+public class AnimatorController : ActorService, IServiceTick, IServiceLoop, IServiceStep, IDisposable
 {
-    readonly Actor owner;
     readonly Animator animator;
     
         // -----------------------------------
@@ -35,14 +34,11 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
     // ===============================================================================
 
-    public AnimatorController(Actor actor)
+    public AnimatorController(Actor actor) : base(actor)
     {
         if (!ValidateOwner(actor))
             return;
 
-        Services.Lane.Register(this);
-
-        owner               = actor;
         animator            = actor.Bridge.Animator;
 
         validParameters     = new();
@@ -59,7 +55,6 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
 
         BuildHandlers();
 
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
     // ===============================================================================
@@ -268,24 +263,25 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         owner.Bus.Emit.Local(new AnimatorEvent(type, request.Data.Animation));
     }
 
-    string GetCurrentAnimationName(int layer)
-    {
-        var clipInfo = animator.GetCurrentAnimatorClipInfo(layer);
-        return clipInfo.Length > 0 ? clipInfo[0].clip.name : null;
-    }
+    // string GetCurrentAnimationName(int layer)
+    // {
+    //     var clipInfo = animator.GetCurrentAnimatorClipInfo(layer);
+    //     return clipInfo.Length > 0 ? clipInfo[0].clip.name : null;
+    // }
 
-    // ============================================================================
-    //  Events
-    // ============================================================================
+    // ===============================================================================
+    //  Predicates
+    // ===============================================================================
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
+    bool ValidateOwner(Actor actor)
     {
-        switch (message.State)
+        if (actor.Bridge.Animator == null)
         {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
+            Log.Error($"{actor.GetType().Name} Failed System Validation. Animator Controller requires Animator assigned in Bridge");
+            return false;
         }
+
+        return true;
     }
 
     // ===============================================================================
@@ -317,23 +313,6 @@ public class AnimatorController : Service, IServiceTick, IServiceLoop, IServiceS
         Log.Trace("overrides", () => overrides.Count());
     }
 
-    bool ValidateOwner(Actor actor)
-    {
-        if (actor.Bridge.Animator == null)
-        {
-            Log.Error($"{actor.GetType().Name} Failed System Validation. Animator Controller requires Animator assigned in Bridge");
-            return false;
-        }
-
-        return true;
-    }
-
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.AnimatorController;
 }
 
@@ -353,10 +332,5 @@ public readonly struct AnimatorEvent : IMessage
         Type = type;
     }
 }
-
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                          Maps
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 

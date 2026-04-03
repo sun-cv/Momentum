@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class Presence : Service, IServiceLoop
 {
-    public enum Target      { Present, Absent }
-    public enum State       { Entering, Present, Exiting, Absent, Disposal }
+    public enum Target      {                      Present, Simulated, Absent, Disposal }
+    public enum State       { Resetting, Entering, Present, Simulated, Absent, Disposal }
 
         // -----------------------------------
 
@@ -15,7 +15,7 @@ public class Presence : Service, IServiceLoop
 
         // -----------------------------------
 
-    Dictionary<State, StateHandler<Presence, State>> stateHandlers;
+    Dictionary<State, IStateHandler<Presence>> stateHandlers;
 
         // -----------------------------------
 
@@ -28,7 +28,7 @@ public class Presence : Service, IServiceLoop
 
     public Presence(Actor actor)
     {
-        Services.Lane.Register(this);
+        Services.Lane.RegisterService(this);
 
         owner       = actor;
         definition  = actor.Definition;
@@ -44,11 +44,11 @@ public class Presence : Service, IServiceLoop
     {
         stateHandlers = new();
 
-        Register(State.Entering,    new PresenceEnteringState(owner, definition));
-        Register(State.Present,     new PresencePresentState (owner, definition));
-        Register(State.Exiting,     new PresenceExitingState (owner, definition));
-        Register(State.Absent,      new PresenceAbsentState  (owner, definition));
-        Register(State.Disposal,    new PresenceDisposalState(owner, definition));
+        Register(State.Entering,    new PresenceEnteringState   (owner, definition));
+        Register(State.Present,     new PresencePresentState    (owner, definition));
+        Register(State.Simulated,   new PresenceSimulatedState  (owner, definition));
+        Register(State.Absent,      new PresenceAbsentState     (owner, definition));
+        Register(State.Disposal,    new PresenceDisposalState   (owner, definition));
     }
 
     // ===============================================================================
@@ -109,10 +109,18 @@ public class Presence : Service, IServiceLoop
         switch (target)
         {
             case Target.Present: 
-                TransitionTo(State.Entering);
+            case Target.Simulated: 
+                switch(current)
+                {
+                    case Target.Absent: TransitionTo(State.Resetting);  break;
+                    default:            TransitionTo(State.Entering);   break;
+                }
             break;
             case Target.Absent:
-                TransitionTo(State.Exiting);
+                TransitionTo(State.Absent);
+            break;
+            case Target.Disposal:
+                TransitionTo(State.Disposal);
             break;
         }
     }
@@ -133,18 +141,16 @@ public class Presence : Service, IServiceLoop
 
     void HandlePresenceStateEvent(PresenceStateEvent message)
     {
-
         switch (message.State)
         {
-            case Presence.State.Disposal: Dispose(); break;
+            case State.Disposal: Dispose(); break;
         }
     }
 
     // ===============================================================================
 
-    void Register(State state, StateHandler<Presence, State> handler)
+    void Register(State state, IStateHandler<Presence> handler)
     {
-        handler.Transition += TransitionTo;
         stateHandlers[state] = handler;
     }
     
@@ -159,11 +165,12 @@ public class Presence : Service, IServiceLoop
 
     public override void Dispose()
     {
-        Debug.Log("Dispose");
         Services.Lane.Deregister(this);
     }
 
     public Target Current           { get => current; set => current = value; }
+    public Target Desired           { get => target;  set =>  target = value; }
+
     public UpdatePriority Priority  => ServiceUpdatePriority.Presence;
 }
 
@@ -172,11 +179,54 @@ public class Presence : Service, IServiceLoop
 //                                     State Handlers                                       
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Initialize
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class PresenceResettingState : IStateHandler<Presence>
+{
+    readonly Actor owner;
+    readonly ActorDefinition definition;
+
+    // ===============================================================================
+
+    public PresenceResettingState(Actor owner, ActorDefinition definition)
+    {
+        this.owner      = owner;
+        this.definition = definition;
+    }
+
+    // ===============================================================================
+
+    public void Enter(Presence controller)
+    {   
+    }
+
+    public void Update(Presence controller)
+    {
+        AdvanceState(controller);
+    }
+
+    public void Exit(Presence controller)
+    {
+        
+    }
+
+    // ===============================================================================
+    
+    void AdvanceState(Presence controller)
+    {
+        controller.TransitionTo(Presence.State.Entering);
+    }
+
+}
+
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                Entering
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class PresenceEnteringState : StateHandler<Presence, Presence.State>
+public class PresenceEnteringState : IStateHandler<Presence>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
@@ -191,21 +241,31 @@ public class PresenceEnteringState : StateHandler<Presence, Presence.State>
 
     // ===============================================================================
 
-    public override void Enter(Presence controller)
+    public void Enter(Presence controller)
     {   
     }
 
-    public override void Update(Presence controller)
+    public void Update(Presence controller)
     {
-        controller.TransitionTo(Presence.State.Present);
+        AdvanceState(controller);
     }
 
-    public override void Exit(Presence controller)
+    public void Exit(Presence controller)
     {
         
     }
 
     // ===============================================================================
+    
+    void AdvanceState(Presence controller)
+    {
+        switch(controller.Desired)
+        {
+            case Presence.Target.Present:   controller.TransitionTo(Presence.State.Present);   break;
+            case Presence.Target.Simulated: controller.TransitionTo(Presence.State.Simulated); break;
+        }
+    }
+
 }
 
 
@@ -213,7 +273,7 @@ public class PresenceEnteringState : StateHandler<Presence, Presence.State>
         //                                 Present
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class PresencePresentState : StateHandler<Presence, Presence.State>
+public class PresencePresentState : IStateHandler<Presence>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
@@ -228,17 +288,17 @@ public class PresencePresentState : StateHandler<Presence, Presence.State>
 
     // ===============================================================================
 
-    public override void Enter(Presence controller)
+    public void Enter(Presence controller)
     {   
         SetCurrentTarget(controller);
     }
 
-    public override void Update(Presence controller)
+    public void Update(Presence controller)
     {
         
     }
 
-    public override void Exit(Presence controller)
+    public void Exit(Presence controller)
     {
         
     }
@@ -254,17 +314,17 @@ public class PresencePresentState : StateHandler<Presence, Presence.State>
 
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Exiting
+        //                              Simulated
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class PresenceExitingState : StateHandler<Presence, Presence.State>
+public class PresenceSimulatedState : IStateHandler<Presence>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
 
     // ===============================================================================
 
-    public PresenceExitingState(Actor owner, ActorDefinition definition)
+    public PresenceSimulatedState(Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
@@ -272,29 +332,24 @@ public class PresenceExitingState : StateHandler<Presence, Presence.State>
 
     // ===============================================================================
 
-    public override void Enter(Presence controller)
+    public void Enter(Presence controller)
     {   
+        SetCurrentTarget(controller);
     }
 
-    public override void Update(Presence controller)
+    public void Update(Presence controller)
     {
-        if (CanBeAbsent())
-            controller.TransitionTo(Presence.State.Absent);
-        else
-            controller.TransitionTo(Presence.State.Disposal);
     }
 
-    public override void Exit(Presence controller)
+    public void Exit(Presence controller)
     {
     }
 
     // ===============================================================================
-    //  PREDICATES
-    // ===============================================================================
 
-    bool CanBeAbsent()
+    void SetCurrentTarget(Presence controller)
     {
-        return definition.Presence.CanBeSetAbsent;
+        controller.Current = Presence.Target.Simulated;
     }
 }
 
@@ -303,7 +358,7 @@ public class PresenceExitingState : StateHandler<Presence, Presence.State>
         //                                 Absent
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class PresenceAbsentState : StateHandler<Presence, Presence.State>
+public class PresenceAbsentState : IStateHandler<Presence>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
@@ -318,17 +373,17 @@ public class PresenceAbsentState : StateHandler<Presence, Presence.State>
 
     // ===============================================================================
 
-    public override void Enter(Presence controller)
+    public void Enter(Presence controller)
     {   
         SetCurrentTarget(controller);
     }
 
-    public override void Update(Presence controller)
+    public void Update(Presence controller)
     {
         
     }
 
-    public override void Exit(Presence controller)
+    public void Exit(Presence controller)
     {
 
     }
@@ -347,7 +402,7 @@ public class PresenceAbsentState : StateHandler<Presence, Presence.State>
         //                                Disposal
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class PresenceDisposalState : StateHandler<Presence, Presence.State>
+public class PresenceDisposalState : IStateHandler<Presence>
 {
     readonly Actor owner;
     readonly ActorDefinition definition;
@@ -362,17 +417,17 @@ public class PresenceDisposalState : StateHandler<Presence, Presence.State>
 
     // ===============================================================================
 
-    public override void Enter(Presence controller)
+    public void Enter(Presence controller)
     {   
     
     }
 
-    public override void Update(Presence controller)
+    public void Update(Presence controller)
     {   
         Exit(controller);
     }
 
-    public override void Exit(Presence controller)
+    public void Exit(Presence controller)
     {
         owner.Bus.Dispose();
         Object.Destroy(owner.Bridge.View);

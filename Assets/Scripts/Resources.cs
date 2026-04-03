@@ -4,22 +4,15 @@ using UnityEngine;
 
 
 
-public class Resources : Service
+public class Resources : ActorService
 {
-    readonly Actor owner;
-
-        // -----------------------------------
 
     readonly Dictionary<Type, IResourceHandler> handlers = new();
 
     // ===============================================================================
     
-    public Resources(Actor owner)
+    public Resources(Actor actor) : base(actor)
     {
-        this.owner = owner;
-
-        owner.Bus.Link.Local<PresenceStateEvent> (HandlePresenceStateEvent);
-
         RegisterHandlers();
     }
 
@@ -33,10 +26,11 @@ public class Resources : Service
 
     void RegisterHandlers()
     {
-        if (owner is IShield)   Register(new ShieldHandler(this));
-        if (owner is IArmor)    Register(new ArmorHandler (this));
-        if (owner is IHealth)   Register(new HealthHandler(this));
-        if (owner is IEnergy)   Register(new EnergyHandler(this));
+        if (owner is IShield)   Register(new ShieldHandler   (owner));
+        if (owner is IArmor )   Register(new ArmorHandler    (owner));
+        if (owner is IHealth)   Register(new HealthHandler   (owner));
+        if (owner is IEnergy)   Register(new EnergyHandler   (owner));
+        if (owner is ICorpse)   Register(new IntegrityHandler(owner));
     }   
 
     void Register(IResourceHandler handler)
@@ -44,37 +38,19 @@ public class Resources : Service
         handlers[handler.GetType()] = handler;
     }
 
-    // ============================================================================
-    //  Events
-    // ============================================================================
+    // ===============================================================================
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
+    // readonly Logger Log = Logging.For(LogSystem.Resources);
 
     // ===============================================================================
 
-    readonly Logger Log = Logging.For(LogSystem.Resources);
+    public float Health     => Get<HealthHandler>   ().Health;
+    public float Armor      => Get<ArmorHandler>    ().Armor;
+    public float Shield     => Get<ShieldHandler>   ().Shield;
+    public float Energy     => Get<EnergyHandler>   ().Energy;
+    public float Integrity  => Get<IntegrityHandler>().Integrity;
 
-    public override void Dispose()
-    {
-        
-    }
-
-    // ===============================================================================
-
-    public float Health => Get<HealthHandler>().Health;
-    public float Armor  => Get<ArmorHandler> ().Armor;
-    public float Shield => Get<ShieldHandler>().Shield;
-    public float Energy => Get<EnergyHandler>().Energy;
-
-    public Actor Owner => owner;
+    public Actor Owner      => owner;
 }
 
 
@@ -89,12 +65,8 @@ public class Resources : Service
         //                                 Shield                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class ShieldHandler : Service, IServiceLoop, IResourceHandler
+public class ShieldHandler : ActorService, IServiceLoop, IResourceHandler
 {
-    readonly Actor              owner;
-    readonly Resources          resources;
-
-        // -----------------------------------
 
     readonly ResourceMonitor    monitor;
     readonly RegenHandler       regeneration;
@@ -109,10 +81,8 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
 
     // ===============================================================================
 
-    public ShieldHandler(Resources resources)
+    public ShieldHandler(Actor actor) : base(actor)
     {
-        this.resources  = resources;
-        this.owner      = resources.Owner;
         this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Shield, OnShieldAlert);
 
         if (owner is IShieldRegen instance)
@@ -122,12 +92,8 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
 
         owner.Bus.Link.Local<Restore>      (Queue);
         owner.Bus.Link.Local<Dissipate>    (Queue);
-        owner.Bus.Link.Local<HealthReset>  (Queue);
+        owner.Bus.Link.Local<ShieldReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
-
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
-        
-        Services.Lane.Register(this);
 
         Reset();
     }
@@ -215,30 +181,15 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
     public float Shield             => shield;
     public float MaxShield          => Shielded.MaxShield;
     public float ShieldPercent      => shield / MaxShield;
     public IMortal Mortal           => owner as IMortal;
     public IShield Shielded         => owner as IShield;
     public IShieldEquipped Equipped => owner as IShieldEquipped;
+    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
 }
 
 
@@ -246,12 +197,8 @@ public class ShieldHandler : Service, IServiceLoop, IResourceHandler
         //                                  Armor                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class ArmorHandler : Service, IServiceLoop, IResourceHandler
+public class ArmorHandler : ActorService, IServiceLoop, IResourceHandler
 {
-    readonly Actor              owner;
-    readonly Resources          resources;
-
-        // -----------------------------------
 
     readonly ResourceMonitor    monitor;
 
@@ -265,20 +212,14 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
 
     // ===============================================================================
 
-    public ArmorHandler(Resources resources)
+    public ArmorHandler(Actor actor) : base(actor)
     {
-        this.resources  = resources;
-        this.owner      = resources.Owner;
         this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Armor, OnArmorAlert);
 
-        owner.Bus.Link.Local<Heal>         (Queue);
-        owner.Bus.Link.Local<Wound>        (Queue);
-        owner.Bus.Link.Local<HealthReset>  (Queue);
-        owner.Bus.Link.Local<ResourceReset>(Queue);
-
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
-        
-        Services.Lane.Register(this);
+        owner.Bus.Link.Local<Repair>        (Queue);
+        owner.Bus.Link.Local<Fracture>      (Queue);
+        owner.Bus.Link.Local<ArmorReset>   (Queue);
+        owner.Bus.Link.Local<ResourceReset> (Queue);
 
         Reset();
     }
@@ -319,7 +260,7 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
         {
             case Repair         instance: Repair (instance.Amount);     break;
             case Fracture       instance: Fracture(instance.Amount);    break;
-            case HealthReset:             Reset();                      break;
+            case ArmorReset:              Reset();                      break;
             case ResourceReset:           Reset();                      break;
         }
     }
@@ -355,29 +296,14 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
     public float Armor              => armor;
     public float MaxArmor           => Armored.MaxArmor;
     public float ArmorPercent       => armor / MaxArmor;
     public IMortal Mortal           => owner as IMortal;
     public IArmor Armored           => owner as IArmor;
+    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
 }
 
 
@@ -385,12 +311,8 @@ public class ArmorHandler : Service, IServiceLoop, IResourceHandler
         //                                 Health                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class HealthHandler : Service, IServiceLoop, IResourceHandler
+public class HealthHandler : ActorService, IServiceLoop, IResourceHandler
 {
-    readonly Actor              owner;
-    readonly Resources          resources;
-
-        // -----------------------------------
 
     readonly ResourceMonitor    monitor;
     readonly RegenHandler       regeneration;
@@ -405,10 +327,8 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
 
     // ===============================================================================
 
-    public HealthHandler(Resources resources)
+    public HealthHandler(Actor actor) : base(actor)
     {
-        this.resources  = resources;
-        this.owner      = resources.Owner;
         this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Health, OnHealthAlert);
 
         if (owner is IHealthRegen instance)
@@ -420,10 +340,6 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<Wound>        (Queue);
         owner.Bus.Link.Local<HealthReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
-
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
-        
-        Services.Lane.Register(this);
 
         Reset();
     }
@@ -513,16 +429,6 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
     // ===============================================================================
 
     void DebugLog()
@@ -530,28 +436,19 @@ public class HealthHandler : Service, IServiceLoop, IResourceHandler
         Logging.For(LogSystem.Resources).Trace($"{owner.GetType().Name}.Health", () => health, clean: true);
     }
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
     public float Health             => health;
     public float MaxHealth          => Mortal.MaxHealth;
     public float HealthPercent      => health / MaxHealth;
     public IMortal Mortal           => owner as IMortal;
+    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
 }
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                  Energy                                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class EnergyHandler : Service, IServiceLoop, IResourceHandler
+public class EnergyHandler : ActorService, IServiceLoop, IResourceHandler
 {
-    readonly Actor              owner;
-    readonly Resources          resources;
-
-        // -----------------------------------
 
     readonly ResourceMonitor    monitor;
     readonly RegenHandler       regeneration;
@@ -566,10 +463,8 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
 
     // ===============================================================================
 
-    public EnergyHandler(Resources resources)
+    public EnergyHandler(Actor actor) : base(actor)
     {
-        this.resources  = resources;
-        this.owner      = resources.Owner;
         this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Health, OnEnergyAlert);
 
         if (owner is IEnergyRegen instance)
@@ -581,10 +476,6 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<Expend>       (Queue);
         owner.Bus.Link.Local<EnergyReset>  (Queue);
         owner.Bus.Link.Local<ResourceReset>(Queue);
-
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
-        
-        Services.Lane.Register(this);
 
         Reset();
     }
@@ -637,7 +528,7 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
         {
             case Recharge       instance: Recharge (instance.Amount);   break;
             case Expend         instance: Expend(instance.Amount);      break;
-            case HealthReset:             Reset();                      break;
+            case EnergyReset:             Reset();                      break;
             case ResourceReset:           Reset();                      break;
         }
     }
@@ -673,32 +564,121 @@ public class EnergyHandler : Service, IServiceLoop, IResourceHandler
         queue.Add(message);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
     public float Energy             => energy;
     public float MaxEnergy          => Energized.MaxEnergy;
     public float EnergyPercent      => energy / MaxEnergy;
     public IMortal Mortal           => owner as IMortal;
     public IEnergy Energized        => owner as IEnergy;
+    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
 }
 
 
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                Integrity                                                      
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class IntegrityHandler : ActorService, IServiceLoop, IResourceHandler
+{
+
+    readonly ResourceMonitor    monitor;
+
+        // -----------------------------------
+
+    readonly List<IResourceAction> queue = new();
+
+        // -----------------------------------
+
+    float integrity;
+
+    // ===============================================================================
+
+    public IntegrityHandler(Actor actor) : base(actor)
+    {
+        this.monitor    = new ResourceMonitor(owner, owner.Definition.Resource.Integrity, OnIntegrityAlert);
+
+        owner.Bus.Link.Local<Deplete>       (Queue);
+        owner.Bus.Link.Local<IntegrityReset>(Queue);
+        owner.Bus.Link.Local<ResourceReset> (Queue);
+
+        Reset();
+    }
+
+    // ===============================================================================
+
+    public void Loop()
+    {
+        ProcessQueue();
+        Monitor();
+    }
+
+    // ===============================================================================
+
+    void ProcessQueue()
+    {
+        if (queue.Count == 0) 
+            return;
+
+        foreach (var action in queue)
+        {
+            ProcessAction(action);
+        }
+
+        queue.Clear();
+    }
+
+    void Monitor()
+    {
+        monitor.Evaluate(integrity, MaxIntegrity);
+    }
+
+    // ===============================================================================
+
+    void ProcessAction(IResourceAction action)
+    {
+        switch (action)
+        {
+            case Deplete        instance: Deplete(instance.Amount);     break;
+            case IntegrityReset:          Reset();                      break;
+            case ResourceReset:           Reset();                      break;
+        }
+    }
+
+    // ===============================================================================
+
+    void Deplete(float amount)
+    {
+        integrity = Mathf.Max(0f, integrity - amount);
+    } 
+
+    void Reset()
+    {
+        integrity = MaxIntegrity;
+    }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
+    void OnIntegrityAlert(float current, float max, float previous, float percent)
+    {
+        owner.Bus.Emit.Local(Publish.Changed, new IntegrityEvent(owner, current, max, previous, percent));
+    }
+
+    void Queue<T>(T message) where T : IResourceAction
+    {
+        queue.Add(message);
+    }
+
+    // ===============================================================================
+
+    public float Integrity          => integrity;
+    public float MaxIntegrity       => Corpse.MaxIntegrity;
+    public float IntegrityPercent   => integrity / MaxIntegrity;
+    public ICorpse Corpse           => owner as ICorpse;
+    public UpdatePriority Priority  => ServiceUpdatePriority.Resources;
+}
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -809,12 +789,21 @@ public readonly struct Expend : IMessage, IResourceAction
     }
 }
 
+public readonly struct Deplete : IMessage, IResourceAction
+{
+    public float Amount                     { get; init; }
 
+    public Deplete(float amount)
+    {
+        Amount = amount;
+    }
+}
 
 public readonly struct HealthReset      : IMessage, IResourceAction { public float Amount { get; init; } }
 public readonly struct ArmorReset       : IMessage, IResourceAction { public float Amount { get; init; } }
 public readonly struct ShieldReset      : IMessage, IResourceAction { public float Amount { get; init; } }
 public readonly struct EnergyReset      : IMessage, IResourceAction { public float Amount { get; init; } }
+public readonly struct IntegrityReset   : IMessage, IResourceAction { public float Amount { get; init; } }
 public readonly struct ResourceReset    : IMessage, IResourceAction { public float Amount { get; init; } }
 
 public readonly struct HealthEvent : IMessage
@@ -889,6 +878,24 @@ public readonly struct EnergyEvent : IMessage
     }
 }
 
+
+public readonly struct IntegrityEvent : IMessage
+{
+    public readonly Actor Owner             { get; init; }
+    public readonly float Integrity         { get; init; }
+    public readonly float MaxIntegrity      { get; init; }
+    public readonly float CurrentPercent    { get; init; }
+    public readonly float LastPercent       { get; init; }
+
+    public IntegrityEvent(Actor owner, float integrity, float maxIntegrity, float current, float last)
+    {
+        Owner           = owner;
+        Integrity       = integrity;
+        MaxIntegrity    = maxIntegrity;
+        CurrentPercent  = current;
+        LastPercent     = last;
+    }
+}
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                            Resource Monitor                                                      
@@ -995,12 +1002,13 @@ public class ResourceMonitor
 
         onAlert?.Invoke(current, max, lastPercent, percent);
     }
-    void EvaluateEmptyAlert(float current, float max, float percent)
-    {
-        if (current >= 0f) return;
 
-        onAlert?.Invoke(current, max, lastPercent, percent);
-    }
+    // void EvaluateEmptyAlert(float current, float max, float percent)
+    // {
+    //     if (current >= 0f) return;
+    //
+    //     onAlert?.Invoke(current, max, lastPercent, percent);
+    // }
 }
 
 

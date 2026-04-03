@@ -4,20 +4,23 @@ using UnityEngine;
 
 
 
-public class Movement : Service, IServiceTick
+public class Movement : ActorService, IServiceTick
 {
     readonly float maxSpeed         = Settings.Movement.MAX_SPEED;
     readonly float acceleration     = Settings.Movement.ACCELERATION;
 
         // -----------------------------------
-
-    readonly Agent          owner;
+    readonly Agent          agent;
     readonly IMovableActor  movable;
     readonly Rigidbody2D    body;
 
         // -----------------------------------
 
     readonly MovementModifierHandler modifierHandler;
+
+        // -----------------------------------
+
+    readonly List<MovementDirective> directives = new();
 
         // -----------------------------------
 
@@ -28,28 +31,24 @@ public class Movement : Service, IServiceTick
     Vector2 control             = Vector2.zero;
     Vector2 momentum            = Vector2.zero;
 
-    readonly List<MovementDirective> directives = new();
 
     // ===============================================================================
 
-    public Movement(Agent agent)
+    public Movement(Agent agent) : base(agent)
     {        
-        Services.Lane.Register(this);
-
-        owner               = agent;
-        body                = agent.Bridge.Body;
-        movable             = agent as IMovableActor;
+        this.agent          = agent;
+        body                = this.agent.Bridge.Body;
+        movable             = this.agent as IMovableActor;
 
         body.freezeRotation = true;
         body.gravityScale   = 0;
         body.interpolation  = RigidbodyInterpolation2D.Interpolate; 
         body.mass           = 1;
 
-        modifierHandler     = new(agent);
+        modifierHandler     = new(this.agent);
 
         owner.Bus.Link.Local<MovementEvent>          (HandleMovementDirective);
         owner.Bus.Link.Local<ClearMovementScopeEvent>(HandleMovementClear);
-        owner.Bus.Link.Local<PresenceStateEvent>     (HandlePresenceStateEvent);
 
         SetSpeed();
         SetMass();
@@ -215,17 +214,6 @@ public class Movement : Service, IServiceTick
         }
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
-
     // ===============================================================================
     //  Predicates
     // ===============================================================================
@@ -247,7 +235,7 @@ public class Movement : Service, IServiceTick
 
     IMovementController CreateController(MovementDefinition definition)
     {
-        return MovementControllerFactory.CreateController(owner, definition);
+        return MovementControllerFactory.CreateController(agent, definition);
     }
 
     // ===============================================================================
@@ -256,6 +244,7 @@ public class Movement : Service, IServiceTick
 
     void DebugLog()
     {
+        Log.Debug("Movement.Control",   () => control);
         Log.Debug("Movement.Modifier",  () => modifier);
         Log.Trace("Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Instances.Select(instance => instance.Effect.Name))}");
         Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Instances.Count);
@@ -264,12 +253,8 @@ public class Movement : Service, IServiceTick
         Log.Trace("agent.CanRotate",    () => movable.CanRotate);
     }
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    public Agent Owner      => owner;
+    public Actor Owner      => owner;
+    public Agent Agent      => agent;
     public Vector2 Control  => control;
     public Vector2 Momentum => momentum;
 
@@ -318,10 +303,10 @@ public static class MovementControllerFactory
     {
         return (definition.KinematicAction, agent)switch
         {
-            (KinematicAction.Dash, IMovableActor movable) =>
+            (KinematicAction.Dash, IMovableActor) =>
                 new DashController(definition),
 
-            (KinematicAction.Lunge, IMovableActor movable) => 
+            (KinematicAction.Lunge, IMovableActor) => 
                 new LungeController(definition),
 
             _ => null

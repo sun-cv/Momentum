@@ -20,14 +20,16 @@ public class DamageRule
     public bool     AbsorbOnBreak   { get; init; }
 
     public static readonly DamageRule Default = new();
+
+    public struct Entry
+    {
+        public Func<DamageCalculationContext, bool> Condition;
+        public Action<DamageCalculationContext>     OnTrue;
+        public Action<DamageCalculationContext>     OnFalse;
+    }
 }
 
-public struct RuleApplicationEntry
-{
-    public Func<DamageCalculationContext, bool> Condition;
-    public Action<DamageCalculationContext>     OnTrue;
-    public Action<DamageCalculationContext>     OnFalse;
-}
+
 
 public class ShieldDamageRules
 {
@@ -39,17 +41,17 @@ public class ShieldDamageRules
         [(DamageMode.Direct, DamageElement.Shock)] = new() { Multiplier  = 1.5f },
     };
  
-    public readonly List<RuleApplicationEntry> Gates                            = new()
+    public readonly List<DamageRule.Entry> Gates                                = new()
     {
         new() { Condition   = (context) => { return context.Target is IMortal actor && actor.Invulnerable; }},
         new() { Condition   = (context) => { return context.Rule.Unblockable; }},
     };
 
-    public readonly List<RuleApplicationEntry> PreProcess                       = new()
+    public readonly List<DamageRule.Entry> PreProcess                           = new()
     {
     };
 
-    public readonly List<RuleApplicationEntry> PostProcess                      = new()
+    public readonly List<DamageRule.Entry> PostProcess                          = new()
     {
         new()
         {
@@ -78,17 +80,17 @@ public class ArmorDamageRules
         [(DamageMode.DoT, DamageElement.Fire)] = new() { Piercing = true },
     };
  
-    public readonly List<RuleApplicationEntry> Gates            = new()
+    public readonly List<DamageRule.Entry> Gates            = new()
     {
         new() { Condition   = (context) => { return context.Target is IMortal actor && actor.Invulnerable; }},
         new() { Condition   = (context) => { return context.Rule.Unblockable; }},
     };
 
-    public readonly List<RuleApplicationEntry> PreProcess                       = new()
+    public readonly List<DamageRule.Entry> PreProcess                           = new()
     {
     };
 
-    public readonly List<RuleApplicationEntry> PostProcess                      = new()
+    public readonly List<DamageRule.Entry> PostProcess                          = new()
     {
         new()
         {
@@ -116,17 +118,17 @@ public class HealthDamageRules
         [(DamageMode.DoT, DamageElement.Fire)] = new() { Piercing = true },
     };
 
-    public readonly List<RuleApplicationEntry> Gates            = new()
+    public readonly List<DamageRule.Entry> Gates            = new()
     {
         new() { Condition   = (context) => { return context.Target is IMortal actor && actor.Invulnerable; }},
         new() { Condition   = (context) => { return context.Rule.Unblockable; }},
     };
 
-    public readonly List<RuleApplicationEntry> PreProcess                       = new()
+    public readonly List<DamageRule.Entry> PreProcess                           = new()
     {
     };
 
-    public readonly List<RuleApplicationEntry> PostProcess                      = new()
+    public readonly List<DamageRule.Entry> PostProcess                          = new()
     {
         new()
         {

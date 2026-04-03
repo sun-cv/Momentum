@@ -26,8 +26,8 @@ public class LoggingSystem : RegisteredService, IServiceUtil
 
 public static class Logging
 {
-    private static LogLevel globalLevel                     = LogLevel.Event;
-    private static Dictionary<LogSystem, Logger> loggers    = new();
+    private static LogLevel globalLevel                             = LogLevel.Event;
+    private static readonly Dictionary<LogSystem, Logger> loggers   = new();
 
     public static void Tick()
     {
@@ -92,12 +92,7 @@ public class Logger
         foreach (var (tag, category) in previousTags)
         {
             if (!currentTags.ContainsKey(tag))
-            {
                 Logwin.DeleteLog(tag, category);
-
-                UnityEngine.Debug.Log($"After delete, exists: {LogWinInternal.Logwin_Internal.sCatDico.ContainsKey(category) && LogWinInternal.Logwin_Internal.sCatDico[category].GetLog(tag) != null}");
-            
-            }
         }
         (previousTags, currentTags) = (currentTags, previousTags);
         currentTags.Clear();
@@ -258,6 +253,7 @@ public enum LogSystem
     Combat,
     Damage,
     Spawners,
+    Corpse,
     
     // Player & Input
     Hero,

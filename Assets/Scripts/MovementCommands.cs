@@ -99,7 +99,7 @@ public enum ControllerPriority
         //                                   Dash                                                  
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class DashController : StateProcessor<Movement, Vector2>, IMovementController
+public class DashController : IStateProcessor<Movement, Vector2>, IMovementController
 {
     public MovementDefinition Definition          { get; init; }
 
@@ -119,17 +119,17 @@ public class DashController : StateProcessor<Movement, Vector2>, IMovementContro
 
     // ===============================================================================
     
-    public override void Enter(Movement controller)
+    public void Enter(Movement controller)
     {
         timer.Start();
     }
 
-    public override Vector2 Process(Movement controller)
+    public Vector2 Process(Movement controller)
     {
         return speed * direction.normalized;
     }
 
-    public override void Exit(Movement controller)
+    public void Exit(Movement controller)
     {
         if (Definition.ExitSpeed > 0)
             controller.SetControlSpeed(Definition.ExitSpeed);
@@ -148,7 +148,7 @@ public class DashController : StateProcessor<Movement, Vector2>, IMovementContro
         //                                  Lunge                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class LungeController : StateProcessor<Movement, Vector2>, IMovementController
+public class LungeController : IStateProcessor<Movement, Vector2>, IMovementController
 {
     public MovementDefinition Definition          { get; init; }
 
@@ -170,17 +170,17 @@ public class LungeController : StateProcessor<Movement, Vector2>, IMovementContr
     
     // ===============================================================================
 
-    public override void Enter(Movement controller)
+    public void Enter(Movement controller)
     {
         timer.Start();
     }
 
-    public override Vector2 Process(Movement controller)
+    public Vector2 Process(Movement controller)
     {
         return speed * speedCurve.Evaluate(timer.PercentComplete) * direction;
     }
     
-    public override void Exit(Movement controller)
+    public void Exit(Movement controller)
     {
         
     }

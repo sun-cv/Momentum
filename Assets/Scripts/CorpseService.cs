@@ -1,19 +1,23 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
 public class CorpseService : RegisteredService, IServiceLoop
 {
 
-    readonly List<Actor> corpses;
+    readonly List<CorpseRequest> queue  = new();
 
         // -----------------------------------
 
-    readonly List<CorpseRequest> queue = new();
+    readonly List<Actor> corpses        = new();
 
         // -----------------------------------
-
-
+    
+    public CorpseService()
+    {
+        Link.Global<CorpseRequest>(HandleCorpseSpawnRequest);
+    }
 
     // ===============================================================================
 
@@ -37,7 +41,24 @@ public class CorpseService : RegisteredService, IServiceLoop
 
     void ProcessCorpseRequest(CorpseRequest request)
     {
-        
+        SpawnCorpse(request.Context);
+    }
+
+    void SpawnCorpse(CorpseContext context)
+    {
+        var factory  = Factories.Get<ICorpseFactory>(context.Actor.Definition.Name);
+        var instance = factory.SpawnCorpse(context.Position);
+
+        corpses.Add(instance);
+    }
+
+    // ===============================================================================
+    //  Events
+    // ===============================================================================
+
+    void HandleCorpseSpawnRequest(CorpseRequest message)
+    {
+        queue.Add(message);
     }
 
     // ===============================================================================
@@ -50,6 +71,8 @@ public class CorpseService : RegisteredService, IServiceLoop
 
 
     // ===============================================================================
+
+    readonly Logger Log = Logging.For(LogSystem.Corpse);
 
     public override void Dispose()
     {
@@ -64,17 +87,21 @@ public class CorpseService : RegisteredService, IServiceLoop
     //                                     Classes
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+public class CorpseContext
+{
+    public Actor Actor                      { get; set; }                      
+    public Vector3 Position                 { get; set; }
+    public KillingBlow KillingBlow          { get; set; }
+    public AnimationAPI DeathAnimation      { get; set; }
+}
+
 public class CorpseRequest : IMessage
 {
-    public Actor Owner                          { get; init; }
-    public KillingBlow KillingBlow              { get; init; }
-    public AnimationAPI Animation           { get; init; }
+    public CorpseContext Context            { get; init; }
 
-    public CorpseRequest(Actor owner, KillingBlow blow, AnimationAPI request)
+    public CorpseRequest(CorpseContext context)
     {
-        Owner       = owner;
-        KillingBlow = blow;
-        Animation   = request;
+        Context = context;
     }
 }
 

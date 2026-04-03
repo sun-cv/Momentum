@@ -1,51 +1,39 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
-public class Lifecycle : Service, IServiceLoop
+public class Lifecycle : ActorService, IServiceLoop
 {
 
     public enum State { Alive, Dying, Dead, Disposal }
 
     // ===============================================================================
-    
-    readonly Actor              owner;
-    readonly ActorDefinition    definition;
+
+    readonly Dictionary<State, IStateHandler> stateHandlers = new();
 
         // -----------------------------------
-
-    readonly Dictionary<State, StateHandler<Lifecycle, State>>  stateHandlers = new();
-
-
-        // -----------------------------------
-       
+    LifecycleContext context;
     State condition;
 
     // ===============================================================================
 
-    public Lifecycle(Actor actor)
+    public Lifecycle(Actor actor) : base(actor)
     {
-        Services.Lane.Register(this);
-
         if (actor is not IMortal)
             return;
 
-        owner       = actor;
-        definition  = actor.Definition;
-
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
-
-
+        CreateContext();
         InitializeStateHandlers();
         EnterLifecycle();
-
     }
 
     void InitializeStateHandlers()
     {
-        Register(State.Alive,    new LifecycleAliveState(owner, definition));
-        Register(State.Dying,    new LifecycleDyingState(owner, definition));
-        Register(State.Dead,     new LifecycleDeadState (owner, definition));
+
+        Register(State.Alive,    new LifecycleAliveState(this, owner, definition));
+        Register(State.Dying,    new LifecycleDyingState(this, owner, definition));
+        Register(State.Dead,     new LifecycleDeadState (this, owner, definition));
     }
 
     // ===============================================================================
@@ -60,7 +48,7 @@ public class Lifecycle : Service, IServiceLoop
     void UpdateHandler()
     {
         if (stateHandlers.TryGetValue(condition, out var handler))
-            handler.Update(this);
+            handler.Update();
     }
 
         // ===================================
@@ -77,7 +65,7 @@ public class Lifecycle : Service, IServiceLoop
     void ExitHandler()
     {
         if (stateHandlers.TryGetValue(condition, out var handler))
-            handler.Exit(this);
+            handler.Exit();
     }
 
     void TransitionState(State newState)
@@ -88,7 +76,7 @@ public class Lifecycle : Service, IServiceLoop
     void EnterHandler()
     {
         if (stateHandlers.TryGetValue(condition, out var handler))
-            handler.Enter(this);
+            handler.Enter();
 
         PublishState();
     }
@@ -96,22 +84,12 @@ public class Lifecycle : Service, IServiceLoop
     void EnterLifecycle()
     {
         if (stateHandlers.TryGetValue(State.Alive, out var handler))
-            handler.Enter(this);
+            handler.Enter();
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
-
-     void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
 
     void PublishState()
     {
@@ -120,26 +98,44 @@ public class Lifecycle : Service, IServiceLoop
     
     // ===============================================================================
 
-    void Register(State state, StateHandler<Lifecycle, State> handler)
+    void Register(State state, IStateHandler handler)
     {
-        handler.Transition += TransitionTo;
         stateHandlers[state] = handler;
+    }
+
+    void CreateContext()
+    {
+        context = new();
+        context.Corpse.Actor = owner;
     }
 
     // ===============================================================================
 
     // readonly Logger Log = Logging.For(LogSystem.Lifecycle);
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-    
     public IMortal Mortal               => owner as IMortal;
     public bool IsAlive                 => condition == State.Alive;
     public bool IsDead                  => condition == State.Dead;
+    public LifecycleContext Context     => context;
 
     public UpdatePriority Priority      => ServiceUpdatePriority.Lifecycle;
+}
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Classes                                       
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
+public class LifecycleContext
+{
+    public CorpseContext Corpse             { get; set; } = new();
+    public bool KillingBlowReceived         { get; set; }
+
+    public void Reset()
+    {
+        Corpse              = new();
+        KillingBlowReceived = false;
+    }
 }
 
 
@@ -151,50 +147,46 @@ public class Lifecycle : Service, IServiceLoop
         //                              Alive state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
+public class LifecycleAliveState : IStateHandler
 {
     readonly Actor owner;
     readonly IMortal mortal;
-    
-        // -----------------------------------
-
-    bool killingBlowReceived;
+    readonly Lifecycle controller;
 
     // ===============================================================================
 
-    public LifecycleAliveState(Actor owner, ActorDefinition definition)
+    public LifecycleAliveState(Lifecycle controller, Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.mortal     = owner as IMortal;
+        this.controller = controller;
 
         this.owner.Bus.Link.Local<KillingBlow>(HandleKillingBlow);
     }
 
     // ===============================================================================
 
-    public override void Enter(Lifecycle controller)
+    public void Enter()
     {
 
     }
     
-    public override void Update(Lifecycle controller)
+    public void Update()
     {
-        if (killingBlowReceived)
-        {
+        if (controller.Context.KillingBlowReceived)
             controller.TransitionTo(Lifecycle.State.Dying);
-        }
     }
     
-    public override void Exit(Lifecycle controller)
+    public void Exit()
     {
-        killingBlowReceived = false;
     }
 
     // ===============================================================================
 
     void HandleKillingBlow(KillingBlow message)
     {
-        killingBlowReceived = true;
+        controller.Context.Corpse.KillingBlow   = message;
+        controller.Context.KillingBlowReceived  = true;
     }
 
     // ===============================================================================
@@ -207,41 +199,34 @@ public class LifecycleAliveState : StateHandler<Lifecycle, Lifecycle.State>
         //                               Dying state                                       
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
+public class LifecycleDyingState : IStateHandler
 {
     readonly Actor              owner;
     readonly IMortal            mortal;
     readonly ActorDefinition    definition;
-
+    readonly Lifecycle          controller;
         // -----------------------------------
 
     readonly LocalEventHandler<Message<Response, AnimationAPI>> animationRequestHandler;
 
-        // -----------------------------------
-
-    AnimationAPI deathAnimation;
-    KillingBlow killingBlow;
-
     // ===============================================================================
 
-    public LifecycleDyingState(Actor owner,ActorDefinition definition)
+    public LifecycleDyingState(Lifecycle controller, Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.mortal     = owner as IMortal;
         this.definition = definition;
+        this.controller = controller;
 
         animationRequestHandler = new(owner.Bus, HandleAnimationAPI);
 
-        owner.Bus.Link.Local<KillingBlow>  (HandleKillingBlow);
         owner.Bus.Link.Local<AnimatorEvent>(HandleAnimatorEvent);
     }
     
     // ===============================================================================
     
-    public override void Enter(Lifecycle controller)
+    public void Enter()
     {
-        ClearDyingState();
-
         DisableDamage();
         DisableControl();
 
@@ -255,24 +240,19 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
             ApplyOnDeathEffects();
     }
     
-    public override void Update(Lifecycle controller)
+    public void Update()
     {
         if (!HasDeathAnimation())
             controller.TransitionTo(Lifecycle.State.Dead);
     }
     
-    public override void Exit(Lifecycle controller)
+    public void Exit()
     {
-        ExitPresence();
+        KillVelocity();
+        RecordPosition();
     }
     
     // ===============================================================================
-
-
-    void ClearDyingState()
-    {
-        deathAnimation          = null;
-    }
 
     void DisableControl()
     {
@@ -303,6 +283,16 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
         }
     }
 
+    void KillVelocity()
+    {
+        if (owner is IMovableActor movable)
+            movable.Velocity = Vector2.zero;
+    }
+
+    void RecordPosition()
+    {
+        controller.Context.Corpse.Position = owner.Bridge.View.transform.position;
+    }
         // ===================================
         //  Animation
         // ===================================
@@ -324,30 +314,22 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
 
     void HandleAnimationAPI(Message<Response, AnimationAPI> response)
     {
-        deathAnimation = response.Payload;
+        controller.Context.Corpse.DeathAnimation = response.Payload;
     }
 
     void HandleAnimatorEvent(AnimatorEvent message)
     {
-        if (deathAnimation == null)
+        if (controller.Context.Corpse.DeathAnimation == null)
             return;
  
         if (message.Type != Publish.Ended)
             return;
 
-        if (deathAnimation.Data.Animation == message.Name)
-            Transition.Invoke(Lifecycle.State.Dead);
+        if (controller.Context.Corpse.DeathAnimation.Data.Animation == message.Name)
+            controller.TransitionTo(Lifecycle.State.Dead);
     }
 
-    void HandleKillingBlow(KillingBlow message)
-    {
-        killingBlow = message;
-    }
 
-    void ExitPresence()
-    {
-        owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Absent));
-    }
     // ===============================================================================
     //  Predicates
     // ===============================================================================
@@ -377,58 +359,59 @@ public class LifecycleDyingState : StateHandler<Lifecycle, Lifecycle.State>
         //                               Dead state                                      
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
+public class LifecycleDeadState : IStateHandler
 {
     readonly Actor              owner;
     readonly ActorDefinition    definition;
+    readonly Lifecycle          controller;
     
     // ===============================================================================
 
-    public LifecycleDeadState(Actor owner, ActorDefinition definition)
+    public LifecycleDeadState(Lifecycle controller, Actor owner, ActorDefinition definition)
     {
         this.owner      = owner;
         this.definition = definition;
+        this.controller = controller;
     }
     
     // ===============================================================================
 
-    public override void Enter(Lifecycle controller)
+    public void Enter()
     {
-
-        if (CanBecomeCorpse())
-        {
-            RequestCorpseSpawn();
-        }
-
-        if (CanRespawn())
-        {
-            // Send respawn request? Hero specific all other entities are disposed and respawned by spawner.
-        }
+        ProcessCorpseSpawn();
+        ProcessActorPresence();
     }
 
-    public override void Update(Lifecycle controller)
+    public void Update()
     {
-        if (CanRespawn())
-            return;
-
-        // ExitPresence();
     }
 
-    public override void Exit(Lifecycle controller)
+    public void Exit()
     {
         
     }
 
     // ===============================================================================
 
-    
-        // Rework required        
-    void RequestCorpseSpawn()
+    void ProcessCorpseSpawn()
     {
-        // Emit.Global(new CorpseRequest(owner, context.KillingBlow, context.DeathAnimation));
+        if (!CanBecomeCorpse())
+            return;
+
+        RequestCorpseSpawn();
     }
 
-    void ExitPresence()
+    void ProcessActorPresence()
+    {
+        // switch(definition.Presence.)
+    }
+        
+    void RequestCorpseSpawn()
+    {
+        Emit.Global(new CorpseRequest(controller.Context.Corpse));
+    }
+
+    void SetAbsentPresence()
     {
         owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Absent));
     }
@@ -437,15 +420,9 @@ public class LifecycleDeadState : StateHandler<Lifecycle, Lifecycle.State>
     //  Predicates
     // ===============================================================================
 
-
-    bool CanRespawn()
-    {
-        return definition.Lifecycle.Respawn.Enabled;
-    }
-
     bool CanBecomeCorpse()
     {
-        return definition.Lifecycle.Corpse.Enabled;
+        return definition.Lifecycle.Spawn.Corpse;
     }
 
     // ===============================================================================

@@ -19,7 +19,7 @@ public class MovableDummyFactory : ICorpseFactory
         return dummy;
     }
     
-    public Actor SpawnCorpse(Actor owner, Vector3 position)
+    public Actor SpawnCorpse(Vector3 position)
     {
         var definition      = new MovableDummyDefinition();
         var prefab          = Assets.Get(definition.Name);

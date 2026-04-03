@@ -18,7 +18,7 @@ public interface IActorFactory : IFactory
 
 public interface ICorpseFactory : IActorFactory
 {
-    Actor SpawnCorpse(Actor owner, Vector3 position);
+    Actor SpawnCorpse(Vector3 position);
 }
 
 public interface IRespawnFactory : IActorFactory

@@ -1,13 +1,12 @@
 
 
 
-
 [Definition]
 public class DummyDefinition : ActorDefinition
 {
     public DummyDefinition()
     {
-        Name                        = "Dummy";
+        Name                        = nameof(Dummy);
         
         Stats                       = new()
         {
@@ -37,15 +36,13 @@ public class DummyDefinition : ActorDefinition
 
         Lifecycle                   = new()
         {   
+            Spawn                   = new()
+            {
+                Corpse              = true
+            },
             Respawn                 = new()
             {
                 Enabled             = false,
-            },
-            Corpse                  = new()
-            {
-                Name                = "DummyCorpse",
-                Enabled             = true,
-                PersistDuration     = 5,
             },
         };
 
@@ -60,8 +57,54 @@ public class DummyDefinition : ActorDefinition
             Death                   = new()
             {   
                 Enabled             = true,
-                Default             = "Dying"
+                Default             = "Death"
             },
+        };
+
+        Rendering                   = new()
+        {
+            DepthSortingTier        = SortTier.Ground,
+        };
+    }
+}
+
+[Definition]
+public class DummyCorpseDefinition : ActorDefinition
+{
+    public DummyCorpseDefinition()
+    {
+        Name                        = nameof(Dummy);
+        
+        Stats                       = new()
+        {
+            MaxIntegrity            = 100,
+        };
+
+        Resource                    = new()
+        {
+            Integrity               = new()
+            {
+                AlertOnChange       = true,
+            }
+        };
+
+        Presence                    = new()
+        {
+            CanBeSetAbsent          = true,
+        };
+
+        Corpse                      = new()
+        {
+            Name                    = nameof(DummyCorpse),
+            FreshDuration           = 10,
+            DecayDuration           = 10,
+            ConsumeDuration         = 10,
+            RemainsDuration         = 10,
+        };
+
+        Rendering                   = new()
+        {
+            DepthSortingTier        = SortTier.Ground,
         };
     }
 }

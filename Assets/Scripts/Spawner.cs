@@ -18,9 +18,9 @@ public class SingleSpawner : Spawner, IServiceStep
 
         // -----------------------------------
 
-    public Actor        actor;
-    public ActorEntry   entry;
-    public ClockTimer   timer;
+    public Actor                actor;
+    public ActorSpawnerEntry    entry;
+    public ClockTimer           timer;
 
         // -----------------------------------
 
@@ -30,10 +30,7 @@ public class SingleSpawner : Spawner, IServiceStep
 
     public SingleSpawner(SingleSpawnerDefinition definition)
     {
-        Services.Lane.Register(this);
-
         Definition = definition;    
-        
         InitializeTimer();
     }
 
@@ -100,12 +97,6 @@ public class SingleSpawner : Spawner, IServiceStep
 
     // ===============================================================================
 
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.Spawner;
 }
 
@@ -119,8 +110,6 @@ public class TimedSpawner : Spawner, IServiceStep
 
     public TimedSpawner(TimedSpawnerDefinition definition)
     {
-        Services.Lane.Register(this);
-
         Definition = definition;    
         
         InitializeLists();
@@ -147,7 +136,7 @@ public class TimedSpawner : Spawner, IServiceStep
         }
     }
 
-    void Spawn(ActorEntry actor)
+    void Spawn(ActorSpawnerEntry actor)
     {
         if (!TryGetSpawnPoint(actor, out var point))
             return;
@@ -182,7 +171,7 @@ public class TimedSpawner : Spawner, IServiceStep
         }
     }
 
-    bool TryGetSpawnPoint(ActorEntry actor, out Vector2 point)
+    bool TryGetSpawnPoint(ActorSpawnerEntry actor, out Vector2 point)
     {
         var bounds      = owner.Area.bounds;
         int attempts    = 10;
@@ -229,7 +218,7 @@ public class TimedSpawner : Spawner, IServiceStep
     //  Predicates
     // ===============================================================================
 
-    bool CanSpawnActor(ActorEntry actor)
+    bool CanSpawnActor(ActorSpawnerEntry actor)
     {
         if (!timers[actor.Name].IsFinished)
             return false;
@@ -248,12 +237,6 @@ public class TimedSpawner : Spawner, IServiceStep
 
     // ===============================================================================
 
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.Spawner;
 }
 
@@ -267,7 +250,7 @@ public class TimedSpawner : Spawner, IServiceStep
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 
-public class ActorEntry
+public class ActorSpawnerEntry
 {
     public string Name                          { get; set; }
     public int MaxActive                        { get; set; }
@@ -287,7 +270,7 @@ public abstract class SpawnerDefinition : Definition
     public abstract SpawnerClass SpawnerClass   { get; }
     public SpawnerSelectionMode SelectionMode   { get; set; }
 
-    public List<ActorEntry> Actors              { get; set; }
+    public List<ActorSpawnerEntry> Actors       { get; set; }
 
     public int MaxActive                        { get; set; }
     public int SpawnLimit                       { get; set; }
@@ -349,7 +332,7 @@ public class TimedSpawnerTest : TimedSpawnerDefinition
 {
     public TimedSpawnerTest()
     {
-        Name                        = "TimedSpawnerTest";
+        Name                        = nameof(TimedSpawnerTest);
 
         Actors                      = new()
         {   
@@ -373,7 +356,7 @@ public class SpawnDummy : SingleSpawnerDefinition
 {
     public SpawnDummy()
     {
-        Name                        = "SpawnDummy";
+        Name                        = nameof(SpawnDummy);
 
         Actors                      = new()
         {   
@@ -381,12 +364,12 @@ public class SpawnDummy : SingleSpawnerDefinition
             {
                 Name                = nameof(Dummy),
                 InitialDelay        = 2,
-                RespawnDelay        = 4,
+                RespawnDelay        = 30,
                 RespawnOnDeath      = true,
             },
         };  
 
-        MaxActive                   = 10;
+        MaxActive                   = 1;
         SpawnInterval               = 2f;
         InitialDelay                = 2f;
     }
@@ -397,7 +380,7 @@ public class SpawnMovableDummy : SingleSpawnerDefinition
 {
     public SpawnMovableDummy()
     {
-        Name                        = "SpawnMovableDummy";
+        Name                        = nameof(SpawnMovableDummy);
 
         Actors                      = new()
         {   

@@ -4,17 +4,12 @@ using System.Collections.Generic;
 
 
 
-public abstract class Stats : Service, IServiceTick
+public abstract class Stats : ActorService, IServiceTick
 {
     protected readonly Dictionary<string, float> stats  = new();
     protected readonly StatsMediator mediator           = new();
 
-    // ===============================================================================
-
-    public void Initialize()
-    {
-        Services.Lane.Register(this);
-    }
+    public Stats(Actor actor) : base(actor) {}
 
     // ===============================================================================
 

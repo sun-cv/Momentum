@@ -1,29 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 
 
-public class EffectRegister : Service, IServiceTick
+public class EffectRegister : ActorService, IServiceTick
 {
-
-    readonly Actor owner;
-
-    // -----------------------------------
 
     readonly List<EffectAPI> queue   = new();
     readonly List<EffectInstance> effects       = new();
 
     // ===============================================================================
 
-    public EffectRegister(Actor actor)
+    public EffectRegister(Actor actor) : base(actor)
     {
-        owner = actor;
         owner.Bus.Link.Local<Message<Request, EffectAPI>>(HandleEffectAPI);
         owner.Bus.Link.Local<PresenceStateEvent>         (HandlePresenceStateEvent);
-
-        Services.Lane.Register(this);
     } 
 
     // ===============================================================================
@@ -152,29 +144,12 @@ public class EffectRegister : Service, IServiceTick
         queue.Add(message.Payload);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
     // ===============================================================================
 
     readonly Logger Log = Logging.For(LogSystem.Effects);
 
-    public override void Dispose()
-    {
-        effects.Clear();
-        Services.Lane.Deregister(this);
-    }
-
-    public UpdatePriority Priority => ServiceUpdatePriority.EffectRegister;
-
     public List<EffectInstance> Effects => effects;
+    public UpdatePriority Priority      => ServiceUpdatePriority.EffectRegister;
 }
 
 
@@ -303,14 +278,17 @@ public class EffectCache : IDisposable
 
     // ===============================================================================
 
-
     public void Bind(LocalEventBus eventbus)
     {
         eventbus.Subscribe<EffectEvent>(HandleEffectPublish);
     }
 
+    public void Dispose()
+    {
+        bus.Link.UnsubscribeLocal(binding);
+    }
+
     public IReadOnlyList<EffectInstance> Instances => activeEffects.ToList();
-    public void Dispose() => bus.Link.UnsubscribeLocal(binding);
 }
 
 

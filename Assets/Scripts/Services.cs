@@ -74,6 +74,7 @@ public static class Services
             {
                 if (type.IsAbstract) 
                     continue;
+
                 if (type.GetCustomAttribute<ServiceAttribute>() == null) 
                     continue;
                 
@@ -86,9 +87,14 @@ public static class Services
                 
                 Registry.RegisterService(type, service);
                 
-                if (service is IService tickable)
-                    Registry.RegisterLanes(tickable);
-            }
+                if (service is Service instance)
+                    instance.Enable();
+
+                    // May Deprecate - Will there be tickable without Service class?
+                if (service is not Service && service is IService tickable )
+                    Registry.RegisterServiceLanes(tickable);
+
+           }
         }
 
         public static void Process()
@@ -105,10 +111,15 @@ public static class Services
     //  Public API / Accessors
     // ===============================================================================
 
-        public static void Register(IService service) 
+        public static void RegisterService(IService service) 
         { 
-            Registry.RegisterLanes(service); 
+            Registry.RegisterServiceLanes(service); 
         } 
+
+        public static void RegisterPassive(IService service)
+        {
+
+        }
 
         public static void Deregister(IService service) 
         { 
@@ -123,6 +134,11 @@ public static class Services
             {
                 if (service.IsEnabled) service.Tick();
             }
+
+            foreach(var service in Registry.TickPassives)
+            {
+                if (service.IsEnabled) service.PassiveTick();
+            }
         }
      
         public static void Loop()
@@ -130,6 +146,11 @@ public static class Services
             foreach(var service in Registry.LoopServices)
             {
                 if (service.IsEnabled) service.Loop();
+            }      
+
+            foreach(var service in Registry.LoopPassives)
+            {
+                if (service.IsEnabled) service.PassiveLoop();
             }
         }
 
@@ -138,6 +159,11 @@ public static class Services
             foreach(var service in Registry.StepServices)
             {
                 if (service.IsEnabled) service.Step();
+            } 
+
+            foreach(var service in Registry.StepPassives)
+            {
+                if (service.IsEnabled) service.PassiveStep();
             }
         }
 
@@ -147,6 +173,11 @@ public static class Services
             {
                 if (service.IsEnabled) service.Util();
             }
+
+            foreach(var service in Registry.UtilPassives)
+            {
+                if (service.IsEnabled) service.PassiveUtil();
+            }
         }
 
         public static void Late()
@@ -154,6 +185,11 @@ public static class Services
             foreach(var service in Registry.LateServices)
             {
                 if (service.IsEnabled) service.Late();
+            }
+
+            foreach(var service in Registry.LatePassives)
+            {
+                if (service.IsEnabled) service.PassiveLate();
             }
         }
     }
@@ -182,17 +218,22 @@ public static class Services
 
     private static class Registry
     {
-        private static readonly List<IService> pendingRegistrations     = new();
-        private static readonly List<IService> pendingDeregistrations   = new();
+        private static readonly List<IService> pendingServiceRegistrations  = new();
+        private static readonly List<IService> pendingPassiveRegistrations  = new();
+        private static readonly List<IService> pendingDeregistrations       = new();
 
-        private static readonly Dictionary<Type, object> services       = new();
+        private static readonly Dictionary<Type, object> services           = new();
 
-        private static readonly List<IServiceTick> tickServices         = new();
-        private static readonly List<IServiceLoop> loopServices         = new();
-        private static readonly List<IServiceStep> stepServices         = new();
-        private static readonly List<IServiceUtil> utilServices         = new();
-        private static readonly List<IServiceLate> lateServices         = new();
-
+        private static readonly List<IServiceTick> tickServices             = new();
+        private static readonly List<IServiceLoop> loopServices             = new();
+        private static readonly List<IServiceStep> stepServices             = new();
+        private static readonly List<IServiceUtil> utilServices             = new();
+        private static readonly List<IServiceLate> lateServices             = new();
+        private static readonly List<IPassiveTick> tickPassives             = new();
+        private static readonly List<IPassiveLoop> loopPassives             = new();
+        private static readonly List<IPassiveStep> stepPassives             = new();
+        private static readonly List<IPassiveUtil> utilPassives             = new();
+        private static readonly List<IPassiveLate> latePassives             = new();
         // ===============================================================================
 
         public static void RegisterService<T>(T service)
@@ -224,9 +265,14 @@ public static class Services
             services.Remove(type);
         }
 
-        public static void RegisterLanes(IService service)
+        public static void RegisterServiceLanes(IService service)
         {
-            pendingRegistrations.Add(service);
+            pendingServiceRegistrations.Add(service);
+        }
+
+        public static void RegisterPassiveLanes(IService service)
+        {
+            pendingPassiveRegistrations.Add(service);
         }
 
         public static void DeregisterLanes(IService service)
@@ -260,7 +306,7 @@ public static class Services
 
         public static void ProcessPending()
         {
-            if (pendingRegistrations.Count == 0 && pendingDeregistrations.Count == 0)
+            if (pendingServiceRegistrations.Count == 0 && pendingPassiveRegistrations.Count == 0 &&pendingDeregistrations.Count == 0 )
                 return;
 
             foreach (var service in pendingDeregistrations)
@@ -270,11 +316,17 @@ public static class Services
                 if (service is IServiceStep ServiceStep) stepServices.Remove(ServiceStep);
                 if (service is IServiceUtil ServiceUtil) utilServices.Remove(ServiceUtil);
                 if (service is IServiceLate ServiceLate) lateServices.Remove(ServiceLate);
+                if (service is IPassiveTick PassiveTick) tickPassives.Remove(PassiveTick);
+                if (service is IPassiveLoop PassiveLoop) loopPassives.Remove(PassiveLoop);
+                if (service is IPassiveStep PassiveStep) stepPassives.Remove(PassiveStep);
+                if (service is IPassiveUtil PassiveUtil) utilPassives.Remove(PassiveUtil);
+                if (service is IPassiveLate PassiveLate) latePassives.Remove(PassiveLate); 
             }
 
             pendingDeregistrations.Clear();
 
-            foreach (var service in pendingRegistrations)
+            
+            foreach (var service in pendingServiceRegistrations)
             {
                 if (service is IServiceTick tickService)
                 {
@@ -307,7 +359,43 @@ public static class Services
                 }
 
             }
-            pendingRegistrations.Clear();
+
+            pendingServiceRegistrations.Clear();
+
+
+            foreach (var service in pendingPassiveRegistrations)
+            {
+                if (service is IPassiveTick tickService)
+                {
+                    tickPassives.Add(tickService);
+                    tickPassives.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                }
+
+                if (service is IPassiveLoop loopService)
+                {
+                    loopPassives.Add(loopService);
+                    loopPassives.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                }
+
+                if (service is IPassiveStep stepService)
+                {
+                    stepPassives.Add(stepService);
+                    stepPassives.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                }
+
+                if (service is IPassiveUtil utilService)
+                {
+                    utilPassives.Add(utilService);
+                    utilPassives.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                }
+
+                if (service is IPassiveLate lateService)
+                {
+                    latePassives.Add(lateService);
+                    latePassives.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                }
+            }
+            pendingServiceRegistrations.Clear();
         }
 
 
@@ -322,18 +410,25 @@ public static class Services
         public static List<IServiceStep> StepServices => stepServices; 
         public static List<IServiceUtil> UtilServices => utilServices;
         public static List<IServiceLate> LateServices => lateServices;
+        public static List<IPassiveTick> TickPassives => tickPassives;
+        public static List<IPassiveLoop> LoopPassives => loopPassives;
+        public static List<IPassiveStep> StepPassives => stepPassives; 
+        public static List<IPassiveUtil> UtilPassives => utilPassives;
+        public static List<IPassiveLate> LatePassives => latePassives;
     }
-
 
         public static List<IServiceTick> TickServices => Registry.TickServices;
         public static List<IServiceLoop> LoopServices => Registry.LoopServices;
         public static List<IServiceStep> StepServices => Registry.StepServices; 
         public static List<IServiceUtil> UtilServices => Registry.UtilServices;
-        public static List<IServiceLate> LateServices => Registry.LateServices;
+        public static List<IServiceLate> LateServices => Registry.LateServices;        
+        public static List<IPassiveTick> TickPassives => Registry.TickPassives;
+        public static List<IPassiveLoop> LoopPassives => Registry.LoopPassives;
+        public static List<IPassiveStep> StepPassives => Registry.StepPassives; 
+        public static List<IPassiveUtil> UtilPassives => Registry.UtilPassives;
+        public static List<IPassiveLate> LatePassives => Registry.LatePassives;
 
     // ===============================================================================
-
-    readonly static Logger Log = Logging.For(LogSystem.Services);
 
     public static void Dispose()
     {

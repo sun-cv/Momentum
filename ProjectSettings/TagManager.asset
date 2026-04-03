@@ -62,6 +62,9 @@ TagManager:
   - name: Entity
     uniqueID: 206664357
     locked: 0
+  - name: Depth-Sorted
+    uniqueID: 2516200305
+    locked: 0
   - name: Fore-Props
     uniqueID: 3492372411
     locked: 0
@@ -73,3 +76,4 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
+  m_MigratedRenderPipelines: []

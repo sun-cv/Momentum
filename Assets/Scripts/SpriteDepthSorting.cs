@@ -4,6 +4,8 @@ using UnityEngine;
 
 
 
+public enum SortTier { Ground, Prop, Entity }
+
 
 public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
 {
@@ -15,10 +17,10 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
     {
         var tracked = new TrackedSprite 
         { 
-            transform   = bridge.Body.transform, 
-            sprite      = bridge.Sprite,
-            backZone    = bridge.BackZone,
-            sortbox     = bridge.Sortbox
+            Tier        = bridge.Owner.Definition.Rendering.DepthSortingTier,
+            Transform   = bridge.Body.transform, 
+            Sprite      = bridge.Sprite,
+            Sortbox     = bridge.Sortbox
         };
         
         trackedSprites.Add(tracked);
@@ -55,44 +57,36 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
                 var original    = sprite1;
                 var expanded    = sprite1;
 
-                expanded.sortbox.bounds.Expand(Config.Rendering.SPRITE_OVERLAP_LOOKAHEAD);
+                expanded.Sortbox.bounds.Expand(Config.Rendering.SPRITE_OVERLAP_LOOKAHEAD);
 
-                bool overlapping = original.sortbox.bounds.Intersects(sprite2.sortbox.bounds);
-                bool approaching = expanded.sortbox.bounds.Intersects(sprite2.sortbox.bounds);
-
-                if (overlapping || approaching)
-                {
-                    Log.Trace($"Overlap detected! overlapping={overlapping}, approaching={approaching}");
-                }
+                bool overlapping = original.Sortbox.bounds.Intersects(sprite2.Sortbox.bounds);
+                bool approaching = expanded.Sortbox.bounds.Intersects(sprite2.Sortbox.bounds);
 
                 if (overlapping || approaching)
                 {
-                    if (!sprite1.orderOverrides.ContainsKey(sprite2))
+                    if (!sprite1.OrderOverrides.ContainsKey(sprite2))
                     {
                         float footY1 = sprite1.FootY;
                         float footY2 = sprite2.FootY;
 
                         if (footY1 < footY2)
                         {
-                            sprite1.orderOverrides[sprite2] =  1;
-                            sprite2.orderOverrides[sprite1] = -1;
+                            if (sprite1.Tier <= sprite2.Tier)
+                                sprite1.OrderOverrides[sprite2] =  1;
+
+                            sprite2.OrderOverrides[sprite1] = -1;
                         }
                         else
                         {
-                            sprite1.orderOverrides[sprite2] = -1;
-                            sprite2.orderOverrides[sprite1] =  1;
+                            sprite1.OrderOverrides[sprite2] = -1;
+                            sprite2.OrderOverrides[sprite1] =  1;
                         }
                     }
                 }
                 else
                 {
-                    if (sprite1.orderOverrides.ContainsKey(sprite2))
-                    {
-                        Log.Trace($"CLEARING override");
-                    }
-
-                    sprite1.orderOverrides.Remove(sprite2);
-                    sprite2.orderOverrides.Remove(sprite1);
+                    sprite1.OrderOverrides.Remove(sprite2);
+                    sprite2.OrderOverrides.Remove(sprite1);
                 }
             }
         }
@@ -101,10 +95,11 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
         {
             int finalOrder;
 
-            if (tracked.orderOverrides.Count > 0)
+            if (tracked.OrderOverrides.Count > 0)
             {
                 finalOrder = 0;
-                foreach (var offset in tracked.orderOverrides.Values)
+
+                foreach (var offset in tracked.OrderOverrides.Values)
                 {
                     finalOrder += offset;
                 }
@@ -114,7 +109,7 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
                 finalOrder = Mathf.RoundToInt(-tracked.FootY * 100);
             }
 
-            tracked.sprite.sortingOrder = finalOrder;
+            tracked.Sprite.sortingOrder = finalOrder;
         }
     }
 
@@ -129,7 +124,7 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
 
     public override void Dispose()
     {
-        // NO OP;
+        trackedSprites.Clear();
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.SpriteLayering;
@@ -140,7 +135,7 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
 public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 {
     
-    List<EntityCollision> trackedSprites = new();
+    readonly List<EntityCollision> trackedSprites = new();
 
         // ===============================================================================
 
@@ -148,10 +143,10 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
     {
         trackedSprites.Add(new EntityCollision
         {
-            actor       = bridge.Owner,
-            frontZone   = bridge.FrontZone,
-            backZone    = bridge.BackZone,
-            transform   = bridge.Body.transform
+            Actor       = bridge.Owner,
+            FrontZone   = bridge.FrontZone,
+            BackZone    = bridge.BackZone,
+            Transform   = bridge.Body.transform
         });
     }
     
@@ -183,29 +178,29 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
                 var entity1     = trackedSprites[i];
                 var entity2     = trackedSprites[j];
                 
-                float distance  = Vector2.Distance(entity1.transform.position, entity2.transform.position);
+                float distance  = Vector2.Distance(entity1.Transform.position, entity2.Transform.position);
                 
                 if (distance > 5f) 
                 {   
                     continue;
                 }
 
-                float y1 = entity1.transform.position.y;
-                float y2 = entity2.transform.position.y;
+                float y1 = entity1.Transform.position.y;
+                float y2 = entity2.Transform.position.y;
                 
                 if (y1 < y2)
                 {
-                    Physics2D.IgnoreCollision(entity1.backZone, entity2.frontZone, false);
-                    Physics2D.IgnoreCollision(entity1.frontZone, entity2.frontZone, true);
-                    Physics2D.IgnoreCollision(entity1.frontZone, entity2.backZone, true);
-                    Physics2D.IgnoreCollision(entity1.backZone, entity2.backZone, true);
+                    Physics2D.IgnoreCollision(entity1.BackZone, entity2.FrontZone, false);
+                    Physics2D.IgnoreCollision(entity1.FrontZone, entity2.FrontZone, true);
+                    Physics2D.IgnoreCollision(entity1.FrontZone, entity2.BackZone, true);
+                    Physics2D.IgnoreCollision(entity1.BackZone, entity2.BackZone, true);
                 }
                 else
                 {
-                    Physics2D.IgnoreCollision(entity2.backZone, entity1.frontZone, false);
-                    Physics2D.IgnoreCollision(entity1.frontZone, entity2.frontZone, true);
-                    Physics2D.IgnoreCollision(entity1.backZone, entity2.frontZone, true);
-                    Physics2D.IgnoreCollision(entity1.backZone, entity2.backZone, true);
+                    Physics2D.IgnoreCollision(entity2.BackZone, entity1.FrontZone, false);
+                    Physics2D.IgnoreCollision(entity1.FrontZone, entity2.FrontZone, true);
+                    Physics2D.IgnoreCollision(entity1.BackZone, entity2.FrontZone, true);
+                    Physics2D.IgnoreCollision(entity1.BackZone, entity2.BackZone, true);
                 }
             }
         }
@@ -222,7 +217,7 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 
     public override void Dispose()
     {
-        // NO OP;
+        trackedSprites.Clear();
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.SpriteDepthSorting;
@@ -235,18 +230,20 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
 
 class TrackedSprite
 {
-    public Transform transform;
-    public SpriteRenderer sprite;
-    public Collider2D backZone;
-    public Collider2D sortbox;
-    public float FootY => backZone.bounds.min.y;
-    public Dictionary<TrackedSprite, int> orderOverrides = new();
+    public SortTier Tier                                    { get; set; }
+    public Transform Transform                              { get; set; }
+    public SpriteRenderer Sprite                            { get; set; }
+    public Collider2D BackZone                              { get; set; }
+    public Collider2D Sortbox                               { get; set; }
+    public Dictionary<TrackedSprite, int> OrderOverrides    { get; set; } = new();
+        
+    public float FootY => Sortbox.bounds.min.y;
 }
 
 class EntityCollision
 {
-    public Actor actor;
-    public Collider2D frontZone;
-    public Collider2D backZone;
-    public Transform transform;
+    public Actor Actor                                      { get; set; }
+    public Collider2D FrontZone                             { get; set; }
+    public Collider2D BackZone                              { get; set; }
+    public Transform Transform                              { get; set; }
 }

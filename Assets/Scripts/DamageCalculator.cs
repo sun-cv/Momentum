@@ -7,8 +7,8 @@ using UnityEngine;
 
 public class DamageCalculator : RegisteredService, IServiceLoop
 {    
-    readonly List<DamageContext> queue = new();
-    readonly List<(Func<Actor, bool>, IDamageCalculator)> calculators = new();
+    readonly List<DamageContext> queue                                  = new();
+    readonly List<(Func<Actor, bool>, IDamageCalculator)> calculators   = new();
 
     // ===============================================================================
 
@@ -17,8 +17,6 @@ public class DamageCalculator : RegisteredService, IServiceLoop
         RegisterDamageCalculators();
 
         Link.Global<CalculateDamage>(HandleDamageCalculatorEvent);
-
-        Services.Lane.Register(this);
     }
 
     // ===============================================================================
@@ -84,12 +82,7 @@ public class DamageCalculator : RegisteredService, IServiceLoop
 
     // ===============================================================================
 
-    readonly Logger Log = Logging.For(LogSystem.Combat);
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
+    // readonly Logger Log = Logging.For(LogSystem.Combat);
 
     public UpdatePriority Priority => ServiceUpdatePriority.DamageCalculator;
 }
@@ -207,7 +200,7 @@ public class ShieldCalculator : IDamageCalculator
         return false;
     } 
 
-    void DamageRuleProcessor(DamageCalculationContext context, List<RuleApplicationEntry> rules)
+    void DamageRuleProcessor(DamageCalculationContext context, List<DamageRule.Entry> rules)
     {
         foreach (var rule in rules)
         {
@@ -304,7 +297,7 @@ public class ArmorCalculator : IDamageCalculator
         return false;
     } 
 
-    void DamageRuleProcessor(DamageCalculationContext context, List<RuleApplicationEntry> rules)
+    void DamageRuleProcessor(DamageCalculationContext context, List<DamageRule.Entry> rules)
     {
         foreach (var rule in rules)
         {
@@ -401,7 +394,7 @@ public class HealthCalculator : IDamageCalculator
         return false;
     } 
 
-    void DamageRuleProcessor(DamageCalculationContext context, List<RuleApplicationEntry> rules)
+    void DamageRuleProcessor(DamageCalculationContext context, List<DamageRule.Entry> rules)
     {
         foreach (var rule in rules)
         {

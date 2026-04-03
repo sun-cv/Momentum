@@ -2,19 +2,16 @@ using System.Collections.Generic;
 
 
 
-public class ParrySystem : Service, IServiceLoop
+public class ParrySystem : RegisteredService, IServiceLoop
 {
     
     readonly List<DamageContext> queue = new();
-
-        // -----------------------------------
 
     // ===============================================================================
 
     public ParrySystem()
     {
         Link.Global<DamageEvent>(HandleParryEvent);
-        Services.Lane.Register(this);
     }
 
     // ===============================================================================
@@ -38,7 +35,6 @@ public class ParrySystem : Service, IServiceLoop
 
     void ProcessParry(DamageContext context)
     {
-
         switch(IsParrying(context.Target))
         {
             case true:  ResolveSuccessfulParry(context);    break;
@@ -83,7 +79,7 @@ public class ParrySystem : Service, IServiceLoop
 
     void SetDamageToZero(DamageContext context)
     {
-        foreach( var (component, result) in context.Package.Result.Components)
+        foreach ( var (_, result) in context.Package.Result.Components)
         {
             result.Damage = 0;
         }
@@ -126,32 +122,9 @@ public class ParrySystem : Service, IServiceLoop
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.ParrySystem;
-
 }
 
-
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                      Declarations
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                               Interfaces                                                      
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Classes                                                    
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Structs                                                   
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events
@@ -166,7 +139,6 @@ public readonly struct ParryEvent : IMessage
         Context = context;
     }
 }
-
 
 // Data declared Parry presentation for animation? REWORK REQUIRED
 

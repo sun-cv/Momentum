@@ -14,5 +14,10 @@ public static partial class Rules
     {
         public static readonly AnimatorParameter Parameter  = new();
     }
+
+    public static class Bridge
+    {
+        public static readonly BridgeParameter Parameter    = new();
+    }
 }
 

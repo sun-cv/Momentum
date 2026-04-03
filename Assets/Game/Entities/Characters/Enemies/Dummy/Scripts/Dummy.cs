@@ -1,8 +1,6 @@
 
 
 
-using Mono.Cecil;
-
 public class Dummy : Agent, IDummy
 {
     public Resources            Resource            { get; private set; }
@@ -35,8 +33,6 @@ public class Dummy : Agent, IDummy
     {
         Definition  = definition;
 
-        Bus         = new();
-
         Resource    = new(this);
         Animation   = new(this);
         Presence    = new(this);
@@ -44,21 +40,4 @@ public class Dummy : Agent, IDummy
     }
 }
 
-
-public class DummyCorpse : Actor, ICorpse
-{
-    public Presence             Presence            { get; set; }
-    public Corpse               Corpse              { get; set; }
-    public AnimationSystem      Animation           { get; set; }
-
-    public Corpse.State Condition                   => Corpse.Condition;
-
-    public void Initialize(ActorDefinition definition)
-    {
-        Definition = definition;
-
-        Presence    = new(this);
-        Corpse      = new(this);
-        Animation   = new(this);
-    }
-}
+public class DummyCorpse {}

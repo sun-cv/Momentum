@@ -69,8 +69,6 @@ public class MovableDummy : Agent, IMovableDummy
     {
         Definition  = definition;
 
-        Bus         = new();
-
         Resource    = new(this);
         Movement    = new(this);
         Animation   = new(this);
@@ -80,21 +78,4 @@ public class MovableDummy : Agent, IMovableDummy
 }
 
 
-public class MovableDummyCorpse : Actor, ICorpse
-{
-    public Presence             Presence            { get; set; }
-    public Corpse               Corpse              { get; set; }
-    public AnimationSystem      Animation           { get; set; }
-
-    public Corpse.State Condition                   => Corpse.Condition;
-
-    public void Initialize(ActorDefinition definition)
-    {
-        Definition = definition;
-
-        Presence    = new(this);
-        Corpse      = new(this);
-        Animation   = new(this);
-
-    }
-}
+public class MovableDummyCorpse {}

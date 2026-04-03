@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class HeroState : State
 {
-    readonly Hero               owner;
+    readonly Hero               hero;
 
         // -----------------------------------
 
@@ -16,8 +16,8 @@ public class HeroState : State
 
         // -----------------------------------
 
-    TimePredicate   idle;
-    TimePredicate   parry;
+    TimePredicate               idle;
+    TimePredicate               parry;
 
         // -----------------------------------
 
@@ -47,7 +47,7 @@ public class HeroState : State
 
     public bool ImmuneToForce                       => effects.Has<DashForceImmunity>((effect) => effect is not null);
 
-    public TimePredicate Parrying                   => parry ?? new(TimerUnit.Frame, () => effects.Has<ShieldParryWindow>((effect) => effect is not null));
+    public TimePredicate Parrying                   => parry ??= new(TimerUnit.Frame, () => effects.Has<ShieldParryWindow>((effect) => effect is not null));
     public bool Blocking                            => effects.Has<ShieldBlockWindow>((effect) => effect is not null);
 
     public bool Disabled                            => Inactive || Stunned; // || other cc 
@@ -79,7 +79,7 @@ public class HeroState : State
     public bool Alive                               => lifecycle.IsAlive;
     public bool Dead                                => lifecycle.IsDead;
     public bool IsMoving                            => CanMove && (Velocity != Vector2.zero || Direction != Vector2.zero);
-    public TimePredicate IsIdle                     => idle ??= new (TimerUnit.Time, () => !IsMoving);
+    public TimePredicate IsIdle                     => idle ??= new(TimerUnit.Time, () => !IsMoving);
 
     public bool ShieldEquipped                      => equipment.GetEquipped(EquipmentSlotType.OffHand) is Shield;
 
@@ -94,7 +94,8 @@ public class HeroState : State
 
     public HeroState(Hero hero) : base(hero)
     {
-        owner       = hero;
+        this.hero   = hero;
+
         effects     = hero.Effects;
         movement    = hero.Movement;
         intent      = hero.Intent;
@@ -104,18 +105,9 @@ public class HeroState : State
         owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
-    {
-        switch (message.State)
-        {
-            case Presence.State.Entering: Enable();  break;
-            case Presence.State.Exiting:  Disable(); break;
-            case Presence.State.Disposal: Dispose(); break;
-        }
-    }
-
-    public override void Dispose()
+    protected override void OnDispose()
     {
         idle.Dispose();
+        parry.Dispose();
     }
 }

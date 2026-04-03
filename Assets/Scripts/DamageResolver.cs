@@ -11,10 +11,7 @@ public class DamageResolver : RegisteredService, IServiceLoop
 
     public DamageResolver()
     {
-
         Link.Global<ResolveDamage>(HandleResolveDamageEvent);
-
-        Services.Lane.Register(this);
     }
 
     // ===============================================================================
@@ -113,13 +110,7 @@ public class DamageResolver : RegisteredService, IServiceLoop
 
     readonly Logger Log = Logging.For(LogSystem.Combat);
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.DamageProcessor;
-
 }
 
 

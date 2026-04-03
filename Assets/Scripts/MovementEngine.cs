@@ -13,7 +13,6 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     public MovementEngine()
     {
-        Services.Lane.Register(this);
         RegisterProcessors();
     }
 
@@ -72,12 +71,7 @@ public class MovementEngine : RegisteredService, IServiceTick
 
     // ===============================================================================
 
-    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
+    // readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 
     public UpdatePriority Priority => ServiceUpdatePriority.MovementEngine;
 }
@@ -88,11 +82,9 @@ public interface IMovementProcessor
     void Process(Actor actor);
 }
 
+
 public class MovementCombineProcessor : IMovementProcessor
 {
-    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
-
-
     public void Process(Actor actor)
     {
         if (actor is not IMovableActor movable)
@@ -107,15 +99,16 @@ public class MovementCombineProcessor : IMovementProcessor
         if (actor is Hero) Log.Debug("Control", () => $"{control}");
         if (actor is Hero) Log.Debug("Force",   () => $"{force}");
         if (actor is Hero) Log.Debug("Velocity",() => $"{control + force}");
+     
         movable.Velocity = control + force;
     }
+
+    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 }
 
 
 public class MovementFrictionProcessor : IMovementProcessor
 {
-    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
-
         public void Process(Actor actor)
         {
             if (actor is not IMovableActor movable)
@@ -131,18 +124,16 @@ public class MovementFrictionProcessor : IMovementProcessor
                     physics.Force = Vector2.zero;
             }
 
-
             movable.Control *= Mathf.Exp(-movable.Friction * Clock.DeltaTime);
             if (movable.Control.magnitude < 0.01f)
                 movable.Control = Vector2.zero;
         }
+        // readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 }
 
 
 public class MovementVelocityProcessor : IMovementProcessor
 {
-    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
-
     public void Process(Actor actor)
     {
         var movable = actor as IMovableActor;
@@ -165,4 +156,5 @@ public class MovementVelocityProcessor : IMovementProcessor
 
         body.linearVelocity = velocity;
     }
+    readonly Logger Log = Logging.For(LogSystem.MovementEngine);
 }

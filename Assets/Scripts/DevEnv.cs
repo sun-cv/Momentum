@@ -5,15 +5,14 @@ using UnityEngine;
 public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 {
     Actor hero;
+    Hero Hero;
 
     // ===============================================================================
     
     public void Initialize()
     {
-        Services.Lane.Register(this);
-
         hero = Factories.Get<HeroFactory>().Spawn(Vector3.zero);
-
+        Hero = hero as Hero;
         hero.Bus.Emit.Local(new EquipEvent(hero, new Sword()) );
         hero.Bus.Emit.Local(new EquipEvent(hero, new Shield()));
         hero.Bus.Emit.Local(new EquipEvent(hero, new Dash())  );
@@ -29,6 +28,8 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 
     public void Tick()
     {
+        Log.Debug("control", () => Hero.Control);
+        Log.Debug($"velocity", () => Hero.Velocity);
     }
 
     public void Loop()
@@ -52,6 +53,7 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Combat)           .SetLevel(LogLevel.Trace);
+        Logging.For(LogSystem.Corpse)           .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Presence)         .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Lifecycle)        .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Hero)             .SetLevel(LogLevel.Debug);    
@@ -62,11 +64,6 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Logging.For(LogSystem.Hero).Debug("Health",() => ((Hero)hero).Health);
         Logging.For(LogSystem.Hero).Debug("Parry", () => ((Hero)hero).Parrying);
         Logging.For(LogSystem.Hero).Debug("block", () => ((Hero)hero).Blocking);
-    }
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.DevEnv;

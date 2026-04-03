@@ -7,7 +7,7 @@ public class MovableDummyDefinition : ActorDefinition
 {
     public MovableDummyDefinition()
     {
-        Name                        = "MovableDummy";
+        Name                        = nameof(MovableDummy);
         
         Stats                       = new()
         {
@@ -41,15 +41,13 @@ public class MovableDummyDefinition : ActorDefinition
 
         Lifecycle                   = new()
         {   
+            Spawn                   = new()
+            {
+                Corpse              = true,
+            },
             Respawn                 = new()
             {
                 Enabled             = false,
-            },
-            Corpse                  = new()
-            {
-                Name                = "MovableDummyCorpse",
-                Enabled             = true,
-                PersistDuration     = 5,
             },
         };
 
@@ -58,14 +56,19 @@ public class MovableDummyDefinition : ActorDefinition
             Spawn                   = new()
             {   
                 Enabled             = true,
-                Default             = "Spawn"
+                Default             = "Spawn",
             },  
 
             Death                   = new()
             {   
                 Enabled             = true,
-                Default             = "Death"
+                Default             = "Death",
             },
+        };
+
+        Rendering                   = new()
+        {
+            DepthSortingTier        = SortTier.Entity,
         };
     }
 }

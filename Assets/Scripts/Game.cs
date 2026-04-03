@@ -80,17 +80,17 @@ public class GameEngine
 
 public class Clock
 {
-    public const float TickRate = Config.Timing.TICK_RATE_TICK;
-    public const float LoopRate = Config.Timing.TICK_RATE_LOOP;
-    public const float StepRate = Config.Timing.TICK_RATE_STEP;
-    public const float UtilRate = Config.Timing.TICK_RATE_UTIL;
+    public const float TickRate     = Config.Timing.TICK_RATE_TICK;
+    public const float LoopRate     = Config.Timing.TICK_RATE_LOOP;
+    public const float StepRate     = Config.Timing.TICK_RATE_STEP;
+    public const float UtilRate     = Config.Timing.TICK_RATE_UTIL;
 
         // -----------------------------------
 
-    public const float TickDelta = 1f / TickRate;
-    public const float LoopDelta = 1f / LoopRate;
-    public const float StepDelta = 1f / StepRate;
-    public const float UtilDelta = 1f / UtilRate;
+    public const float TickDelta    = 1f / TickRate;
+    public const float LoopDelta    = 1f / LoopRate;
+    public const float StepDelta    = 1f / StepRate;
+    public const float UtilDelta    = 1f / UtilRate;
 
         // -----------------------------------
 
@@ -99,10 +99,10 @@ public class Clock
 
         // -----------------------------------
 
-    public int TickFired { get; private set; }
-    public int LoopFired { get; private set; }
-    public int StepFired { get; private set; }
-    public int UtilFired { get; private set; }
+    public int TickFired            { get; private set; }
+    public int LoopFired            { get; private set; }
+    public int StepFired            { get; private set; }
+    public int UtilFired            { get; private set; }
 
         // -----------------------------------
 
@@ -112,11 +112,14 @@ public class Clock
     float utilAccumulator;
 
     static int frameCount;
+    static float time;
 
     // ===============================================================================
 
     public void Tick()
     {
+        time            += DeltaTime;
+
         tickAccumulator += DeltaTime;
         loopAccumulator += DeltaTime;
         stepAccumulator += DeltaTime;
@@ -145,8 +148,8 @@ public class Clock
     // ===============================================================================
 
     public static int   FrameCount => frameCount;
+    public static float Time       => time;
     public static float DeltaTime  => UnityEngine.Time.fixedDeltaTime;
-    public static float Time       => UnityEngine.Time.time;
 }
 
 
@@ -218,6 +221,7 @@ public class GameLoop
     {
         timeHerz += Clock.DeltaTime;
         tickHerz++;
+
         if (timeHerz >= 1f)
         {
             Logging.For(LogSystem.Engine).Debug("Tick Rate", () => tickHerz / timeHerz);
@@ -285,7 +289,7 @@ public readonly struct UpdatePriority : IComparable<UpdatePriority>
 
     public int CompareTo(UpdatePriority other)
     {
-        int phaseCompare = Phase.CompareTo(other.Phase);
+        int phaseCompare     = Phase.CompareTo(other.Phase);
         return phaseCompare != 0 ? phaseCompare : Priority.CompareTo(other.Priority);
     }
 }

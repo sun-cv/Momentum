@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 
 
@@ -8,15 +7,11 @@ public class DamageProcessor : RegisteredService, IServiceLoop
     
     readonly List<DamageContext> queue = new();
 
-        // -----------------------------------
-
-
     // ===============================================================================
 
     public DamageProcessor()
     {
         Link.Global<DamageEvent>(HandleDamageEvent);
-        Services.Lane.Register(this);
     }
 
     // ===============================================================================
@@ -76,13 +71,8 @@ public class DamageProcessor : RegisteredService, IServiceLoop
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
 
     public UpdatePriority Priority => ServiceUpdatePriority.DamageProcessor;
-
 }
 
 

@@ -1,12 +1,7 @@
 
 
 
-public abstract class State : Service
+public abstract class State : ActorService
 {
-    public Actor Owner { get; }
-
-    public State(Actor owner)
-    {
-        Owner = owner;
-    }
+    public State(Actor actor) : base(actor) {}
 }
