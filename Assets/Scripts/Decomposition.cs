@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 
 
@@ -27,7 +28,11 @@ public class Decomposition : ActorService, IServiceStep
     {
         stateHandlers = new()
         {
-            { State.Fresh, new CorpseFreshState(this, owner)}
+            { State.Fresh,      new CorpseFreshState    (this, owner) },
+            { State.Decaying,   new CorpseDecayingState (this, owner) },
+            { State.Consumed,   new CorpseConsumedState (this, owner) },
+            { State.Remains,    new CorpseRemainsState  (this, owner) },
+            { State.Disposal,   new CorpseDisposalState (this, owner) },
         };
     }
 
@@ -82,6 +87,7 @@ public class Decomposition : ActorService, IServiceStep
 
     void PublishState()
     {
+        if (owner is DummyCorpse) Debug.Log(state);
         owner.Bus.Emit.Local(new CorpseEvent(owner, state));
     }
 
@@ -112,7 +118,7 @@ public class CorpseFreshState : IStateHandler
 
     // -----------------------------------
 
-    float entryTime;
+    ClockTimer duration;
 
     // ===============================================================================
 
@@ -128,17 +134,28 @@ public class CorpseFreshState : IStateHandler
 
     public void Enter()
     {
-        entryTime = Clock.Time;
+        duration = new(definition.Corpse.FreshDuration);
+        duration.Start();
     }
 
     public void Update()
     {
-        controller.TransitionTo(Decomposition.State.Decaying);
+        AdvanceOnDurationEnd();
     }
 
     public void Exit()
     {
+
     }
+
+    // ===============================================================================
+
+    void AdvanceOnDurationEnd()
+    {
+        if (duration.IsFinished)
+            controller.TransitionTo(Decomposition.State.Decaying);
+    }
+
 }
 
 
@@ -148,10 +165,15 @@ public class CorpseFreshState : IStateHandler
 
 public class CorpseDecayingState : IStateHandler
 {
+    
     readonly Actor      owner;
     readonly ICorpse    corpse;
     readonly Decomposition     controller;
     readonly ActorDefinition definition;
+
+    // -----------------------------------
+
+    ClockTimer duration;
 
     // ===============================================================================
 
@@ -166,17 +188,29 @@ public class CorpseDecayingState : IStateHandler
     // ===============================================================================
 
     public void Enter()
-    {   
+    {
+        duration = new(definition.Corpse.DecayDuration);
+        duration.Start();
     }
 
     public void Update()
     {
-        controller.TransitionTo(Decomposition.State.Remains);
+        AdvanceOnDurationEnd();
     }
 
     public void Exit()
     {
+
     }
+
+    // ===============================================================================
+
+    void AdvanceOnDurationEnd()
+    {
+        if (duration.IsFinished)
+            controller.TransitionTo(Decomposition.State.Consumed);
+    }
+
 }
 
 
@@ -187,10 +221,15 @@ public class CorpseDecayingState : IStateHandler
 
 public class CorpseConsumedState : IStateHandler
 {
+    
     readonly Actor      owner;
     readonly ICorpse    corpse;
     readonly Decomposition     controller;
     readonly ActorDefinition definition;
+
+    // -----------------------------------
+
+    ClockTimer duration;
 
     // ===============================================================================
 
@@ -205,17 +244,29 @@ public class CorpseConsumedState : IStateHandler
     // ===============================================================================
 
     public void Enter()
-    {   
+    {
+        duration = new(definition.Corpse.ConsumeDuration);
+        duration.Start();
     }
 
     public void Update()
     {
-        controller.TransitionTo(Decomposition.State.Remains);
+        AdvanceOnDurationEnd();
     }
 
     public void Exit()
     {
+
     }
+
+    // ===============================================================================
+
+    void AdvanceOnDurationEnd()
+    {
+        if (duration.IsFinished)
+            controller.TransitionTo(Decomposition.State.Remains);
+    }
+
 }
 
 
@@ -225,10 +276,15 @@ public class CorpseConsumedState : IStateHandler
 
 public class CorpseRemainsState : IStateHandler
 {
+    
     readonly Actor      owner;
     readonly ICorpse    corpse;
     readonly Decomposition     controller;
     readonly ActorDefinition definition;
+
+    // -----------------------------------
+
+    ClockTimer duration;
 
     // ===============================================================================
 
@@ -243,17 +299,29 @@ public class CorpseRemainsState : IStateHandler
     // ===============================================================================
 
     public void Enter()
-    {   
+    {
+        duration = new(definition.Corpse.RemainsDuration);
+        duration.Start();
     }
 
     public void Update()
     {
-        controller.TransitionTo(Decomposition.State.Disposal);
+        AdvanceOnDurationEnd();
     }
 
     public void Exit()
     {
+
     }
+
+    // ===============================================================================
+
+    void AdvanceOnDurationEnd()
+    {
+        if (duration.IsFinished)
+            controller.TransitionTo(Decomposition.State.Disposal);
+    }
+
 
 }
 
@@ -283,16 +351,18 @@ public class CorpseDisposalState : IStateHandler
 
     public void Enter()
     {   
-        owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Absent));
+        Debug.Log("Enter disposal corpse");
+        owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Disposal));
     }
 
     public void Update()
     {
+
     }
 
     public void Exit()
     {
-        
+               
     }
 }
 

@@ -34,11 +34,6 @@ public class MovableDummyDefinition : ActorDefinition
             MomentumThreshold       = 25f,
         };
         
-        Presence                    = new()
-        {
-            CanBeSetAbsent          = false,
-        };
-
         Lifecycle                   = new()
         {   
             Spawn                   = new()
@@ -69,6 +64,42 @@ public class MovableDummyDefinition : ActorDefinition
         Rendering                   = new()
         {
             DepthSortingTier        = SortTier.Entity,
+        };
+    }
+}
+
+[Definition]
+public class MovableDummyCorpseDefinition : ActorDefinition
+{
+    public MovableDummyCorpseDefinition()
+    {
+        Name                        = nameof(MovableDummyCorpse);
+        
+        Stats                       = new()
+        {
+            MaxIntegrity            = 100,
+        };
+
+        Resource                    = new()
+        {
+            Integrity               = new()
+            {
+                AlertOnChange       = true,
+            }
+        };
+
+        Corpse                      = new()
+        {
+            Name                    = nameof(DummyCorpse),
+            FreshDuration           = 5,
+            DecayDuration           = 5,
+            ConsumeDuration         = 5,
+            RemainsDuration         = 5,
+        };
+
+        Rendering                   = new()
+        {
+            DepthSortingTier        = SortTier.Ground,
         };
     }
 }

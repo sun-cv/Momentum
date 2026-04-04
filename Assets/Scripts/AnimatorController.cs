@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 
-public class AnimatorController : ActorService, IServiceTick, IServiceLoop, IServiceStep, IDisposable
+public class AnimatorController : ActorService, IServiceTick, IServiceLoop, IDisposable
 {
     readonly Animator animator;
     
@@ -55,6 +55,7 @@ public class AnimatorController : ActorService, IServiceTick, IServiceLoop, ISer
 
         BuildHandlers();
 
+        Enable();
     }
 
     // ===============================================================================
@@ -90,11 +91,6 @@ public class AnimatorController : ActorService, IServiceTick, IServiceLoop, ISer
         ProcessHandlers(loopHandlers);
     }
 
-    public void Step()
-    {
-
-    }
-
     // ===============================================================================
 
     void ProcessAnimatorRequests()
@@ -118,8 +114,8 @@ public class AnimatorController : ActorService, IServiceTick, IServiceLoop, ISer
     {
         foreach (var (param, handler) in handlers)
         {
-            if (overrides.TryGetValue(param, out var o))
-                ApplyOverride(o);
+            if (overrides.TryGetValue(param, out var overwrite))
+                ApplyOverride(overwrite);
             else
                 handler(animator, owner);
         }

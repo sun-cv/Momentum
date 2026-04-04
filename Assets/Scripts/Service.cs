@@ -47,6 +47,11 @@ public abstract class Service : IService
     protected bool active   = false;
     protected bool passive  = false;
 
+    public Service()
+    {
+        if (AutoEnable) Enable();
+    }
+
     // ===============================================================================
 
     public void Restart()
@@ -120,16 +125,19 @@ public abstract class Service : IService
 
     public virtual void Dispose()
     {
+        Disable();
         Services.Lane.Deregister(this);
         OnDispose();
     }
     // ===============================================================================
 
-    public bool PassiveEnabled  => this is IPassiveTick || this is IPassiveLoop || this is IPassiveStep || this is IPassiveUtil || this is IPassiveLate;
+    protected virtual bool AutoEnable => true;
+
     public bool IsEnabled       => enabled;
     public bool IsActive        => active;
     public bool IsPassive       => passive;
     public bool IsDisabled      => !enabled;
+    public bool PassiveEnabled  => this is IPassiveTick || this is IPassiveLoop || this is IPassiveStep || this is IPassiveUtil || this is IPassiveLate;
 }
 
 
@@ -165,5 +173,9 @@ public abstract class ActorService : Service
             case Presence.State.Disposal:   Dispose();      break;
         }
     }
+
+    // ===============================================================================
+
+    protected override bool AutoEnable => false;
 }
 

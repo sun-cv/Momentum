@@ -1,11 +1,10 @@
-using System;
 using UnityEngine;
 
 
 
 public class SpawnController : Controller
 {
-    [SerializeField] private string definition;
+    [SerializeField] string definition;
 
         // -----------------------------------
 
@@ -53,6 +52,7 @@ public class SpawnController : Controller
         foreach (var collider in colliders)
             GizmoTools.DrawCollider(collider, true);
     }
+    public string Definition        { get => definition; set => definition = value; }
 }
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -74,11 +74,12 @@ public class SpawnAnchor : Anchor
         View            = view;
         Area            = view.GetComponent<Collider2D>();
 
-        Owner           = new();
-
-        Owner.Name      = definition;
-        Owner.Anchor    = this;
-        Owner.Area      = Area;
+        Owner = new()
+        {
+            Name    = definition,
+            Anchor  = this,
+            Area    = Area
+        };
     }
 }
 

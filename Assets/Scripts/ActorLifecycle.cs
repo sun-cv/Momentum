@@ -26,6 +26,8 @@ public class Lifecycle : ActorService, IServiceLoop
         CreateContext();
         InitializeStateHandlers();
         EnterLifecycle();
+
+        Enable();
     }
 
     void InitializeStateHandlers()
@@ -378,22 +380,24 @@ public class LifecycleDeadState : IStateHandler
 
     public void Enter()
     {
-        ProcessCorpseSpawn();
-        ProcessActorPresence();
+        RequestAbsenceOrDisposal();
     }
 
     public void Update()
     {
+        Exit();
     }
 
     public void Exit()
     {
-        
+        TrySpawnCorpse();
+
+        Debug.Log("Exiting dead");
     }
 
     // ===============================================================================
 
-    void ProcessCorpseSpawn()
+    void TrySpawnCorpse()
     {
         if (!CanBecomeCorpse())
             return;
@@ -401,9 +405,13 @@ public class LifecycleDeadState : IStateHandler
         RequestCorpseSpawn();
     }
 
-    void ProcessActorPresence()
+    void RequestAbsenceOrDisposal()
     {
-        // switch(definition.Presence.)
+        switch(definition.Lifecycle.Respawn.Enabled)
+        {   
+            case true:  RequestAbsence();   break;
+            case false: RequestDisposal();  break;
+        }
     }
         
     void RequestCorpseSpawn()
@@ -411,11 +419,15 @@ public class LifecycleDeadState : IStateHandler
         Emit.Global(new CorpseRequest(controller.Context.Corpse));
     }
 
-    void SetAbsentPresence()
+    void RequestAbsence()
     {
         owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Absent));
     }
 
+    void RequestDisposal()
+    {
+        owner.Bus.Emit.Local(new PresenceTargetEvent(Presence.Target.Disposal));
+    }
     // ===============================================================================
     //  Predicates
     // ===============================================================================

@@ -17,6 +17,8 @@ public class LivePredicate : Service, IServiceLoop
     {
         this.evaluator  = evaluator;
         value           = evaluator();
+
+        Enable();
     }
 
     // ===============================================================================

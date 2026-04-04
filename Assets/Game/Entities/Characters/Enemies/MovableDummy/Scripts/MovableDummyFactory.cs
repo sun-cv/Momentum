@@ -7,12 +7,12 @@ public class MovableDummyFactory : ICorpseFactory
 
     public Actor Spawn(Vector3 position)
     {
-        var definition      = new MovableDummyDefinition();
-        var prefab          = Assets.Get(definition.Name);
-        var view            = Object.Instantiate(prefab, position, Quaternion.identity);
+        var definition              = new MovableDummyDefinition();
+        var prefab                  = Assets.Get(definition.Name);
+        var view                    = Object.Instantiate(prefab, position, Quaternion.identity);
 
-        MovableDummy dummy  = new();
-        dummy.Bridge        = new(dummy, view);
+        MovableDummy dummy          = new();
+        dummy.Bridge                = new(dummy, view);
 
         dummy.Initialize(definition);
 
@@ -21,15 +21,15 @@ public class MovableDummyFactory : ICorpseFactory
     
     public Actor SpawnCorpse(Vector3 position)
     {
-        var definition      = new MovableDummyDefinition();
-        var prefab          = Assets.Get(definition.Name);
-        var view            = Object.Instantiate(prefab, position, Quaternion.identity);
+        var definition              = new MovableDummyCorpseDefinition();
+        var prefab                  = Assets.Get(definition.Name);
+        var view                    = Object.Instantiate(prefab, position, Quaternion.identity);
 
-        MovableDummy dummy  = new();
-        dummy.Bridge        = new(dummy, view);
+        MovableDummyCorpse corpse   = new();
+        corpse.Bridge               = new(corpse, view);
 
-        dummy.Initialize(definition);
+        corpse.Initialize(definition);
 
-        return dummy;
+        return corpse;
     }
 }

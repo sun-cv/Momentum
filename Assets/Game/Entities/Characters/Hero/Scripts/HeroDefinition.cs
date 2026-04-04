@@ -53,11 +53,6 @@ public class HeroDefinition : ActorDefinition
             MomentumThreshold       = 0f,
         };
 
-        Presence                    = new()
-        {
-            CanBeSetAbsent          = true,
-        };
-
         Lifecycle                   = new()
         {
             Spawn                   = new()

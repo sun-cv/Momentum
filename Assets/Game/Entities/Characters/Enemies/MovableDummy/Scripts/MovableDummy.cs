@@ -78,4 +78,4 @@ public class MovableDummy : Agent, IMovableDummy
 }
 
 
-public class MovableDummyCorpse {}
+public class MovableDummyCorpse : Corpse {}

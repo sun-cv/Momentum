@@ -29,11 +29,6 @@ public class DummyDefinition : ActorDefinition
 
         };
 
-        Presence                    = new()
-        {
-            CanBeSetAbsent          = false,
-        };
-
         Lifecycle                   = new()
         {   
             Spawn                   = new()
@@ -63,7 +58,7 @@ public class DummyDefinition : ActorDefinition
 
         Rendering                   = new()
         {
-            DepthSortingTier        = SortTier.Ground,
+            DepthSortingTier        = SortTier.Prop,
         };
     }
 }
@@ -73,7 +68,7 @@ public class DummyCorpseDefinition : ActorDefinition
 {
     public DummyCorpseDefinition()
     {
-        Name                        = nameof(Dummy);
+        Name                        = nameof(DummyCorpse);
         
         Stats                       = new()
         {
@@ -88,18 +83,12 @@ public class DummyCorpseDefinition : ActorDefinition
             }
         };
 
-        Presence                    = new()
-        {
-            CanBeSetAbsent          = true,
-        };
-
         Corpse                      = new()
         {
-            Name                    = nameof(DummyCorpse),
-            FreshDuration           = 10,
-            DecayDuration           = 10,
-            ConsumeDuration         = 10,
-            RemainsDuration         = 10,
+            FreshDuration           = 5,
+            DecayDuration           = 5,
+            ConsumeDuration         = 5,
+            RemainsDuration         = 5,
         };
 
         Rendering                   = new()

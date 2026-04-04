@@ -10,7 +10,6 @@ public abstract class ActorDefinition : Definition
 {
     public StatsDefinition Stats                        { get; init; } = new();
     public ResourceDefinition Resource                  { get; init; } = new();
-    public PresenceDefinition Presence                  { get; init; } = new();
     public LifecycleDefinition Lifecycle                { get; init; } = new();
     public PhysicsDefinition Physics                    { get; init; } = new();
     public CorpseDefinition Corpse                      { get; init; } = new();
@@ -68,23 +67,13 @@ public class ResourceThreshold
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                        Presence
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class PresenceDefinition : Definition
-{
-    public bool CanBeSetAbsent                          { get; init; }
-    public bool CanBeCameraTarget                       { get; init; }
-}
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                        Lifecycle
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class LifecycleDefinition : Definition
 {
-    public SpawnBehavior    Spawn                       { get; init; }
-    public RespawnBehavior  Respawn                     { get; init; }
+    public SpawnBehavior    Spawn                       { get; init; } = new();
+    public RespawnBehavior  Respawn                     { get; init; } = new();
     
     public List<Effect> OnDeathEffects                  { get; init; } = new();
     public bool AlertOnDeath                            { get; init; }
@@ -108,6 +97,7 @@ public class SpawnBehavior : Definition
 public class RespawnBehavior : Definition
 {
     public bool Enabled                                 { get; init; }
+
     public float RespawnDelay                           { get; init; }
 
     public bool RestoreFullHealth                       { get; init; }
@@ -178,4 +168,7 @@ public class AnimationSet : Definition
 public class RenderingDefinition : Definition
 {
     public SortTier DepthSortingTier                    { get; init; }
+
+    // Sort out? REWORK REQUIRED
+    public bool CanBeCameraTarget                       { get; init; }
 }

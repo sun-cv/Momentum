@@ -66,20 +66,22 @@ public class SpriteLayeringSystem : RegisteredService, IServiceStep, IBind
                 {
                     if (!sprite1.OrderOverrides.ContainsKey(sprite2))
                     {
-                        float footY1 = sprite1.FootY;
-                        float footY2 = sprite2.FootY;
-
-                        if (footY1 < footY2)
+                        if (sprite1.Tier != SortTier.Ground && sprite2.Tier == SortTier.Ground)
                         {
-                            if (sprite1.Tier <= sprite2.Tier)
-                                sprite1.OrderOverrides[sprite2] =  1;
-
+                            sprite1.OrderOverrides[sprite2] =  1;
                             sprite2.OrderOverrides[sprite1] = -1;
                         }
-                        else
+                        else if (sprite1.Tier == SortTier.Ground && sprite2.Tier != SortTier.Ground)
                         {
                             sprite1.OrderOverrides[sprite2] = -1;
                             sprite2.OrderOverrides[sprite1] =  1;
+                        }
+                        else
+                        {
+                            float footY1 = sprite1.FootY;
+                            float footY2 = sprite2.FootY;
+                            sprite1.OrderOverrides[sprite2] = footY1 < footY2 ?  1 : -1;
+                            sprite2.OrderOverrides[sprite1] = footY1 < footY2 ? -1 :  1;
                         }
                     }
                 }

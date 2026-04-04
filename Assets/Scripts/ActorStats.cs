@@ -18,6 +18,8 @@ public class ActorStats : Stats
 
             stats.Add(stat.Name, value);
         }
+
+        Enable();
     }
 
     // ===============================================================================

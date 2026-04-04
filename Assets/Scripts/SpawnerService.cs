@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
@@ -40,7 +41,6 @@ public class SpawnerService : RegisteredService, IServiceLoop
         requests.Clear();
     }
 
-
     void ResolveRequest(SpawnerRequest request)
     {
         var spawnPoint = request.SpawnPoint;
@@ -61,7 +61,7 @@ public class SpawnerService : RegisteredService, IServiceLoop
         var definition  = Definitions.Get<SpawnerDefinition>(point.Name);
         var spawner     = CreateSpawner(definition);
         
-        spawner.owner   = point;
+        spawner.Owner   = point;
         point.Spawner   = spawner;
 
         Register(spawner);

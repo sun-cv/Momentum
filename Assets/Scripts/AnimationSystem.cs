@@ -24,7 +24,8 @@ public class AnimationSystem : ActorService, IServiceLoop
         animator    = new(owner);
 
         owner.Bus.Link.Local<Message<Request, AnimationAPI>>(HandleAnimationRequest);        
-        owner.Bus.Link.Local<PresenceStateEvent>(HandlePresenceStateEvent);
+
+        Enable();
     } 
 
     // ===============================================================================
@@ -139,7 +140,7 @@ public class AnimationSystem : ActorService, IServiceLoop
 
     readonly Logger Log = Logging.For(LogSystem.Animation);
 
-    public UpdatePriority Priority      => ServiceUpdatePriority.AnimationSystem;
+    public UpdatePriority Priority => ServiceUpdatePriority.AnimationSystem;
 }
 
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

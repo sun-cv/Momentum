@@ -64,6 +64,11 @@ public class AnimatorParameter
         { nameof(IsMoving),                 IsMoving                },
         { nameof(Idle),                     Idle                    },
         { nameof(IdleTime),                 IdleTime                },
+        { nameof(CorpseFresh),              CorpseFresh             },
+        { nameof(CorpseDecaying),           CorpseDecaying          },
+        { nameof(CorpseConsumed),           CorpseConsumed          },
+        { nameof(CorpseRemains),            CorpseRemains           },
+
     };
 
     public static readonly Dictionary<Type, Entry[]> Handlers = new()
@@ -99,7 +104,7 @@ public class AnimatorParameter
         },
         { typeof(ICorpse), new Entry[]
             {
-                new() { Rate = ServiceRate.Loop, Parameter = CorpseFresh,           Handler = (animator, owner) => animator.SetBool(CorpseFresh,            ((ICorpse)owner).Condition == Decomposition.State.Fresh)   },
+                new() { Rate = ServiceRate.Loop, Parameter = CorpseFresh,           Handler = (animator, owner) => { animator.SetBool(CorpseFresh,            ((ICorpse)owner).Condition == Decomposition.State.Fresh); Debug.Log("called");   }},
                 new() { Rate = ServiceRate.Loop, Parameter = CorpseDecaying,        Handler = (animator, owner) => animator.SetBool(CorpseDecaying,         ((ICorpse)owner).Condition == Decomposition.State.Decaying)},
                 new() { Rate = ServiceRate.Loop, Parameter = CorpseConsumed,        Handler = (animator, owner) => animator.SetBool(CorpseConsumed,         ((ICorpse)owner).Condition == Decomposition.State.Consumed)},
                 new() { Rate = ServiceRate.Loop, Parameter = CorpseRemains,         Handler = (animator, owner) => animator.SetBool(CorpseRemains,          ((ICorpse)owner).Condition == Decomposition.State.Remains) },

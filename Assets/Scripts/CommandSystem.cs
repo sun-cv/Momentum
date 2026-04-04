@@ -21,6 +21,9 @@ public class CommandSystem : ActorService, IServiceTick
 
         owner.Bus.Link.Local<CommandEvent>(HandleCommandRequest);
         Broadcast();
+
+        Enable();
+
     }
 
     // ===============================================================================

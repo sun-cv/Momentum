@@ -123,4 +123,4 @@ public class Hero : Player, IHero
     }
 }
 
-public class HeroCorpse {}
+public class HeroCorpse : Corpse {}

@@ -72,15 +72,9 @@ public class CorpseService : RegisteredService, IServiceLoop
 
     // ===============================================================================
 
-    readonly Logger Log = Logging.For(LogSystem.Corpse);
-
-    public override void Dispose()
-    {
-        
-    }
+    // readonly Logger Log = Logging.For(LogSystem.Corpse);
 
     public UpdatePriority Priority => ServiceUpdatePriority.CorpseService;
-
 }
 
     // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

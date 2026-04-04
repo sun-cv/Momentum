@@ -14,6 +14,8 @@ public class Resources : ActorService
     public Resources(Actor actor) : base(actor)
     {
         RegisterHandlers();
+
+        Enable();
     }
 
     // ===============================================================================
@@ -96,6 +98,7 @@ public class ShieldHandler : ActorService, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Reset();
+        Enable();
     }
 
     // ===============================================================================
@@ -222,6 +225,7 @@ public class ArmorHandler : ActorService, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<ResourceReset> (Queue);
 
         Reset();
+        Enable();
     }
 
     // ===============================================================================
@@ -342,6 +346,7 @@ public class HealthHandler : ActorService, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Reset();
+        Enable();
     }
 
     // ===============================================================================
@@ -478,6 +483,7 @@ public class EnergyHandler : ActorService, IServiceLoop, IResourceHandler
         owner.Bus.Link.Local<ResourceReset>(Queue);
 
         Reset();
+        Enable();
     }
 
     // ===============================================================================

@@ -40,4 +40,4 @@ public class Dummy : Agent, IDummy
     }
 }
 
-public class DummyCorpse {}
+public class DummyCorpse : Corpse {}

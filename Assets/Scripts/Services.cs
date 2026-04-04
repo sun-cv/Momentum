@@ -87,9 +87,6 @@ public static class Services
                 
                 Registry.RegisterService(type, service);
                 
-                if (service is Service instance)
-                    instance.Enable();
-
                     // May Deprecate - Will there be tickable without Service class?
                 if (service is not Service && service is IService tickable )
                     Registry.RegisterServiceLanes(tickable);

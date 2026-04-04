@@ -6,15 +6,15 @@ using UnityEngine;
 
 public abstract class Spawner : Service
 {
-    public SpawnPoint owner;
-    public SpawnerDefinition Definition;
+    public SpawnPoint Owner                             { get; set;  }
+    public SpawnerDefinition Definition                 { get; init; }
 }
 
 
 
 public class SingleSpawner : Spawner, IServiceStep
 {
-    public new SingleSpawnerDefinition Definition        { get; init; }
+    public new SingleSpawnerDefinition Definition       { get; init; }
 
         // -----------------------------------
 
@@ -32,6 +32,8 @@ public class SingleSpawner : Spawner, IServiceStep
     {
         Definition = definition;    
         InitializeTimer();
+
+        Enable();
     }
 
     // ===============================================================================
@@ -50,7 +52,7 @@ public class SingleSpawner : Spawner, IServiceStep
     {
         entry           = Definition.Actors.First();
         var factory     = Factories.Get<IActorFactory>(entry.Name);
-        var instance    = factory.Spawn(owner.Anchor.View.transform.position);
+        var instance    = factory.Spawn(Owner.Anchor.View.transform.position);
 
         actor           = instance;
         HasSpawned      = true;
@@ -173,9 +175,9 @@ public class TimedSpawner : Spawner, IServiceStep
 
     bool TryGetSpawnPoint(ActorSpawnerEntry actor, out Vector2 point)
     {
-        var bounds      = owner.Area.bounds;
+        var bounds      = Owner.Area.bounds;
         int attempts    = 10;
-        var mask        = ~(1 << owner.Area.gameObject.layer);
+        var mask        = ~(1 << Owner.Area.gameObject.layer);
 
 
         for (int i = 0; i < attempts; i++)
@@ -185,7 +187,7 @@ public class TimedSpawner : Spawner, IServiceStep
                 Random.Range(bounds.min.y, bounds.max.y)
             );
 
-            if (!owner.Area.OverlapPoint(candidate))
+            if (!Owner.Area.OverlapPoint(candidate))
                 continue;
 
             if (Physics2D.OverlapCircle(candidate, actor.SpawnRadius, mask) != null)
@@ -388,13 +390,13 @@ public class SpawnMovableDummy : SingleSpawnerDefinition
             {
                 Name                = nameof(MovableDummy),
                 InitialDelay        = 2,
-                RespawnDelay        = 4,
+                RespawnDelay        = 30,
                 RespawnOnDeath      = true,
             },
         };  
 
         MaxActive                   = 10;
-        SpawnInterval               = 2f;
+        SpawnInterval               = 30f;
         InitialDelay                = 2f;
     }
 }           

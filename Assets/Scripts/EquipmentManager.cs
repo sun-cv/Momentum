@@ -3,18 +3,15 @@ using System.Linq;
 
 
 
-public class EquipmentManager : Service
+public class EquipmentManager : ActorService
 {
 
-    readonly Actor owner;
     readonly Dictionary<EquipmentSlotType, EquipmentSlot> slots = new();
         
     // ===============================================================================
 
-    public EquipmentManager(Actor actor)
+    public EquipmentManager(Actor actor) : base(actor)
     {
-        owner = actor;
-
         slots[EquipmentSlotType.Head    ] = new() { SlotType = EquipmentSlotType.Head       };
         slots[EquipmentSlotType.Cloak   ] = new() { SlotType = EquipmentSlotType.Cloak      };
         slots[EquipmentSlotType.MainHand] = new() { SlotType = EquipmentSlotType.MainHand   };
@@ -22,6 +19,8 @@ public class EquipmentManager : Service
         slots[EquipmentSlotType.Dash    ] = new() { SlotType = EquipmentSlotType.Dash       };
 
         owner.Bus.Link.Local<EquipEvent>(HandleEquipEvent);
+
+        Enable();
     }
 
     // ===============================================================================

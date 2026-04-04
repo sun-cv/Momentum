@@ -3,15 +3,10 @@ using UnityEngine;
 
 
 
-public class Presence : Service, IServiceLoop
+public class Presence : ActorService, IServiceLoop
 {
-    public enum Target      {                      Present, Simulated, Absent, Disposal }
-    public enum State       { Resetting, Entering, Present, Simulated, Absent, Disposal }
-
-        // -----------------------------------
-
-    readonly Actor           owner;
-    readonly ActorDefinition definition;
+    public enum Target      { Initialize,                      Present, Simulated, Absent, Disposal }
+    public enum State       {             Resetting, Entering, Present, Simulated, Absent, Disposal }
 
         // -----------------------------------
 
@@ -20,23 +15,20 @@ public class Presence : Service, IServiceLoop
         // -----------------------------------
 
     Target target           = Target.Present;
-    Target current          = Target.Absent;
+    Target current          = Target.Initialize;
 
     State state             = State.Entering;
 
     // ===============================================================================
 
-    public Presence(Actor actor)
+    public Presence(Actor actor) : base(actor)
     {
-        Services.Lane.RegisterService(this);
-
-        owner       = actor;
-        definition  = actor.Definition;
-
         owner.Bus.Link.Local<PresenceTargetEvent>(HandlePresenceTargetEvent);
-        owner.Bus.Link.Local<PresenceStateEvent> (HandlePresenceStateEvent);
 
         InitializeStateHandlers();
+
+        Enable();
+
         EnterHandler();
     }
 
@@ -131,6 +123,7 @@ public class Presence : Service, IServiceLoop
     
     void PublishState()
     {
+        if (owner is MovableDummy) Log.Debug($"dummy state: {state}");
         owner.Bus.Emit.Local(new PresenceStateEvent(owner, state));
     }
 
@@ -139,7 +132,7 @@ public class Presence : Service, IServiceLoop
         target = message.Target;
     }
 
-    void HandlePresenceStateEvent(PresenceStateEvent message)
+    protected override void HandlePresenceStateEvent(PresenceStateEvent message)
     {
         switch (message.State)
         {
@@ -161,11 +154,6 @@ public class Presence : Service, IServiceLoop
     void DebugLog()
     {
         Log.Debug($"Presence.State.{owner.GetType().Name}", () => state, clean: true);
-    }
-
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
     }
 
     public Target Current           { get => current; set => current = value; }
@@ -394,7 +382,6 @@ public class PresenceAbsentState : IStateHandler<Presence>
     {
         controller.Current = Presence.Target.Absent;
     }
-
 }
 
 
@@ -418,8 +405,11 @@ public class PresenceDisposalState : IStateHandler<Presence>
     // ===============================================================================
 
     public void Enter(Presence controller)
-    {   
-    
+    {
+        SetCurrentTarget(controller);
+        if (owner is MovableDummy) Debug.Log("Entered disposal");
+        if (owner is MovableDummy) Debug.Log(controller.Current);
+        if (owner is MovableDummy) Debug.Log(controller.Desired);
     }
 
     public void Update(Presence controller)
@@ -429,8 +419,17 @@ public class PresenceDisposalState : IStateHandler<Presence>
 
     public void Exit(Presence controller)
     {
+
+        if (owner is MovableDummy) Debug.Log("Exit disposal");
         owner.Bus.Dispose();
         Object.Destroy(owner.Bridge.View);
+    }
+
+    // ===============================================================================
+
+    void SetCurrentTarget(Presence controller)
+    {
+        controller.Current = Presence.Target.Disposal;
     }
 }
 
