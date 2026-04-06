@@ -23,7 +23,7 @@ public class HeroFactory : IRespawnFactory, ICorpseFactory
     public Actor SpawnCorpse(Vector3 position)
     {
         var definition  = new HeroDefinition();
-        var prefab      = Assets.Get(definition.Corpse.Name);
+        var prefab      = Assets.Get(definition.Lifecycle.Spawn.Corpse);
         var view        = Object.Instantiate(prefab, position, Quaternion.identity);
 
         var hero        = new Hero();

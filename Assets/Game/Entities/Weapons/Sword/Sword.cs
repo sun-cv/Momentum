@@ -283,7 +283,6 @@ public class SwordRend : DamagingWeapon
         FireDurationFrames          = 20;
         ControlWindow               = 0.3f;
         CanCancelDisables           = true;
-        SwapOnFire                  = "null";
         ForceReleaseOnSwap          = true;
         Effects = new()
         {

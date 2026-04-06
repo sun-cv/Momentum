@@ -35,6 +35,7 @@ public class BaseDash : MovementWeapon
     {
         Name                        = "Dash";
         DefaultWeapon               = Capability.Dash;
+        Type                        = WeaponType.Interrupt;
         Trigger                     = new() { Capability.Dash };
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
@@ -44,7 +45,6 @@ public class BaseDash : MovementWeapon
         FireDurationFrames          = 20;
         Cooldown                    = 0.5f;
         CanCancelDisables           = true;
-        CanInterrupt                = true;
         Effects = new()
         {
             new DashDisable()

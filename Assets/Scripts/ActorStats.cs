@@ -49,5 +49,9 @@ public class ActorStats : Stats
 
     // readonly Logger Log = Logging.For(LogSystem.Stats);
 
-    static readonly PropertyInfo[] StatProperties = typeof(StatsDefinition).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(prop => prop.PropertyType == typeof(float)).ToArray();
+    static readonly PropertyInfo[] StatProperties =
+        typeof(StatsDefinition)
+            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Where(p => p.IsDefined(typeof(StatAttribute)))
+            .ToArray();
 }

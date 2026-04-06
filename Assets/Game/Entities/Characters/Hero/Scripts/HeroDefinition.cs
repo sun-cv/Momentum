@@ -8,39 +8,39 @@ public class HeroDefinition : ActorDefinition
     public HeroDefinition()
     {
         Name                        = nameof(Hero);
-        
-        Stats                       = new()
-        {
-            MaxHealth               = 100,
-            MaxArmor                = 0,
-            MaxShield               = 100,
-            MaxEnergy               = 100,
-            ShieldRegen             = 5,
-            EnergyRegen             = 5,
-            HealthRegen             = 5,
-            Speed                   = 5,
-            Strength                = 10,
-            Impact                  = 10,
-        };
 
-        Resource                    = new()
+        Stats                       = new()
         {
             Health                  = new()
             {
                 AlertOnChange       = true,
             },
+            MaxHealth               = 100,
+            HealthRegen             = 5,
+
             Armor                   = new()
             {
                 AlertOnChange       = true,
             },
+            MaxArmor                = 0,
+
             Shield                  = new()
             {
                 AlertOnChange       = true,
             },
+            MaxShield               = 100,
+            ShieldRegen             = 5,
+
             Energy                  = new()
             {
                 AlertOnChange       = true,
-            }
+            },
+            MaxEnergy               = 100,
+            EnergyRegen             = 5,
+
+            Speed                   = 5,
+            Strength                = 10,
+            Impact                  = 10,
         };
 
         Physics                     = new()
@@ -57,7 +57,7 @@ public class HeroDefinition : ActorDefinition
         {
             Spawn                   = new()
             {
-                Corpse              = true
+                Corpse              = ""
             },
             Respawn                 = new()
             {
@@ -65,24 +65,25 @@ public class HeroDefinition : ActorDefinition
             },
         };
 
-        Animations                  = new()
+        Appearance                  = new()
         {
-            Spawn                   = new()
-            {
-                Enabled             = false,
-                Default             = "Spawn"
-            },
 
-            Death                   = new()
+            Animations              = new()
             {
-                Enabled             = false,
-                Default             = "Death"
-            },
-        };
+                Spawn               = new()
+                {
+                    Enabled         = false,
+                    Default         = "Spawn"
+                },
 
-        Rendering                   = new()
-        {
+                Death               = new()
+                {
+                    Enabled         = false,
+                    Default         = "Death"
+                },
+            },
             DepthSortingTier        = SortTier.Entity,
         };
+
     }
 }

@@ -9,7 +9,7 @@ public class AnimationSystem : ActorService, IServiceLoop
 
     // -----------------------------------
 
-    readonly AnimatorController animator;
+    readonly AnimationController animator;
 
     // -----------------------------------
 
@@ -19,7 +19,7 @@ public class AnimationSystem : ActorService, IServiceLoop
 
     public AnimationSystem(Actor actor) : base(actor)
     {
-        animations  = actor.Definition.Animations;
+        animations  = actor.Definition.Appearance.Animations;
 
         animator    = new(owner);
 

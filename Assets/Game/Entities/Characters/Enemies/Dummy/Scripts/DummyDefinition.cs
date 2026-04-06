@@ -10,17 +10,14 @@ public class DummyDefinition : ActorDefinition
         
         Stats                       = new()
         {
-            MaxHealth               = 100,
-            MaxEnergy               = 100,
-            Speed                   = 0,
-        };
 
-        Resource                    = new()
-        {
             Health                  = new()
             {
                 AlertOnChange       = true,
             },
+            MaxHealth               = 100,
+            MaxEnergy               = 100,
+            Speed                   = 0,
         };
 
         Physics                     = new()
@@ -33,7 +30,7 @@ public class DummyDefinition : ActorDefinition
         {   
             Spawn                   = new()
             {
-                Corpse              = true
+                Corpse              = nameof(DummyCorpse),
             },
             Respawn                 = new()
             {
@@ -41,23 +38,22 @@ public class DummyDefinition : ActorDefinition
             },
         };
 
-        Animations                  = new()
-        {   
-            Spawn                   = new()
-            {   
-                Enabled             = true,
-                Default             = "Spawn"
-            },  
-
-            Death                   = new()
-            {   
-                Enabled             = true,
-                Default             = "Death"
-            },
-        };
-
-        Rendering                   = new()
+        Appearance                  = new()
         {
+            Animations              = new()
+            {   
+                Spawn               = new()
+                {   
+                    Enabled         = true,
+                    Default         = "Spawn"
+                },  
+
+                Death               = new()
+                {   
+                    Enabled         = true,
+                    Default         = "Death"
+                },
+            },
             DepthSortingTier        = SortTier.Prop,
         };
     }
@@ -69,29 +65,30 @@ public class DummyCorpseDefinition : ActorDefinition
     public DummyCorpseDefinition()
     {
         Name                        = nameof(DummyCorpse);
-        
-        Stats                       = new()
-        {
-            MaxIntegrity            = 100,
-        };
 
-        Resource                    = new()
+        Stats                       = new()
         {
             Integrity               = new()
             {
                 AlertOnChange       = true,
-            }
+            },
+
+            MaxIntegrity            = 100,
         };
 
-        Corpse                      = new()
+        Lifecycle                   = new()
         {
-            FreshDuration           = 5,
-            DecayDuration           = 5,
-            ConsumeDuration         = 5,
-            RemainsDuration         = 5,
+
+            Corpse                  = new()
+            {
+                FreshDuration       = 5,
+                DecayDuration       = 5,
+                ConsumeDuration     = 5,
+                RemainsDuration     = 5,
+            },
         };
 
-        Rendering                   = new()
+        Appearance                  = new()
         {
             DepthSortingTier        = SortTier.Ground,
         };

@@ -11,18 +11,15 @@ public class MovableDummyDefinition : ActorDefinition
         
         Stats                       = new()
         {
+            Health                  = new()
+            {
+                AlertOnChange       = true,
+            },
             MaxHealth               = 100,
             MaxEnergy               = 100,
             Speed                   = 5,
         };
 
-        Resource                    = new()
-        {
-            Health                  = new()
-            {
-                AlertOnChange       = true,
-            },
-        };
 
         Physics                     = new()
         {
@@ -38,7 +35,7 @@ public class MovableDummyDefinition : ActorDefinition
         {   
             Spawn                   = new()
             {
-                Corpse              = true,
+                Corpse              = "Test"
             },
             Respawn                 = new()
             {
@@ -46,24 +43,23 @@ public class MovableDummyDefinition : ActorDefinition
             },
         };
 
-        Animations                  = new()
-        {   
-            Spawn                   = new()
-            {   
-                Enabled             = true,
-                Default             = "Spawn",
-            },  
-
-            Death                   = new()
-            {   
-                Enabled             = true,
-                Default             = "Death",
-            },
-        };
-
-        Rendering                   = new()
+        Appearance                  = new()
         {
             DepthSortingTier        = SortTier.Entity,
+            Animations              = new()
+            {   
+                Spawn               = new()
+                {   
+                    Enabled         = true,
+                    Default         = "Spawn",
+                },  
+
+                Death               = new()
+                {   
+                    Enabled         = true,
+                    Default         = "Death",
+                },
+            }
         };
     }
 }
@@ -77,27 +73,25 @@ public class MovableDummyCorpseDefinition : ActorDefinition
         
         Stats                       = new()
         {
-            MaxIntegrity            = 100,
-        };
-
-        Resource                    = new()
-        {
             Integrity               = new()
             {
                 AlertOnChange       = true,
+            },
+            MaxIntegrity            = 100,
+        };
+
+        Lifecycle                   = new()
+        {
+            Corpse                  = new()
+            {
+                FreshDuration       = 5,
+                DecayDuration       = 5,
+                ConsumeDuration     = 5,
+                RemainsDuration     = 5,
             }
         };
 
-        Corpse                      = new()
-        {
-            Name                    = nameof(DummyCorpse),
-            FreshDuration           = 5,
-            DecayDuration           = 5,
-            ConsumeDuration         = 5,
-            RemainsDuration         = 5,
-        };
-
-        Rendering                   = new()
+        Appearance                  = new()
         {
             DepthSortingTier        = SortTier.Ground,
         };

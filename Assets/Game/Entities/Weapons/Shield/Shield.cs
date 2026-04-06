@@ -36,6 +36,7 @@ public class ShieldParry : DamagingWeapon
     {
         Name                                = "ShieldParry";
         DefaultWeapon                       = Capability.Attack2;
+        Type                                = WeaponType.Interrupt;
         Trigger                             = new() { Capability.Attack2 };
         Activation                          = WeaponActivation.OnPress;
         Termination                         = WeaponTermination.AfterFire;
@@ -44,7 +45,6 @@ public class ShieldParry : DamagingWeapon
         ChargeTimeFrames                    = 1;
         FireDurationFrames                  = 4;
         AddControlOnFireEnd                 = new() { "ShieldBlock" };
-        CanInterrupt                        = true;
         CanCancelDisables                   = true;
         Cooldown                            = .2f;
         Effects = new()     

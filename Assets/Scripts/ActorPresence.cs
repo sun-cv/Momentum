@@ -123,7 +123,6 @@ public class Presence : ActorService, IServiceLoop
     
     void PublishState()
     {
-        if (owner is MovableDummy) Log.Debug($"dummy state: {state}");
         owner.Bus.Emit.Local(new PresenceStateEvent(owner, state));
     }
 
@@ -407,9 +406,6 @@ public class PresenceDisposalState : IStateHandler<Presence>
     public void Enter(Presence controller)
     {
         SetCurrentTarget(controller);
-        if (owner is MovableDummy) Debug.Log("Entered disposal");
-        if (owner is MovableDummy) Debug.Log(controller.Current);
-        if (owner is MovableDummy) Debug.Log(controller.Desired);
     }
 
     public void Update(Presence controller)

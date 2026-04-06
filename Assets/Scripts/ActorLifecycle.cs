@@ -338,7 +338,7 @@ public class LifecycleDyingState : IStateHandler
 
     bool HasDeathAnimation()
     {
-        return definition.Animations.Death.Enabled;
+        return definition.Appearance.Animations.Death.Enabled;
     }
 
     bool HasOnDeathEffects()
@@ -391,8 +391,6 @@ public class LifecycleDeadState : IStateHandler
     public void Exit()
     {
         TrySpawnCorpse();
-
-        Debug.Log("Exiting dead");
     }
 
     // ===============================================================================
@@ -434,7 +432,7 @@ public class LifecycleDeadState : IStateHandler
 
     bool CanBecomeCorpse()
     {
-        return definition.Lifecycle.Spawn.Corpse;
+        return definition.Lifecycle.Spawn.Corpse != "";
     }
 
     // ===============================================================================

@@ -26,6 +26,9 @@ public class LoggingSystem : RegisteredService, IServiceUtil
 
 public static class Logging
 {
+    private static bool alwaysLogAlert                              = true;
+    private static bool alwaysLogError                              = true;
+
     private static LogLevel globalLevel                             = LogLevel.Event;
     private static readonly Dictionary<LogSystem, Logger> loggers   = new();
 
@@ -59,8 +62,19 @@ public static class Logging
         globalLevel = level;
     }
 
+    public static void SetGlobalLogAlert(bool value)
+    {
+        alwaysLogAlert = value;
+    }
+
+    public static void SetGlobalLogError(bool value)
+    {
+        alwaysLogError = value;
+    }
     // ===============================================================================
 
+    public static bool AlwaysLogAlert => alwaysLogAlert;
+    public static bool AlwaysLogError => alwaysLogError;
     
     internal static LogLevel GlobalLevel            => globalLevel;
 
@@ -155,6 +169,11 @@ public class Logger
 
     public void Admin(string message)
     {
+        Log(message, LogLevel.Alert);
+    }
+
+    public void Alert(string message)
+    {
         Log(message, LogLevel.Admin);
     }
 
@@ -193,6 +212,12 @@ public class Logger
 
     private bool IsEnabled(LogLevel logLevel)
     {
+        if (Logging.AlwaysLogAlert && logLevel == LogLevel.Alert)
+            return true;
+
+        if (Logging.AlwaysLogError && logLevel == LogLevel.Error)
+            return true;
+
         if (level == LogLevel.None)
             return false;
 
@@ -212,6 +237,7 @@ public enum LogLevel
     Debug,
     Event,
     Admin,
+    Alert,
     Error,
 }
 
@@ -226,6 +252,7 @@ public enum LogSystem
     Services,
     Definitions,
     Assets,
+    Validation,
     Actors,
     Factories,
     Dev,

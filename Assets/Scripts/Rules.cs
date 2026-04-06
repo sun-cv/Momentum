@@ -1,7 +1,7 @@
 
 
 
-public static partial class Rules
+public static class Rules
 {
     public static class Damage
     {
