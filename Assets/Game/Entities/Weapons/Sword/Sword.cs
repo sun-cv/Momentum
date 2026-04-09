@@ -168,6 +168,7 @@ public class SwordCleave : DamagingWeapon
         ControlWindow               = 0.3f;
         CanCancelDisables           = true;
         AddControlOnFire            = new() { "SwordRend"};
+        LockAimDuringPlayback       = true;
         Effects = new()
         {
             new SwordSwingDisable()
@@ -284,6 +285,7 @@ public class SwordRend : DamagingWeapon
         ControlWindow               = 0.3f;
         CanCancelDisables           = true;
         ForceReleaseOnSwap          = true;
+        LockAimDuringPlayback       = true;
         Effects = new()
         {
             new SwordSwingDisable()

@@ -195,7 +195,12 @@ public class Logwin {
 	{
 
 	}
-		
+
+    public static void DeleteLog(string logKey, string categoryKey = "Uncategorized")
+    {
+
+    }
+
 	private static void LogInternal(string key, object value, string categoryKey, LW_LogElement.eLogType logType, params LogwinParam[] options)
 	{
 #if LOGWIN_OUTPUT_IN_BUILD

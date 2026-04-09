@@ -119,7 +119,6 @@ public class Hero : Player, IHero
         Animation   = new(this);
 
         State       = new(this);
-
     }
 }
 

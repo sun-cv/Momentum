@@ -19,6 +19,7 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
 
         Services.Get<CameraRig>().SetCameraTarget(new ActorCameraTarget(hero));
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
+        // Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerOffset);
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.PlayerDeadzone);
         
         DebugLogSetup();

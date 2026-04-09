@@ -64,6 +64,7 @@ public class ShieldParry : DamagingWeapon
                 Modifier                    = .50f,
             },  
         };  
+
         Hitboxes = new()    
         {   
             new()   
@@ -74,15 +75,18 @@ public class ShieldParry : DamagingWeapon
                     Offset                  = new(){ x = 0, y = 0 },
     
                 },  
+
                 Behavior                    = new()
                 {   
                     Type                    = HitboxBehavior.Attached,
                     AllowMultiHit           = false,
                 },  
+
                 Direction                   = new()
                 {   
                     Scope                   = HitboxDirectionScope.Cardinal
                 },  
+
                 Lifetime                    = new()
                 {   
                     Type                    = HitboxLifetime.FrameBased, 

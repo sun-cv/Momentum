@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 {
-    readonly Queue<TriggerEvent> pendingTriggers = new();
+    readonly Queue<TriggerEvent> queue = new();
 
     // ===============================================================================
 
@@ -24,7 +24,7 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 
     void ProcessPendingTriggers()
     {
-        while (pendingTriggers.TryDequeue(out var trigger))
+        while (queue.TryDequeue(out var trigger))
         {
             RouteTrigger(trigger);
         }
@@ -51,7 +51,7 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 
     void HandleTriggerEvent(TriggerEvent message)
     {
-        pendingTriggers.Enqueue(message);
+        queue.Enqueue(message);
     }
 
     // ===============================================================================

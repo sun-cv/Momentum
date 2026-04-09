@@ -20,7 +20,6 @@ public class AnimationSystem : ActorService, IServiceLoop
     public AnimationSystem(Actor actor) : base(actor)
     {
         animations  = actor.Definition.Appearance.Animations;
-
         animator    = new(owner);
 
         owner.Bus.Link.Local<Message<Request, AnimationAPI>>(HandleAnimationRequest);        
@@ -71,14 +70,12 @@ public class AnimationSystem : ActorService, IServiceLoop
         owner.Bus.Emit.Local(request.Id, Response.Completed, request);
     }
 
-    AnimationAPI Resolve(AnimationAPI request)
+    void Resolve(AnimationAPI request)
     {
         var set                 = SelectAnimationSet(request.Intent);
         var animation           = SelectAnimation(set, request);
 
         SetAnimationData(request, animation);
-
-        return request;
     }
 
     AnimationSet SelectAnimationSet(AnimationIntent intent)
@@ -113,12 +110,11 @@ public class AnimationSystem : ActorService, IServiceLoop
     void SetAnimationData(AnimationAPI request, string animation)
     {
         request.Data.Animation  = animation;
-        request.Data.Duration   = animator.RequestAnimationDuration(request.Data.Animation);
     }
 
     void RequestAnimationChange(AnimationAPI request)
     {
-        animator.RequestAnimationChange(request);
+        animator.RequestAnimationAPI(request);
     }
 
         // REWORK REQUIRED FOR CONTEXT
@@ -192,7 +188,6 @@ public class AnimationContext
 public class AnimationData
 {
     public string Animation                             { get; set; }
-    public float Duration                               { get; set; }
     public List<AnimatorParameter.Override> Overrides   { get; set; } = new();
 };
 
@@ -226,6 +221,26 @@ public readonly struct AnimationTriggerEvent
     public AnimationTriggerEvent(string trigger)
     {
         Trigger = trigger;   
+    }
+}
+
+public readonly struct AnimationEvent : IMessage
+{
+    public Animation Animation                      { get; init; }
+
+    public AnimationEvent(Animation animation)
+    {
+        Animation = animation;
+    }
+}
+
+public readonly struct AnimationControllerEvent : IMessage
+{
+    AnimationController.State State              { get; init; }
+
+    public AnimationControllerEvent(AnimationController.State state)
+    {
+       State = state; 
     }
 }
 

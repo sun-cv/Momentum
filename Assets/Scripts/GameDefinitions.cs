@@ -397,7 +397,10 @@ public enum Publish
     Disabled,
 
     Started,
+    Stopped,
+
     Ended,
+    Finished,
 
     Triggered,
     Fired,

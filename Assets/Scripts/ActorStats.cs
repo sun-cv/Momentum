@@ -52,6 +52,6 @@ public class ActorStats : Stats
     static readonly PropertyInfo[] StatProperties =
         typeof(StatsDefinition)
             .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-            .Where(p => p.IsDefined(typeof(StatAttribute)))
+            .Where(parameter => parameter.IsDefined(typeof(StatAttribute)))
             .ToArray();
 }

@@ -366,7 +366,7 @@ public class SpawnDummy : SingleSpawnerDefinition
             {
                 Name                = nameof(Dummy),
                 InitialDelay        = 2,
-                RespawnDelay        = 30,
+                RespawnDelay        = 5,
                 RespawnOnDeath      = true,
             },
         };  
@@ -390,7 +390,7 @@ public class SpawnMovableDummy : SingleSpawnerDefinition
             {
                 Name                = nameof(MovableDummy),
                 InitialDelay        = 2,
-                RespawnDelay        = 30,
+                RespawnDelay        = 5,
                 RespawnOnDeath      = true,
             },
         };  

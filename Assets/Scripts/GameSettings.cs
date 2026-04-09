@@ -66,7 +66,6 @@ public static class Settings
         public static Color GIZMO_COLOR_HITBOX              = Color.red;
         public static Color GIZMO_COLOR_SPAWNER             = new Color32(65, 224, 65, 255);
         public static Color GIZMO_COLOR_SPAWNER_SELECTED    = Color.blue;
-
     }
 
 }
@@ -118,6 +117,6 @@ public static class ServiceUpdatePriority
     public static UpdatePriority SpriteLayering             = new(UpdatePhase.Render,   10);
     public static UpdatePriority SpriteDepthSorting         = new(UpdatePhase.Render,   20);
     public static UpdatePriority AnimationSystem            = new(UpdatePhase.Render,   30);
-    public static UpdatePriority AnimatorController         = new(UpdatePhase.Render,   40);
+    public static UpdatePriority AnimationController        = new(UpdatePhase.Render,   40);
     public static UpdatePriority CameraRig                  = new(UpdatePhase.Render,   50);
 }

@@ -310,6 +310,7 @@ public class WeaponState
 
     public bool HasFired                        { get; set; }
     public bool ReadyToRelease                  { get; set; }
+    public bool HasUpdatedControls                { get; set; }
 
     public AnimationAPI AnimationAPI            { get; set; }
 

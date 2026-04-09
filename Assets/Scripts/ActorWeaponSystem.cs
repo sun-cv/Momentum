@@ -3,15 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-
-// REWORK REQUIRED
-// Bug found weapon system > weapon animation
-// Reproduction:
-// Start any attack animation
-// Immediately after hold right click to queue shield parry/block
-// Animation controller will not release action layer animation state
-
-
 // CHECK REQUIRED
 // Interrupt validation handler
 // On held validation allows early true - may cause issues with can overwrite pending?
@@ -156,8 +147,8 @@ public class WeaponSystem : ActorService, IServiceTick
 
         return instance.State.Phase switch
         {
-            WeaponPhase.Charging    => strategy.ShouldTransitionOnFireRelease(instance, this),
-            WeaponPhase.Fire        => strategy.ShouldTransitionOnChargeRelease(instance, this),
+            WeaponPhase.Fire        => strategy.ShouldTransitionOnFireRelease(instance, this),
+            WeaponPhase.Charging    => strategy.ShouldTransitionOnChargeRelease(instance, this),
             _ => false
         };    
     }
@@ -167,9 +158,6 @@ public class WeaponSystem : ActorService, IServiceTick
         if (phaseHandlers.TryGetValue(instance.State.Phase, out var handler))
             handler.Update(this);
     }
-        // ===================================
-        //  Process Weapon Services
-        // ===================================
 
     void ProcessWeaponServices()
     {
@@ -184,7 +172,7 @@ public class WeaponSystem : ActorService, IServiceTick
     {
         if (ResolveInterruptWeaponTransition())
             return;
-       
+
         if (ResolveAvailableWeaponTransition())
             return;
 
@@ -194,7 +182,10 @@ public class WeaponSystem : ActorService, IServiceTick
 
     bool ResolveInterruptWeaponTransition()
     {
-        if (!HasInputBuffer() || !HasActiveWeapon())
+        if (!HasInputBuffer())
+            return false;
+
+        if (!HasActiveWeapon())
             return false;
 
         foreach (var command in inputBuffer.Values)
@@ -215,7 +206,13 @@ public class WeaponSystem : ActorService, IServiceTick
 
     bool ResolveAvailableWeaponTransition()
     {
-        if (!HasInputBuffer() || !HasActiveWeapon())
+        if (!HasInputBuffer())
+            return false;
+
+        if (!HasActiveWeapon())
+            return false;
+
+        if (ResolveControlsUpdated())
             return false;
 
         foreach (var control in instance.State.AvailableControls)
@@ -230,13 +227,25 @@ public class WeaponSystem : ActorService, IServiceTick
             DisableWeapon();
             return true;
         }
-
         return false;
+    }
+
+
+    public bool ResolveControlsUpdated()
+    {
+        if (!instance.State.HasUpdatedControls)
+            return false;
+
+        instance.State.HasUpdatedControls = false;
+        return true;
     }
 
     bool ResolveDefaultWeaponActivation()
     {
-        if (!HasInputBuffer() || HasActiveWeapon())
+        if (!HasInputBuffer())
+            return false;
+
+        if (HasActiveWeapon())
             return false;
 
         foreach (var command in inputBuffer.Values)
@@ -267,8 +276,6 @@ public class WeaponSystem : ActorService, IServiceTick
         ActivateWeapon();
         EnableWeapon();
     }
-
-    
 
     public void TransitionTo(WeaponPhase newPhase)
     {
@@ -312,7 +319,6 @@ public class WeaponSystem : ActorService, IServiceTick
         UpdateHitboxAngle();
     }
 
-
         // ===================================
         //  Equip and Enable
         // ===================================
@@ -342,7 +348,6 @@ public class WeaponSystem : ActorService, IServiceTick
         StoreAndReleaseInstance();
         SendWeaponUnequip();
     }
-
 
         // ===================================
         //  Validation
@@ -468,22 +473,12 @@ public class WeaponSystem : ActorService, IServiceTick
 
     }
 
-    // void UnlockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
-    // {
-    //     foreach (var action in actions)
-    //     {
-    //         if (commands.TryGetValue(action, out var cmd))
-    //             UnlockCommand(cmd);
-    //     }
-    // }
-
     // ============================================================================
     // Control System
     // ============================================================================
 
     public void UpdateAvailableControls()
     {
-
         switch (instance.State.Phase)
         {
             case WeaponPhase.Charging:
@@ -505,20 +500,26 @@ public class WeaponSystem : ActorService, IServiceTick
                 break;
         }
 
+        instance.State.HasUpdatedControls = true;
+
         if (instance.State.AvailableControls.Count > 0)
             Log.Trace("Control.Available", () => $"{string.Join(", ", instance.State.AvailableControls)}");
     }
 
     void AddControls(List<string> controls)
     {
-        if (controls == null) return;
+        if (controls == null)
+            return;
+
         foreach (var control in controls)
             instance.State.AvailableControls.Add(control);
     }
 
     void RemoveControls(List<string> controls)
     {
-        if (controls == null) return;
+        if (controls == null)
+            return;
+
         foreach (var control in controls)
             instance.State.AvailableControls.Remove(control);
     }
@@ -534,12 +535,7 @@ public class WeaponSystem : ActorService, IServiceTick
         {
             if (ShouldApplyEffect(effect))
             {
-                var API = new EffectAPI(instance, effect)
-                {
-                    Request = Request.Create
-                };
-
-                owner.Bus.Emit.Local(API.Request, API);
+                RequestEffect(effect);
             }
         }
     }
@@ -550,12 +546,7 @@ public class WeaponSystem : ActorService, IServiceTick
         {
             if (instance.Effect is ICancelable effect && effect.Cancelable)
             {
-                var API = new EffectAPI(instance)
-                {
-                    Request = Request.Cancel
-                };
-
-                owner.Bus.Emit.Local(API.Request, API);
+                CancelEffect(instance);
             }
         }
     }
@@ -566,14 +557,29 @@ public class WeaponSystem : ActorService, IServiceTick
         {
             if (owned.Effect is ICancelable effect && effect.Cancelable && owned.Effect is ICancelableOnRelease cancelable && cancelable.CancelOnRelease)
             {
-                var API = new EffectAPI(owned)
-                {
-                    Request = Request.Cancel
-                };
-
-                owner.Bus.Emit.Local(API.Request, API);
+                CancelEffect(owned);
             }
         }
+    }
+    
+    void RequestEffect(Effect effect)
+    {
+        var API = new EffectAPI(instance, effect)
+        {
+            Request = Request.Create
+        };
+
+        owner.Bus.Emit.Local(API.Request, API);
+    }
+
+    void CancelEffect(EffectInstance instance)
+    {
+        var API = new EffectAPI(instance)
+        {
+            Request = Request.Cancel
+        };
+
+        owner.Bus.Emit.Local(API.Request, API);
     }
 
     bool ShouldApplyEffect(Effect effect)
@@ -724,8 +730,6 @@ public class WeaponSystem : ActorService, IServiceTick
     // Animation System
     // ============================================================================
 
-        // Rework required blanket call to animation API?
-
     public void RequestAnimation()
     {
         string animation = instance.State.Phase switch
@@ -743,7 +747,6 @@ public class WeaponSystem : ActorService, IServiceTick
         {
             Request = Request.Play,
         };
-
 
         instance.State.AnimationAPI = API;
 
@@ -766,7 +769,6 @@ public class WeaponSystem : ActorService, IServiceTick
         owner.Bus.Emit.Local(API.Request, API);
         
     }
-
 
     public void RequestClearAnimation()
     {
@@ -880,7 +882,6 @@ public class WeaponSystem : ActorService, IServiceTick
         owner.Bus.Emit.Local(new WeaponInstanceEvent(Publish.Transitioned, agent, instance));
     }
 
-
     // ============================================================================
     //  Predicates
     // ============================================================================
@@ -898,6 +899,7 @@ public class WeaponSystem : ActorService, IServiceTick
         // ===================================
         //  Activation Predicates
         // ===================================
+
     private bool HasPendingWeapon()
     {
         return pendingWeapon != null;
@@ -1103,7 +1105,6 @@ public class WeaponSystem : ActorService, IServiceTick
         Services.Lane.Deregister(this);
     }
 
-    public Actor Owner                                                  => owner;
     public Agent Agent                                                  => agent;
     public WeaponInstance Instance                                      => instance;
     public WeaponCooldown Cooldown                                      => cooldown;
@@ -1370,7 +1371,8 @@ public class WhileHeldActivationStrategy : IActivationStrategy
     {
         bool inputReleased = weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger));
 
-        if (!inputReleased) return false;
+        if (!inputReleased) 
+            return false;
 
         controller.TransitionTo(WeaponPhase.FireEnd);
         return true;

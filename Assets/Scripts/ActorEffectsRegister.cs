@@ -15,7 +15,6 @@ public class EffectRegister : ActorService, IServiceTick
     public EffectRegister(Actor actor) : base(actor)
     {
         owner.Bus.Link.Local<Message<Request, EffectAPI>>(HandleEffectAPI);
-        owner.Bus.Link.Local<PresenceStateEvent>         (HandlePresenceStateEvent);
     } 
 
     // ===============================================================================

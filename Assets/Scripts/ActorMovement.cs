@@ -253,7 +253,6 @@ public class Movement : ActorService, IServiceTick
         Log.Trace("agent.CanRotate",    () => movable.CanRotate);
     }
 
-    public Actor Owner      => owner;
     public Agent Agent      => agent;
     public Vector2 Control  => control;
     public Vector2 Momentum => momentum;

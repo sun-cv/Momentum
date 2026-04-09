@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using UnityEngine;
 
 
 
@@ -9,31 +7,23 @@ public class Decomposition : ActorService, IServiceStep
 
     // ===============================================================================
 
-    Dictionary<State, IStateHandler> stateHandlers;
-
-        // -----------------------------------
-
-    int occupancy   = 0;
-    State state     = State.Fresh;
+    // int occupancy   = 0;
+    readonly DecompositionStateMachine stateMachine;
 
     // ===============================================================================
 
     public Decomposition(Actor actor) : base(actor)
     {
         InitializeStateHandlers();
-        EnterHandler();
     }
 
     void InitializeStateHandlers()
     {
-        stateHandlers = new()
-        {
-            { State.Fresh,      new CorpseFreshState    (this, owner) },
-            { State.Decaying,   new CorpseDecayingState (this, owner) },
-            { State.Consumed,   new CorpseConsumedState (this, owner) },
-            { State.Remains,    new CorpseRemainsState  (this, owner) },
-            { State.Disposal,   new CorpseDisposalState (this, owner) },
-        };
+        stateMachine.Register(State.Fresh,      new CorpseFreshState    (stateMachine));
+        stateMachine.Register(State.Decaying,   new CorpseDecayingState (stateMachine));
+        stateMachine.Register(State.Consumed,   new CorpseConsumedState (stateMachine));
+        stateMachine.Register(State.Remains,    new CorpseRemainsState  (stateMachine));
+        stateMachine.Register(State.Disposal,   new CorpseDisposalState (stateMachine));
     }
 
     // ===============================================================================
@@ -47,55 +37,51 @@ public class Decomposition : ActorService, IServiceStep
 
     void UpdateHandler()
     {
-        if (stateHandlers.TryGetValue(state, out var handler))
-            handler.Update();
-    }
-
-        // ===================================
-        //  State
-        // ===================================
-
-    public void TransitionTo(State newState)
-    {
-        ExitHandler();
-        TransitionState(newState);
-        EnterHandler();
-    }
-
-    void ExitHandler()
-    {
-        if (stateHandlers.TryGetValue(state, out var handler))
-            handler.Exit();
-    }
-
-    void TransitionState(State newState)
-    {
-        state = newState;
-    }
-
-    void EnterHandler()
-    {
-        if (stateHandlers.TryGetValue(state, out var handler))
-            handler.Enter();
-    
-        PublishState();
+        stateMachine.Update();
     }
 
     // ===============================================================================
     //  Events
     // ===============================================================================
 
-    void PublishState()
+    public void PublishState()
     {
-        owner.Bus.Emit.Local(new CorpseEvent(owner, state));
+        owner.Bus.Emit.Local(new CorpseEvent(owner, stateMachine.State));
+        Log.Debug($"{stateMachine.State}");
     }
 
     // ===============================================================================
 
-    public int Occupancy    => occupancy;
-    public State Condition  => state;
+    readonly Logger Log = Logging.For(LogSystem.Corpse);
+
+
+    // public int Occupancy    => occupany;
+    public State Condition  => stateMachine.State;
 
     public UpdatePriority Priority => ServiceUpdatePriority.Corpse;
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                        Classes                                       
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+
+public class DecompositionStateMachine : StateMachine<Decomposition.State>
+{
+    readonly Decomposition controller;
+
+    public DecompositionStateMachine(Decomposition controller) : base(controller.PublishState) 
+    {
+        this.controller = controller;
+    }
+
+    public Decomposition Controller => controller;
+}
+
+public class DecompositionState : MachineState<Decomposition.State, DecompositionStateMachine>
+{
+    public DecompositionState(DecompositionStateMachine machine) : base(machine) {}
 }
 
 
@@ -108,11 +94,8 @@ public class Decomposition : ActorService, IServiceStep
         //                               Fresh state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseFreshState : IStateHandler
+public class CorpseFreshState : DecompositionState, IStateHandler
 {
-    readonly Actor      owner;
-    readonly ICorpse    corpse;
-    readonly Decomposition     controller;
     readonly ActorDefinition definition;
 
     // -----------------------------------
@@ -121,12 +104,9 @@ public class CorpseFreshState : IStateHandler
 
     // ===============================================================================
 
-    public CorpseFreshState(Decomposition controller, Actor owner)
+    public CorpseFreshState(DecompositionStateMachine machine) : base(machine)
     {
-        this.owner      = owner;
-        this.corpse     = owner as ICorpse;
-        this.definition = owner.Definition;
-        this.controller = controller;
+        this.definition = machine.Controller.Owner.Definition;
     }
 
     // ===============================================================================
@@ -152,7 +132,7 @@ public class CorpseFreshState : IStateHandler
     void AdvanceOnDurationEnd()
     {
         if (duration.IsFinished)
-            controller.TransitionTo(Decomposition.State.Decaying);
+            machine.TransitionTo(Decomposition.State.Decaying);
     }
 
 }
@@ -162,12 +142,8 @@ public class CorpseFreshState : IStateHandler
         //                             Decaying state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseDecayingState : IStateHandler
+public class CorpseDecayingState : DecompositionState, IStateHandler
 {
-    
-    readonly Actor      owner;
-    readonly ICorpse    corpse;
-    readonly Decomposition     controller;
     readonly ActorDefinition definition;
 
     // -----------------------------------
@@ -176,12 +152,9 @@ public class CorpseDecayingState : IStateHandler
 
     // ===============================================================================
 
-    public CorpseDecayingState(Decomposition controller, Actor owner)
+    public CorpseDecayingState(DecompositionStateMachine machine) : base(machine)
     {
-        this.owner      = owner;
-        this.corpse     = owner as ICorpse;
-        this.definition = owner.Definition;
-        this.controller = controller;
+        this.definition = machine.Controller.Owner.Definition;
     }
 
     // ===============================================================================
@@ -199,7 +172,6 @@ public class CorpseDecayingState : IStateHandler
 
     public void Exit()
     {
-
     }
 
     // ===============================================================================
@@ -207,7 +179,7 @@ public class CorpseDecayingState : IStateHandler
     void AdvanceOnDurationEnd()
     {
         if (duration.IsFinished)
-            controller.TransitionTo(Decomposition.State.Consumed);
+            machine.TransitionTo(Decomposition.State.Consumed);
     }
 
 }
@@ -218,12 +190,8 @@ public class CorpseDecayingState : IStateHandler
         //                             Consumed state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseConsumedState : IStateHandler
+public class CorpseConsumedState : DecompositionState, IStateHandler
 {
-    
-    readonly Actor      owner;
-    readonly ICorpse    corpse;
-    readonly Decomposition     controller;
     readonly ActorDefinition definition;
 
     // -----------------------------------
@@ -232,12 +200,9 @@ public class CorpseConsumedState : IStateHandler
 
     // ===============================================================================
 
-    public CorpseConsumedState(Decomposition controller, Actor owner)
+    public CorpseConsumedState(DecompositionStateMachine machine) : base(machine)
     {
-        this.owner      = owner;
-        this.corpse     = owner as ICorpse;
-        this.definition = owner.Definition;
-        this.controller = controller;
+        this.definition = machine.Controller.Owner.Definition;
     }
 
     // ===============================================================================
@@ -255,7 +220,6 @@ public class CorpseConsumedState : IStateHandler
 
     public void Exit()
     {
-
     }
 
     // ===============================================================================
@@ -263,7 +227,7 @@ public class CorpseConsumedState : IStateHandler
     void AdvanceOnDurationEnd()
     {
         if (duration.IsFinished)
-            controller.TransitionTo(Decomposition.State.Remains);
+            machine.TransitionTo(Decomposition.State.Remains);
     }
 
 }
@@ -273,12 +237,8 @@ public class CorpseConsumedState : IStateHandler
         //                              Remains state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseRemainsState : IStateHandler
+public class CorpseRemainsState : DecompositionState, IStateHandler
 {
-    
-    readonly Actor      owner;
-    readonly ICorpse    corpse;
-    readonly Decomposition     controller;
     readonly ActorDefinition definition;
 
     // -----------------------------------
@@ -287,12 +247,9 @@ public class CorpseRemainsState : IStateHandler
 
     // ===============================================================================
 
-    public CorpseRemainsState(Decomposition controller, Actor owner)
+    public CorpseRemainsState(DecompositionStateMachine machine) : base(machine)
     {
-        this.owner      = owner;
-        this.corpse     = owner as ICorpse;
-        this.definition = owner.Definition;
-        this.controller = controller;
+        this.definition = machine.Controller.Owner.Definition;
     }
 
     // ===============================================================================
@@ -310,7 +267,6 @@ public class CorpseRemainsState : IStateHandler
 
     public void Exit()
     {
-
     }
 
     // ===============================================================================
@@ -318,7 +274,7 @@ public class CorpseRemainsState : IStateHandler
     void AdvanceOnDurationEnd()
     {
         if (duration.IsFinished)
-            controller.TransitionTo(Decomposition.State.Disposal);
+            machine.TransitionTo(Decomposition.State.Disposal);
     }
 
 
@@ -329,21 +285,15 @@ public class CorpseRemainsState : IStateHandler
         //                             Disposal state
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public class CorpseDisposalState : IStateHandler
+public class CorpseDisposalState : DecompositionState, IStateHandler
 {
-    readonly Actor      owner;
-    readonly ICorpse    corpse;
-    readonly Decomposition     controller;
-    readonly ActorDefinition definition;
+    readonly Actor owner;
 
     // ===============================================================================
 
-    public CorpseDisposalState(Decomposition controller, Actor owner)
+    public CorpseDisposalState(DecompositionStateMachine machine) : base(machine)
     {
-        this.owner      = owner;
-        this.corpse     = owner as ICorpse;
-        this.definition = owner.Definition;
-        this.controller = controller;
+        owner = machine.Controller.Owner;
     }
 
     // ===============================================================================
@@ -355,12 +305,10 @@ public class CorpseDisposalState : IStateHandler
 
     public void Update()
     {
-
     }
 
     public void Exit()
     {
-               
     }
 }
 

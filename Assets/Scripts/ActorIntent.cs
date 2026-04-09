@@ -31,7 +31,6 @@ public class IntentSystem : ActorService
 
     // ===============================================================================
 
-    public Actor         Owner          => owner;
     public CommandSystem Command        => command;
     public InputIntent   Input          => input;
     public InputRouter   InputRouter    => inputRouter;

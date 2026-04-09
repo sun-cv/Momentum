@@ -51,8 +51,6 @@ public class Resources : ActorService
     public float Shield     => Get<ShieldHandler>   ().Shield;
     public float Energy     => Get<EnergyHandler>   ().Energy;
     public float Integrity  => Get<IntegrityHandler>().Integrity;
-
-    public Actor Owner      => owner;
 }
 
 

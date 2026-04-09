@@ -213,7 +213,7 @@ public class Emit : IDisposable
     //  Public API
     // ===============================================================================
 
-    public void Local<TAction, TPayload>(TAction action, TPayload payload) 
+     public void Local<TAction, TPayload>(TAction action, TPayload payload) 
     {
         Bus.Raise(new Message<TAction, TPayload>(action, payload));
     }

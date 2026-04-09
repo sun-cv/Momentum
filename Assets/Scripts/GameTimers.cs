@@ -139,10 +139,12 @@ public abstract class Timer : IDisposable
     {
         IsRunning = true;
     }
+
     public void Pause()
     {
         IsRunning = false;
     }
+
     public void Cancel()
     { 
         IsRunning = false; 

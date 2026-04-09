@@ -82,11 +82,6 @@ public class TriggerLocks : RegisteredService, IInitialize
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        // NO OP;
-    }
-
     public IReadOnlyDictionary<Capability, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
 } 
 
