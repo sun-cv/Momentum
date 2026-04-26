@@ -34,7 +34,7 @@ public class EffectRegister : ActorService, IServiceTick
     public bool Has<T>(Func<T, bool> hasCondition, bool defaultValue = false) where T : class
     {
         foreach (var instance in effects)
-        {
+{
             if (instance.Effect is T effect && hasCondition(effect))
                 return true; 
         }
@@ -226,6 +226,8 @@ public class EffectCache : IDisposable
 {
     readonly Bus bus;
 
+    int count;
+
         // -----------------------------------
 
     readonly Func<EffectInstance, bool> filter;
@@ -246,7 +248,9 @@ public class EffectCache : IDisposable
         this.bus    = bus;
         this.filter = filter;
 
-        binding = this.bus.Link.Local<EffectEvent>(HandleEffectPublish);
+        binding     = this.bus.Link.Local<EffectEvent>(HandleEffectPublish);
+
+        BindCount();
     }
 
     // ===============================================================================
@@ -275,6 +279,13 @@ public class EffectCache : IDisposable
         }
     }
 
+    void BindCount()
+    {
+        OnApply    += _ => count++;
+        OnClear    += _ => count--;
+        OnCancel   += _ => count--;
+    }
+
     // ===============================================================================
 
     public void Bind(LocalEventBus eventbus)
@@ -286,6 +297,8 @@ public class EffectCache : IDisposable
     {
         bus.Link.UnsubscribeLocal(binding);
     }
+
+    public int Count => count;
 
     public IReadOnlyList<EffectInstance> Instances => activeEffects.ToList();
 }

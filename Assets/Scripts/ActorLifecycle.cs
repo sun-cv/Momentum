@@ -85,8 +85,8 @@ public class Lifecycle : ActorService, IServiceLoop
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                        Classes                                       
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class LifecycleContext
 {
@@ -277,7 +277,7 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
         var request = new AnimationAPI(AnimationIntent.Death) 
         {
             Request  = Request.Play,
-            Settings = new() 
+            Configuration = new() 
             { 
                 AllowInterrupt      = false,
             },
@@ -285,7 +285,7 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
         };
 
         if (CanBecomeCorpse())
-            request.Settings.HoldOnPlaybackEnd = true;
+            request.Configuration.HoldOnPlaybackEnd = true;
 
         animationRequestHandler.Forward(request.Id, request.Request, request);
     }

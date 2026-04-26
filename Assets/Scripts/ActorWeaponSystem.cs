@@ -33,9 +33,9 @@ public class WeaponSystem : ActorService, IServiceTick
     WeaponInstance                                          instance;
     WeaponInstance                                          instanceStorage;
 
-    IReadOnlyDictionary<Capability, Command>                activeBuffer;
-    IReadOnlyDictionary<Capability, Command>                inputBuffer;
-    IReadOnlyDictionary<Capability, IReadOnlyList<string>>  locks;
+    IReadOnlyDictionary<Trigger, Command>                activeBuffer;
+    IReadOnlyDictionary<Trigger, Command>                inputBuffer;
+    IReadOnlyDictionary<Trigger, IReadOnlyList<string>>  locks;
 
     public int NonCancelableAttackLocks                     { get; set; } = 0;
     public bool AimEnabled                                  { get; set; }
@@ -190,7 +190,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
         foreach (var command in inputBuffer.Values)
         {
-            var weapon = loadout.GetActionByType(command.Action, WeaponType.Interrupt);
+            var weapon = loadout.GetActionByType(command.Data.Trigger, WeaponType.Interrupt);
 
             if (!CanActivateFromInterruptControls(weapon))
                 continue;
@@ -250,7 +250,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
         foreach (var command in inputBuffer.Values)
         {
-            var weapon = loadout.DefaultWeapon(command.Action);
+            var weapon = loadout.DefaultWeapon(command.Data.Trigger);
 
             if (!CanActivateFromDefaultControls(weapon))
                 continue;
@@ -311,10 +311,7 @@ public class WeaponSystem : ActorService, IServiceTick
         if (!AimEnabled || !HasActiveWeapon()) 
            return;
 
-        WeaponAimProcessor.Process(instance, Owner, Time.deltaTime, out bool facingChanged);
-
-        if (facingChanged)
-            RequestFacingDirection();
+        WeaponAimProcessor.Process(instance, Owner, Time.deltaTime, out bool _);
 
         UpdateHitboxAngle();
     }
@@ -355,16 +352,16 @@ public class WeaponSystem : ActorService, IServiceTick
 
     bool HasAllRequiredTriggers(WeaponAction weapon)
     {
-        bool hasAll = weapon.Trigger.All(trigger => activeBuffer.ContainsKey(trigger) || inputBuffer.ContainsKey(trigger));
+        bool hasAll = weapon.ActivationTrigger.All(trigger => activeBuffer.ContainsKey(trigger) || inputBuffer.ContainsKey(trigger));
         return hasAll;
     }
 
     bool HasNewCommandForWeapon(WeaponAction weapon)
     {
-        return weapon.Trigger.Any(trigger => IsNewCommand(trigger));
+        return weapon.ActivationTrigger.Any(trigger => IsNewCommand(trigger));
     }
 
-    bool IsNewCommand(Capability trigger)
+    bool IsNewCommand(Trigger trigger)
     {
         if (inputBuffer.TryGetValue(trigger, out var command))
         {
@@ -374,7 +371,7 @@ public class WeaponSystem : ActorService, IServiceTick
         return false;
     }
 
-    public bool IsTriggerActive(Capability trigger)
+    public bool IsTriggerActive(Trigger trigger)
     {
         return activeBuffer.ContainsKey(trigger) || inputBuffer.ContainsKey(trigger);
     }
@@ -391,20 +388,20 @@ public class WeaponSystem : ActorService, IServiceTick
         switch (instance.Action.Availability)
         {
             case WeaponAvailability.Default:
-                ConsumeAllCommands(inputBuffer, instance.Action.Trigger);
+                ConsumeAllCommands(inputBuffer, instance.Action.ActivationTrigger);
                 break;
             case WeaponAvailability.OnPhase:
-                ConsumeAllCommands(inputBuffer, instance.Action.Trigger);
+                ConsumeAllCommands(inputBuffer, instance.Action.ActivationTrigger);
                 break;
             case WeaponAvailability.OnHeld:
                 break;  
         }
 
-        StoreAllCommandIDs      (activeBuffer, instance.Action.Trigger);
-        StoreInputIntentSnapshot(activeBuffer, instance.Action.Trigger);
+        StoreAllCommandIDs      (activeBuffer, instance.Action.ActivationTrigger);
+        StoreInputIntentSnapshot(activeBuffer, instance.Action.ActivationTrigger);
 
         if (instance.Action.LockTriggerAction)
-            LockAllCommands(activeBuffer, instance.Action.Trigger);
+            LockAllCommands(activeBuffer, instance.Action.ActivationTrigger);
     }
 
     void ConsumeCommand(Command command)
@@ -412,7 +409,7 @@ public class WeaponSystem : ActorService, IServiceTick
         owner.Bus.Emit.Local(new CommandEvent(Request.Consume, command));
     }
 
-    void ConsumeAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
+    void ConsumeAllCommands(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
     {
         foreach (var action in actions)
         {
@@ -426,7 +423,7 @@ public class WeaponSystem : ActorService, IServiceTick
         instance.State.OwnedCommands.Add(command.RuntimeId);
     }
 
-    void StoreAllCommandIDs(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
+    void StoreAllCommandIDs(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
     {
         foreach (var action in actions)
         {
@@ -435,12 +432,12 @@ public class WeaponSystem : ActorService, IServiceTick
         }
     }
 
-    void StoreInputIntentSnapshot(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
+    void StoreInputIntentSnapshot(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
     {
         foreach (var action in actions)
         {
             if (commands.TryGetValue(action, out var command))
-                instance.State.Intent = command.Intent;
+                instance.State.Intent = command.Data.Intent;
         }
     }
 
@@ -449,7 +446,7 @@ public class WeaponSystem : ActorService, IServiceTick
         owner.Bus.Emit.Local(new CommandEvent(Request.Lock, command));
     }
 
-    void LockAllCommands(IReadOnlyDictionary<Capability, Command> commands, List<Capability> actions)
+    void LockAllCommands(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
     {
         foreach (var action in actions)
         {
@@ -465,7 +462,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
     public void UnlockActiveWeaponCommands()
     {
-        foreach (var action in instance.Action.Trigger)
+        foreach (var action in instance.Action.ActivationTrigger)
         {
             if (activeBuffer.TryGetValue(action, out var cmd))
                 UnlockCommand(cmd);
@@ -601,37 +598,6 @@ public class WeaponSystem : ActorService, IServiceTick
             WeaponAimProcessor.InitialiseAim(instance, Owner);
     }
 
-    // ============================================================================
-    //  Direction Management
-    // ============================================================================
-
-    public void RequestFacingDirection()
-    {
-        if (!(instance.Action.Direction.Enabled && instance.Action.Direction.SetTrigger == instance.State.Phase))
-            return;
-
-        var intent = instance.Action.Aim.Enabled ? instance.State.LiveIntent : instance.State.Intent;
-
-        instance.State.LastFacingDirection = instance.Action.Direction.Source switch
-        {
-            DirectionSource.Aim             => instance.Action.Aim.Enabled ? Orientation.DirectionFromAngle(instance.State.CurrentAimAngle): intent.Aim,
-            DirectionSource.Facing          => intent.Facing,
-            DirectionSource.Direction       => intent.Direction,
-            DirectionSource.LastDirection   => intent.LastDirection,
-            _                               => intent.Direction,
-        };
-
-        owner.Bus.Emit.Local(new ForcedFacingEvent(Request.Set, instance.State.LastFacingDirection));
-    }
-
-    public void RequestClearDirection()
-    {
-        if (!(instance.Action.Direction.Enabled && instance.Action.Direction.ClearTrigger == instance.State.Phase))
-            return;
-
-        owner.Bus.Emit.Local(new ForcedFacingEvent(Request.Clear, Vector2.zero));
-    }
-
 
     // ============================================================================
     //  Movement Management
@@ -752,7 +718,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
         if (instance.Action.HoldAnimationUntilReleased)
         {
-            API.Settings.HoldUntilReleased = true;
+            API.Configuration.HoldUntilReleased = true;
         }
 
         if (instance.Action.LockAimDuringPlayback)
@@ -996,7 +962,7 @@ public class WeaponSystem : ActorService, IServiceTick
     {
         return instance.Action.Termination switch
         {
-            WeaponTermination.OnRelease     => instance.Action.Trigger.Any(trigger => !IsTriggerActive(trigger)),
+            WeaponTermination.OnRelease     => instance.Action.ActivationTrigger.Any(trigger => !IsTriggerActive(trigger)),
             WeaponTermination.OnRootRelease => instance.Action.RequiredHeldTriggers.Any(trigger => !IsTriggerActive(trigger)),
             _ => false,
         };
@@ -1108,7 +1074,7 @@ public class WeaponSystem : ActorService, IServiceTick
     public Agent Agent                                                  => agent;
     public WeaponInstance Instance                                      => instance;
     public WeaponCooldown Cooldown                                      => cooldown;
-    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks => locks;
+    public IReadOnlyDictionary<Trigger, IReadOnlyList<string>> Locks => locks;
 
     public UpdatePriority Priority => ServiceUpdatePriority.WeaponLogic;
 
@@ -1177,7 +1143,6 @@ public class ChargingPhaseHandler : IWeaponPhaseHandler
 
         controller.UpdateAvailableControls  ();
         controller.RequestEffects           ();
-        controller.RequestFacingDirection   ();
         controller.RequestMovement          ();
         controller.RequestHitboxes          ();
         controller.RequestAnimation         ();
@@ -1212,7 +1177,6 @@ public class FirePhaseHandler : IWeaponPhaseHandler
 
         controller.UpdateAvailableControls  ();
         controller.RequestEffects           ();
-        controller.RequestFacingDirection   ();
         controller.RequestMovement          ();
         controller.RequestHitboxes          ();
         controller.RequestAnimation         ();
@@ -1257,7 +1221,6 @@ public class FireEndPhaseHandler : IWeaponPhaseHandler
 
         controller.UpdateAvailableControls  ();
         controller.RequestEffects           ();
-        controller.RequestFacingDirection   ();
         controller.RequestMovement          ();
         controller.RequestHitboxes          ();
         controller.RequestAnimation         ();
@@ -1305,7 +1268,6 @@ public class DisablePhaseHandler : IWeaponPhaseHandler
         controller.Instance.State.PhaseFrames.Reset();
         
         controller.RequestClearHitboxes();
-        controller.RequestClearDirection();
         controller.RequestClearAnimation();
         controller.RequestClearOnReleaseEffects();
         controller.RequestClearMovementFromOwner();
@@ -1354,7 +1316,7 @@ public class OnReleaseActivationStrategy : IActivationStrategy
     public bool ShouldTransitionOnFireRelease   (WeaponInstance weapon, WeaponSystem controller) => false;
     public bool ShouldTransitionOnChargeRelease (WeaponInstance weapon, WeaponSystem controller)
     {
-        bool inputReleased = weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger));
+        bool inputReleased = weapon.Action.ActivationTrigger.Any(trigger => !controller.IsTriggerActive(trigger));
         bool chargedEnough = weapon.GetChargePercent() >= weapon.Action.MinimumChargeToFire;
 
         if (!inputReleased || !chargedEnough) return false;
@@ -1369,7 +1331,7 @@ public class WhileHeldActivationStrategy : IActivationStrategy
     public bool ShouldFireOnChargeComplete      (WeaponInstance weapon) => weapon.IsChargeComplete();
     public bool ShouldTransitionOnFireRelease   (WeaponInstance weapon, WeaponSystem controller)
     {
-        bool inputReleased = weapon.Action.Trigger.Any(trigger => !controller.IsTriggerActive(trigger));
+        bool inputReleased = weapon.Action.ActivationTrigger.Any(trigger => !controller.IsTriggerActive(trigger));
 
         if (!inputReleased) 
             return false;
@@ -1506,7 +1468,7 @@ public class WeaponActivationValidator
         if (weapon.CanCancelDisables)
             return WeaponValidationResult.Pass();
 
-        foreach (var trigger in weapon.Trigger)
+        foreach (var trigger in weapon.ActivationTrigger)
         {
             if (controller.Locks != null && controller.Locks.TryGetValue(trigger, out var lockList) && lockList.Count > 0)
                 return WeaponValidationResult.Fail($"Trigger {trigger} has {lockList.Count} lock(s)");

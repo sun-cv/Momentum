@@ -4,10 +4,6 @@ using UnityEngine;
 
 public class HeroState : State
 {
-    readonly Hero               hero;
-
-        // -----------------------------------
-
     readonly IntentSystem       intent;
     readonly EffectRegister     effects;
     readonly EquipmentManager   equipment;
@@ -59,14 +55,16 @@ public class HeroState : State
     public bool CanAttack                           => effects.Can<IDisableAttack>(effect => effect.DisableAttack, defaultValue: !Disabled); 
     public bool CanRotate                           => effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !Disabled); 
    
-    public Direction Aim                            => intent.Input.Aim;
-    public Direction Facing                         => intent.Input.Facing;
-    public Direction Direction                      => intent.Input.Direction;
-    public Direction LastDirection                  => intent.Input.LastDirection;
-    
-    public Direction ResolvedAim                    { get {                                                                                 if (CanRotate) { hasLockedAim       = false; return intent.Input.Aim;       }; if (!hasLockedAim)       { cachedLockedAim       = intent.Input.Aim;       hasLockedAim       = true; }; return cachedLockedAim;       }}
-    public Direction ResolvedFacing                 { get { if (intent.Input.ForcedDirection.HasValue) return intent.Input.ForcedDirection; if (CanRotate) { hasLockedFacing    = false; return intent.Input.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Input.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
-    public Direction ResolvedDirection              { get {                                                                                 if (CanRotate) { hasLockedDirection = false; return intent.Input.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Input.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
+
+        // REWORK REQUIRED 
+    public Direction Aim                            => intent.Aiming.Aim;
+    public Direction Facing                         => intent.Direction.Facing;
+    public Direction Direction                      => intent.Direction.Direction;
+    public Direction LastDirection                  => intent.Direction.LastDirection;
+
+    public Direction ResolvedAim                    { get {  if (CanRotate) { hasLockedAim       = false; return intent.Aiming.Aim;          }; if (!hasLockedAim)       { cachedLockedAim       = intent.Aiming.Aim;          hasLockedAim       = true; }; return cachedLockedAim;       }}
+    public Direction ResolvedFacing                 { get {  if (CanRotate) { hasLockedFacing    = false; return intent.Direction.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Direction.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
+    public Direction ResolvedDirection              { get {  if (CanRotate) { hasLockedDirection = false; return intent.Direction.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Direction.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
 
     public Vector2 Velocity                         { get => velocity;          set => velocity         = value; }
     public Vector2 Control                          { get => control;           set => control          = value; }
@@ -94,8 +92,6 @@ public class HeroState : State
 
     public HeroState(Hero hero) : base(hero)
     {
-        this.hero   = hero;
-
         effects     = hero.Effects;
         movement    = hero.Movement;
         intent      = hero.Intent;

@@ -350,6 +350,18 @@ public interface IMovableDummy :
         //                                  Enums                                                 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
+public enum Priority
+{
+    Override = 7,
+    Critical = 6,
+    High     = 5,
+    Normal   = 4,
+    Low      = 3,
+    Minimal  = 2,
+    Default  = 1,
+    None     = 0
+}
+
 
 public enum Request
 {
@@ -369,6 +381,8 @@ public enum Request
     Consume,
     Clear,
     Trigger,
+    Claim,
+    Release,
     Transition,
     Dispose,
     Equip,
@@ -429,16 +443,6 @@ public enum InputCondition
     ReleasedRecently,
 }
 
-public enum PlayerAction
-{
-    None,
-    Interact,
-    Action,
-    Attack1,
-    Attack2,
-    Modifier,
-    Dash,
-}
 
 public enum Capability
 {
@@ -455,6 +459,19 @@ public enum Capability
     ItemUse,
     MenuAccess,
 }
+
+
+public enum Trigger
+{
+    None,
+    Interact,
+    Action,
+    Attack1,
+    Attack2,
+    Modifier,
+    Dash,
+}
+
 
 public enum ThresholdTrigger
 {

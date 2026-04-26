@@ -31,8 +31,8 @@ public class SwordStrike : DamagingWeapon
     public SwordStrike()
     {
         Name                        = "SwordStrike";
-        DefaultWeapon               = Capability.Attack1;
-        Trigger                     = new() { Capability.Attack1 };
+        DefaultWeapon               = Trigger.Attack1;
+        ActivationTrigger           = new() { Trigger.Attack1 };
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
         Availability                = WeaponAvailability.Default;
@@ -54,7 +54,7 @@ public class SwordStrike : DamagingWeapon
                 DisableRotate       = true,
                 DisableMove         = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Attack1 }
+                ActionLocks         = new(){ Trigger.Attack1 }
             },
             
             new SwordSwingDisable()
@@ -67,7 +67,7 @@ public class SwordStrike : DamagingWeapon
                 DisableRotate       = true,
                 DisableMove         = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Attack1 }
+                ActionLocks         = new(){ Trigger.Attack1 }
             },
         };
 
@@ -157,7 +157,7 @@ public class SwordCleave : DamagingWeapon
     public SwordCleave()
     {
         Name                        = "SwordCleave";
-        Trigger                     = new() { Capability.Attack1 };
+        ActivationTrigger           = new() { Trigger.Attack1 };
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
         Availability                = WeaponAvailability.OnPhase;
@@ -181,7 +181,7 @@ public class SwordCleave : DamagingWeapon
                 DisableRotate       = true,
                 DisableMove         = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Attack1 }
+                ActionLocks         = new(){ Trigger.Attack1 }
             },
             
             new SwordSwingDisable()
@@ -194,7 +194,7 @@ public class SwordCleave : DamagingWeapon
                 DisableRotate       = true,
                 DisableMove         = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Attack1 }
+                ActionLocks         = new(){ Trigger.Attack1 }
             },
         };
 
@@ -274,7 +274,7 @@ public class SwordRend : DamagingWeapon
     public SwordRend()
     {
         Name                        = "SwordRend";
-        Trigger                     = new() { Capability.Attack1 };
+        ActivationTrigger           = new() { Trigger.Attack1 };
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
         Availability                = WeaponAvailability.OnPhase;
@@ -298,7 +298,7 @@ public class SwordRend : DamagingWeapon
                 DisableRotate       = true,
                 DisableMove         = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Attack1 }
+                ActionLocks         = new(){ Trigger.Attack1 }
             },
             
             new SwordSwingDisable()
@@ -311,7 +311,7 @@ public class SwordRend : DamagingWeapon
                 DisableRotate       = true,
                 DisableMove         = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Attack1 }
+                ActionLocks         = new(){ Trigger.Attack1 }
             },
         };
 

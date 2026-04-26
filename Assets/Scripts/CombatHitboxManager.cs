@@ -465,7 +465,7 @@ public class HitboxDirectionDefinition : Definition
     public HitboxDirectionSource Type               { get; init; }
     public HitboxDirectionScope Scope               { get; init; }
     public Vector2 Explicit                         { get; set;  }
-    public InputIntentSnapshot Input                { get; set;  }
+    public IntentSnapshot Input                { get; set;  }
 
     public HitboxTrackingConstraint Constraint      { get; init; }
 }

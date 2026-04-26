@@ -34,9 +34,9 @@ public class BaseDash : MovementWeapon
     public BaseDash()
     {
         Name                        = "Dash";
-        DefaultWeapon               = Capability.Dash;
+        DefaultWeapon               = Trigger.Dash;
         Type                        = WeaponType.Interrupt;
-        Trigger                     = new() { Capability.Dash };
+        ActivationTrigger           = new() { Trigger.Dash };
         Activation                  = WeaponActivation.OnPress;
         Termination                 = WeaponTermination.AfterFire;
         Availability                = WeaponAvailability.Default;
@@ -56,7 +56,7 @@ public class BaseDash : MovementWeapon
                 DisableMove         = true,
                 DisableAttack       = true,
                 RequestActionLock   = true,
-                ActionLocks         = new(){ Capability.Dash }
+                ActionLocks         = new(){ Trigger.Dash }
             },
 
             new DashForceImmunity()

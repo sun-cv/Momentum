@@ -21,7 +21,7 @@ public class WeaponAction       : Definition
     // <summary>The type of weapon, root, combo, interrupt</summary>
     public WeaponType Type                          { get; init; } = new();
     // <summary>The capabilities required to activate this weapon</summary>
-    public List<Capability> Trigger                 { get; init; } = new();
+    public List<Trigger> ActivationTrigger          { get; init; } = new();
     // <summary>What causes this weapon to fire</summary>
     public WeaponActivation Activation              { get; init; } = WeaponActivation.OnPress;
     // <summary>What causes this weapon to terminate </summary>
@@ -29,7 +29,7 @@ public class WeaponAction       : Definition
     // <summary>How this weapon becomes available for activation</summary>
     public WeaponAvailability Availability          { get; init; } = WeaponAvailability.OnPhase;
     // <summary>Default weapon mapping for this action (used for Availability.Default)</summary>
-    public Capability DefaultWeapon                 { get; init; } = Capability.None;
+    public Trigger DefaultWeapon                    { get; init; } = Trigger.None;
 
     // ============================================================================
     //  Control System
@@ -56,7 +56,7 @@ public class WeaponAction       : Definition
     // ============================================================================
     
     // <summary> Root inputs that anchor this weapon chain. If any of these are released, the weapon terminates</summary>
-    public List<Capability> RequiredHeldTriggers    { get; init; } = new();
+    public List<Trigger> RequiredHeldTriggers    { get; init; } = new();
 
     // ============================================================================
     //  Cancelling
@@ -281,8 +281,8 @@ public class WeaponState
 
         // -----------------------------------
 
-    public InputIntentSnapshot Intent           { get; set; }
-    public InputIntentSnapshot LiveIntent       { get; set; }
+    public IntentSnapshot Intent           { get; set; }
+    public IntentSnapshot LiveIntent       { get; set; }
 
     public float CurrentAimAngle                { get; set; }
     public float TargetAimAngle                 { get; set; }
@@ -381,21 +381,21 @@ public class WeaponLoadout
         return true;
     }
 
-    public WeaponAction DefaultWeapon(Capability capability)
+    public WeaponAction DefaultWeapon(Trigger capability)
     {
         return actions.Values
             .Select(weapon => weapon.action)
             .FirstOrDefault(action => 
-                action.Trigger.SequenceEqual(new List<Capability>() { capability }) && 
+                action.ActivationTrigger.SequenceEqual(new List<Trigger>() { capability }) && 
                 action.Availability == WeaponAvailability.Default);
     }
 
-    public WeaponAction GetActionByType(Capability capability, WeaponType type)
+    public WeaponAction GetActionByType(Trigger capability, WeaponType type)
     {
         return actions.Values
             .Select(weapon => weapon.action)
             .FirstOrDefault(action => 
-                action.Trigger.SequenceEqual(new List<Capability>() { capability }) && 
+                action.ActivationTrigger.SequenceEqual(new List<Trigger>() { capability }) && 
                 action.Type == type);
     }
 }

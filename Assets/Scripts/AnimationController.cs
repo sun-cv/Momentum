@@ -331,13 +331,13 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
 
     Animation CreateAnimation(AnimationAPI request)
     {
-        var duration = AnimationLength(request.Data.Animation),
+        var duration = AnimationLength(request.Data.Animation);
 
         return new Animation()
         {
             Name            = request.Data.Animation,
             Duration        = duration,
-            Settings        = request.Settings,
+            Settings        = request.Configuration,
             PlaybackTimer   = new(duration),
         };
     }
@@ -497,7 +497,7 @@ public class Animation
     public string Name                  { get; set; }
     public Playback State               { get; set; }
     public float Duration               { get; set; }
-    public AnimationSettings Settings   { get; set; }
+    public AnimationConfiguration Settings   { get; set; }
     public ClockTimer PlaybackTimer     { get; set; }
 }
 

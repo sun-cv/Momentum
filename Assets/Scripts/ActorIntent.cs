@@ -4,106 +4,64 @@ using UnityEngine;
 
 public class IntentSystem : ActorService
 {
-    readonly InputRouter    inputRouter;
-    readonly WorldPosition  worldPosition;
+    readonly CommandSystem      command;
+    readonly DirectionIntent    direction;
+    readonly FacingIntent       facing; 
+    readonly TargetingSystem    targeting;
+    readonly AimingSystem       aiming;
 
-    // -----------------------------------
-
-    readonly InputIntent    input;
-    readonly CommandSystem  command;
-
-    // SubSystems
-    // Targeting    - intent not resolve
     
+        // -----------------------------------
+
+    public class TargetingSystem
+    {
+        public TargetingSystem(IntentSystem intent)
+        {
+
+        }
+    }
+
+    public class AimingSystem
+    {
+        public Direction Aim;
+
+        public AimingSystem(IntentSystem intent)
+        {
+
+        }
+    }
+
    // ===============================================================================
 
     public IntentSystem(Actor owner) : base(owner)
     {
-
-        inputRouter     = Services.Get<InputRouter>();
-        worldPosition   = Services.Get<WorldPosition>();
-
         command         = new(this);
-        input           = new(this);
-
-        this.owner.Bus.Link.LocalBinding<PresenceStateEvent>(HandlePresenceStateEvent);
+        direction       = new(this);
+        facing          = new(this);
+        targeting       = new(this);
+        aiming          = new(this);
     }
 
     // ===============================================================================
 
-    public CommandSystem Command        => command;
-    public InputIntent   Input          => input;
-    public InputRouter   InputRouter    => inputRouter;
-    public WorldPosition Position       => worldPosition;
-
-    public UpdatePriority Priority      => ServiceUpdatePriority.IntentSystem;
-}
-
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                      Declarations
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                               Interfaces                                                      
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public interface IDirectionSource
-{
-    Direction Aim               { get; }
-    Direction Facing            { get; }
-    Direction Direction         { get; }
-    Direction LastDirection     { get; }
-}
-
-public enum DirectionSource
-{
-    Aim,
-    Facing,
-    Direction,
-    LastDirection
-}
-
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                 Structs                                                   
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-
-public readonly struct Direction
-{
-    readonly Vector2 vector;
-
-    public Direction(Vector2 vector)
+    public IntentSnapshot Snapshot()
     {
-        this.vector = vector.sqrMagnitude > 0.0001f ? vector.normalized : Vector2.zero;
+        return new()
+        {
+            Aim                 = aiming.Aim,
+            Facing              = facing.Facing,
+            Direction           = direction.Direction,
+            LastDirection       = direction.LastDirection,
+        };
     }
 
-    public Vector2 Vector                   => vector;
-    public Vector2 Cardinal                 => Orientation.NormalizeVectorToCardinal(vector);
-    public Vector2 Intercardinal            => Orientation.NormalizeVectorToIntercardinal(vector);
+    public TargetingSystem Targeting    => targeting;
+    public AimingSystem Aiming          => aiming;
+    public FacingIntent Facing          => facing;
+    public CommandSystem Command        => command;
+    public DirectionIntent Direction    => direction;
 
-    public Cardinal AsCardinal              => Orientation.CardinalFrom(vector);
-    public Intercardinal AsIntercardinal    => Orientation.IntercardinalFrom(vector);
-
-    public float X                          => vector.x;
-    public float Y                          => vector.y;
-    public float Angle                      => Mathf.Atan2(vector.y, vector.x) * Mathf.Rad2Deg;
-
-    public bool IsZero                      => vector.sqrMagnitude < 0.0001f;
-    public bool HasValue                    => !IsZero;
-
-    public static implicit operator Vector2(Direction direction)    => direction.vector;
-    public static implicit operator Direction(Vector2 vector)       => new(vector);
-}
-
-
-public readonly struct InputIntentSnapshot : IDirectionSource
-{
-    public Direction Aim                { get; init; }
-    public Direction Facing             { get; init; }
-    public Direction Direction          { get; init; }
-    public Direction LastDirection      { get; init; }
+    public UpdatePriority Priority      => ServiceUpdatePriority.IntentSystem;
 }
 
 
@@ -111,15 +69,23 @@ public readonly struct InputIntentSnapshot : IDirectionSource
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-
-public readonly struct ForcedFacingEvent : IMessage
+public readonly struct ActorAim : IMessage 
 {
-    public Vector2 Direction            { get; init; }
-    public Request Type                 { get; init; }
+    public Vector2 Vector               { get; init; }
 
-    public ForcedFacingEvent(Request type, Vector2 direction)
+    public ActorAim(Vector2 vector)
     {
-        Direction = direction;
-        Type      = type;
+        Vector = vector;
     }
 }
+
+public readonly struct ActorMovement: IMessage 
+{
+    public Vector2 Vector               { get; init; }
+
+    public ActorMovement(Vector2 vector)
+    {
+        Vector = vector;
+    }
+}
+

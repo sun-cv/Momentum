@@ -29,7 +29,7 @@ public interface ICancelable                { public bool Cancelable            
 public interface ICancelableOnRelease       { public bool CancelOnRelease           { get; init; }}
 
 public interface IActionLock                { public bool RequestActionLock         { get; init; } 
-                                              public List<Capability> ActionLocks   { get; init; }}
+                                              public List<Trigger> ActionLocks   { get; init; }}
 
 public interface IModifyFloat               { public float Modifier                 { get; init; }}
 public interface IModifyTarget              { public float ModifyTarget             { get; init; }}
@@ -100,7 +100,7 @@ public class SwordSwingDisable : Effect, ICancelable, ITrigger, IDurationFrames,
     public bool DisableMove                     { get; init; }
 
     public bool RequestActionLock               { get; init; }
-    public List<Capability> ActionLocks         { get; init; }
+    public List<Trigger> ActionLocks         { get; init; }
 }
 
 public class ShieldParryWindow : Effect, IDurationFrames
@@ -174,7 +174,7 @@ public class DashDisable : Effect, ICancelable, IDurationFrames, IDisableRules, 
     public bool DisableMove                     { get; init; }
     
     public bool RequestActionLock               { get; init; }
-    public List<Capability> ActionLocks         { get; init; }
+    public List<Trigger> ActionLocks         { get; init; }
 
 }
 

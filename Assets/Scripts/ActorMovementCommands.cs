@@ -44,7 +44,7 @@ public class MovementDefinition : Definition
     public WeaponPhase Phase                { get; init; }
 
     // Input
-    public InputIntentSnapshot InputIntent  { get; set;  }
+    public IntentSnapshot InputIntent  { get; set;  }
 
     // Config
     public int  Scope                       { get; set;  }

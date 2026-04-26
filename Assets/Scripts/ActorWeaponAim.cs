@@ -49,11 +49,11 @@ public static class WeaponAimProcessor
         state.AnchorAimAngle  = initialAngle;
     }
 
-    static InputIntentSnapshot BuildLiveIntent(Actor owner, InputIntentSnapshot stored)
+    static IntentSnapshot BuildLiveIntent(Actor owner, IntentSnapshot stored)
     {
         Direction liveAim = ((IAimable)owner).Aim;
 
-        return new InputIntentSnapshot
+        return new IntentSnapshot
         {
             Aim           = liveAim.HasValue ? liveAim : stored.Facing,
             Facing        = stored.Facing,
@@ -62,7 +62,7 @@ public static class WeaponAimProcessor
         };
     }
 
-    static float ResolveRawAngle(InputIntentSnapshot intent, float currentAngle)
+    static float ResolveRawAngle(IntentSnapshot intent, float currentAngle)
     {
         if (intent.Aim.HasValue)
             return intent.Aim.Angle;

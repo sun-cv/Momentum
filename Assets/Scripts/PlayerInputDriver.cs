@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
-
-
 
 
 
@@ -90,146 +86,6 @@ public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDispos
     public UpdatePriority Priority => ServiceUpdatePriority.InputDriver;
 }
 
-
-public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDisposable
-{
-
-    Dictionary<PlayerAction, InputButton> buttonMap = new();
-    HashSet<InputButton> activeButtons              = new();
-    Queue<PendingInputEvent> pendingInputs          = new();
-
-    Vector2 mousePositionVector                     = new();
-    Vector2 movementDirectionVector                 = new();
-
-        // -----------------------------------
-
-    EventBinding<InteractPress>         interactPress;
-    EventBinding<InteractRelease>       interactRelease;
-    EventBinding<ActionPress>           actionPress;
-    EventBinding<ActionRelease>         actionRelease;
-    EventBinding<Attack1Press>          attack1Press;
-    EventBinding<Attack1Release>        attack1Release;
-    EventBinding<Attack2Press>          attack2Press;
-    EventBinding<Attack2Release>        attack2Release;
-    EventBinding<ModifierPress>         modifierPress;
-    EventBinding<ModifierRelease>       modifierRelease;
-    EventBinding<DashPress>             dashPress;
-    EventBinding<DashRelease>           dashRelease;
-    EventBinding<MovementVector>        movementVector;
-    EventBinding<MousePosition>         mousePosition;
-
-    // ===============================================================================
-
-    public void Initialize()
-    {
-        mousePosition   = EventBus<MousePosition> .Subscribe(UpdateMousePosition);
-        movementVector  = EventBus<MovementVector>.Subscribe(UpdateMovementIntent);    
-
-        interactPress   = BindPress     <InteractPress>     ();
-        interactRelease = BindRelease   <InteractRelease>   ();
-        actionPress     = BindPress     <ActionPress>       ();
-        actionRelease   = BindRelease   <ActionRelease>     ();
-        attack1Press    = BindPress     <Attack1Press>      ();
-        attack1Release  = BindRelease   <Attack1Release>    ();
-        attack2Press    = BindPress     <Attack2Press>      ();
-        attack2Release  = BindRelease   <Attack2Release>    ();
-        modifierPress   = BindPress     <ModifierPress>     ();
-        modifierRelease = BindRelease   <ModifierRelease>   ();
-        dashPress       = BindPress     <DashPress>         ();
-        dashRelease     = BindRelease   <DashRelease>       ();
-
-        foreach (PlayerAction intent in EnumUtils.GetEnumValues<PlayerAction>())
-        {
-            if (intent == PlayerAction.None)
-                continue;
-
-            buttonMap[intent] = new InputButton(intent);
-        }
-    }
-
-    // ===============================================================================
-    
-    public void Tick()
-    {
-        ResolvePendingInput();
-        UpdateButtons();
-    }
-
-
-    void ResolvePendingInput()
-    {
-        while(pendingInputs.TryDequeue(out var evt))
-        {
-            if (evt.IsPress)
-                GetOrCreateButton(evt.Action).Press();
-            else
-                GetOrCreateButton(evt.Action).Release();
-        }
-
-    }
-
-    void UpdateButtons()
-    {
-        foreach (var button in buttonMap.Values)
-        {
-            button.Update();
-
-            if (button.Condition != InputCondition.None)
-                activeButtons.Add(button);
-            else
-                activeButtons.Remove(button);
-        }
-    }
-
-    InputButton GetOrCreateButton(PlayerAction input)
-    {
-        if (!buttonMap.TryGetValue(input, out InputButton button))
-        {
-            button = new InputButton(input);
-            buttonMap[input] = button;
-        }
-
-        return button;
-    }
-
-    // ===============================================================================
-    //  Helpers
-    // ===============================================================================
-
-    void UpdateMousePosition(MousePosition evt)             => mousePositionVector      = evt.vector;
-    void UpdateMovementIntent(MovementVector evt)           => movementDirectionVector  = evt.vector;
-
-    EventBinding<T> BindPress<T>()   where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Action = evt.Action, IsPress = true  }); });
-    EventBinding<T> BindRelease<T>() where T : IInputEvent  => EventBus<T>.Subscribe(evt => { pendingInputs.Enqueue(new() { Action = evt.Action, IsPress = false }); });
-
-    // ===============================================================================
-
-
-    public override void Dispose()
-    {
-        EventBus<InteractPress>     .Unsubscribe(interactPress);  
-        EventBus<InteractRelease>   .Unsubscribe(interactRelease);  
-        EventBus<ActionPress>       .Unsubscribe(actionPress);  
-        EventBus<ActionRelease>     .Unsubscribe(actionRelease);  
-        EventBus<Attack1Press>      .Unsubscribe(attack1Press);  
-        EventBus<Attack1Release>    .Unsubscribe(attack1Release);  
-        EventBus<Attack2Press>      .Unsubscribe(attack2Press);  
-        EventBus<Attack2Release>    .Unsubscribe(attack2Release);  
-        EventBus<ModifierPress>     .Unsubscribe(modifierPress);  
-        EventBus<ModifierRelease>   .Unsubscribe(modifierRelease);  
-        EventBus<DashPress>         .Unsubscribe(dashPress);  
-        EventBus<DashRelease>       .Unsubscribe(dashRelease);  
-    }
-
-    public Vector2 MousePosition                            => mousePositionVector;
-    public Vector2 MovementDirection                        => movementDirectionVector;
-
-    public Dictionary<PlayerAction, InputButton> ButtonMap  => buttonMap;
-    public HashSet<InputButton> ActiveButtons               => activeButtons;
-    
-    public UpdatePriority Priority => ServiceUpdatePriority.InputRouter;
-}
-
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -237,47 +93,24 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
 
 public class InputButton
 {
-    public PlayerAction    Input            { get; }
-    public InputCondition Condition
-    {
-        get
-        {
-            if (pressedThisFrame)           return InputCondition.PressedThisFrame;
-            if (pressed)                    return InputCondition.Pressed;
-            if (releasedThisFrame)          return InputCondition.ReleasedThisFrame;
-            if (released)                   return InputCondition.ReleasedRecently;
-                                            return InputCondition.None;
-        }
+    bool pressed                            = false;
+    bool released                           = false;
+    bool pressedThisFrame                   = false;
+    bool releasedThisFrame                  = false;
+
+    // -----------------------------------
+
+    readonly FrameWatch pressedframeCount   = new();
+    readonly FrameWatch releasedframeCount  = new();
+
+    // ===============================================================================
+
+    public InputButton(Capability input)
+    {    
+        Input = input;
     }
 
-    public bool pressed                     = false;
-    public bool released                    = false;
-    public bool pressedThisFrame            = false;
-    public bool releasedThisFrame           = false;
-
-    public FrameWatch pressedframeCount   = new();
-    public FrameWatch releasedframeCount  = new();
-
-    public InputButton(PlayerAction input)   => Input = input;
-
-    public void Update()
-    {
-        if (pressedThisFrame && pressedframeCount.CurrentFrame != 0)
-        {
-            pressedThisFrame    = false;
-        }
-
-        if (releasedThisFrame && releasedframeCount.CurrentFrame != 0)
-        {
-            releasedThisFrame   = false;
-        }
-
-        if (releasedframeCount.CurrentFrame >= Config.Input.RELEASE_THRESHOLD)
-        {
-            releasedframeCount.Stop();
-            released = false;
-        }
-    }
+    // ===============================================================================
 
     public void Press()
     {
@@ -299,6 +132,25 @@ public class InputButton
         releasedframeCount.Start();
     }
 
+    public void Update()
+    {
+        if (pressedThisFrame && pressedframeCount.CurrentFrame != 0)
+        {
+            pressedThisFrame    = false;
+        }
+
+        if (releasedThisFrame && releasedframeCount.CurrentFrame != 0)
+        {
+            releasedThisFrame   = false;
+        }
+
+        if (releasedframeCount.CurrentFrame >= Config.Input.RELEASE_THRESHOLD)
+        {
+            releasedframeCount.Stop();
+            released = false;
+        }
+    }
+
     void ResetState()
     {
 
@@ -314,12 +166,34 @@ public class InputButton
         releasedframeCount.Stop();
         releasedframeCount.Reset();   
     }
+
+    // ===============================================================================
+
+    public Capability    Input            { get; }
+    public InputCondition Condition
+    {
+        get
+        {
+            if (pressedThisFrame)           return InputCondition.PressedThisFrame;
+            if (pressed)                    return InputCondition.Pressed;
+            if (releasedThisFrame)          return InputCondition.ReleasedThisFrame;
+            if (released)                   return InputCondition.ReleasedRecently;
+                                            return InputCondition.None;
+        }
+    }
+    public bool Pressed                     => pressed; 
+    public bool Released                    => released; 
+    public bool PressedThisFrame            => PressedThisFrame; 
+    public bool ReleasedThisFrame           => ReleasedThisFrame; 
+
+    public FrameWatch PressedframeCount     => pressedframeCount;  
+    public FrameWatch ReleasedframeCount    => releasedframeCount; 
 }
 
 
 public struct PendingInputEvent
 {
-    public PlayerAction Action      { get; set; }
+    public Capability Action      { get; set; }
     public bool IsPress             { get; set; }
 }
 
@@ -328,26 +202,26 @@ public struct PendingInputEvent
 //                                         Events
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-public interface IInputEvent : IEvent { PlayerAction Action { get; } InputCondition Condition { get; }}
+public interface IInputEvent : IEvent { Capability Action { get; } InputCondition Condition { get; }}
 
-public struct InteractPress         : IInputEvent { public readonly PlayerAction Action => PlayerAction.Interact; public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct InteractRelease       : IInputEvent { public readonly PlayerAction Action => PlayerAction.Interact; public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct InteractPress         : IInputEvent { public readonly Capability Action => Capability.Interact; public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct InteractRelease       : IInputEvent { public readonly Capability Action => Capability.Interact; public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct ActionPress           : IInputEvent { public readonly PlayerAction Action => PlayerAction.Action;   public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct ActionRelease         : IInputEvent { public readonly PlayerAction Action => PlayerAction.Action;   public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct ActionPress           : IInputEvent { public readonly Capability Action => Capability.Action;   public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct ActionRelease         : IInputEvent { public readonly Capability Action => Capability.Action;   public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct Attack1Press          : IInputEvent { public readonly PlayerAction Action => PlayerAction.Attack1;  public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct Attack1Release        : IInputEvent { public readonly PlayerAction Action => PlayerAction.Attack1;  public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct Attack1Press          : IInputEvent { public readonly Capability Action => Capability.Attack1;  public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct Attack1Release        : IInputEvent { public readonly Capability Action => Capability.Attack1;  public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct Attack2Press          : IInputEvent { public readonly PlayerAction Action => PlayerAction.Attack2;  public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct Attack2Release        : IInputEvent { public readonly PlayerAction Action => PlayerAction.Attack2;  public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct Attack2Press          : IInputEvent { public readonly Capability Action => Capability.Attack2;  public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct Attack2Release        : IInputEvent { public readonly Capability Action => Capability.Attack2;  public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct ModifierPress         : IInputEvent { public readonly PlayerAction Action => PlayerAction.Modifier; public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct ModifierRelease       : IInputEvent { public readonly PlayerAction Action => PlayerAction.Modifier; public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct ModifierPress         : IInputEvent { public readonly Capability Action => Capability.Modifier; public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct ModifierRelease       : IInputEvent { public readonly Capability Action => Capability.Modifier; public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct DashPress             : IInputEvent { public readonly PlayerAction Action => PlayerAction.Dash;     public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
-public struct DashRelease           : IInputEvent { public readonly PlayerAction Action => PlayerAction.Dash;     public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
+public struct DashPress             : IInputEvent { public readonly Capability Action => Capability.Dash;     public readonly InputCondition Condition => InputCondition.PressedThisFrame;  }
+public struct DashRelease           : IInputEvent { public readonly Capability Action => Capability.Dash;     public readonly InputCondition Condition => InputCondition.ReleasedThisFrame; }
 
-public struct MousePosition         : IInputEvent { public readonly PlayerAction Action => PlayerAction.None;     public readonly InputCondition Condition => InputCondition.None; public Vector2 vector; public MousePosition(Vector2 value) => vector = value;   }
-public struct MovementVector        : IInputEvent { public readonly PlayerAction Action => PlayerAction.None;     public readonly InputCondition Condition => InputCondition.None; public Vector2 vector; public MovementVector(Vector2 value) => vector = value;  }
+public struct MousePosition         : IInputEvent { public readonly Capability Action => Capability.None;     public readonly InputCondition Condition => InputCondition.None; public Vector2 vector; public MousePosition(Vector2 value) => vector = value;   }
+public struct MovementVector        : IInputEvent { public readonly Capability Action => Capability.None;     public readonly InputCondition Condition => InputCondition.None; public Vector2 vector; public MovementVector(Vector2 value) => vector = value;  }
 

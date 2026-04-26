@@ -112,7 +112,7 @@ public class AnimatorParameter
         },
     };
 
-    public static readonly Dictionary<Type, Func<InputIntentSnapshot, Override[]>> InputIntentSnapshot = new()
+    public static readonly Dictionary<Type, Func<IntentSnapshot, Override[]>> InputIntentSnapshot = new()
     {
         { typeof(IAimable), snapshot => new[]
             {

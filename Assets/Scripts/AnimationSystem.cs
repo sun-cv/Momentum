@@ -147,23 +147,23 @@ public class AnimationAPI : API
 {
     public AnimationIntent Intent                   { get; init; }
     public AnimationContext Context                 { get; init; }
-    public AnimationSettings Settings               { get; init; }
+    public AnimationConfiguration Configuration     { get; init; }
     public AnimationData Data                       { get; init; }
 
     // ===============================================================================
 
     public AnimationAPI(string name)
     {
-        Settings           = new() { AllowInterrupt = true };
-        Data               = new() { Animation      = name };
+        Configuration           = new() { AllowInterrupt = true };
+        Data                    = new() { Animation      = name };
     }
 
     public AnimationAPI(AnimationIntent intent, AnimationContext context = null)
     {
-        Intent             = intent;
-        Context            = context;
-        Settings           = new() { AllowInterrupt = true };
-        Data               = new();
+        Intent                  = intent;
+        Context                 = context;
+        Configuration           = new() { AllowInterrupt = true };
+        Data                    = new();
     }
 
     // ===============================================================================
@@ -173,7 +173,7 @@ public class AnimationAPI : API
     public bool HasOverrides    => Data.Overrides   != null && Data.Overrides.Count > 0;
 }
 
-public class AnimationSettings
+public class AnimationConfiguration
 {
     public bool AllowInterrupt                          { get; set; }
     public bool HoldUntilReleased                       { get; set; }

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 public class TriggerLocks : RegisteredService, IInitialize
 {
 
-    readonly Dictionary<Capability, List<string>> locks = new();
+    readonly Dictionary<Trigger, List<string>> locks = new();
 
             // -----------------------------------
 
@@ -23,7 +23,7 @@ public class TriggerLocks : RegisteredService, IInitialize
 
     // ===============================================================================
 
-    void AddLock(Capability action, string origin)
+    void AddLock(Trigger action, string origin)
     {
         if (!locks.TryGetValue(action, out var list))
         {   
@@ -34,7 +34,7 @@ public class TriggerLocks : RegisteredService, IInitialize
         list.Add(origin);
     }
 
-    void RemoveLock(Capability action, string origin)
+    void RemoveLock(Trigger action, string origin)
     {
         if (!locks.TryGetValue(action, out var list))
             return;
@@ -78,11 +78,11 @@ public class TriggerLocks : RegisteredService, IInitialize
     }
 
 
-    public bool IsLocked(Capability action)     => locks.TryGetValue(action, out var list) && list.Count > 0;
+    public bool IsLocked(Trigger action)     => locks.TryGetValue(action, out var list) && list.Count > 0;
 
     // ===============================================================================
 
-    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
+    public IReadOnlyDictionary<Trigger, IReadOnlyList<string>> GetLocks() => Snapshot.ReadOnly(locks);
 } 
 
 
@@ -92,11 +92,11 @@ public class TriggerLocks : RegisteredService, IInitialize
 
 public readonly struct LockEvent : IMessage
 {
-    public readonly Capability Action       { get; init; }
+    public readonly Trigger Action       { get; init; }
     public readonly string     Origin       { get; init; }
     public readonly Request    Request      { get; init; }
 
-    public LockEvent(Capability action, string origin, Request request)
+    public LockEvent(Trigger action, string origin, Request request)
     {
         Action  = action;
         Origin  = origin;
@@ -106,9 +106,9 @@ public readonly struct LockEvent : IMessage
 
 public readonly struct LockUpdateEvent : IMessage
 {
-    public IReadOnlyDictionary<Capability, IReadOnlyList<string>> Locks { get;}
+    public IReadOnlyDictionary<Trigger, IReadOnlyList<string>> Locks { get;}
 
-    public LockUpdateEvent(IReadOnlyDictionary<Capability, IReadOnlyList<string>> locks)
+    public LockUpdateEvent(IReadOnlyDictionary<Trigger, IReadOnlyList<string>> locks)
     {
         Locks   = locks;
     }

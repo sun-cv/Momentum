@@ -49,8 +49,6 @@ public static class Settings
         public static float FACING_SWITCH_DELAY             = 1f;
         public static float FACING_CLOCKWISE                = 0.1f;
         public static float FACING_COUNTER_CLOCKWISE        = 0.8f; 
-
-        public static bool NORMALIZE_VELOCITY               = false;
     }   
 
     public static class Physics
@@ -82,6 +80,7 @@ public static class ServiceUpdatePriority
 
     public static UpdatePriority InputDriver                = new(UpdatePhase.Input,    10);
     public static UpdatePriority InputRouter                = new(UpdatePhase.Input,    20);
+    public static UpdatePriority ActorDriver                = new(UpdatePhase.Input,    30);
 
     public static UpdatePriority EcoSystem                  = new(UpdatePhase.Logic,    01);
     public static UpdatePriority SpawnerService             = new(UpdatePhase.Logic,    02);
@@ -90,8 +89,9 @@ public static class ServiceUpdatePriority
     public static UpdatePriority Stats                      = new(UpdatePhase.Logic,    10);
     public static UpdatePriority IntentSystem               = new(UpdatePhase.Logic,    20);
     public static UpdatePriority DirectionHandler           = new(UpdatePhase.Logic,    21);
-    public static UpdatePriority CommandSystem              = new(UpdatePhase.Logic,    22);
-    public static UpdatePriority InputIntent                = new(UpdatePhase.Logic,    23);
+    public static UpdatePriority FacingHandler              = new(UpdatePhase.Logic,    22);
+    public static UpdatePriority CommandSystem              = new(UpdatePhase.Logic,    23);
+    public static UpdatePriority InputIntent                = new(UpdatePhase.Logic,    24);
     public static UpdatePriority WeaponLogic                = new(UpdatePhase.Logic,    30);
     public static UpdatePriority EffectRegister             = new(UpdatePhase.Logic,    35);
 

@@ -35,13 +35,13 @@ public class ShieldParry : DamagingWeapon
     public ShieldParry()
     {
         Name                                = "ShieldParry";
-        DefaultWeapon                       = Capability.Attack2;
+        DefaultWeapon = Trigger.Attack2;
         Type                                = WeaponType.Interrupt;
-        Trigger                             = new() { Capability.Attack2 };
+        ActivationTrigger                   = new() { Trigger.Attack2 };
         Activation                          = WeaponActivation.OnPress;
         Termination                         = WeaponTermination.AfterFire;
         Availability                        = WeaponAvailability.Default;
-        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        RequiredHeldTriggers                = new() { Trigger.Attack2 };
         ChargeTimeFrames                    = 1;
         FireDurationFrames                  = 4;
         AddControlOnFireEnd                 = new() { "ShieldBlock" };
@@ -105,11 +105,11 @@ public class ShieldBlock : DamagingWeapon
     public ShieldBlock()
     {
         Name                                = "ShieldBlock";
-        Trigger                             = new() { Capability.Attack2 };
+        ActivationTrigger                   = new() { Trigger.Attack2 };
         Activation                          = WeaponActivation.WhileHeld;
         Termination                         = WeaponTermination.OnRelease;
         Availability                        = WeaponAvailability.OnHeld;
-        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        RequiredHeldTriggers                = new() { Trigger.Attack2 };
         AcceptTriggerLockRequests           = false;
         FireDuration                        = 9999;
         HoldAnimationUntilReleased          = true;
@@ -117,10 +117,10 @@ public class ShieldBlock : DamagingWeapon
         Aim                                 = new()
         {       
             Enabled                         = true,
-            Mode                            = AimMode.Intercardinal,
-            RotationRateDegs                = 180,
-            HysteresisAngle                 = 15,
-            ArcLimitDegs                    = 45,
+            Mode                            = AimMode.Cardinal,
+            RotationRateDegs                = 0,
+            HysteresisAngle                 = 0,
+            ArcLimitDegs                    = 350,
         };      
 
         AddControlOnFire                    = new() 
@@ -226,11 +226,11 @@ public class ShieldAim : DamagingWeapon
     public ShieldAim()  
     {   
         Name                                = "ShieldAim";
-        Trigger                             = new() { Capability.Attack2, Capability.Modifier };
+        ActivationTrigger                   = new() { Trigger.Attack2, Trigger.Modifier };
         Activation                          = WeaponActivation.WhileHeld;
         Termination                         = WeaponTermination.OnRootRelease;
         Availability                        = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        RequiredHeldTriggers                = new() { Trigger.Attack2 };
         FireDuration                        = 9999;
         AddControlOnFire                    = new() { "ShieldFire" };
         AddControlOnFireEnd                 = new() { "ShieldBlock" };
@@ -270,11 +270,11 @@ public class ShieldFire : DamagingWeapon
     public ShieldFire()
     {
         Name                                = "ShieldFire";
-        Trigger                             = new() { Capability.Attack2, Capability.Modifier, Capability.Attack1 };
+        ActivationTrigger                   = new() { Trigger.Attack2, Trigger.Modifier, Trigger.Attack1 };
         Activation                          = WeaponActivation.OnRelease;
         Termination                         = WeaponTermination.OnRootRelease;
         Availability                        = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        RequiredHeldTriggers                = new() { Trigger.Attack2 };
         ChargeTimeFrames                    = 20;
         FireDuration                        = 25;
         ForceMaxChargeRelease               = true;
@@ -309,11 +309,11 @@ public class ShieldBash : DamagingWeapon
     public ShieldBash()
     {
         Name                                = "ShieldBash";
-        Trigger                             = new() { Capability.Attack2, Capability.Attack1 };
+        ActivationTrigger                   = new() { Trigger.Attack2, Trigger.Attack1 };
         Activation                          = WeaponActivation.OnPress;
         Termination                         = WeaponTermination.OnRootRelease;
         Availability                        = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        RequiredHeldTriggers                = new() { Trigger.Attack2 };
         ChargeTimeFrames                    = 5;
         FireDuration                        = 20;
         AddControlOnFireEnd                 = new() { "ShieldBlock" };
@@ -349,11 +349,11 @@ public class ShieldCharge : DamagingWeapon
 
         
         Name                                = "ShieldCharge";
-        Trigger                             = new() { Capability.Attack2, Capability.Attack1 };
+        ActivationTrigger                   = new() { Trigger.Attack2, Trigger.Attack1 };
         Activation                          = WeaponActivation.OnPress;
         Termination                         = WeaponTermination.OnRootRelease;
         Availability                        = WeaponAvailability.OnPhase;
-        RequiredHeldTriggers                = new() { Capability.Attack2 };
+        RequiredHeldTriggers                = new() { Trigger.Attack2 };
         ChargeTimeFrames                    = 5;
         FireDuration                        = 20;
         ControlWindow                       = 0.3f;

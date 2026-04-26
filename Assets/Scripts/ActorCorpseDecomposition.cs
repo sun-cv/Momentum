@@ -8,7 +8,7 @@ public class Decomposition : ActorService, IServiceStep
     // ===============================================================================
 
     // int occupancy   = 0;
-    readonly DecompositionStateMachine stateMachine;
+    DecompositionStateMachine stateMachine;
 
     // ===============================================================================
 
@@ -19,11 +19,15 @@ public class Decomposition : ActorService, IServiceStep
 
     void InitializeStateHandlers()
     {
+        stateMachine = new(this);
+
         stateMachine.Register(State.Fresh,      new CorpseFreshState    (stateMachine));
         stateMachine.Register(State.Decaying,   new CorpseDecayingState (stateMachine));
         stateMachine.Register(State.Consumed,   new CorpseConsumedState (stateMachine));
         stateMachine.Register(State.Remains,    new CorpseRemainsState  (stateMachine));
         stateMachine.Register(State.Disposal,   new CorpseDisposalState (stateMachine));
+
+        stateMachine.Initialize(State.Fresh);
     }
 
     // ===============================================================================
@@ -47,12 +51,11 @@ public class Decomposition : ActorService, IServiceStep
     public void PublishState()
     {
         owner.Bus.Emit.Local(new CorpseEvent(owner, stateMachine.State));
-        Log.Debug($"{stateMachine.State}");
     }
 
     // ===============================================================================
 
-    readonly Logger Log = Logging.For(LogSystem.Corpse);
+    // readonly Logger Log = Logging.For(LogSystem.Corpse);
 
 
     // public int Occupancy    => occupany;
@@ -106,7 +109,7 @@ public class CorpseFreshState : DecompositionState, IStateHandler
 
     public CorpseFreshState(DecompositionStateMachine machine) : base(machine)
     {
-        this.definition = machine.Controller.Owner.Definition;
+        definition = machine.Controller.Owner.Definition;
     }
 
     // ===============================================================================
