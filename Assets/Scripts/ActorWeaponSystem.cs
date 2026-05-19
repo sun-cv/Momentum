@@ -406,15 +406,15 @@ public class WeaponSystem : ActorService, IServiceTick
 
     void ConsumeCommand(Command command)
     {
-        owner.Bus.Emit.Local(new CommandEvent(Request.Consume, command));
+        owner.Bus.Emit.Local<Request, CommandAPI>(new() { Request = Request.Consume, Command = command });
     }
 
     void ConsumeAllCommands(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
     {
         foreach (var action in actions)
         {
-            if (commands.TryGetValue(action, out var cmd))
-                ConsumeCommand(cmd);
+            if (commands.TryGetValue(action, out var command))
+                ConsumeCommand(command);
         }
     }
 
@@ -443,7 +443,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
     void LockCommand(Command command)
     {
-        owner.Bus.Emit.Local(new CommandEvent(Request.Lock, command));
+        owner.Bus.Emit.Local<Request, CommandAPI>(new() { Request = Request.Lock, Command = command });
     }
 
     void LockAllCommands(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
@@ -457,10 +457,10 @@ public class WeaponSystem : ActorService, IServiceTick
 
     void UnlockCommand(Command command)
     {
-        owner.Bus.Emit.Local(new CommandEvent(Request.Unlock, command));
+        owner.Bus.Emit.Local<Request, CommandAPI>(new() { Request = Request.Unlock, Command = command });
     }
 
-    public void UnlockActiveWeaponCommands()
+    public void UnlockAllCommands()
     {
         foreach (var action in instance.Action.ActivationTrigger)
         {
@@ -566,7 +566,7 @@ public class WeaponSystem : ActorService, IServiceTick
             Request = Request.Create
         };
 
-        owner.Bus.Emit.Local(API.Request, API);
+        owner.Bus.Emit.Local<Request, EffectAPI>(API);
     }
 
     void CancelEffect(EffectInstance instance)
@@ -576,7 +576,7 @@ public class WeaponSystem : ActorService, IServiceTick
             Request = Request.Cancel
         };
 
-        owner.Bus.Emit.Local(API.Request, API);
+        owner.Bus.Emit.Local<Request, EffectAPI>(API);
     }
 
     bool ShouldApplyEffect(Effect effect)
@@ -659,8 +659,7 @@ public class WeaponSystem : ActorService, IServiceTick
         foreach (var API in instance.State.OwnedHitboxes)
         {
             API.Request = Request.Destroy; 
-
-            Emit.Global(API.Request, API);
+            Emit.Global<Request, HitboxAPI>(API);
         }
     }
 
@@ -696,6 +695,9 @@ public class WeaponSystem : ActorService, IServiceTick
     // Animation System
     // ============================================================================
 
+        
+    // REWORK REQUIRED - Lock Direction during playback relied on facing which now resolves in intent and is not stored in snapshot. Pull from owner?
+
     public void RequestAnimation()
     {
         string animation = instance.State.Phase switch
@@ -726,14 +728,14 @@ public class WeaponSystem : ActorService, IServiceTick
             API.Data.Overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IAimable)](instance.State.Intent));
         }
 
-        if (instance.Action.LockDirectionDuringPlayback)
-        {
-            API.Data.Overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IMovableActor)](instance.State.Intent));
-        }
-        
+        // REWORK REQUIRED
 
-        owner.Bus.Emit.Local(API.Request, API);
+        // if (instance.Action.LockDirectionDuringPlayback)
+        // {
+        //     API.Data.Overrides.AddRange(AnimatorParameter.InputIntentSnapshot[typeof(IMovableActor)](instance.State.Intent));
+        // }
         
+        owner.Bus.Emit.Local<Request, AnimationAPI>(API);
     }
 
     public void RequestClearAnimation()
@@ -747,7 +749,7 @@ public class WeaponSystem : ActorService, IServiceTick
         var API = instance.State.AnimationAPI;
 
         API.Request = Request.Stop;
-        owner.Bus.Emit.Local(API.Request, API);
+        owner.Bus.Emit.Local<Request, AnimationAPI>(API);
     }
 
     // ============================================================================
@@ -1272,7 +1274,7 @@ public class DisablePhaseHandler : IWeaponPhaseHandler
         controller.RequestClearOnReleaseEffects();
         controller.RequestClearMovementFromOwner();
 
-        controller.UnlockActiveWeaponCommands();
+        controller.UnlockAllCommands();
         controller.RegisterCooldown();
 
         controller.Instance.State.ReadyToRelease = true;

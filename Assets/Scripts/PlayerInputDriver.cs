@@ -136,12 +136,12 @@ public class InputButton
     {
         if (pressedThisFrame && pressedframeCount.CurrentFrame != 0)
         {
-            pressedThisFrame    = false;
+            pressedThisFrame  = false;
         }
 
         if (releasedThisFrame && releasedframeCount.CurrentFrame != 0)
         {
-            releasedThisFrame   = false;
+            releasedThisFrame = false;
         }
 
         if (releasedframeCount.CurrentFrame >= Config.Input.RELEASE_THRESHOLD)
@@ -183,8 +183,8 @@ public class InputButton
     }
     public bool Pressed                     => pressed; 
     public bool Released                    => released; 
-    public bool PressedThisFrame            => PressedThisFrame; 
-    public bool ReleasedThisFrame           => ReleasedThisFrame; 
+    public bool PressedThisFrame            => pressedThisFrame; 
+    public bool ReleasedThisFrame           => releasedThisFrame; 
 
     public FrameWatch PressedframeCount     => pressedframeCount;  
     public FrameWatch ReleasedframeCount    => releasedframeCount; 

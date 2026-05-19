@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 
 public class CommandSystem : ActorService, IServiceTick
 {
 
-    readonly Dictionary<Trigger, Command> commandBuffer  = new();
-    readonly Dictionary<Trigger, Command> pendingBuffer  = new();
+    readonly Dictionary<Trigger, Command> commandBuffer     = new();
+    readonly Dictionary<Trigger, Command> pendingBuffer     = new();
 
     // -----------------------------------
    
@@ -19,9 +20,7 @@ public class CommandSystem : ActorService, IServiceTick
     public CommandSystem(IntentSystem intent) : base(intent.Owner)
     {
         owner.Bus.Link.Local<Message<Request, CommandAPI>>(HandleCommandRequest);
-
         Broadcast();
-        Enable();
     }
 
     // ===============================================================================
@@ -34,6 +33,8 @@ public class CommandSystem : ActorService, IServiceTick
 
     void ProcessQueue()
     {
+        Log.Debug(queue.Count());
+
         foreach(var request in queue)
         {
            Process(request); 
@@ -57,7 +58,12 @@ public class CommandSystem : ActorService, IServiceTick
 
     void MonitorBuffers()
     {
-        if(RemoveExpiredBufferCommands())
+        var changed = false;
+
+        changed |= RemoveExpiredBufferCommands();
+        changed |= RemoveReleasedActiveCommands();
+
+        if (changed)
             Broadcast();
     }
 
@@ -65,13 +71,13 @@ public class CommandSystem : ActorService, IServiceTick
 
     void CreateCommand(CommandAPI request)
     {
+        Log.Debug($"creating command trigger { request.Trigger }");
         var command = new Command()
         {
             Data            = new()
             {
-                Trigger  = IntentMap.Triggers[request.Capability],
+                Trigger     = request.Trigger
             },
-            Configuration   = request.Configuration,
         };
 
         pendingBuffer.Add(command.Data.Trigger, command);
@@ -79,13 +85,13 @@ public class CommandSystem : ActorService, IServiceTick
 
     void ReleaseCommand(CommandAPI request)
     {
-        if (commandBuffer.TryGetValue(IntentMap.Triggers[request.Capability], out var command))
+        if (commandBuffer.TryGetValue(request.Trigger, out var command))
         {
             command.Data.Released       = true;
             command.Data.FrameReleased  = Clock.FrameCount;
         }
 
-        if (pendingBuffer.TryGetValue(IntentMap.Triggers[request.Capability], out var pending))
+        if (pendingBuffer.TryGetValue(request.Trigger, out var pending))
         {
             pending.Data.Released       = true;
             pending.Data.FrameReleased  = Clock.FrameCount;
@@ -98,7 +104,7 @@ public class CommandSystem : ActorService, IServiceTick
             return false;
 
         var toRemove = pendingBuffer.Values
-            .Where(command => !command.Locked && command.Data.Released && command.Data.FrameReleased > Config.Input.BUFFER_WINDOW_FRAMES)
+            .Where(command => !command.Data.Locked && command.Data.Released && (Clock.FrameCount - command.Data.FrameReleased > Config.Input.BUFFER_WINDOW_FRAMES))
             .ToList();
 
         foreach (var command in toRemove)
@@ -107,11 +113,26 @@ public class CommandSystem : ActorService, IServiceTick
         return toRemove.Count > 0;
     }
 
+    bool RemoveReleasedActiveCommands()
+    {
+        if (commandBuffer.Count == 0)
+            return false;
+
+        var toRemove = commandBuffer.Values
+            .Where(command => !command.Data.Locked && command.Data.Released)
+            .ToList();
+
+        foreach (var command in toRemove)
+            commandBuffer.Remove(command.Data.Trigger);
+
+        return toRemove.Count > 0;
+    }
+
     void ConsumeCommand(CommandAPI request)
     {   
         var command  = pendingBuffer.Values.Where(command => command.Data.Trigger == request.Command.Data.Trigger).OrderByDescending(command => command.Data.FrameCreated).First();
 
-        RemoveCommand(command, pendingBuffer);
+        RemoveCommand (command, pendingBuffer);
         PromoteCommand(command, commandBuffer);
     }
 
@@ -122,7 +143,10 @@ public class CommandSystem : ActorService, IServiceTick
 
     void UnlockCommand(CommandAPI request)
     {
-        commandBuffer.FirstOrDefault(entry => entry.Value.RuntimeId == request.Command.RuntimeId).Value.Unlock();
+        var Test = commandBuffer.FirstOrDefault(entry => entry.Value.RuntimeId == request.Command.RuntimeId);
+        Test.Value.Unlock();
+
+        Debug.Log($"Unlock command {Test.Value.Data.Trigger}");
     }
     // ===============================================================================
     //  Events
@@ -130,11 +154,14 @@ public class CommandSystem : ActorService, IServiceTick
 
     void HandleCommandRequest(Message<Request, CommandAPI> message)
     {
-        queue.Append(message.Payload);
+        Debug.Log($"Caught request { message.Payload.Request }");
+        queue.Add(message.Payload);
     }
 
-    void Broadcast() => owner.Bus.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(commandBuffer), Snapshot.ReadOnly(pendingBuffer)));
-
+    void Broadcast()
+    {
+        owner.Bus.Emit.Local(new CommandPipelinesEvent(Snapshot.ReadOnly(commandBuffer), Snapshot.ReadOnly(pendingBuffer)));
+    }
     // ===============================================================================
     //  Helpers
     // ===============================================================================
@@ -151,6 +178,8 @@ public class CommandSystem : ActorService, IServiceTick
 
     // ===============================================================================
 
+    readonly Logger Log = Logging.For(LogSystem.Input);
+
     public UpdatePriority Priority      => ServiceUpdatePriority.CommandSystem;
 }
 
@@ -166,26 +195,16 @@ public class CommandSystem : ActorService, IServiceTick
 
 public class CommandAPI : API
 {
-    public Capability Capability                { get; init; } 
+    public Trigger Trigger                      { get; set;  }
     public Command Command                      { get; set;  }
-
-    public CommandConfiguration Configuration   { get; init; } = new();
-}
-
-public class CommandConfiguration
-{
-    public bool Instance                        { get; init; }
 }
 
 public class Command : Instance
 {
     public CommandData Data                     { get; set; }
-    public CommandConfiguration Configuration   { get; set; }
 
     public void Lock()   => Data.Locked = true;
     public void Unlock() => Data.Locked = false;
-
-    public bool Locked   => Data.Locked;
 }
 
 public class CommandData
@@ -196,7 +215,7 @@ public class CommandData
     public int FrameCreated                     { get; set;  }
     public int FrameReleased                    { get; set;  }
     
-    public bool Locked;
+    public bool Locked                          { get; set;  }
     public bool Released                        { get; set;  }
 
     public CommandData()
@@ -204,37 +223,6 @@ public class CommandData
         FrameCreated = Clock.FrameCount;
     }
 }
-
-
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                  Maps                                                  
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public static partial class IntentMap
-{
-    public static readonly Dictionary<Capability, Trigger> Triggers = new()
-    {
-        { Capability.None,     global::Trigger.None },
-        { Capability.Interact, global::Trigger.Interact },
-        { Capability.Action,   global::Trigger.Action },
-        { Capability.Attack1,  global::Trigger.Attack1 },
-        { Capability.Attack2,  global::Trigger.Attack2 },
-        { Capability.Modifier, global::Trigger.Modifier },
-        { Capability.Dash,     global::Trigger.Dash },
-    };
-
-    public static readonly Dictionary<Trigger, Capability> Capabilities = new()
-    {
-        { global::Trigger.None,       Capability.None },
-        { global::Trigger.Interact,   Capability.Interact },
-        { global::Trigger.Action,     Capability.Action },
-        { global::Trigger.Attack1,    Capability.Attack1 },
-        { global::Trigger.Attack2,    Capability.Attack2 },
-        { global::Trigger.Modifier,   Capability.Modifier },
-        { global::Trigger.Dash,       Capability.Dash },
-    };
-}
-
 
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬

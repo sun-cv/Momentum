@@ -1,190 +1,244 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
 
 public class FacingIntent : ActorService, IServiceTick
 {
+    readonly IntentSystem intent;
 
-    readonly DirectionIntent source;
+    readonly Dictionary<Guid, FacingClaim> claims = new();
+    readonly List<FacingAPI> queue = new();
 
-        // -----------------------------------
+    readonly EffectCache rotationLocks;
 
-    readonly List<FacingAPI> queue                                              = new();
+    Direction facing = new(Vector2.down);
 
-        // -----------------------------------
-
-    readonly List<Priority> tiers                                               = new();
-    readonly Dictionary<Priority, (Guid Claimant, Direction Direction)> claims  = new();
-
-        // -----------------------------------
-
-    readonly EffectCache locks;
-
-        // -----------------------------------
-
-    Direction facing    = new(Vector2.down);
-
-   // ===============================================================================
-
-    public FacingIntent(IntentSystem intent) : base (intent.Owner)
+    public FacingIntent(IntentSystem intent) : base(intent.Owner)
     {
-        source  = intent.Direction;
-        locks   = new(owner.Bus,(effect) => effect is IDisableRotate);
+        this.intent = intent;
 
-        CreateTiers();
+        rotationLocks = new(owner.Bus, effect => effect is IDisableRotate);
+
+        owner.Bus.Link.Local<Message<Request, FacingAPI>>(HandleFacingRequest);
     }
-
-    // ===============================================================================
 
     public void Tick()
     {
-        ProcessClaims();
-        ResolveFacing();
-    }
-
-    void ProcessClaims()
-    {
         ProcessQueue();
+        ResolveFacing();
     }
 
     void ProcessQueue()
     {
         foreach (var request in queue)
         {
-            Process(request); 
-        }
-    }
+            switch (request.Request)
+            {
+                case Request.Claim:
+                    Claim(request);
+                    break;
 
-    void Process(FacingAPI message)
-    {
-        switch(message.Request)
-        {
-            case Request.Claim:     ClaimFacing(message);   break;
-            case Request.Release:   ReleaseFacing(message); break;
+                case Request.Release:
+                    Release(request);
+                    break;
+
+                case Request.Clear:
+                    Clear(request);
+                    break;
+            }
         }
+
+        queue.Clear();
     }
 
     void ResolveFacing()
     {
-        if (ResolveClaimedFacing())
+        var claim = WinningClaim();
+
+        if (claim == null)
             return;
 
-        if (ResolveLockedFacing())
+        var desired = ResolveClaim(claim);
+
+        if (!desired.HasValue)
             return;
 
-        if (ResolveBaseFacing())
+        if (RotationLocked() && !claim.IgnoreRotationLock)
             return;
 
-        if (ResolveDefaultFacing())
-            return;
+        facing = desired;
     }
-    
-    bool ResolveClaimedFacing()
-    {
-        if (claims.Count == 0)
-            return false;
 
-        foreach (var tier in tiers)
+    FacingClaim WinningClaim()
+    {
+        return claims.Values
+            .OrderByDescending(claim => claim.Priority)
+            .ThenByDescending(claim => claim.FrameClaimed)
+            .FirstOrDefault();
+    }
+
+    Direction ResolveClaim(FacingClaim claim)
+    {
+        if (claim.Constraint == DirectionConstraint.Locked && claim.HasLockedFacing)
+            return claim.LockedFacing;
+
+        var resolved = ResolveSource(claim);
+
+        if (claim.Constraint == DirectionConstraint.Locked && resolved.HasValue)
         {
-            if (claims.TryGetValue(tier, out var claim))
-            {
-                facing = claim.Direction;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool ResolveLockedFacing()
-    {
-        return locks.Count > 0;
-    }
-
-    bool ResolveBaseFacing()
-    {
-        if (source.Direction.IsZero)
-            return false;
-
-        if (!source.Direction.IsCardinal)
-            return false;
-
-        bool facingHorizontal = Mathf.Abs(facing.X) > Mathf.Abs(facing.Y);
-
-        if (facingHorizontal)
-        {
-            facing = new Vector2(source.Direction.X > 0 ? 1 : -1, 0);
-            return true;
+            claim.LockedFacing = resolved;
+            claim.HasLockedFacing = true;
         }
 
-        if (!facingHorizontal)
+        return resolved;
+    }
+
+    Direction ResolveSource(FacingClaim claim)
+    {
+        return claim.Mode switch
         {
-            if (source.DiagonalTravel.Duration >= Orientation.GetTurnDelay(facing, source.Direction))
-                facing = new Vector2(source.Direction.X > 0 ? 1 : -1, 0);
+            DirectionMode.Live     => ResolveLiveSource(claim.Source, claim),
+            DirectionMode.Snapshot => ResolveSnapshotSource(claim.Source, claim),
+            _                      => default,
+        };
+    }
+
+    Direction ResolveLiveSource(DirectionSource source, FacingClaim claim)
+    {
+        return source switch
+        {
+            DirectionSource.Aim       => intent.Aiming.Aim,
+            DirectionSource.Direction => intent.Direction.Direction,
+            DirectionSource.Explicit  => claim.Explicit,
+            _                         => default,
+        };
+    }
+
+    Direction ResolveSnapshotSource(DirectionSource source, FacingClaim claim)
+    {
+        return source switch
+        {
+            DirectionSource.Aim       => claim.Snapshot.Aim,
+            DirectionSource.Direction => claim.Snapshot.Direction,
+            DirectionSource.Explicit  => claim.Explicit,
+            _                         => default,
+        };
+    }
+
+    bool RotationLocked()
+    {
+        return rotationLocks.Count > 0;
+    }
+
+    void Claim(FacingAPI request)
+    {
+        if (request.Claimant == Guid.Empty)
+            return;
+
+        if (!claims.TryGetValue(request.Claimant, out var claim))
+        {
+            claim = new FacingClaim(request.Claimant);
+            claims.Add(request.Claimant, claim);
         }
 
-        return true;
+        claim.Apply(request);
     }
 
-    bool ResolveDefaultFacing()
+    void Release(FacingAPI request)
     {
-        if (source.Direction.IsZero)
-            return false;
-
-        facing = source.Direction.Cardinal;
-        return true;
-    }
-    
-    // ===============================================================================
-    //  Helpers
-    // ===============================================================================
-
-
-    void ClaimFacing(FacingAPI request)
-    {
-        claims[request.Priority] = (request.Claimant, request.Facing);
-    }
-
-    void ReleaseFacing(FacingAPI request)
-    {
-        if (!claims.TryGetValue(request.Priority, out var claim))
+        if (request.Claimant == Guid.Empty)
             return;
 
-        if (request.Claimant != claim.Claimant)
-            return;
-
-        claims.Remove(request.Priority);
+        claims.Remove(request.Claimant);
     }
 
-    void CreateTiers()
+    void Clear(FacingAPI request)
     {
-        foreach (Priority tier in Enum.GetValues(typeof(Priority)))
-            tiers.Add(tier);
-
-        tiers.Reverse();
+        claims.Clear();
     }
-    bool IsMovingDiagonal()
+
+    void HandleFacingRequest(Message<Request, FacingAPI> message)
     {
-        return source.Direction.IsDiagonal;
+        queue.Add(message.Payload);
     }
 
-    // ===============================================================================
-
-    public Direction Facing         => facing;
-    public UpdatePriority Priority  => ServiceUpdatePriority.FacingHandler;
-
+    public Direction Facing => facing;
+    public UpdatePriority Priority => ServiceUpdatePriority.FacingHandler;
 }
 
 
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                      Declarations
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+        //                                 Classes                                                    
+        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+public class FacingClaim
+{
+    public Guid Claimant                    { get; }
+
+    public Priority Priority                { get; private set; }
+    public DirectionMode Mode               { get; private set; }
+    public DirectionSource Source           { get; private set; }
+    public DirectionConstraint Constraint   { get; private set; }
+
+    public IntentSnapshot Snapshot          { get; private set; }
+    public Direction Explicit               { get; private set; }
+
+    public bool IgnoreRotationLock          { get; private set; }
+
+    public bool HasLockedFacing             { get; set; }
+    public Direction LockedFacing           { get; set; }
+
+    public int FrameClaimed                 { get; private set; }
+
+    public FacingClaim(Guid claimant)
+    {
+        Claimant = claimant;
+    }
+
+    public void Apply(FacingAPI request)
+    {
+        Priority            = request.Priority;
+        Mode                = request.Mode;
+        Source              = request.Source;
+        Constraint          = request.Constraint;
+        Snapshot            = request.Snapshot;
+        Explicit            = request.Explicit;
+        IgnoreRotationLock  = request.IgnoreRotationLock;
+
+        HasLockedFacing     = false;
+        LockedFacing        = default;
+
+        FrameClaimed        = Clock.FrameCount;
+    }
+}
+
+
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//                                         Events
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 public class FacingAPI : API
 {
     public Guid Claimant                    { get; init; }
-    public Direction Facing                 { get; init; }
-    public Priority Priority                { get; init; }
+    public Priority Priority                { get; init; } = Priority.Default;
 
-    public FacingAPI(Vector2 facing) => Facing = new Direction(facing);
+    public DirectionMode Mode               { get; init; } = DirectionMode.Live;
+    public DirectionSource Source           { get; init; } = DirectionSource.Direction;
+    public DirectionConstraint Constraint   { get; init; } = DirectionConstraint.Free;
+
+    public IntentSnapshot Snapshot          { get; init; }
+    public Direction Explicit               { get; init; }
+
+    public bool IgnoreRotationLock          { get; init; }
+
+    public FacingAPI() {}
 }
 
 

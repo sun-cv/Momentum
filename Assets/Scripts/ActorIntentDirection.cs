@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 
@@ -6,14 +5,11 @@ using UnityEngine;
 public class DirectionIntent : ActorService, IServiceTick, IDirectionSource
 {
 
-    Vector2 rawDirection;
-    
-        // -----------------------------------
-
     readonly TimePredicate diagonalTravel;
 
         // -----------------------------------
 
+    Vector2 rawDirection            = new();
     Direction direction             = new(Vector2.down);
     Direction lastDirection         = new(Vector2.down);
 
@@ -67,9 +63,6 @@ public class DirectionIntent : ActorService, IServiceTick, IDirectionSource
 }
 
 
-
-
-
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                      Declarations
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
@@ -84,25 +77,32 @@ public interface IAimSource
     Direction Aim               { get; }
 }
 
-public interface IDirectionSource
+public interface IDirectionSource 
 {
     Direction Direction         { get; }
     Direction LastDirection     { get; }
 }
 
-public interface IFacingSource
+public interface IOrientationSource : IDirectionSource, IAimSource {}
+
+public enum DirectionMode
 {
-    Direction Facing            { get; }
+    Live,
+    Snapshot,
 }
 
 public enum DirectionSource
 {
     Aim,
-    Facing,
     Direction,
-    LastDirection
+    Explicit,
 }
 
+public enum DirectionConstraint
+{
+    Free,
+    Locked,
+}
 
         // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
         //                                 Structs                                                   
@@ -141,7 +141,6 @@ public readonly struct Direction
 public readonly struct IntentSnapshot : IDirectionSource
 {
     public Direction Aim                { get; init; }
-    public Direction Facing             { get; init; }
     public Direction Direction          { get; init; }
     public Direction LastDirection      { get; init; }
 }

@@ -246,7 +246,6 @@ public readonly struct AnimationControllerEvent : IMessage
 
 public static partial class IntentMap
 {
-
     public static readonly Dictionary<AnimationIntent, Func<AnimationDefinition, AnimationSet>> Animations = new()
     {
         { AnimationIntent.Spawn, definition => definition.Spawn },

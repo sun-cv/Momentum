@@ -58,12 +58,12 @@ public class HeroState : State
 
         // REWORK REQUIRED 
     public Direction Aim                            => intent.Aiming.Aim;
-    public Direction Facing                         => intent.Direction.Facing;
+    public Direction Facing                         => intent.Facing.Facing;
     public Direction Direction                      => intent.Direction.Direction;
     public Direction LastDirection                  => intent.Direction.LastDirection;
 
     public Direction ResolvedAim                    { get {  if (CanRotate) { hasLockedAim       = false; return intent.Aiming.Aim;          }; if (!hasLockedAim)       { cachedLockedAim       = intent.Aiming.Aim;          hasLockedAim       = true; }; return cachedLockedAim;       }}
-    public Direction ResolvedFacing                 { get {  if (CanRotate) { hasLockedFacing    = false; return intent.Direction.Facing;    }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Direction.Facing;    hasLockedFacing    = true; }; return cachedLockedFacing;    }}
+    public Direction ResolvedFacing                 { get {  if (CanRotate) { hasLockedFacing    = false; return intent.Facing.Facing;       }; if (!hasLockedFacing)    { cachedLockedFacing    = intent.Facing.Facing;       hasLockedFacing    = true; }; return cachedLockedFacing;    }}
     public Direction ResolvedDirection              { get {  if (CanRotate) { hasLockedDirection = false; return intent.Direction.Direction; }; if (!hasLockedDirection) { cachedLockedDirection = intent.Direction.Direction; hasLockedDirection = true; }; return cachedLockedDirection; }}
 
     public Vector2 Velocity                         { get => velocity;          set => velocity         = value; }

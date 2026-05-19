@@ -177,6 +177,6 @@ public abstract class ActorService : Service
     // ===============================================================================
     
     public Actor Owner                  => owner;
-    protected override bool AutoEnable  => false;
+    protected override bool AutoEnable => false;
 }
 

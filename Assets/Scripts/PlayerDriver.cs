@@ -6,7 +6,7 @@ using UnityEngine;
 public class PlayerDriver : ActorService, IServiceTick
 {
     readonly InputRouter input;
-    readonly WorldPosition worldPosition;
+    readonly WorldPosition world;
 
     // -----------------------------------
 
@@ -18,6 +18,7 @@ public class PlayerDriver : ActorService, IServiceTick
     public PlayerDriver(Actor owner) : base(owner)
     {
         input = Services.Get<InputRouter>();
+        world = Services.Get<WorldPosition>();
     }
 
     public void Tick()
@@ -30,7 +31,7 @@ public class PlayerDriver : ActorService, IServiceTick
 
     void UpdateAim()
     {
-        aimVector = worldPosition.MouseDirectionFrom(owner.Bridge.View.transform.position);
+        aimVector = world.MouseDirectionFrom(owner.Bridge.View.transform.position);
     }
 
     void UpdateInput()
@@ -48,11 +49,10 @@ public class PlayerDriver : ActorService, IServiceTick
             var command     = new CommandAPI()
             {
                 Request     = Request.Create,
-                Capability      = button.Input,
+                Trigger     = IntentMap.Triggers[button.Input],
             };
 
-            var capability  = IntentMap.Triggers[button.Input];
-            owner.Bus.Emit.Local(command.Request, command); 
+            owner.Bus.Emit.Local<Request, CommandAPI>(command); 
         }
     }
 
@@ -64,11 +64,11 @@ public class PlayerDriver : ActorService, IServiceTick
         {
             var command     = new CommandAPI()
             {
-                Request     = Request.Destroy,
-                Capability  = button.Input,
+                Request     = Request.Release,
+                Trigger     = IntentMap.Triggers[button.Input],
             };
 
-            owner.Bus.Emit.Local(command.Request, command); 
+            owner.Bus.Emit.Local<Request, CommandAPI>(command); 
         };
     }
 
@@ -82,6 +82,8 @@ public class PlayerDriver : ActorService, IServiceTick
         owner.Bus.Emit.Local(new ActorAim(aimVector));
         owner.Bus.Emit.Local(new ActorMovement(movementVector));
     }
+
+    readonly Logger Log = Logging.For(LogSystem.Input);
 
     public UpdatePriority Priority => ServiceUpdatePriority.ActorDriver; 
 }

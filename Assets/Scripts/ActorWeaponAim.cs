@@ -49,14 +49,16 @@ public static class WeaponAimProcessor
         state.AnchorAimAngle  = initialAngle;
     }
 
+
+    // REWORK REQUIRED: Storing aim ? facing - This is replaced because facing resolve moved to intent 
     static IntentSnapshot BuildLiveIntent(Actor owner, IntentSnapshot stored)
     {
         Direction liveAim = ((IAimable)owner).Aim;
+        Direction facing  = ((IOrientable)owner).Facing;
 
         return new IntentSnapshot
         {
-            Aim           = liveAim.HasValue ? liveAim : stored.Facing,
-            Facing        = stored.Facing,
+            Aim           = liveAim.HasValue ? liveAim : facing,
             Direction     = stored.Direction,
             LastDirection = stored.LastDirection,
         };

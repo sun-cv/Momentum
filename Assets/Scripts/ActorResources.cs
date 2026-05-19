@@ -174,7 +174,7 @@ public class ShieldHandler : ActorService, IServiceLoop, IResourceHandler
 
     void OnShieldAlert(float current, float max, float previous, float percent)
     {
-        owner.Bus.Emit.Local(Publish.Changed, new ShieldEvent(owner, current, max, previous, percent));
+        owner.Bus.Emit.Local<Publish, ShieldEvent>(new(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -290,7 +290,7 @@ public class ArmorHandler : ActorService, IServiceLoop, IResourceHandler
 
     void OnArmorAlert(float current, float max, float previous, float percent)
     {
-        owner.Bus.Emit.Local(Publish.Changed, new ArmorEvent(owner, current, max, previous, percent));
+        owner.Bus.Emit.Local<Publish, ArmorEvent>(new(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -560,7 +560,7 @@ public class EnergyHandler : ActorService, IServiceLoop, IResourceHandler
 
     void OnEnergyAlert(float current, float max, float previous, float percent)
     {
-        owner.Bus.Emit.Local(Publish.Changed, new EnergyEvent(owner, current, max, previous, percent));
+        owner.Bus.Emit.Local<Publish, EnergyEvent>(new(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -667,7 +667,7 @@ public class IntegrityHandler : ActorService, IServiceLoop, IResourceHandler
 
     void OnIntegrityAlert(float current, float max, float previous, float percent)
     {
-        owner.Bus.Emit.Local(Publish.Changed, new IntegrityEvent(owner, current, max, previous, percent));
+        owner.Bus.Emit.Local<Publish, IntegrityEvent>(new IntegrityEvent(owner, current, max, previous, percent));
     }
 
     void Queue<T>(T message) where T : IResourceAction
@@ -992,7 +992,7 @@ public class ResourceMonitor
                 Request = Request.Create
             };
 
-            owner.Bus.Emit.Local(API.Request, API);
+            owner.Bus.Emit.Local<Request, EffectAPI>(API);
         }
     }
 

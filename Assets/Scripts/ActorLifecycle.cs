@@ -253,7 +253,7 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
                 Request = Request.Create
             };
 
-            owner.Bus.Emit.Local(API.Request, API);
+            owner.Bus.Emit.Local<Request, EffectAPI>(API);
         }
     }
 

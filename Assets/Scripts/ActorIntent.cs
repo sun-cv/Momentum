@@ -9,14 +9,13 @@ public class IntentSystem : ActorService
     readonly FacingIntent       facing; 
     readonly TargetingSystem    targeting;
     readonly AimingSystem       aiming;
-
     
         // -----------------------------------
 
     public class TargetingSystem
     {
         public TargetingSystem(IntentSystem intent)
-        {
+        {       
 
         }
     }
@@ -49,7 +48,6 @@ public class IntentSystem : ActorService
         return new()
         {
             Aim                 = aiming.Aim,
-            Facing              = facing.Facing,
             Direction           = direction.Direction,
             LastDirection       = direction.LastDirection,
         };

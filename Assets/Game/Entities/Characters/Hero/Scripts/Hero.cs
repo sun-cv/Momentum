@@ -8,6 +8,7 @@ public class Hero : Player, IHero
     //  Systems
     // ===============================================================================
     
+    public PlayerDriver         Driver              { get; private set; }
     public IntentSystem         Intent              { get; private set; }
     public HeroState            State               { get; private set; }
     public ActorStats           Stats               { get; private set; }
@@ -107,6 +108,7 @@ public class Hero : Player, IHero
     {
         Definition  = definition;
 
+        Driver      = new(this);
         Intent      = new(this);
         Stats       = new(this);
         Resource    = new(this);

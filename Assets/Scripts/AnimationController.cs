@@ -78,7 +78,7 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
 
     public void RequestAnimationTrigger(string trigger)
     {
-        animator.SetTrigger(trigger);
+       animator.SetTrigger(trigger);
     }
 
     // ===============================================================================

@@ -182,6 +182,36 @@ public class Logger
         Log(message, LogLevel.Error);
     }
 
+    public void Trace(object value)
+    {
+        Log($"{value}", LogLevel.Debug);
+    }
+
+    public void Debug(object value)
+    {
+        Log($"{value}", LogLevel.Debug);
+    }
+
+    public void Event(object value)
+    {
+        Log($"{value}", LogLevel.Debug);
+    }
+
+    public void Admin(object value)
+    {
+        Log($"{value}", LogLevel.Debug);
+    }
+
+    public void Alert(object value)
+    {
+        Log($"{value}", LogLevel.Debug);
+    }
+
+    public void Error(object value)
+    {
+        Log($"{value}", LogLevel.Debug);
+    }
+
     public void Trace(string tag, Func<object> value, bool clean = false)
     {
         Log(tag, LogLevel.Trace, value, clean);

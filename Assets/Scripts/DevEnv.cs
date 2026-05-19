@@ -45,6 +45,7 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
     public void DebugLogSetup()
     {
         Logging.For(LogSystem.Dev)              .SetLevel(LogLevel.Debug);
+        Logging.For(LogSystem.Input)            .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Engine)           .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Resources)        .SetLevel(LogLevel.Trace);

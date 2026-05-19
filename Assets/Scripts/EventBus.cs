@@ -213,14 +213,14 @@ public class Emit : IDisposable
     //  Public API
     // ===============================================================================
 
-     public void Local<TAction, TPayload>(TAction action, TPayload payload) 
+    public void Local<TAction, TPayload>(TPayload payload)
     {
-        Bus.Raise(new Message<TAction, TPayload>(action, payload));
+        Bus.Raise(new Message<TAction, TPayload>(payload)); 
     }
 
     public void Local<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
     {
-        Bus.Raise(new Message<TAction, TPayload>(id, action, payload));
+        Bus.Raise(new Message<TAction, TPayload>(id, payload));
     }
 
     public void Local<TMessage>(TMessage message) where TMessage : IEvent
@@ -228,14 +228,14 @@ public class Emit : IDisposable
         Bus.Raise(message);
     }
 
-    public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
+    public static void Global<TAction, TPayload>(TPayload payload)
     {
-        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(id, action, payload));
+        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(payload)); 
     }
 
-    public static void Global<TAction, TPayload>(TAction action, TPayload payload) 
+    public static void Global<TAction, TPayload>(Guid id, TAction action, TPayload payload) 
     {
-        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(action, payload));
+        EventBus<Message<TAction, TPayload>>.Raise(new Message<TAction, TPayload>(id, payload));
     }
 
     public static void Global<TMessage>(TMessage message) where TMessage : IEvent
@@ -360,7 +360,7 @@ public class GlobalEventHandler<TResponse> : IDisposable where TResponse : IMess
 
     public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
     {
-        var message = new Message<TAction, TPayload>(id, action, payload);
+        var message = new Message<TAction, TPayload>(id, payload);
         pendingIds.Add(message.Id);
         EventBus<Message<TAction, TPayload>>.Raise(message);
     }
@@ -423,7 +423,7 @@ public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMess
 
     public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
     {
-        var message = new Message<TAction, TPayload>(id, action, payload);
+        var message = new Message<TAction, TPayload>(id, payload);
         pendingIds.Add(message.Id);
         bus.Emit.Local(message);
     }
@@ -461,19 +461,16 @@ public readonly struct Message<TAction, TPayload> : IMessageAPI
 {
     public Guid Id              { get; }
     public TPayload Payload     { get; }
-    public TAction Action       { get; }
 
-    public Message(TAction action, TPayload payload)
+    public Message(TPayload payload)
     {
         Id          = Guid.NewGuid();
-        Action      = action;
         Payload     = payload;
     }
 
-    public Message(Guid id, TAction action, TPayload payload)
+    public Message(Guid id, TPayload payload)
     {
         Id          = id;
-        Action      = action;
         Payload     = payload;
     }
 }
