@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDisposable
 {
-    public enum State { Idle, Loading, Playing, Stopped }
+    public enum State { Idle, Loading, Playing }
 
         // -----------------------------------
 
@@ -62,7 +62,6 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
         stateMachine.Register(State.Idle,       new AnimationIdleState   (stateMachine));
         stateMachine.Register(State.Loading,    new AnimationLoadingState(stateMachine));
         stateMachine.Register(State.Playing,    new AnimationPlayingState(stateMachine));
-        stateMachine.Register(State.Stopped,    new AnimationStoppedState(stateMachine));
         
         stateMachine.Initialize(State.Idle);
     }
@@ -86,7 +85,6 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
     public void Tick()
     {
         ProcessRequests();
-        AdvanceState();
         ProcessState();
         ProcessServices();
     }
@@ -107,22 +105,6 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
     {
         UpdateParameters(loopHandlers);
         DebugLog();
-    }
-
-    // ===============================================================================
-
-    void AdvanceState()
-    {
-        if (pending == null) 
-            return;
-
-        switch (stateMachine.State)
-        {
-            case State.Idle:    stateMachine.TransitionTo(State.Loading);   break;
-            case State.Loading:                                             break;
-            case State.Stopped: stateMachine.TransitionTo(State.Loading);   break;
-            default:            stateMachine.TransitionTo(State.Stopped);   break;
-        }
     }
 
     // ===============================================================================
@@ -151,36 +133,38 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
     {
         switch(request.Request)
         {
-            case Request.Play: RequestPlayAnimation(request); break;
-            case Request.Stop: RequestStopAnimation(request);  break;
+            case Request.Play: PlayAnimationRequest(request); break;
+            case Request.Stop: StopAnimationRequest(request);  break;
         }
     }
         // =================================
         //  Start
         // =================================
 
-    void RequestPlayAnimation(AnimationAPI request)
+    void PlayAnimationRequest(AnimationAPI request)
     {
         if (!CanPlayAnimation(request))
             return;
 
         SetPendingAnimation(request);
+        SetAnimationStateMachine(State.Loading);
     }
 
         // =================================
         //  Stop
         // =================================
 
-    void RequestStopAnimation(AnimationAPI request)
+    void StopAnimationRequest(AnimationAPI request)
     {
         if (!CanStopAnimation(request))
             return;
 
-        stateMachine.TransitionTo(State.Stopped);
+        ReleasePlayback();
+        SetAnimationStateMachine(State.Idle);
     }
 
         // ===================================
-        //  Animation Load
+        //  Load
         // ===================================
 
     public void LoadPlayback()
@@ -238,39 +222,36 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
 
     public void StopPlayback()
     {
-        if (!ResolveAnimationPlayback())
-            return;
-
         ClearAnimatorState();
     }
 
-    bool ResolveAnimationPlayback()
+        // ===================================
+        //  End Playback
+        // ===================================
+
+
+    public void CompletePlayback()
     {
-        if (animation.Settings.HoldOnPlaybackEnd)
+        if (animation.Settings.HoldOnPlaybackEnd || animation.Settings.HoldUntilReleased)
         {
             SetAnimationPlayback(Animation.Playback.Held);
-            return false;
-        }
-    
-        if (animation.Settings.HoldUntilReleased && pending == null)
-        {
-            SetAnimationPlayback(Animation.Playback.Completed);
-            return false;
+            return;
         }
 
-        if (animation.PlaybackTimer.IsFinished)
-        {
-            SetAnimationPlayback(Animation.Playback.Completed);
-            return true;
-        }
+        SetAnimationPlayback(Animation.Playback.Completed);
+        ClearAnimatorState();
+    }
 
-        if (pending != null)
-        {
-            SetAnimationPlayback(Animation.Playback.Interrupted);
-            return true;
-        }
+    public void InterruptPlayback()
+    {
+        SetAnimationPlayback(Animation.Playback.Interrupted);
+        ClearAnimatorState();
+    }
 
-        return true;
+    public void ReleasePlayback()
+    {
+        SetAnimationPlayback(Animation.Playback.Completed);
+        ClearAnimatorState();
     }
 
     // ===================================
@@ -299,6 +280,12 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
         animation.State = state; 
         PublishAnimationState();
     }
+
+    public void SetAnimationStateMachine(State state)
+    {
+        stateMachine.TransitionTo(state);
+    }
+
         // ===================================
         //  Handlers
         // ===================================
@@ -337,14 +324,14 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
         {
             Name            = request.Data.Animation,
             Duration        = duration,
-            Settings        = request.Configuration,
+            Settings        = request.Settings,
             PlaybackTimer   = new(duration),
         };
-    }
+    } 
 
-    void SetPendingAnimation(AnimationAPI request)
+    void SetPendingAnimation(AnimationAPI animation)
     {
-        this.pending = request;
+        pending = animation;
     }
 
     void CacheAnimatorParameters()
@@ -449,6 +436,11 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
         return false;
     }
 
+    public bool HasPendingAnimation() 
+    {
+        return pending != null;
+    }
+
     // ===============================================================================
 
     readonly Logger Log = Logging.For(LogSystem.Animation);
@@ -494,11 +486,11 @@ public class Animation
 {
     public enum Playback { Loading, Playing, Looped, Interrupted, Held, Completed }
 
-    public string Name                  { get; set; }
-    public Playback State               { get; set; }
-    public float Duration               { get; set; }
-    public AnimationConfiguration Settings   { get; set; }
-    public ClockTimer PlaybackTimer     { get; set; }
+    public string Name                      { get; set; }
+    public Playback State                   { get; set; }
+    public float Duration                   { get; set; }
+    public AnimationSettings Settings       { get; set; }
+    public ClockTimer PlaybackTimer         { get; set; }
 }
 
 public class AnimationStateMachine : StateMachine<AnimationController.State>
@@ -598,17 +590,21 @@ public class AnimationPlayingState : AnimationState, IStateHandler
     
     public void Update()
     {
-        
 
         if (!ExitCondition())
             return;
 
-        machine.TransitionTo(AnimationController.State.Stopped);
+        machine.TransitionTo(AnimationController.State.Idle);
     }
     
     public void Exit()
     {
+        if (machine.Controller.HasPendingAnimation())
+            machine.Controller.InterruptPlayback();
+        else
+            machine.Controller.CompletePlayback();
     }
+
     
     bool ExitCondition()
     {
@@ -628,33 +624,3 @@ public class AnimationPlayingState : AnimationState, IStateHandler
     // ===============================================================================
 }
 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-        //                                Stopped 
-        // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class AnimationStoppedState : AnimationState, IStateHandler
-{
-    // ===============================================================================
-
-    public AnimationStoppedState(AnimationStateMachine machine) : base(machine)
-    {
-    }
-
-    // ===============================================================================
-
-    public void Enter()
-    {
-        machine.Controller.StopPlayback();
-    }
-    
-    public void Update()
-    {
-        machine.TransitionTo(AnimationController.State.Idle);
-    }
-    
-    public void Exit()
-    {
-    }
-
-    // ===============================================================================
-}

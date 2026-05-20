@@ -720,7 +720,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
         if (instance.Action.HoldAnimationUntilReleased)
         {
-            API.Configuration.HoldUntilReleased = true;
+            API.Settings.HoldUntilReleased = true;
         }
 
         if (instance.Action.LockAimDuringPlayback)

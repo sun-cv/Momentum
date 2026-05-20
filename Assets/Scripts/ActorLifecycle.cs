@@ -277,7 +277,7 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
         var request = new AnimationAPI(AnimationIntent.Death) 
         {
             Request  = Request.Play,
-            Configuration = new() 
+            Settings = new() 
             { 
                 AllowInterrupt      = false,
             },
@@ -285,7 +285,7 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
         };
 
         if (CanBecomeCorpse())
-            request.Configuration.HoldOnPlaybackEnd = true;
+            request.Settings.HoldOnPlaybackEnd = true;
 
         animationRequestHandler.Forward(request.Id, request.Request, request);
     }

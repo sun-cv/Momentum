@@ -14,7 +14,6 @@ public class CommandSystem : ActorService, IServiceTick
    
     readonly List<CommandAPI> queue                         = new();
 
-
     // ===============================================================================
 
     public CommandSystem(IntentSystem intent) : base(intent.Owner)
@@ -53,6 +52,7 @@ public class CommandSystem : ActorService, IServiceTick
             case Request.Lock:      LockCommand(command);       break;
             case Request.Unlock:    UnlockCommand(command);     break;
         }
+
         Broadcast();
     }
 
@@ -80,7 +80,7 @@ public class CommandSystem : ActorService, IServiceTick
             },
         };
 
-        pendingBuffer.Add(command.Data.Trigger, command);
+        pendingBuffer[command.Data.Trigger] = command;
     }
 
     void ReleaseCommand(CommandAPI request)
@@ -108,7 +108,7 @@ public class CommandSystem : ActorService, IServiceTick
             .ToList();
 
         foreach (var command in toRemove)
-            pendingBuffer.Remove(command.Data.Trigger);
+            RemoveCommand(command, pendingBuffer);
 
         return toRemove.Count > 0;
     }
@@ -119,11 +119,11 @@ public class CommandSystem : ActorService, IServiceTick
             return false;
 
         var toRemove = commandBuffer.Values
-            .Where(command => !command.Data.Locked && command.Data.Released)
+            .Where(command => command.Data.Released && !command.Data.Locked)
             .ToList();
 
         foreach (var command in toRemove)
-            commandBuffer.Remove(command.Data.Trigger);
+            RemoveCommand(command, commandBuffer);
 
         return toRemove.Count > 0;
     }
@@ -143,10 +143,7 @@ public class CommandSystem : ActorService, IServiceTick
 
     void UnlockCommand(CommandAPI request)
     {
-        var Test = commandBuffer.FirstOrDefault(entry => entry.Value.RuntimeId == request.Command.RuntimeId);
-        Test.Value.Unlock();
-
-        Debug.Log($"Unlock command {Test.Value.Data.Trigger}");
+        commandBuffer.FirstOrDefault(entry => entry.Value.RuntimeId == request.Command.RuntimeId).Value.Unlock();
     }
     // ===============================================================================
     //  Events
