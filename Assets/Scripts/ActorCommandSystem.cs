@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 
 
 public class CommandSystem : ActorService, IServiceTick
 {
+
+    readonly IntentSystem Intent;
+
+    // -----------------------------------
 
     readonly Dictionary<Trigger, Command> commandBuffer     = new();
     readonly Dictionary<Trigger, Command> pendingBuffer     = new();
@@ -18,7 +21,10 @@ public class CommandSystem : ActorService, IServiceTick
 
     public CommandSystem(IntentSystem intent) : base(intent.Owner)
     {
+        Intent = intent;
+
         owner.Bus.Link.Local<Message<Request, CommandAPI>>(HandleCommandRequest);
+
         Broadcast();
     }
 
@@ -32,8 +38,6 @@ public class CommandSystem : ActorService, IServiceTick
 
     void ProcessQueue()
     {
-        Log.Debug(queue.Count());
-
         foreach(var request in queue)
         {
            Process(request); 
@@ -71,30 +75,27 @@ public class CommandSystem : ActorService, IServiceTick
 
     void CreateCommand(CommandAPI request)
     {
-        Log.Debug($"creating command trigger { request.Trigger }");
         var command = new Command()
         {
-            Data            = new()
-            {
-                Trigger     = request.Trigger
-            },
+            Trigger     = request.Trigger,
+            Intent      = Intent.Snapshot(),
         };
 
-        pendingBuffer[command.Data.Trigger] = command;
+        pendingBuffer[command.Trigger] = command;
     }
 
     void ReleaseCommand(CommandAPI request)
     {
         if (commandBuffer.TryGetValue(request.Trigger, out var command))
         {
-            command.Data.Released       = true;
-            command.Data.FrameReleased  = Clock.FrameCount;
+            command.Released       = true;
+            command.FrameReleased  = Clock.FrameCount;
         }
 
         if (pendingBuffer.TryGetValue(request.Trigger, out var pending))
         {
-            pending.Data.Released       = true;
-            pending.Data.FrameReleased  = Clock.FrameCount;
+            pending.Released       = true;
+            pending.FrameReleased  = Clock.FrameCount;
         }
     }
 
@@ -104,7 +105,7 @@ public class CommandSystem : ActorService, IServiceTick
             return false;
 
         var toRemove = pendingBuffer.Values
-            .Where(command => !command.Data.Locked && command.Data.Released && (Clock.FrameCount - command.Data.FrameReleased > Config.Input.BUFFER_WINDOW_FRAMES))
+            .Where(command => !command.Locked && command.Released && (Clock.FrameCount - command.FrameReleased > Config.Input.BUFFER_WINDOW_FRAMES))
             .ToList();
 
         foreach (var command in toRemove)
@@ -119,7 +120,7 @@ public class CommandSystem : ActorService, IServiceTick
             return false;
 
         var toRemove = commandBuffer.Values
-            .Where(command => command.Data.Released && !command.Data.Locked)
+            .Where(command => command.Released && !command.Locked)
             .ToList();
 
         foreach (var command in toRemove)
@@ -130,7 +131,7 @@ public class CommandSystem : ActorService, IServiceTick
 
     void ConsumeCommand(CommandAPI request)
     {   
-        var command  = pendingBuffer.Values.Where(command => command.Data.Trigger == request.Command.Data.Trigger).OrderByDescending(command => command.Data.FrameCreated).First();
+        var command  = pendingBuffer.Values.Where(command => command.Trigger == request.Command.Trigger).OrderByDescending(command => command.FrameCreated).First();
 
         RemoveCommand (command, pendingBuffer);
         PromoteCommand(command, commandBuffer);
@@ -151,7 +152,6 @@ public class CommandSystem : ActorService, IServiceTick
 
     void HandleCommandRequest(Message<Request, CommandAPI> message)
     {
-        Debug.Log($"Caught request { message.Payload.Request }");
         queue.Add(message.Payload);
     }
 
@@ -165,12 +165,12 @@ public class CommandSystem : ActorService, IServiceTick
 
     void RemoveCommand(Command command, Dictionary<Trigger, Command> buffer)
     {
-        buffer.Remove(command.Data.Trigger);
+        buffer.Remove(command.Trigger);
     }
 
     void PromoteCommand(Command command, Dictionary<Trigger, Command> buffer)
     {
-        buffer.Add(command.Data.Trigger, command);
+        buffer.Add(command.Trigger, command);
     }
 
     // ===============================================================================
@@ -198,14 +198,6 @@ public class CommandAPI : API
 
 public class Command : Instance
 {
-    public CommandData Data                     { get; set; }
-
-    public void Lock()   => Data.Locked = true;
-    public void Unlock() => Data.Locked = false;
-}
-
-public class CommandData
-{
     public Trigger Trigger                      { get; init; }
     public IntentSnapshot Intent                { get; init; }
 
@@ -215,10 +207,13 @@ public class CommandData
     public bool Locked                          { get; set;  }
     public bool Released                        { get; set;  }
 
-    public CommandData()
+    public Command()
     {
         FrameCreated = Clock.FrameCount;
     }
+
+    public void Lock()   => Locked = true;
+    public void Unlock() => Locked = false;
 }
 
 

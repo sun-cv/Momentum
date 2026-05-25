@@ -190,7 +190,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
         foreach (var command in inputBuffer.Values)
         {
-            var weapon = loadout.GetActionByType(command.Data.Trigger, WeaponType.Interrupt);
+            var weapon = loadout.GetActionByType(command.Trigger, WeaponType.Interrupt);
 
             if (!CanActivateFromInterruptControls(weapon))
                 continue;
@@ -250,7 +250,7 @@ public class WeaponSystem : ActorService, IServiceTick
 
         foreach (var command in inputBuffer.Values)
         {
-            var weapon = loadout.DefaultWeapon(command.Data.Trigger);
+            var weapon = loadout.DefaultWeapon(command.Trigger);
 
             if (!CanActivateFromDefaultControls(weapon))
                 continue;
@@ -384,7 +384,8 @@ public class WeaponSystem : ActorService, IServiceTick
     // ============================================================================
 
     void ResolveCommandActivation()
-    {        
+    {    
+        
         switch (instance.Action.Availability)
         {
             case WeaponAvailability.Default:
@@ -397,13 +398,26 @@ public class WeaponSystem : ActorService, IServiceTick
                 break;  
         }
 
-        StoreAllCommandIDs      (activeBuffer, instance.Action.ActivationTrigger);
-        StoreInputIntentSnapshot(activeBuffer, instance.Action.ActivationTrigger);
+        StoreAllCommandIDs      (inputBuffer, instance.Action.ActivationTrigger);
+        StoreInputIntentSnapshot(inputBuffer, instance.Action.ActivationTrigger);
 
         if (instance.Action.LockTriggerAction)
             LockAllCommands(activeBuffer, instance.Action.ActivationTrigger);
     }
 
+    // IReadOnlyDictionary<Trigger, Command> FindMatchingCommands(IReadOnlyDictionary<Trigger, Command> commands, IEnumerable<Trigger> triggers)
+    // {
+    //     var matches = new Dictionary<Trigger, Command>();
+    //
+    //     foreach( var trigger in triggers)
+    //     {
+    //         if (commands.TryGetValue(trigger, out var command))
+    //             matches[trigger] = command;
+    //     }
+    //
+    //     return matches;
+    // }
+    
     void ConsumeCommand(Command command)
     {
         owner.Bus.Emit.Local<Request, CommandAPI>(new() { Request = Request.Consume, Command = command });
@@ -434,10 +448,15 @@ public class WeaponSystem : ActorService, IServiceTick
 
     void StoreInputIntentSnapshot(IReadOnlyDictionary<Trigger, Command> commands, List<Trigger> actions)
     {
+        Debug.Log("Called store intent");
         foreach (var action in actions)
         {
+            Debug.Log($"Action: {action}");
             if (commands.TryGetValue(action, out var command))
-                instance.State.Intent = command.Data.Intent;
+            {
+                Debug.Log($"Storing intent {command.Intent}");
+                instance.State.Intent = command.Intent;
+            }
         }
     }
 
@@ -610,7 +629,7 @@ public class WeaponSystem : ActorService, IServiceTick
             if (definition.Phase  != instance.State.Phase)
                 continue;
 
-            definition.InputIntent = instance.State.Intent;
+            definition.IntentSnapshot = instance.State.Intent;
 
             owner.Bus.Emit.Local(new MovementEvent(owner, definition));
         }

@@ -281,8 +281,8 @@ public class WeaponState
 
         // -----------------------------------
 
-    public IntentSnapshot Intent           { get; set; }
-    public IntentSnapshot LiveIntent       { get; set; }
+    public IntentSnapshot Intent                { get; set; }
+    public IntentSnapshot LiveIntent            { get; set; }
 
     public float CurrentAimAngle                { get; set; }
     public float TargetAimAngle                 { get; set; }

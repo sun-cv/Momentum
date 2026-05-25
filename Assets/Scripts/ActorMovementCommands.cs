@@ -44,7 +44,7 @@ public class MovementDefinition : Definition
     public WeaponPhase Phase                { get; init; }
 
     // Input
-    public IntentSnapshot InputIntent  { get; set;  }
+    public IntentSnapshot IntentSnapshot    { get; set;  }
 
     // Config
     public int  Scope                       { get; set;  }
@@ -104,15 +104,16 @@ public class DashController : IStateProcessor<Movement, Vector2>, IMovementContr
     public MovementDefinition Definition          { get; init; }
 
     readonly float speed;
-    readonly Vector2 direction;
     readonly FrameTimer timer;
+
+    Vector2 direction;
 
     // ===============================================================================
 
     public DashController(MovementDefinition definition)
     {
         Definition = definition;
-        direction  = Definition.InputIntent.Direction != Vector2.zero ? Definition.InputIntent.Direction.Vector.normalized : Definition.InputIntent.LastDirection.Vector.normalized;
+        direction  = Definition.IntentSnapshot.Direction;
         speed      = Definition.Speed;
         timer      = new FrameTimer(definition.DurationFrames);
     }
@@ -122,6 +123,13 @@ public class DashController : IStateProcessor<Movement, Vector2>, IMovementContr
     public void Enter(Movement controller)
     {
         timer.Start();
+
+        if (controller.Owner is IDirectional actor && direction == Vector2.zero)
+        {
+            Debug.Log("Setting last direction");
+            direction = actor.LastDirection;
+        }
+        Debug.Log($"Dash controller direction {direction.normalized}");
     }
 
     public Vector2 Process(Movement controller)
@@ -162,7 +170,7 @@ public class LungeController : IStateProcessor<Movement, Vector2>, IMovementCont
     public LungeController(MovementDefinition definition)
     {
         Definition  = definition;
-        direction   = Definition.InputIntent.Aim.Vector.normalized;
+        direction   = Definition.IntentSnapshot.Aim.Vector.normalized;
         speed       = Definition.Speed;
         speedCurve  = Definition.SpeedCurve ?? AnimationCurve.EaseInOut(0, 1, 1, 0);
         timer       = new FrameTimer(Definition.DurationFrames);

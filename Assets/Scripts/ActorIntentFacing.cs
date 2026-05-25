@@ -100,9 +100,9 @@ public class FacingIntent : ActorService, IServiceTick
     {
         return claim.Mode switch
         {
-            DirectionMode.Live     => ResolveLiveSource(claim.Source, claim),
-            DirectionMode.Snapshot => ResolveSnapshotSource(claim.Source, claim),
-            _                      => default,
+            DirectionMode.Live          => ResolveLiveSource(claim.Source, claim),
+            DirectionMode.Snapshot      => ResolveSnapshotSource(claim.Source, claim),
+            _                           => default,
         };
     }
 
@@ -110,10 +110,10 @@ public class FacingIntent : ActorService, IServiceTick
     {
         return source switch
         {
-            DirectionSource.Aim       => intent.Aiming.Aim,
-            DirectionSource.Direction => intent.Direction.Direction,
-            DirectionSource.Explicit  => claim.Explicit,
-            _                         => default,
+            DirectionSource.Aim         => intent.Aiming.Aim,
+            DirectionSource.Direction   => intent.Direction.Direction,
+            DirectionSource.Explicit    => claim.Explicit,
+            _                           => default,
         };
     }
 
@@ -121,10 +121,10 @@ public class FacingIntent : ActorService, IServiceTick
     {
         return source switch
         {
-            DirectionSource.Aim       => claim.Snapshot.Aim,
-            DirectionSource.Direction => claim.Snapshot.Direction,
-            DirectionSource.Explicit  => claim.Explicit,
-            _                         => default,
+            DirectionSource.Aim         => claim.Snapshot.Aim,
+            DirectionSource.Direction   => claim.Snapshot.Direction,
+            DirectionSource.Explicit    => claim.Explicit,
+            _                           => default,
         };
     }
 
@@ -237,8 +237,6 @@ public class FacingAPI : API
     public Direction Explicit               { get; init; }
 
     public bool IgnoreRotationLock          { get; init; }
-
-    public FacingAPI() {}
 }
 
 

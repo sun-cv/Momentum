@@ -36,6 +36,7 @@ public class DirectionIntent : ActorService, IServiceTick, IDirectionSource
     void UpdateDirection()
     {
         direction = rawDirection.normalized;
+        Debug.Log(rawDirection.normalized);
     }    
 
     void UpdateLastDirection()
@@ -59,6 +60,7 @@ public class DirectionIntent : ActorService, IServiceTick, IDirectionSource
     public Direction Direction          => direction;
     public Direction LastDirection      => lastDirection;
     public TimePredicate DiagonalTravel => diagonalTravel;
+
     public UpdatePriority Priority      => ServiceUpdatePriority.CommandSystem;
 }
 
@@ -80,7 +82,6 @@ public interface IAimSource
 public interface IDirectionSource 
 {
     Direction Direction         { get; }
-    Direction LastDirection     { get; }
 }
 
 public interface IOrientationSource : IDirectionSource, IAimSource {}
@@ -142,7 +143,6 @@ public readonly struct IntentSnapshot : IDirectionSource
 {
     public Direction Aim                { get; init; }
     public Direction Direction          { get; init; }
-    public Direction LastDirection      { get; init; }
 }
 
 

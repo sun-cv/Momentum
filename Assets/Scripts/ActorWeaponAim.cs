@@ -54,13 +54,13 @@ public static class WeaponAimProcessor
     static IntentSnapshot BuildLiveIntent(Actor owner, IntentSnapshot stored)
     {
         Direction liveAim = ((IAimable)owner).Aim;
-        Direction facing  = ((IOrientable)owner).Facing;
+        // Direction facing  = ((IOrientable)owner).Facing;
 
         return new IntentSnapshot
         {
-            Aim           = liveAim.HasValue ? liveAim : facing,
+            // Aim           = liveAim.HasValue ? liveAim : facing,
+            Aim           = liveAim,
             Direction     = stored.Direction,
-            LastDirection = stored.LastDirection,
         };
     }
 

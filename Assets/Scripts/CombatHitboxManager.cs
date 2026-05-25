@@ -388,6 +388,8 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     Vector2 GetSpawnDirection(HitboxAPI request)
     {
+
+        Debug.Log($"Called get spawn Direction: {request.definition.Direction.Input.Direction.Vector} Aim: {request.definition.Direction.Input.Aim.Vector }");
         return request.definition.Direction.Type switch
         {
             HitboxDirectionSource.Input => request.definition.Direction.Scope switch
@@ -465,7 +467,7 @@ public class HitboxDirectionDefinition : Definition
     public HitboxDirectionSource Type               { get; init; }
     public HitboxDirectionScope Scope               { get; init; }
     public Vector2 Explicit                         { get; set;  }
-    public IntentSnapshot Input                { get; set;  }
+    public IntentSnapshot Input                     { get; set;  }
 
     public HitboxTrackingConstraint Constraint      { get; init; }
 }

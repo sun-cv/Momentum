@@ -45,11 +45,13 @@ public class IntentSystem : ActorService
 
     public IntentSnapshot Snapshot()
     {
+
+        Debug.Log($"Called Snapshot: {direction.Direction.Vector} Aim: {aiming.Aim.Vector}");
+
         return new()
         {
             Aim                 = aiming.Aim,
             Direction           = direction.Direction,
-            LastDirection       = direction.LastDirection,
         };
     }
 
