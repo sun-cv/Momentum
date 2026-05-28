@@ -36,7 +36,6 @@ public class DirectionIntent : ActorService, IServiceTick, IDirectionSource
     void UpdateDirection()
     {
         direction = rawDirection.normalized;
-        Debug.Log(rawDirection.normalized);
     }    
 
     void UpdateLastDirection()
@@ -61,7 +60,7 @@ public class DirectionIntent : ActorService, IServiceTick, IDirectionSource
     public Direction LastDirection      => lastDirection;
     public TimePredicate DiagonalTravel => diagonalTravel;
 
-    public UpdatePriority Priority      => ServiceUpdatePriority.CommandSystem;
+    public UpdatePriority Priority      => ServiceUpdatePriority.IntentSystem;
 }
 
 
