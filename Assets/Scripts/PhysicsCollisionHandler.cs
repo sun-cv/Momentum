@@ -135,11 +135,6 @@ public class CollisionHandler : RegisteredService, IServiceTick
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.CollisionHandler;
 }
 

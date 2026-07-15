@@ -39,18 +39,17 @@ public class MovementDefinition : Definition
 
     public AnimationCurve SpeedCurve        { get; init; }
     public int DurationFrames               { get; init; }
+    
+    public bool LockMovement                { get; init; }
 
     // Source
-    public WeaponPhase Phase                { get; init; }
+    public AbilityPhase EnterPhase          { get; init; }
+    public AbilityPhase ClearPhase          { get; init; }
 
     // Input
     public IntentSnapshot IntentSnapshot    { get; set;  }
 
     // Config
-    public int  Scope                       { get; set;  }
-    public bool PersistPastScope            { get; init; }
-    public bool PersistPastSource           { get; init; }
-
     public ControllerPriority Priority      { get; init; }
 }
 
@@ -110,10 +109,10 @@ public class DashController : IStateProcessor<Movement, Vector2>, IMovementContr
 
     // ===============================================================================
 
-    public DashController(MovementDefinition definition)
+    public DashController(IntentSnapshot intent, MovementDefinition definition)
     {
         Definition = definition;
-        direction  = Definition.IntentSnapshot.Direction;
+        direction  = intent.Direction;
         speed      = Definition.Speed;
         timer      = new FrameTimer(definition.DurationFrames);
     }
@@ -126,10 +125,8 @@ public class DashController : IStateProcessor<Movement, Vector2>, IMovementContr
 
         if (controller.Owner is IDirectional actor && direction == Vector2.zero)
         {
-            Debug.Log("Setting last direction");
             direction = actor.LastDirection;
         }
-        Debug.Log($"Dash controller direction {direction.normalized}");
     }
 
     public Vector2 Process(Movement controller)
@@ -167,10 +164,10 @@ public class LungeController : IStateProcessor<Movement, Vector2>, IMovementCont
 
         // ===============================================================================
 
-    public LungeController(MovementDefinition definition)
+    public LungeController(IntentSnapshot intent, MovementDefinition definition)
     {
         Definition  = definition;
-        direction   = Definition.IntentSnapshot.Aim.Vector.normalized;
+        direction   = intent.Aim.Vector.normalized;
         speed       = Definition.Speed;
         speedCurve  = Definition.SpeedCurve ?? AnimationCurve.EaseInOut(0, 1, 1, 0);
         timer       = new FrameTimer(Definition.DurationFrames);

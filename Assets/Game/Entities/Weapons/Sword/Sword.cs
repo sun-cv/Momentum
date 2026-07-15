@@ -5,384 +5,891 @@ public class Sword : Weapon
 {
     public Sword()
     {
-        SlotType                    = EquipmentSlotType.MainHand;
-        Definition                  = new SwordDefinition(); 
+        SlotType                            = EquipmentSlotType.MainHand;
+        AbilitySet                          = new SwordSet();
+    }
+}
+
+
+[Definition]
+public class SwordSet : AbilitySet
+{
+    public SwordSet()
+    {
+        Name                                = nameof(Sword);
+        Abilities                           = new()
+        {
+            { nameof(SwordStrike),  new SwordStrike()   },
+            { nameof(SwordCleave),  new SwordCleave()   },
+            { nameof(SwordRend),    new SwordRend()     },
+        };
+        Bindings                            = new()
+        {
+            { Trigger.Attack1,      nameof(SwordStrike) }
+        };
+    }
+}
+
+
+[Definition]
+public class SwordStrike : Ability
+{
+    public SwordStrike()
+    {
+        Name                                = nameof(SwordStrike);
+        Lifecycle                           = new()
+        {
+            Triggers                        = new()
+            {
+                                            Trigger.Attack1
+            },
+            Activation                      = AbilityActivation.OnPress,
+        };
+        Permission                          = new()
+        {
+            Phase                           = new()
+            {                
+                {
+                    AbilityPhase.Fire, 
+                    new()
+                    {
+                        CancelableBy        = new()
+                        {
+                                              AbilityTag.Action,
+                                              AbilityTag.Movement
+                        }
+                    }
+                }
+            }
+        };
+        Timing                              = new()
+        {
+            Phase                           = new()
+            {
+                { 
+                    AbilityPhase.Charging, 
+                    new()
+                    {
+                        Frames              = 3,
+                    }
+                },
+                {
+                    AbilityPhase.Fire, 
+                    new()
+                    {
+                        Frames              = 60,
+                        CancelFrameOffset   = 30,
+                    }
+                }
+            },
+            Cooldown                        = new()
+            {
+                {
+                    nameof(SwordStrike),
+                    30
+                }
+            },
+            ControlWindow                   = 60,
+        };
+        Control                             = new()
+        {
+            AddControlOnFire                = new()
+            {
+                nameof(SwordCleave)
+            }
+        };
+        Damage                              = new()
+        {
+            Components                      = new()
+            {
+                new DamageComponent()
+                {
+                    Damage                  = new()
+                    {                    
+                        Amount              = 50,
+                        Element             = DamageElement.Physical,
+                    },
+                    StatusEffects           = new(),
+                },
+            },
+            Forces                          = new()
+            {   
+                new ForceComponent()
+                {
+                    Force                   = new()
+                    {
+                        Magnitude           = 500
+                    }
+                }
+            }
+        };
+        Movement                            = new()
+        {
+            Actions                         = new()
+            {
+                new()
+                {
+                    KinematicAction         = KinematicAction.Lunge,
+                    Speed                   = 5,
+                    SpeedCurve              = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+                    DurationFrames          = 15,
+                    LockMovement            = true,
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Fire,
+                }
+            }
+        };
+        Facing                              = new()
+        {
+            DirectionMode                   = DirectionMode.Snapshot,
+            DirectionSource                 = DirectionSource.Aim,
+            DirectionConstraint             = DirectionConstraint.Locked,
+            EnterPhase                      = AbilityPhase.Fire,
+            ClearPhase                      = AbilityPhase.FireEnd,
+        };
+        Animation                           = new()
+        {
+            Entries                         = new()
+            {
+                new() 
+                {
+                    Animation               = nameof(SwordStrike),
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Disable,
+                    LockAimDuringPlayback   = true,
+                }
+            }
+        };
+        Hitboxes                            = new()
+        {
+            new()
+            {
+                Form                        = new()
+                {
+                    Prefab                  = "HB_SwordSwing",
+                    Offset                  = new(){ x = 0, y = 0 },
+
+                },
+                Behavior                    = new()
+                {
+                    Type                    = HitboxBehavior.Attached,
+                    AllowMultiHit           = false,
+                },
+                Direction                   = new()
+                {
+                    Scope                   = HitboxDirectionScope.Intercardinal
+                },
+                Lifetime                    = new()
+                {
+                    FrameStart              = 1,
+                    FrameEnd                = 20,
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Disable,
+                },
+            },
+        };
     }
 }
 
 [Definition]
-public class SwordDefinition : WeaponDefinition
-{
-    public SwordDefinition()
-    {
-        Name                        = "Sword";
-        actions = new()
-        {
-            { "SwordStrike",        new SwordStrike()   },
-            { "SwordCleave",        new SwordCleave()   },
-            { "SwordRend",          new SwordRend()     },
-        };
-    }
-}
-
-
-public class SwordStrike : DamagingWeapon
-{
-    public SwordStrike()
-    {
-        Name                        = "SwordStrike";
-        DefaultWeapon               = Trigger.Attack1;
-        ActivationTrigger           = new() { Trigger.Attack1 };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.AfterFire;
-        Availability                = WeaponAvailability.Default;
-        AcceptTriggerLockRequests   = true;
-        ChargeTimeFrames            = 3;
-        FireDurationFrames          = 30;
-        ControlWindow               = 0.3f;
-        AddControlOnFire            = new() { "SwordCleave"};
-        LockAimDuringPlayback       = true;
-        Effects = new()
-        {
-            new SwordSwingDisable()
-            {   
-                Name                = "SwordSwingDisable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = false,
-                DurationFrames      = 30,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Attack1 }
-            },
-            
-            new SwordSwingDisable()
-            {
-                Name                = "SwordSwingDisableCancelable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = true,
-                DurationFrames      = 60,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Attack1 }
-            },
-        };
-
-        MovementDefinitions = new()
-        {
-            new()
-            {
-                KinematicAction     = KinematicAction.Lunge,
-                Speed               = 5,
-                SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrames      = 15,
-                PersistPastScope    = true,
-                Phase               = WeaponPhase.Fire,
-                Scope               = (int)WeaponPhase.Fire,
-            }
-        };
-
-        DamageComponents            = new()
-        {
-            new()
-            {
-                Damage              = new()
-                {
-                    Amount          = 50,
-                    Element         = DamageElement.Physical,
-                },
-                StatusEffects       = new(),
-            }
-        };
-
-        ForceComponents             = new()
-        {
-            new()
-            {
-                Force               = new()
-                {
-                    Magnitude       = 500
-                }
-            }
-        };
-
-        Direction = new()
-        {
-                Enabled             = true,
-                Source              = DirectionSource.Aim,
-                SetTrigger          = WeaponPhase.Fire,
-                ClearTrigger        = WeaponPhase.Disable,
-        };
-
-        Hitboxes = new()
-        {
-            new()
-            {
-                Form                = new()
-                {
-                    Prefab          = "HB_SwordSwing",
-                    Offset          = new(){ x = 0, y = 0 },
-
-                },
-                Behavior            = new()
-                {
-                    Type            = HitboxBehavior.Attached,
-                    AllowMultiHit   = false,
-                },
-                Direction           = new()
-                {
-                    Scope           = HitboxDirectionScope.Intercardinal
-                },
-                Lifetime            = new()
-                {
-                    FrameStart      = 1,
-                    FrameEnd        = 20,
-                    Phase           = WeaponPhase.Fire,
-                },
-            },
-        };
-        
-        Animations = new()
-        {
-            OnFire = "SwordStrike",
-        };
-    }
-}
-
-public class SwordCleave : DamagingWeapon
+public class SwordCleave : Ability
 {
     public SwordCleave()
     {
-        Name                        = "SwordCleave";
-        ActivationTrigger           = new() { Trigger.Attack1 };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.AfterFire;
-        Availability                = WeaponAvailability.OnPhase;
-        LockTriggerAction           = true;
-        AcceptTriggerLockRequests   = true;
-        ChargeTimeFrames            = 3;
-        FireDurationFrames          = 30;
-        ControlWindow               = 0.3f;
-        CanCancelDisables           = true;
-        AddControlOnFire            = new() { "SwordRend"};
-        LockAimDuringPlayback       = true;
-        Effects = new()
+        Name                                = nameof(SwordCleave);
+        Lifecycle                           = new()
         {
-            new SwordSwingDisable()
-            {   
-                Name                = "SwordSwingDisable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = false,
-                DurationFrames      = 30,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Attack1 }
+            Triggers                        = new()
+            {
+                                            Trigger.Attack1
             },
-            
-            new SwordSwingDisable()
-            {
-                Name                = "SwordSwingDisableCancelable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = true,
-                DurationFrames      = 60,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Attack1 }
-            },
+            Activation                      = AbilityActivation.OnPress,
         };
-
-        MovementDefinitions = new()
+        Permission                          = new()
         {
-            new()
-            {
-                KinematicAction     = KinematicAction.Lunge,
-                Speed               = 5,
-                SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrames      = 15,
-                PersistPastScope    = true,
-                Phase               = WeaponPhase.Fire,
-                Scope               = (int)WeaponPhase.Fire,
-            }
-        };
-
-        DamageComponents            = new()
-        {
-            new()
-            {
-                Damage              = new()
+            Phase                           = new()
+            {                
                 {
-                    Amount          = 10,
-                    Element         = DamageElement.Physical,
-                },
-                StatusEffects       = new(),
-            }
-        };
-
-        ForceComponents             = new()
-        {
-            new()
-            {
-                Force               = new()
-                {
-                    Magnitude       = 500
+                    AbilityPhase.Fire, 
+                    new()
+                    {
+                        CancelableBy        = new()
+                        {
+                                              AbilityTag.Action,
+                                              AbilityTag.Movement
+                        }
+                    }
                 }
             }
         };
-        Hitboxes = new()
+        Timing                              = new()
+        {
+            Phase                           = new()
+            {
+                { 
+                    AbilityPhase.Charging, 
+                    new()
+                    {
+                        Frames              = 3,
+                    }
+                },
+                {
+                    AbilityPhase.Fire, 
+                    new()
+                    {
+                        Frames              = 60,
+                        CancelFrameOffset   = 30,
+                    }
+                }
+            },
+            ControlWindow                   = 30,
+        };
+        Control                             = new()
+        {
+            AddControlOnFire                = new()
+            {
+                nameof(SwordRend)
+            }
+        };
+        Damage                              = new()
+        {
+            Components                      = new()
+            {
+                new DamageComponent()
+                {
+                    Damage                  = new()
+                    {                    
+                        Amount              = 50,
+                        Element             = DamageElement.Physical,
+                    },
+                    StatusEffects           = new(),
+                },
+            },
+            Forces                          = new()
+            {   
+                new ForceComponent()
+                {
+                    Force                   = new()
+                    {
+                        Magnitude           = 500
+                    }
+                }
+            }
+        };
+        Movement                            = new()
+        {
+            Actions                         = new()
+            {
+                new()
+                {
+                    KinematicAction         = KinematicAction.Lunge,
+                    Speed                   = 5,
+                    SpeedCurve              = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+                    DurationFrames          = 15,
+                    LockMovement            = true,
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Fire,
+                }
+            }
+        };
+        Facing                              = new()
+        {
+            DirectionMode                   = DirectionMode.Snapshot,
+            DirectionSource                 = DirectionSource.Aim,
+            DirectionConstraint             = DirectionConstraint.Locked,
+            EnterPhase                      = AbilityPhase.Fire,
+            ClearPhase                      = AbilityPhase.FireEnd,
+        };
+        Animation                           = new()
+        {
+            Entries                         = new()
+            {
+                new() 
+                {
+                    Animation               = nameof(SwordStrike),
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Disable,
+                    LockAimDuringPlayback   = true,
+                }
+            }
+        };
+        Hitboxes                            = new()
         {
             new()
             {
-                Form                = new()
+                Form                        = new()
                 {
-                    Prefab          = "HB_SwordSwing",
-                    Offset          = new(){ x = 0, y = 0 },
+                    Prefab                  = "HB_SwordSwing",
+                    Offset                  = new(){ x = 0, y = 0 },
 
                 },
-                Behavior            = new()
+                Behavior                    = new()
                 {
-                    Type            = HitboxBehavior.Attached,
-                    AllowMultiHit   = false,
+                    Type                    = HitboxBehavior.Attached,
+                    AllowMultiHit           = false,
                 },
-                Direction           = new()
+                Direction                   = new()
                 {
-                    Scope           = HitboxDirectionScope.Intercardinal
+                    Scope                   = HitboxDirectionScope.Intercardinal
                 },
-                Lifetime            = new()
+                Lifetime                    = new()
                 {
-                    FrameStart      = 1,
-                    FrameEnd        = 20,
-                    Phase           = WeaponPhase.Fire,
+                    FrameStart              = 1,
+                    FrameEnd                = 20,
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Disable,
                 },
             },
-        };
-        Animations = new()
-        {
-            OnFire = "SwordCleave",
         };
     }
 }
 
-public class SwordRend : DamagingWeapon
+[Definition]
+public class SwordRend : Ability
 {
     public SwordRend()
     {
-        Name                        = "SwordRend";
-        ActivationTrigger           = new() { Trigger.Attack1 };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.AfterFire;
-        Availability                = WeaponAvailability.OnPhase;
-        LockTriggerAction           = true;
-        AcceptTriggerLockRequests   = true;
-        ChargeTimeFrames            = 3;
-        FireDurationFrames          = 20;
-        ControlWindow               = 0.3f;
-        CanCancelDisables           = true;
-        ForceReleaseOnSwap          = true;
-        LockAimDuringPlayback       = true;
-        Effects = new()
+        Name                                = nameof(SwordRend);
+        Lifecycle                           = new()
         {
-            new SwordSwingDisable()
-            {   
-                Name                = "SwordSwingDisable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = false,
-                DurationFrames      = 30,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Attack1 }
+            Triggers                        = new()
+            {
+                                            Trigger.Attack1
             },
-            
-            new SwordSwingDisable()
-            {
-                Name                = "SwordSwingDisableCancelable",
-                Trigger             = WeaponPhase.Fire,
-                Cancelable          = true,
-                DurationFrames      = 60,
-                DisableAttack       = true,
-                DisableRotate       = true,
-                DisableMove         = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Attack1 }
-            },
+            Activation                      = AbilityActivation.OnPress,
         };
-
-        MovementDefinitions = new()
+        Permission                          = new()
         {
-            new()
-            {
-                KinematicAction     = KinematicAction.Lunge,
-                Speed               = 5,
-                SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
-                DurationFrames      = 15,
-                PersistPastScope    = true,
-                Phase               = WeaponPhase.Fire,
-                Scope               = (int)WeaponPhase.Fire,
-            }
-        };
-
-        DamageComponents            = new()
-        {
-            new()
-            {
-                Damage              = new()
+            Phase                         = new()
+            {                
                 {
-                    Amount          = 10,
-                    Element         = DamageElement.Physical,
-                },
-                StatusEffects       = new(),
-            }
-        };
-
-        ForceComponents             = new()
-        {
-            new()
-            {
-                Force               = new()
-                {
-                    Magnitude       = 1000
+                    AbilityPhase.Fire, 
+                    new()
+                    {
+                        CancelableBy        = new()
+                        {
+                                              AbilityTag.Action,
+                                              AbilityTag.Movement
+                        }
+                    }
                 }
             }
         };
-
-        Hitboxes = new()
+        Timing                              = new()
         {
-            new()
+            Phase                           = new()
             {
-                Form                = new()
-                {
-                    Prefab          = "HB_SwordSwing",
-                    Offset          = new(){ x = 0, y = 0 },
-
+                { 
+                    AbilityPhase.Charging, 
+                    new()
+                    {
+                        Frames              = 3,
+                    }
                 },
-                Behavior            = new()
                 {
-                    Type            = HitboxBehavior.Attached,
-                    AllowMultiHit   = false,
-                },
-                Direction           = new()
+                    AbilityPhase.Fire, 
+                    new()
+                    {
+                        Frames              = 60,
+                        CancelFrameOffset   = 30,
+                    }
+                }
+            },
+            Cooldown                        = new()
+            {
                 {
-                    Scope           = HitboxDirectionScope.Intercardinal
-                },
-                Lifetime            = new()
-                {
-                    FrameStart      = 1,
-                    FrameEnd        = 20,
-                    Phase           = WeaponPhase.Fire,
+                    nameof(SwordStrike),
+                    60
                 },
             },
         };
-        Animations = new()
+        Control                             = new()
         {
-            OnFire = "SwordRend"
+            BlockedControl                  = new()
+            {
+                nameof(SwordStrike)
+            }
+        };
+        Damage                              = new()
+        {
+            Components                      = new()
+            {
+                new DamageComponent()
+                {
+                    Damage                  = new()
+                    {                    
+                        Amount              = 50,
+                        Element             = DamageElement.Physical,
+                    },
+                    StatusEffects           = new(),
+                },
+            },
+            Forces                          = new()
+            {   
+                new ForceComponent()
+                {
+                    Force                   = new()
+                    {
+                        Magnitude           = 500
+                    }
+                }
+            }
+        };
+        Movement                            = new()
+        {
+            Actions                         = new()
+            {
+                new()
+                {
+                    KinematicAction         = KinematicAction.Lunge,
+                    Speed                   = 5,
+                    SpeedCurve              = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+                    DurationFrames          = 15,
+                    LockMovement            = true,
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Fire,
+                }
+            }
+        };
+        Facing                              = new()
+        {
+            DirectionMode                   = DirectionMode.Snapshot,
+            DirectionSource                 = DirectionSource.Aim,
+            DirectionConstraint             = DirectionConstraint.Locked,
+            EnterPhase                      = AbilityPhase.Fire,
+            ClearPhase                      = AbilityPhase.FireEnd,
+        };
+        Animation                           = new()
+        {
+            Entries                         = new()
+            {
+                new() 
+                {
+                    Animation               = nameof(SwordStrike),
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Disable,
+                    LockAimDuringPlayback   = true,
+                }
+            }
+        };
+        Hitboxes                            = new()
+        {
+            new()
+            {
+                Form                        = new()
+                {
+                    Prefab                  = "HB_SwordSwing",
+                    Offset                  = new(){ x = 0, y = 0 },
+
+                },
+                Behavior                    = new()
+                {
+                    Type                    = HitboxBehavior.Attached,
+                    AllowMultiHit           = false,
+                },
+                Direction                   = new()
+                {
+                    Scope                   = HitboxDirectionScope.Intercardinal
+                },
+                Lifetime                    = new()
+                {
+                    FrameStart              = 1,
+                    FrameEnd                = 20,
+                    EnterPhase              = AbilityPhase.Fire,
+                    ClearPhase              = AbilityPhase.Disable,
+                },
+            },
         };
     }
 }
+
+
+
+
+//
+// public class Sword : Weapon
+// {
+//     public Sword()
+//     {
+//         SlotType                    = EquipmentSlotType.MainHand;
+//         Definition                  = new SwordDefinition(); 
+//     }
+// }
+//
+// [Definition]
+// public class SwordDefinition : WeaponDefinition
+// {
+//     public SwordDefinition()
+//     {
+//         Name                        = "Sword";
+//         actions = new()
+//         {
+//             { "SwordStrike",        new SwordStrike()   },
+//             { "SwordCleave",        new SwordCleave()   },
+//             { "SwordRend",          new SwordRend()     },
+//         };
+//     }
+// }
+//
+//
+// public class SwordStrike : DamagingWeapon
+// {
+//     public SwordStrike()
+//     {
+//         Name                        = "SwordStrike";
+//         DefaultWeapon               = Trigger.Attack1;
+//         ActivationTrigger           = new() { Trigger.Attack1 };
+//         Activation                  = WeaponActivation.OnPress;
+//         Termination                 = WeaponTermination.AfterFire;
+//         Availability                = WeaponAvailability.Default;
+//         AcceptTriggerLockRequests   = true;
+//         ChargeTimeFrames            = 3;
+//         FireDurationFrames          = 30;
+//         ControlWindow               = 0.3f;
+//         AddControlOnFire            = new() { "SwordCleave"};
+//         LockAimDuringPlayback       = true;
+//         Effects = new()
+//         {
+//             new SwordSwingDisable()
+//             {   
+//                 Name                = "SwordSwingDisable",
+//                 Trigger             = WeaponPhase.Fire,
+//                 Cancelable          = false,
+//                 DurationFrames      = 30,
+//                 DisableAttack       = true,
+//                 DisableRotate       = true,
+//                 DisableMove         = true,
+//                 RequestActionLock   = true,
+//                 ActionLocks         = new(){ Trigger.Attack1 }
+//             },
+//             
+//             new SwordSwingDisable()
+//             {
+//                 Name                = "SwordSwingDisableCancelable",
+//                 Trigger             = WeaponPhase.Fire,
+//                 Cancelable          = true,
+//                 DurationFrames      = 60,
+//                 DisableAttack       = true,
+//                 DisableRotate       = true,
+//                 DisableMove         = true,
+//                 RequestActionLock   = true,
+//                 ActionLocks         = new(){ Trigger.Attack1 }
+//             },
+//         };
+//
+//         MovementDefinitions = new()
+//         {
+//             new()
+//             {
+//                 KinematicAction     = KinematicAction.Lunge,
+//                 Speed               = 5,
+//                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+//                 DurationFrames      = 15,
+//                 PersistPastScope    = true,
+//                 Phase               = WeaponPhase.Fire,
+//                 Scope               = (int)WeaponPhase.Fire,
+//             }
+//         };
+//
+//         DamageComponents            = new()
+//         {
+//             new()
+//             {
+//                 Damage              = new()
+//                 {
+//                     Amount          = 50,
+//                     Element         = DamageElement.Physical,
+//                 },
+//                 StatusEffects       = new(),
+//             }
+//         };
+//
+//         ForceComponents             = new()
+//         {
+//             new()
+//             {
+//                 Force               = new()
+//                 {
+//                     Magnitude       = 500
+//                 }
+//             }
+//         };
+//
+//         Direction = new()
+//         {
+//                 Mode                = DirectionMode.Snapshot,
+//                 Source              = DirectionSource.Aim,
+//                 Constraint          = DirectionConstraint.Locked, 
+//                 SetTrigger          = WeaponPhase.Fire,
+//                 ClearTrigger        = WeaponPhase.Disable,
+//         };
+//
+//         Hitboxes = new()
+//         {
+//             new()
+//             {
+//                 Form                = new()
+//                 {
+//                     Prefab          = "HB_SwordSwing",
+//                     Offset          = new(){ x = 0, y = 0 },
+//
+//                 },
+//                 Behavior            = new()
+//                 {
+//                     Type            = HitboxBehavior.Attached,
+//                     AllowMultiHit   = false,
+//                 },
+//                 Direction           = new()
+//                 {
+//                     Scope           = HitboxDirectionScope.Intercardinal
+//                 },
+//                 Lifetime            = new()
+//                 {
+//                     FrameStart      = 1,
+//                     FrameEnd        = 20,
+//                     Phase           = WeaponPhase.Fire,
+//                 },
+//             },
+//         };
+//         
+//         Animations = new()
+//         {
+//             OnFire = "SwordStrike",
+//         };
+//     }
+// }
+//
+// public class SwordCleave : DamagingWeapon
+// {
+//     public SwordCleave()
+//     {
+//         Name                        = "SwordCleave";
+//         ActivationTrigger           = new() { Trigger.Attack1 };
+//         Activation                  = WeaponActivation.OnPress;
+//         Termination                 = WeaponTermination.AfterFire;
+//         Availability                = WeaponAvailability.OnPhase;
+//         LockTriggerAction           = true;
+//         AcceptTriggerLockRequests   = true;
+//         ChargeTimeFrames            = 3;
+//         FireDurationFrames          = 30;
+//         ControlWindow               = 0.3f;
+//         CanCancelDisables           = true;
+//         AddControlOnFire            = new() { "SwordRend"};
+//         LockAimDuringPlayback       = true;
+//         Effects = new()
+//         {
+//             new SwordSwingDisable()
+//             {   
+//                 Name                = "SwordSwingDisable",
+//                 Trigger             = WeaponPhase.Fire,
+//                 Cancelable          = false,
+//                 DurationFrames      = 30,
+//                 DisableAttack       = true,
+//                 DisableRotate       = true,
+//                 DisableMove         = true,
+//                 RequestActionLock   = true,
+//                 ActionLocks         = new(){ Trigger.Attack1 }
+//             },
+//             
+//             new SwordSwingDisable()
+//             {
+//                 Name                = "SwordSwingDisableCancelable",
+//                 Trigger             = WeaponPhase.Fire,
+//                 Cancelable          = true,
+//                 DurationFrames      = 60,
+//                 DisableAttack       = true,
+//                 DisableRotate       = true,
+//                 DisableMove         = true,
+//                 RequestActionLock   = true,
+//                 ActionLocks         = new(){ Trigger.Attack1 }
+//             },
+//         };
+//
+//         MovementDefinitions = new()
+//         {
+//             new()
+//             {
+//                 KinematicAction     = KinematicAction.Lunge,
+//                 Speed               = 5,
+//                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+//                 DurationFrames      = 15,
+//                 PersistPastScope    = true,
+//                 Phase               = WeaponPhase.Fire,
+//                 Scope               = (int)WeaponPhase.Fire,
+//             }
+//         };
+//
+//         DamageComponents            = new()
+//         {
+//             new()
+//             {
+//                 Damage              = new()
+//                 {
+//                     Amount          = 10,
+//                     Element         = DamageElement.Physical,
+//                 },
+//                 StatusEffects       = new(),
+//             }
+//         };
+//
+//         ForceComponents             = new()
+//         {
+//             new()
+//             {
+//                 Force               = new()
+//                 {
+//                     Magnitude       = 500
+//                 }
+//             }
+//         };
+//         Hitboxes = new()
+//         {
+//             new()
+//             {
+//                 Form                = new()
+//                 {
+//                     Prefab          = "HB_SwordSwing",
+//                     Offset          = new(){ x = 0, y = 0 },
+//
+//                 },
+//                 Behavior            = new()
+//                 {
+//                     Type            = HitboxBehavior.Attached,
+//                     AllowMultiHit   = false,
+//                 },
+//                 Direction           = new()
+//                 {
+//                     Scope           = HitboxDirectionScope.Intercardinal
+//                 },
+//                 Lifetime            = new()
+//                 {
+//                     FrameStart      = 1,
+//                     FrameEnd        = 20,
+//                     Phase           = WeaponPhase.Fire,
+//                 },
+//             },
+//         };
+//         Animations = new()
+//         {
+//             OnFire = "SwordCleave",
+//         };
+//     }
+// }
+//
+// public class SwordRend : DamagingWeapon
+// {
+//     public SwordRend()
+//     {
+//         Name                        = "SwordRend";
+//         ActivationTrigger           = new() { Trigger.Attack1 };
+//         Activation                  = WeaponActivation.OnPress;
+//         Termination                 = WeaponTermination.AfterFire;
+//         Availability                = WeaponAvailability.OnPhase;
+//         LockTriggerAction           = true;
+//         AcceptTriggerLockRequests   = true;
+//         ChargeTimeFrames            = 3;
+//         FireDurationFrames          = 20;
+//         ControlWindow               = 0.3f;
+//         CanCancelDisables           = true;
+//         ForceReleaseOnSwap          = true;
+//         LockAimDuringPlayback       = true;
+//         Effects = new()
+//         {
+//             new SwordSwingDisable()
+//             {   
+//                 Name                = "SwordSwingDisable",
+//                 Trigger             = WeaponPhase.Fire,
+//                 Cancelable          = false,
+//                 DurationFrames      = 30,
+//                 DisableAttack       = true,
+//                 DisableRotate       = true,
+//                 DisableMove         = true,
+//                 RequestActionLock   = true,
+//                 ActionLocks         = new(){ Trigger.Attack1 }
+//             },
+//             
+//             new SwordSwingDisable()
+//             {
+//                 Name                = "SwordSwingDisableCancelable",
+//                 Trigger             = WeaponPhase.Fire,
+//                 Cancelable          = true,
+//                 DurationFrames      = 60,
+//                 DisableAttack       = true,
+//                 DisableRotate       = true,
+//                 DisableMove         = true,
+//                 RequestActionLock   = true,
+//                 ActionLocks         = new(){ Trigger.Attack1 }
+//             },
+//         };
+//
+//         MovementDefinitions = new()
+//         {
+//             new()
+//             {
+//                 KinematicAction     = KinematicAction.Lunge,
+//                 Speed               = 5,
+//                 SpeedCurve          = new(new(0f, 1f, 0f, -0.25f), new(1f, .25f, 0f, 0f)),
+//                 DurationFrames      = 15,
+//                 PersistPastScope    = true,
+//                 Phase               = WeaponPhase.Fire,
+//                 Scope               = (int)WeaponPhase.Fire,
+//             }
+//         };
+//
+//         DamageComponents            = new()
+//         {
+//             new()
+//             {
+//                 Damage              = new()
+//                 {
+//                     Amount          = 10,
+//                     Element         = DamageElement.Physical,
+//                 },
+//                 StatusEffects       = new(),
+//             }
+//         };
+//
+//         ForceComponents             = new()
+//         {
+//             new()
+//             {
+//                 Force               = new()
+//                 {
+//                     Magnitude       = 1000
+//                 }
+//             }
+//         };
+//
+//         Hitboxes = new()
+//         {
+//             new()
+//             {
+//                 Form                = new()
+//                 {
+//                     Prefab          = "HB_SwordSwing",
+//                     Offset          = new(){ x = 0, y = 0 },
+//
+//                 },
+//                 Behavior            = new()
+//                 {
+//                     Type            = HitboxBehavior.Attached,
+//                     AllowMultiHit   = false,
+//                 },
+//                 Direction           = new()
+//                 {
+//                     Scope           = HitboxDirectionScope.Intercardinal
+//                 },
+//                 Lifetime            = new()
+//                 {
+//                     FrameStart      = 1,
+//                     FrameEnd        = 20,
+//                     Phase           = WeaponPhase.Fire,
+//                 },
+//             },
+//         };
+//         Animations = new()
+//         {
+//             OnFire = "SwordRend"
+//         };
+//     }
+// }

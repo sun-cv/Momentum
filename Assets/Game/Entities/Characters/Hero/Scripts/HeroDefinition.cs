@@ -53,6 +53,11 @@ public class HeroDefinition : ActorDefinition
             MomentumThreshold       = 0f,
         };
 
+        Behaviour                   = new()
+        {
+            Facing                  = FacingProfile.DelayedTurn,
+        };
+
         Lifecycle                   = new()
         {
             Spawn                   = new()
@@ -84,6 +89,6 @@ public class HeroDefinition : ActorDefinition
             },
             DepthSortingTier        = SortTier.Entity,
         };
-
+    
     }
 }

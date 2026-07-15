@@ -170,7 +170,7 @@ public class CommandSystem : ActorService, IServiceTick
 
     void PromoteCommand(Command command, Dictionary<Trigger, Command> buffer)
     {
-        buffer.Add(command.Trigger, command);
+        buffer[command.Trigger] = command;
     }
 
     // ===============================================================================

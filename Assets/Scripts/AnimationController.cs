@@ -159,7 +159,6 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
         if (!CanStopAnimation(request))
             return;
 
-        ReleasePlayback();
         SetAnimationStateMachine(State.Idle);
     }
 
@@ -245,12 +244,6 @@ public class AnimationController : ActorService, IServiceTick, IServiceLoop, IDi
     public void InterruptPlayback()
     {
         SetAnimationPlayback(Animation.Playback.Interrupted);
-        ClearAnimatorState();
-    }
-
-    public void ReleasePlayback()
-    {
-        SetAnimationPlayback(Animation.Playback.Completed);
         ClearAnimatorState();
     }
 
@@ -599,10 +592,10 @@ public class AnimationPlayingState : AnimationState, IStateHandler
     
     public void Exit()
     {
-        if (machine.Controller.HasPendingAnimation())
-            machine.Controller.InterruptPlayback();
-        else
+        if (ExitCondition())
             machine.Controller.CompletePlayback();
+        else
+            machine.Controller.InterruptPlayback();
     }
 
     

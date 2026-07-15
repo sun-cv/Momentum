@@ -179,10 +179,6 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
     readonly IMortal            mortal;
     readonly ActorDefinition    definition;
 
-        // -----------------------------------
-
-    readonly LocalEventHandler<Message<Response, AnimationAPI>> animationRequestHandler;
-
     // ===============================================================================
 
     public LifecycleDyingState(LifecycleStateMachine machine) : base(machine)
@@ -192,9 +188,8 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
         this.mortal     = machine.Controller.Owner as IMortal;
         this.definition = machine.Controller.Owner.Definition;
 
-        animationRequestHandler = new(owner.Bus, HandleAnimationAPI);
-
         owner.Bus.Link.Local<AnimationEvent>(HandleAnimatorEvent);
+        owner.Bus.Link.Local<Message<Response, AnimationAPI>>(HandleAnimationAPI);
     }
     
     // ===============================================================================
@@ -274,7 +269,7 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
 
     void RequestDeathAnimation()
     {
-        var request = new AnimationAPI(AnimationIntent.Death) 
+        var API = new AnimationAPI(AnimationIntent.Death) 
         {
             Request  = Request.Play,
             Settings = new() 
@@ -285,9 +280,9 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
         };
 
         if (CanBecomeCorpse())
-            request.Settings.HoldOnPlaybackEnd = true;
+            API.Settings.HoldOnPlaybackEnd = true;
 
-        animationRequestHandler.Forward(request.Id, request.Request, request);
+        owner.Bus.Emit.Local<Request, AnimationAPI>(API);
     }
 
     void HandleAnimationAPI(Message<Response, AnimationAPI> response)
@@ -307,7 +302,6 @@ public class LifecycleDyingState : LifecycleState, IStateHandler
 
         if (machine.Controller.Context.Corpse.DeathAnimation.Data.Animation == animation.Name)
         {
-            Debug.Log("Transition dead..");
             machine.TransitionTo(Lifecycle.State.Dead);
         }
     }

@@ -75,7 +75,7 @@ public class InputDriver : RegisteredService, IServiceTick, IInitialize, IDispos
 
     // ===============================================================================
 
-    public override void Dispose()
+    protected override void OnDispose()
     {
         input?.Player.Disable();
         input?.Disable();

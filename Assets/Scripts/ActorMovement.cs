@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -21,6 +22,7 @@ public class Movement : ActorService, IServiceTick
         // -----------------------------------
 
     readonly List<MovementDirective> directives = new();
+    readonly List<Guid> movementLocks           = new();
 
         // -----------------------------------
 
@@ -47,8 +49,8 @@ public class Movement : ActorService, IServiceTick
 
         modifierHandler     = new(this.agent);
 
-        owner.Bus.Link.Local<MovementEvent>          (HandleMovementDirective);
-        owner.Bus.Link.Local<ClearMovementScopeEvent>(HandleMovementClear);
+        owner.Bus.Link.Local<MovementEvent>     (HandleMovementDirective);
+        owner.Bus.Link.Local<ClearMovementEvent>(HandleMovementClear);
 
         SetSpeed();
         SetMass();
@@ -59,6 +61,7 @@ public class Movement : ActorService, IServiceTick
     public void Tick()
     {
         ProcessDirectives();
+        ProcessMovementLocks();
 
         CalculateModifier();
         CalculateVelocity();
@@ -71,19 +74,6 @@ public class Movement : ActorService, IServiceTick
 
     // ===============================================================================
 
-
-    void AddDirective(object source, MovementDefinition definition)
-    {
-        var controller = CreateController(definition);
-
-        if (controller == null)
-            return;
-
-        controller.Enter(this);
-        
-        directives.Add(new() { Owner = source, Definition = definition, Controller = controller });
-    }
-
     void ProcessDirectives()
     {
         var expired = AllDisabledDirectives();
@@ -95,26 +85,43 @@ public class Movement : ActorService, IServiceTick
         }
     }
 
-    void RemoveDirective(object source, int scope)
+    void ProcessMovementLocks()
     {
-        var expired = AllScopeDirectives(source, scope);
 
-        foreach (var directive in expired)
+        
+        if (!movable.LockMovement && movementLocks.Count > 0)
         {
-            directive.Controller.Exit(this);
-            directives.Remove(directive);
+            movable.LockMovement    = true;
+            return;
+        }
+
+        if (movable.LockMovement && movementLocks.Count == 0)
+        {
+            movable.LockMovement    = false;
+            return;        
         }
     }
 
-    void RemoveAllDirectives(object source)
+    void AddDirective(object source, IntentSnapshot intent, MovementDefinition definition)
     {
-        var expired = AllSourceDirectives(source);
+        var controller = CreateController(intent, definition);
 
-        foreach (var directive in expired)
-        {
-            directive.Controller.Exit(this);
-            directives.Remove(directive);
-        }
+        if (controller == null)
+            return;
+
+        controller.Enter(this);
+        
+        directives.Add(new() { Owner = source, Definition = definition, Controller = controller });
+    }
+    void RemoveDirective(MovementDefinition definition)
+    {
+        int index = directives.FindIndex(directive => directive.Definition == definition);
+
+        if (index < 0)
+            return;
+
+        directives[index].Controller.Exit(this);
+        directives.RemoveAt(index);
     }
 
         // ===================================
@@ -170,6 +177,18 @@ public class Movement : ActorService, IServiceTick
         return result;
     }
 
+    void AddMovementLock(Instance owner, MovementDefinition definition)
+    {
+        if (definition.LockMovement)
+            movementLocks.Add(owner.RuntimeId);
+    }
+
+    void RemoveMovementLock(Instance owner, MovementDefinition definition)
+    {
+        if (definition.LockMovement)
+           movementLocks.Remove(owner.RuntimeId); 
+    }
+
         // ===================================
         //  Execution
         // ===================================
@@ -197,21 +216,14 @@ public class Movement : ActorService, IServiceTick
 
     void HandleMovementDirective(MovementEvent message)
     {
-        AddDirective(message.Owner, message.Definition);
+        AddDirective(message.Owner, message.Intent, message.Definition);
+        AddMovementLock(message.Owner, message.Definition);
     }
 
-    void HandleMovementClear(ClearMovementScopeEvent message)
-    {;
-        switch (message.Type, message)
-        {
-            case (Request.Clear, { Owner: not null, Scope: not -1 }):
-                RemoveDirective(message.Owner, message.Scope);
-                break;
-
-            case (Request.Clear, { Owner: not null }):
-                RemoveAllDirectives(message.Owner);
-                break;
-        }
+    void HandleMovementClear(ClearMovementEvent message)
+    {
+        RemoveDirective(message.Definition);
+        RemoveMovementLock(message.Owner, message.Definition);
     }
 
     // ===============================================================================
@@ -225,17 +237,15 @@ public class Movement : ActorService, IServiceTick
     //  Helpers
     // ===============================================================================
 
-    void SetSpeed() => speed = movable.Speed;
-    void SetMass()  => mass  = movable.Mass;
+    void SetSpeed()         => speed = movable.Speed;
+    void SetMass()          => mass  = movable.Mass;
 
 
-    List<MovementDirective> AllDisabledDirectives()                         => directives.Where(directive => !directive.Controller.Active).ToList();
-    List<MovementDirective> AllScopeDirectives(object source, int scope)    => directives.Where(directive => directive.Owner == source && directive.Definition.Scope == scope && !directive.Definition.PersistPastScope).ToList();
-    List<MovementDirective> AllSourceDirectives(object source)              => directives.Where(directive => directive.Owner == source && !directive.Definition.PersistPastSource).ToList();
+    List<MovementDirective> AllDisabledDirectives() => directives.Where(directive => !directive.Controller.Active).ToList();
 
-    IMovementController CreateController(MovementDefinition definition)
+    IMovementController CreateController(IntentSnapshot intent, MovementDefinition definition)
     {
-        return MovementControllerFactory.CreateController(agent, definition);
+        return MovementControllerFactory.CreateController(agent, intent, definition);
     }
 
     // ===============================================================================
@@ -246,6 +256,7 @@ public class Movement : ActorService, IServiceTick
     {
         Log.Debug("Movement.Control",   () => control);
         Log.Debug("Movement.Modifier",  () => modifier);
+        Log.Debug("Movement.Locked",    () =>  $"{!movable.CanMove}");
         Log.Trace("Effect.Active",      () => $"{string.Join(", ", modifierHandler.Cache.Instances.Select(instance => instance.Effect.Name))}");
         Log.Trace("Effect.Cache",       () => modifierHandler.Cache.Instances.Count);
         Log.Trace("Directive.Count",    () => directives.Count);
@@ -267,27 +278,27 @@ public class Movement : ActorService, IServiceTick
 
 public readonly struct MovementEvent : IMessage
 {
-    public readonly object Owner                    { get; init; }
+    public readonly Instance Owner                  { get; init; }
     public readonly MovementDefinition Definition   { get; init; }
+    public readonly IntentSnapshot Intent           { get; init; }
 
-    public MovementEvent(object owner, MovementDefinition definition)
+    public MovementEvent(Instance owner, MovementDefinition definition, IntentSnapshot intent)
     {
         Owner       = owner;
         Definition  = definition;
+        Intent      = intent;
     }
 }
 
-public readonly struct ClearMovementScopeEvent : IMessage
+public readonly struct ClearMovementEvent : IMessage
 {
-    public readonly object Owner                { get; init; }
-    public readonly int Scope                   { get; init; }
-    public readonly Request Type                { get; init; }
+    public readonly Instance Owner                  { get; init; }
+    public readonly MovementDefinition Definition   { get; init; }
 
-    public ClearMovementScopeEvent(Request type, object owner, int scope)
+    public ClearMovementEvent(Instance owner, MovementDefinition definition)
     {
-        Owner   = owner;
-        Scope   = scope;
-        Type    = type;
+        Owner       = owner;
+        Definition  = definition;        
     }
 }
 
@@ -298,15 +309,15 @@ public readonly struct ClearMovementScopeEvent : IMessage
 
 public static class MovementControllerFactory
 {
-    public static IMovementController CreateController(Agent agent, MovementDefinition definition)
+    public static IMovementController CreateController(Agent agent, IntentSnapshot intent, MovementDefinition definition)
     {
         return (definition.KinematicAction, agent)switch
         {
             (KinematicAction.Dash, IMovableActor) =>
-                new DashController(definition),
+                new DashController(intent, definition),
 
             (KinematicAction.Lunge, IMovableActor) => 
-                new LungeController(definition),
+                new LungeController(intent, definition),
 
             _ => null
         };

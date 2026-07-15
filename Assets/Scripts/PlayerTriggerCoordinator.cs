@@ -56,11 +56,6 @@ public class TriggerCoordinator : RegisteredService, IServiceTick, IInitialize
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        // NO OP;
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.TriggerCoordinator;
 }
 

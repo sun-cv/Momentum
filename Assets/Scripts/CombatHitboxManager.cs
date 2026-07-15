@@ -143,13 +143,13 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     void CreateHitbox(HitboxAPI request)
     {
-        request.owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+        request.Owner.Bridge.View.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 
         Vector2 intentVector        = GetSpawnDirection(request);
         Quaternion intentRotation   = Orientation.ToRotation(intentVector);
-        Vector3 spawnPosition       = position + (intentRotation * request.definition.Form.Offset);
+        Vector3 spawnPosition       = position + (intentRotation * request.Definition.Form.Offset);
 
-        var prefab                  = Assets.Get(request.definition.Form.Prefab);
+        var prefab                  = Assets.Get(request.Definition.Form.Prefab);
         var hitbox                  = UnityEngine.Object.Instantiate(prefab, spawnPosition, intentRotation);
 
         var instance                = CreateInstance(request);
@@ -164,7 +164,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
         activeHitboxes.Add(instance.RuntimeId, instance);
 
-        request.hitboxId            = instance.RuntimeId;
+        request.HitboxId            = instance.RuntimeId;
         request.Response            = Response.Success;
 
         PublishHitbox(request);
@@ -174,9 +174,9 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     {
         HitboxInstance instance = new()
         {
-            Owner       = request.owner,
-            Definition  = request.definition,
-            Packages    = request.packages,
+            Owner       = request.Owner,
+            Definition  = request.Definition,
+            Packages    = request.Packages,
         };
 
         return instance;
@@ -227,7 +227,7 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     void ProcessDestroyRequest(HitboxAPI request)
     {
-        var hitboxId = request.hitboxId;
+        var hitboxId = request.HitboxId;
 
         if (ShouldProcessDestructionRequest(hitboxId))
             DestroyHitbox(hitboxId);
@@ -388,18 +388,16 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
 
     Vector2 GetSpawnDirection(HitboxAPI request)
     {
-
-        Debug.Log($"Called get spawn Direction: {request.definition.Direction.Input.Direction.Vector} Aim: {request.definition.Direction.Input.Aim.Vector }");
-        return request.definition.Direction.Type switch
+        return request.Definition.Direction.Type switch
         {
-            HitboxDirectionSource.Input => request.definition.Direction.Scope switch
+            HitboxDirectionSource.Input         => request.Definition.Direction.Scope switch
             {
-                HitboxDirectionScope.Cardinal => request.definition.Direction.Input.Aim.Cardinal,
-                HitboxDirectionScope.Intercardinal => request.definition.Direction.Input.Aim.Intercardinal,
-                _ => request.definition.Direction.Input.Aim.Intercardinal
+                HitboxDirectionScope.Cardinal       => request.Intent.Aim.Cardinal,
+                HitboxDirectionScope.Intercardinal  => request.Intent.Aim.Intercardinal,
+                _ => request.Intent.Aim.Intercardinal
             },
-            HitboxDirectionSource.Explicit => request.definition.Direction.Explicit,
-            HitboxDirectionSource.OwnerFacing => request.owner is IOrientable instance ? instance.Facing : Vector2.right,
+            HitboxDirectionSource.Explicit      => request.Definition.Direction.Explicit,
+            HitboxDirectionSource.OwnerFacing   => request.Owner is IOrientable instance ? instance.Facing : Vector2.right,
             _ => Vector2.right
         };
     }
@@ -411,11 +409,6 @@ public class HitboxManager : RegisteredService, IServiceTick, IInitialize
     void DebugLog()
     {
         Log.Trace("Active", () => activeHitboxes.Count);
-    }
-
-    public override void Dispose()
-    {
-        // NO OP;
     }
 
     public UpdatePriority Priority => ServiceUpdatePriority.HitboxManager;
@@ -439,6 +432,7 @@ public class HitboxDefinition : Definition
     public HitboxBehaviorDefinition Behavior        { get; init; }
     public HitboxDirectionDefinition Direction      { get; init; }
     public HitboxLifetimeDefinition Lifetime        { get; init; }
+    public IntentSnapshot Input                     { get; set;  }
 }
 
 public class HitboxFormDefinition : Definition
@@ -467,7 +461,6 @@ public class HitboxDirectionDefinition : Definition
     public HitboxDirectionSource Type               { get; init; }
     public HitboxDirectionScope Scope               { get; init; }
     public Vector2 Explicit                         { get; set;  }
-    public IntentSnapshot Input                     { get; set;  }
 
     public HitboxTrackingConstraint Constraint      { get; init; }
 }
@@ -480,7 +473,8 @@ public class HitboxLifetimeDefinition : Definition
     public int FrameEnd                             { get; init; }
     public bool PersistPastSource                   { get; init; }
 
-    public WeaponPhase Phase                        { get; init; }
+    public AbilityPhase EnterPhase                  { get; init; }
+    public AbilityPhase ClearPhase                  { get; init; }
 
     public Func<Actor, bool> ConditionalRelease     { get; init; }
 }
@@ -558,16 +552,16 @@ public enum HitboxTrackingConstraint
 
 public class HitboxAPI : API
 {
-    public Actor owner;
-    public Guid hitboxId;
-    public HitboxDefinition definition;
-    public List<object> packages;
+    public Actor Owner                          { get; set; }
+    public Guid HitboxId                        { get; set; }
+    public HitboxDefinition Definition          { get; set; }
+    public IntentSnapshot Intent                { get; set; }
+    public List<object> Packages                { get; set; } = new();
 
-    public HitboxAPI(Actor owner, HitboxDefinition definition, List<object> packages)
+    public HitboxAPI(Actor owner, HitboxDefinition definition)
     {
-        this.owner      = owner;
-        this.definition = definition;
-        this.packages   = packages ?? new();
+        this.Owner      = owner;
+        this.Definition = definition;
     }
 }
 

@@ -161,7 +161,7 @@ public class CameraRig : RegisteredService, IServiceTick, IServiceLate, IInitial
     
     readonly Logger Log = Logging.For(LogSystem.Camera);
 
-    public override void Dispose()
+    protected override void OnDispose()
     {
         foreach (var behavior in cameraBehaviors.Values)
         {

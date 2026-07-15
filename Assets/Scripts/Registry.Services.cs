@@ -205,11 +205,6 @@ public static class Services
 
     // ===============================================================================
 
-        public override void Dispose()
-        {
-            // NO OP;
-        }
-
         public UpdatePriority Priority => ServiceUpdatePriority.Services;
     }
 

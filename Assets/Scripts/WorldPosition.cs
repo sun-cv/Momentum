@@ -48,7 +48,7 @@ public class WorldPosition : RegisteredService, IBind
         InputRouter     = Services.Get<InputRouter>();
     }
 
-    public override void Dispose()
+    protected override void OnDispose()
     {
         Camera      = null;
         InputRouter = null;

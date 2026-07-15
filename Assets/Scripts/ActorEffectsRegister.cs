@@ -89,7 +89,6 @@ public class EffectRegister : ActorService, IServiceTick
         instance.OnClear   += () => owner.Bus.Emit.Local(new EffectEvent(instance));
         instance.OnCancel  += () => owner.Bus.Emit.Local(new EffectEvent(instance));
         
-        RegisterTriggerLock(instance);
         RegisterDebugLog(instance);
         
         instance.OnClear   += () => effects.Remove(instance);
@@ -98,26 +97,6 @@ public class EffectRegister : ActorService, IServiceTick
         effects.Add(instance);
         instance.Initialize();
     }
-
-    void RegisterTriggerLock(EffectInstance instance)
-    {
-        if (instance.Effect is not IActionLock effect)
-            return;
-
-        if (effect.ActionLocks == null)
-            return;
-
-        if (!effect.RequestActionLock)
-            return; 
-            
-        foreach (var action in effect.ActionLocks)
-        {
-            instance.OnApply   += () => owner.Bus.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Lock));
-            instance.OnClear   += () => owner.Bus.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
-            instance.OnCancel  += () => owner.Bus.Emit.Local(new LockEvent(action, instance.Effect.Name, Request.Unlock));
-        }
-    }
-
 
     void RegisterDebugLog(EffectInstance instance)
     {

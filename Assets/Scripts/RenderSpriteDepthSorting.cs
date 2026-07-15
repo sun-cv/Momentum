@@ -87,7 +87,7 @@ public class DepthCollisionSystem : RegisteredService, IServiceStep, IBind
         RefreshRegistrations();
     }
 
-    public override void Dispose()
+    protected override void OnDispose()
     {
         trackedSprites.Clear();
     }

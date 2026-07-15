@@ -39,11 +39,6 @@ public class Timers : RegisteredService, IServiceTick
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        // NO OP;
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.TimerManager;
 }
 

@@ -111,11 +111,6 @@ public class EquipmentManager : ActorService
         Log.Debug("Offhand",   () => slots[EquipmentSlotType.OffHand]?.Equipped    );
         Log.Debug("Dash",      () => slots[EquipmentSlotType.Dash]?.Equipped       );
     }
-
-    public override void Dispose()
-    {
-        // NO OP   
-    }
 }
 
 

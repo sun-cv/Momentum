@@ -2,6 +2,16 @@
 # **Notes**
 
 
+> ## **Ability System Rework**
+>
+- Full rebuild: `WeaponSystem` → `AbilitySystem`, `WeaponAction` → `Ability` (definition), `WeaponInstance` → `AbilityInstance` (runtime). No seam, port weapons then delete old.
+- Lanes for concurrency: start with Action + Movement. One ability per lane, lanes run concurrently. Defense/parry stays in Action for now.
+- `WeaponType` (Root/Combo/Interrupt) → rename `AbilityRole`; fold `Interrupt` into the cancel contract (leaves Root/Combo).
+- Cancel contract = per-phase windows on the ability: permit-set (default `{Any}`) + outcome `Abort` (pre-commit charge) vs `Truncate` (post-commit anim-cancel). Cross-lane activation queries the held ability's window.
+- Default mapping moves to the ability *set* (`Trigger → default Ability`), not self-declared on the ability. Retire `Availability.Default`; keep `OnPhase`/`OnHeld` on the ability.
+- Facing claims key off the `AbilityInstance` (lane-ready), not a global weapon.
+- Added `AbilityPhase.Release`. `DisablePhaseHandler` sets Release phase; checks become "are we in Release phase?" instead of `ReadyToRelease`. Tidier.
+
 
 
 
@@ -9,6 +19,7 @@
 > ## **To be fixed**
 >
 Update weapon system with new registration for state handlers 
+Review the `UpdatePriority` list once the ability system is updated.
 
 > ## **Rework Required**
 >

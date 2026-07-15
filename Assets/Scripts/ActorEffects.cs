@@ -28,9 +28,6 @@ public interface IDisableRotate             { public bool DisableRotate         
 public interface ICancelable                { public bool Cancelable                { get; init; }}
 public interface ICancelableOnRelease       { public bool CancelOnRelease           { get; init; }}
 
-public interface IActionLock                { public bool RequestActionLock         { get; init; } 
-                                              public List<Trigger> ActionLocks   { get; init; }}
-
 public interface IModifyFloat               { public float Modifier                 { get; init; }}
 public interface IModifyTarget              { public float ModifyTarget             { get; init; }}
 public interface IModifySpeed               { public float ModifySpeed              { get; init; }}
@@ -88,7 +85,7 @@ public class IFrictionEffect : Effect, IFriction
     public float Friction                       { get; init;}
 }
 
-public class SwordSwingDisable : Effect, ICancelable, ITrigger, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove, IActionLock
+public class SwordSwingDisable : Effect, ICancelable, ITrigger, IDurationFrames, IDisableAttack, IDisableRotate, IDisableMove
 {
     public WeaponPhase Trigger                  { get; init; }
     public bool Cancelable                      { get; init; }
@@ -163,7 +160,7 @@ public class ShieldMobility : Effect, ICancelable, IType, ITrigger, IDurationFra
     public float ModifyDurationFrames           { get; init; }
 }
 
-public class DashDisable : Effect, ICancelable, IDurationFrames, IDisableRules, IActionLock
+public class DashDisable : Effect, ICancelable, IDurationFrames, IDisableRules
 {
     public bool Cancelable                      { get; init; }
 

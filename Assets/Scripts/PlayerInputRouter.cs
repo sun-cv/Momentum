@@ -116,7 +116,7 @@ public class InputRouter : RegisteredService, IServiceTick, IInitialize, IDispos
     // ===============================================================================
 
 
-    public override void Dispose()
+    protected override void OnDispose()
     {
         EventBus<InteractPress>     .Unsubscribe(interactPress);  
         EventBus<InteractRelease>   .Unsubscribe(interactRelease);  

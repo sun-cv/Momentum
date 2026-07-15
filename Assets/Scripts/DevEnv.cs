@@ -13,9 +13,10 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
     {
         hero = Factories.Get<HeroFactory>().Spawn(Vector3.zero);
         Hero = hero as Hero;
+
         hero.Bus.Emit.Local(new EquipEvent(hero, new Sword()) );
-        hero.Bus.Emit.Local(new EquipEvent(hero, new Shield()));
-        hero.Bus.Emit.Local(new EquipEvent(hero, new Dash())  );
+        // hero.Bus.Emit.Local(new EquipEvent(hero, new Shield()));
+        // hero.Bus.Emit.Local(new EquipEvent(hero, new Dash())  );
 
         Services.Get<CameraRig>().SetCameraTarget(new ActorCameraTarget(hero));
         Services.Get<CameraRig>().ActivateBehavior(CameraBehavior.MouseOffset);
@@ -50,7 +51,7 @@ public class DevEnv : RegisteredService, IServiceTick, IServiceLoop, IInitialize
         Logging.For(LogSystem.Actors)           .SetLevel(LogLevel.Debug);
         Logging.For(LogSystem.Resources)        .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Equipment)        .SetLevel(LogLevel.Debug);
-        Logging.For(LogSystem.Weapons)          .SetLevel(LogLevel.Trace);
+        Logging.For(LogSystem.Ability)          .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Animation)        .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Movement)         .SetLevel(LogLevel.Trace);
         Logging.For(LogSystem.Hitboxes)         .SetLevel(LogLevel.Debug);

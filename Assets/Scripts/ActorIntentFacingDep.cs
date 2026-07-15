@@ -36,7 +36,7 @@
 //
 //    // ===============================================================================
 //
-//     public FacingIntent(IntentSystem intent) : base (intent.Owner)
+//     public FacingIntentDep(IntentSystem intent) : base (intent.Owner)
 //     {
 //         this.intent  = intent;
 //         locks   = new(owner.Bus,(effect) => effect is IDisableRotate);

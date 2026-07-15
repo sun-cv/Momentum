@@ -76,7 +76,7 @@ public class SpawnPoint         : Zone          { public Spawner Spawner        
 public class AudioPoint         : Zone          {}
 public class CameraPoint        : Zone          {}
 
-public class Entity             : Runtime       {}
+public class Entity             : Instance      {}
 public class Actor              : Entity        { 
                                                   public Bus    Bus                     { get; set;  }  = new();
                                                   public Bridge Bridge                  { get; set;  }
@@ -100,7 +100,7 @@ public class Hazard             : Environmental {}
 public class Item               : Entity        {}
 
 public class Equipment          : Item          { public EquipmentSlotType SlotType     { get; init; }}
-public class Weapon             : Equipment     { public WeaponDefinition Definition    { get; init; }}
+public class Weapon             : Equipment     { public AbilitySet AbilitySet          { get; init; }}
 public class Armor              : Equipment     { public ArmorDefinition Definition     { get; init; }}
 
 
@@ -210,10 +210,12 @@ public interface IEnergyRegen
 
 public interface IMovable           
 {           
-    bool CanMove                            { get; }
     float Speed                             { get; }
     float SpeedMultiplier                   { get; }
+
+    bool CanMove                            { get; }
     bool IsMoving                           { get; }
+    bool LockMovement                       { get; set; }
     bool Disabled                           { get; }
 }           
 
@@ -315,7 +317,7 @@ public interface IHero :
     // Core
     IMovableActor, IPhysicsBody,
     // Combat
-    IAttacker, IParryable, IBlockable, IAimable, IShieldEquipped,
+    IAttacker, IParryable, IBlockable, IAimable,/*  IShieldEquipped, */
     // Resources
     IHealthRegen, IShield, IShieldRegen, IArmor, IEnergy, IEnergyRegen,
     // Status

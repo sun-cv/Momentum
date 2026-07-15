@@ -91,7 +91,7 @@ public static class ServiceUpdatePriority
     public static UpdatePriority DirectionHandler           = new(UpdatePhase.Logic,    21);
     public static UpdatePriority FacingHandler              = new(UpdatePhase.Logic,    22);
     public static UpdatePriority CommandSystem              = new(UpdatePhase.Logic,    23);
-    public static UpdatePriority InputIntent                = new(UpdatePhase.Logic,    24);
+    public static UpdatePriority AbilitySystem              = new(UpdatePhase.Logic,    24);
     public static UpdatePriority WeaponLogic                = new(UpdatePhase.Logic,    30);
     public static UpdatePriority EffectRegister             = new(UpdatePhase.Logic,    35);
 

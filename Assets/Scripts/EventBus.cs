@@ -324,133 +324,133 @@ public class Link
 }
 
 
-
-
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//                                       Utilities
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-public class GlobalEventHandler<TResponse> : IDisposable where TResponse : IMessageAPI
-{
-    
-    readonly Action<TResponse> onResponse;
-
-        // -----------------------------------
-
-    readonly HashSet<Guid>  pendingIds = new();
-    readonly EventBinding<TResponse> binding;
-
-    // ===============================================================================
-
-    public GlobalEventHandler(Action<TResponse> onResponse)
-    {
-        this.onResponse = onResponse;
-
-        binding = Link.Global<TResponse>(Receive);
-    }
-
-    // ===============================================================================
-    //  Public API
-    // ===============================================================================
-
-    public void Send<TAction, TPayload>(TAction action, TPayload payload) where TPayload : Payload
-    {
-        Forward(payload.Id, action, payload);
-    }
-
-    public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
-    {
-        var message = new Message<TAction, TPayload>(id, payload);
-        pendingIds.Add(message.Id);
-        EventBus<Message<TAction, TPayload>>.Raise(message);
-    }
-
-    void Receive(TResponse response)
-    {
-        if (!pendingIds.Remove(response.Id))
-            return;
-
-        onResponse(response);
-    }
-
-    public void Clear()
-    {
-        pendingIds.Clear();
-    }
-
-    public void Dispose()
-    {
-        Link.UnsubscribeGlobal(binding);
-    }
-
-    // ===============================================================================
-
-    public int PendingCount => pendingIds.Count;
-}
-
-
-public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMessageAPI
-{
-    readonly Bus bus;
-
-        // -----------------------------------
-
-    readonly Action<TResponse> onResponse;
-
-        // -----------------------------------
-
-    readonly HashSet<Guid> pendingIds = new();
-    readonly EventBinding<TResponse> binding;
-
-    // ===============================================================================
-
-    public LocalEventHandler(Bus bus, Action<TResponse> onResponse)
-    {
-        this.bus = bus;
-        this.onResponse = onResponse;
-        
-        binding = bus.Link.Local<TResponse>(Receive);
-    }
-
-    // ===============================================================================
-    //  Public API
-    // ===============================================================================
-
-    public void Send<TAction, TPayload>(TAction action, TPayload payload) where TPayload : Payload
-    {
-        Forward(payload.Id, action, payload);
-    }
-
-    public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
-    {
-        var message = new Message<TAction, TPayload>(id, payload);
-        pendingIds.Add(message.Id);
-        bus.Emit.Local(message);
-    }
-
-    void Receive(TResponse response)
-    {
-        if (!pendingIds.Remove(response.Id))
-            return;
-
-        onResponse(response);
-    }
-
-    public void Clear()
-    {
-        pendingIds.Clear();
-    }
-
-    public void Dispose()
-    {
-        bus.Link.UnsubscribeLocal(binding);
-    }
-    
-    // ===============================================================================
-
-    public int PendingCount => pendingIds.Count;
-}
-
+//
+//
+// // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+// //                                       Utilities
+// // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//
+// public class GlobalEventHandler<TResponse> : IDisposable where TResponse : IMessageAPI
+// {
+//     
+//     readonly Action<TResponse> onResponse;
+//
+//         // -----------------------------------
+//
+//     readonly HashSet<Guid>  pendingIds = new();
+//     readonly EventBinding<TResponse> binding;
+//
+//     // ===============================================================================
+//
+//     public GlobalEventHandler(Action<TResponse> onResponse)
+//     {
+//         this.onResponse = onResponse;
+//
+//         binding = Link.Global<TResponse>(Receive);
+//     }
+//
+//     // ===============================================================================
+//     //  Public API
+//     // ===============================================================================
+//
+//     public void Send<TAction, TPayload>(TAction action, TPayload payload) where TPayload : Payload
+//     {
+//         Forward(payload.Id, action, payload);
+//     }
+//
+//     public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
+//     {
+//         var message = new Message<TAction, TPayload>(id, payload);
+//         pendingIds.Add(message.Id);
+//         EventBus<Message<TAction, TPayload>>.Raise(message);
+//     }
+//
+//     void Receive(TResponse response)
+//     {
+//         if (!pendingIds.Remove(response.Id))
+//             return;
+//
+//         onResponse(response);
+//     }
+//
+//     public void Clear()
+//     {
+//         pendingIds.Clear();
+//     }
+//
+//     public void Dispose()
+//     {
+//         Link.UnsubscribeGlobal(binding);
+//     }
+//
+//     // ===============================================================================
+//
+//     public int PendingCount => pendingIds.Count;
+// }
+//
+//
+// public class LocalEventHandler<TResponse> : IDisposable  where TResponse : IMessageAPI
+// {
+//     readonly Bus bus;
+//
+//         // -----------------------------------
+//
+//     readonly Action<TResponse> onResponse;
+//
+//         // -----------------------------------
+//
+//     readonly HashSet<Guid> pendingIds = new();
+//     readonly EventBinding<TResponse> binding;
+//
+//     // ===============================================================================
+//
+//     public LocalEventHandler(Bus bus, Action<TResponse> onResponse)
+//     {
+//         this.bus = bus;
+//         this.onResponse = onResponse;
+//         
+//         binding = bus.Link.Local<TResponse>(Receive);
+//     }
+//
+//     // ===============================================================================
+//     //  Public API
+//     // ===============================================================================
+//
+//     public void Send<TAction, TPayload>(TAction action, TPayload payload) where TPayload : Payload
+//     {
+//         Forward(payload.Id, action, payload);
+//     }
+//
+//     public void Forward<TAction, TPayload>(Guid id, TAction action, TPayload payload)
+//     {
+//         var message = new Message<TAction, TPayload>(id, payload);
+//         pendingIds.Add(message.Id);
+//         bus.Emit.Local(message);
+//     }
+//
+//     void Receive(TResponse response)
+//     {
+//         if (!pendingIds.Remove(response.Id))
+//             return;
+//
+//         onResponse(response);
+//     }
+//
+//     public void Clear()
+//     {
+//         pendingIds.Clear();
+//     }
+//
+//     public void Dispose()
+//     {
+//         bus.Link.UnsubscribeLocal(binding);
+//     }
+//     
+//     // ===============================================================================
+//
+//     public int PendingCount => pendingIds.Count;
+// }
+//
 
 // ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 //                                         Events

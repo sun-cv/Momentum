@@ -120,7 +120,7 @@ public class SpawnerService : RegisteredService, IServiceLoop
 
     readonly EventBinding<TeleportEvent> binding;
 
-    public override void Dispose()
+    protected override void OnDispose()
     {
         Services.Lane.Deregister(this);
         

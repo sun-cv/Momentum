@@ -60,6 +60,8 @@ public class MovableDummy : Agent, IMovableDummy
     public Vector2 Normal                           { get; set; }
     public Vector2 Force                            { get; set; }
 
+    public bool LockMovement                        { get; set; }
+
     public bool IsMoving                            { get; set; }
     public TimePredicate IsIdle                     { get; set; }
 

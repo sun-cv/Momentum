@@ -1,71 +1,71 @@
 
 
-
-public class Dash : Weapon
-{
-    public Dash()
-    {
-        SlotType                    = EquipmentSlotType.Dash;
-        Definition                  = new DashDefinition(); 
-    }
-}
-
-
-[Definition]
-public class DashDefinition : WeaponDefinition
-{
-
-    public DashDefinition()
-    {
-        Name                        = "BaseDash";
-        actions = new()
-        {
-            { "BaseDash",           new BaseDash()   },
-        };
-    }
-}
-
-// ============================================================================
-// DASH
-// ============================================================================
-
-public class BaseDash : MovementWeapon
-{
-    public BaseDash()
-    {
-        Name                        = "Dash";
-        DefaultWeapon               = Trigger.Dash;
-        Type                        = WeaponType.Interrupt;
-        ActivationTrigger           = new() { Trigger.Dash };
-        Activation                  = WeaponActivation.OnPress;
-        Termination                 = WeaponTermination.AfterFire;
-        Availability                = WeaponAvailability.Default;
-        AcceptTriggerLockRequests   = true;
-        ChargeTimeFrames            = 3;
-        FireDurationFrames          = 20;
-        Cooldown                    = 0.5f;
-        CanCancelDisables           = true;
-        Effects = new()
-        {
-            new DashDisable()
-            {   
-                Name                = "DashDisable",
-                Cancelable          = false,
-                DurationFrames      = 20,
-                DisableRotate       = true,
-                DisableMove         = true,
-                DisableAttack       = true,
-                RequestActionLock   = true,
-                ActionLocks         = new(){ Trigger.Dash }
-            },
-
-            new DashForceImmunity()
-            {
-                Name                = "DashForceImmunity",
-                DurationFrames      = 45,
-                ImmuneToForce       = true,
-            },
-
+//
+// public class Dash : Weapon
+// {
+//     public Dash()
+//     {
+//         SlotType                    = EquipmentSlotType.Dash;
+//         Definition                  = new DashDefinition(); 
+//     }
+// }
+//
+//
+// [Definition]
+// public class DashDefinition : WeaponDefinition
+// {
+//
+//     public DashDefinition()
+//     {
+//         Name                        = "BaseDash";
+//         actions = new()
+//         {
+//             { "BaseDash",           new BaseDash()   },
+//         };
+//     }
+// }
+//
+// // ============================================================================
+// // DASH
+// // ============================================================================
+//
+// public class BaseDash : MovementWeapon
+// {
+//     public BaseDash()
+//     {
+//         Name                        = "Dash";
+//         DefaultWeapon               = Trigger.Dash;
+//         Type                        = WeaponType.Interrupt;
+//         ActivationTrigger           = new() { Trigger.Dash };
+//         Activation                  = WeaponActivation.OnPress;
+//         Termination                 = WeaponTermination.AfterFire;
+//         Availability                = WeaponAvailability.Default;
+//         AcceptTriggerLockRequests   = true;
+//         ChargeTimeFrames            = 3;
+//         FireDurationFrames          = 20;
+//         Cooldown                    = 0.5f;
+//         CanCancelDisables           = true;
+//         Effects = new()
+        // {
+        //     new DashDisable()
+        //     {   
+        //         Name                = "DashDisable",
+        //         Cancelable          = false,
+        //         DurationFrames      = 20,
+        //         DisableRotate       = true,
+        //         DisableMove         = true,
+        //         DisableAttack       = true,
+        //         RequestActionLock   = true,
+        //         ActionLocks         = new(){ Trigger.Dash }
+        //     },
+        //
+        //     new DashForceImmunity()
+        //     {
+        //         Name                = "DashForceImmunity",
+        //         DurationFrames      = 45,
+        //         ImmuneToForce       = true,
+        //     },
+        //
             // new WeaponMobility()
             // {
             //     Trigger             = WeaponPhase.FireEnd,
@@ -77,24 +77,24 @@ public class BaseDash : MovementWeapon
             //     ModifyTarget        = .2f,
             //     ModifyTimespan      = .25f,
             // },
-        };
-
-        MovementDefinitions = new()
-        {
-            new()
-            {
-                KinematicAction     = KinematicAction.Dash,
-                Phase               = WeaponPhase.Fire,
-                Scope               = (int)WeaponPhase.Fire,
-                Speed               = 35.5f,
-                DurationFrames      = 10,
-                PersistPastScope    = true,
-                ExitSpeed           = 0f,
-            }
-        };
-    }
-}
-
+//         };
+//
+//         MovementDefinitions = new()
+//         {
+//             new()
+//             {
+//                 KinematicAction     = KinematicAction.Dash,
+//                 Phase               = WeaponPhase.Fire,
+//                 Scope               = (int)WeaponPhase.Fire,
+//                 Speed               = 35.5f,
+//                 DurationFrames      = 10,
+//                 PersistPastScope    = true,
+//                 ExitSpeed           = 0f,
+//             }
+//         };
+//     }
+// }
+//
 
 
 // public class BaseDash : MovementWeapon

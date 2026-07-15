@@ -28,6 +28,10 @@ public class HeroState : State
 
     bool constrained            = false;
 
+    bool lockMovement           = false;
+    bool lockAttack             = false;
+    bool lockRotation           = false;
+
     Vector2 velocity            = Vector2.zero;
     Vector2 force               = Vector2.zero;
     Vector2 control             = Vector2.zero;
@@ -47,14 +51,17 @@ public class HeroState : State
     public bool Blocking                            => effects.Has<ShieldBlockWindow>((effect) => effect is not null);
 
     public bool Disabled                            => Inactive || Stunned; // || other cc 
-    public bool Stunned                             { get => effects.Has<IStunned>(effect => effect.Stunned,        defaultValue: stunned); set => stunned = value; }
+    public bool Stunned                             { get => effects.Has<IStunned>(effect => effect.Stunned,    defaultValue: stunned); set => stunned = value; }
 
     public bool Constrained                         { get => constrained;       set => constrained      = value; }
 
-    public bool CanMove                             => effects.Can<IDisableMove>  (effect => effect.DisableMove,   defaultValue: !Disabled); 
-    public bool CanAttack                           => effects.Can<IDisableAttack>(effect => effect.DisableAttack, defaultValue: !Disabled); 
-    public bool CanRotate                           => effects.Can<IDisableRotate>(effect => effect.DisableRotate, defaultValue: !Disabled); 
+    public bool CanMove                             => !Disabled && !LockMovement;
+    public bool CanAttack                           => !Disabled && !LockAttack;
+    public bool CanRotate                           => !Disabled && !LockRotation;
    
+    public bool LockMovement                        { get => lockMovement;      set => lockMovement   = value; }
+    public bool LockAttack                          { get => lockAttack;        set => lockAttack     = value; }
+    public bool LockRotation                        { get => lockRotation;      set => lockRotation   = value; }
 
         // REWORK REQUIRED 
     public Direction Aim                            => intent.Aiming.Aim;

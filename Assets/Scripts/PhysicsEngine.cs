@@ -39,11 +39,6 @@ public class PhysicsEngine : RegisteredService, IServiceTick, IInitialize
 
     // ===============================================================================
 
-    public override void Dispose()
-    {   
-        Services.Lane.Deregister(this);
-    }
-
     public UpdatePriority Priority => ServiceUpdatePriority.PhysicsEngine;
 }
 

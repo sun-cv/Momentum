@@ -14,7 +14,7 @@ public class Hero : Player, IHero
     public ActorStats           Stats               { get; private set; }
     public Resources            Resource            { get; private set; }
     public EquipmentManager     Equipment           { get; private set; }
-    public WeaponSystem         Weapons             { get; private set; }
+    public AbilitySystem        Abilities           { get; private set; }
     public Movement             Movement            { get; private set; }
     public EffectRegister       Effects             { get; private set; }
     public Presence             Presence            { get; private set; }
@@ -57,9 +57,9 @@ public class Hero : Player, IHero
     //  State
     // ===============================================================================
 
-    public bool Inactive                            { get => State.Inactive;            set => State.Inactive       = value;}
-    public bool Invulnerable                        { get => State.Invulnerable;        set => State.Invulnerable   = value;}
-    public bool Impervious                          { get => State.Impervious;          set => State.Impervious     = value;}
+    public bool Inactive                            { get => State.Inactive;            set => State.Inactive       = value; }
+    public bool Invulnerable                        { get => State.Invulnerable;        set => State.Invulnerable   = value; }
+    public bool Impervious                          { get => State.Impervious;          set => State.Impervious     = value; }
 
     public bool ImmuneToForce                       => State.ImmuneToForce;
 
@@ -67,9 +67,9 @@ public class Hero : Player, IHero
     public bool Dead                                => State.Dead;
     
     public bool Disabled                            => State.Disabled;
-    public bool Stunned                             { get => State.Stunned;             set => State.Stunned        = value;}
+    public bool Stunned                             { get => State.Stunned;             set => State.Stunned        = value; }
 
-    public bool Constrained                         { get => State.Constrained;         set => State.Constrained    = value;}
+    public bool Constrained                         { get => State.Constrained;         set => State.Constrained    = value; }
 
     public TimePredicate Parrying                   => State.Parrying;
     public bool Blocking                            => State.Blocking;
@@ -77,6 +77,8 @@ public class Hero : Player, IHero
     public bool CanMove                             => State.CanMove;
     public bool CanRotate                           => State.CanRotate; 
     public bool CanAttack                           => State.CanAttack;
+
+    public bool LockMovement                        { get => State.LockMovement;        set => State.LockMovement   = value; }
 
     public Direction Aim                            => State.Aim;
     public Direction Facing                         => State.Facing;
@@ -92,10 +94,10 @@ public class Hero : Player, IHero
 
     public Vector2 Momentum                         => State.Momentum;
 
-    public Vector2 Velocity                         { get => State.Velocity;            set => State.Velocity       = value;}
-    public Vector2 Control                          { get => State.Control;             set => State.Control        = value;}
-    public Vector2 Force                            { get => State.Force;               set => State.Force          = value;}
-    public Vector2 Normal                           { get => State.Normal;              set => State.Normal         = value;}
+    public Vector2 Velocity                         { get => State.Velocity;            set => State.Velocity       = value; }
+    public Vector2 Control                          { get => State.Control;             set => State.Control        = value; }
+    public Vector2 Force                            { get => State.Force;               set => State.Force          = value; }
+    public Vector2 Normal                           { get => State.Normal;              set => State.Normal         = value; }
 
     public bool IsMoving                            => State.IsMoving;
     public TimePredicate IsIdle                     => State.IsIdle;
@@ -113,7 +115,7 @@ public class Hero : Player, IHero
         Stats       = new(this);
         Resource    = new(this);
         Equipment   = new(this);
-        Weapons     = new(this);
+        Abilities   = new(this);
         Movement    = new(this);
         Effects     = new(this);
         Presence    = new(this);

@@ -93,7 +93,7 @@ public abstract class Service : IService
         OnPassive();
     }
 
-    protected virtual void Absent()
+    protected void Absent()
     { 
         if (!enabled) return;
             
@@ -123,7 +123,7 @@ public abstract class Service : IService
 
     // ===============================================================================
 
-    public virtual void Dispose()
+    public void Dispose()
     {
         Disable();
         Services.Lane.Deregister(this);
@@ -177,6 +177,6 @@ public abstract class ActorService : Service
     // ===============================================================================
     
     public Actor Owner                  => owner;
-    protected override bool AutoEnable => false;
+    protected override bool AutoEnable  => false;
 }
 

@@ -12,13 +12,6 @@ public class LoggingSystem : RegisteredService, IServiceUtil
 
     // ===============================================================================
 
-    public override void Dispose()
-    {
-        Services.Lane.Deregister(this);
-    }
-
-    // ===============================================================================
-
     public UpdatePriority Priority  => ServiceUpdatePriority.LoggingSystem;
 }
 
@@ -304,7 +297,7 @@ public enum LogSystem
     Teleport,
     
     // Combat & Equipment
-    Weapons,
+    Ability,
     Hitboxes,
     Equipment,
     Combat,

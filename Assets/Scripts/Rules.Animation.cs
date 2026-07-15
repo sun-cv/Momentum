@@ -122,12 +122,6 @@ public class AnimatorParameter
                 Float(ResolvedCardinalAimY, snapshot.Aim.Cardinal.y),
             }
         },
-        // { typeof(IMovableActor), snapshot => new[]
-        //     {
-        //         Float(ResolvedFacingX, snapshot.Facing.X),
-        //         Float(ResolvedFacingY, snapshot.Facing.Y),
-        //     }
-        // },
     };
 }
 

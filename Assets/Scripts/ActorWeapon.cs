@@ -9,8 +9,6 @@ public class WeaponAction       : Definition
     // ============================================================================
     // DAMAGE
     // ============================================================================
-    public float Damage                             { get; init; }
-    public DamageElement DamageElement              { get; init; }
     public List<DamageComponent> DamageComponents   { get; init; } = new();
     public List<ForceComponent> ForceComponents     { get; init; } = new();
 
@@ -182,8 +180,9 @@ public class WeaponAnimations
 
 public class CommandDirection           
 {           
-    public bool Enabled                             { get; init; }
+    public DirectionMode Mode                       { get; init; }
     public DirectionSource Source                   { get; init; }
+    public DirectionConstraint Constraint           { get; init; }
     public WeaponPhase SetTrigger                   { get; init; }
     public WeaponPhase ClearTrigger                 { get; init; }
 }
