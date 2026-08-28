@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e19be2eea62f714469a3b79766bb5154
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 149558
+  packageName: Logwin.Log() - Debug Values Tracker
+  packageVersion: 1.01
+  assetPath: Assets/LogWin/Example/ExampleScene/LightingData.asset
+  uploadId: 744786

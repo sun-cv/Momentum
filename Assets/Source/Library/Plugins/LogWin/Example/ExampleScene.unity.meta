@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 944e60f9f7f5afe459e64149410e2a65
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 149558
+  packageName: Logwin.Log() - Debug Values Tracker
+  packageVersion: 1.01
+  assetPath: Assets/LogWin/Example/ExampleScene.unity
+  uploadId: 744786
