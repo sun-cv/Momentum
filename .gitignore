@@ -103,3 +103,5 @@ InitTestScene*.unity*
 /.claude
 CLAUDE.md
 
+Assets/Source/Library/Plugins/LogWin/Example/
+Assets/Source/Library/Plugins/LogWin/**/LW_Prefs.cs.meta

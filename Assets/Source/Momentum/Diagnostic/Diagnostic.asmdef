@@ -1,0 +1,17 @@
+{
+    "name": "Game.Diagnostic",
+    "rootNamespace": "",
+    "references": [
+        "GUID:82812b832f6f081478670c6c2e938fc5",
+        "GUID:ee695f8fdea1c2e45a2730361b1681cc"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

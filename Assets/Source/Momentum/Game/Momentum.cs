@@ -9,15 +9,14 @@ namespace Game
         private Engine.Core     engine;
         private World.Context   world;
         
-        public void Initialize()
+        public Momentum()
         {
             engine  = new();
             world   = new();
 
-            engine  .Initialize();
             world   .Initialize();
         }
-    
+
         public void Shutdown()
         {
             engine  .Shutdown();
@@ -28,16 +27,25 @@ namespace Game
     }
 }
  
+namespace Game
+{
+
+    public class Orchestrator
+    {
+
+    }
+}
 
 namespace Game.World
 {
 
     class Context
     {
-
-        public void Initialize()
+        public Context()
         {
+
         }
+
         public void Shutdown()
         {
         }

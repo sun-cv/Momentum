@@ -14,12 +14,12 @@ namespace Game
         public void Awake()
         {
             momentum = new();
-            momentum.Initialize();
         }
 
         public void FixedUpdate()
         {
-            momentum.Engine.Tick();
+            momentum.Engine         .Tick();
+            momentum.Engine.Clock   .Tick();
         }
 
         public void LateUpdate()

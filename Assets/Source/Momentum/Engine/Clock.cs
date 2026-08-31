@@ -1,76 +1,39 @@
-using System;
-using UnityEngine;
+using Game.Data;
+using Game.Common;
+
 
 
 namespace Game.Engine
 {
-    internal class Clock
+
+    public class Clock : IRateBase
     {
+        private readonly float delta    = 1f / Config.Engine.Clock.Rate;
 
-        private const float tickRate    = Config.Engine.TICK_RATE; 
-        private const float loopRate    = Config.Engine.LOOP_RATE; 
-        private const float utilRate    = Config.Engine.UTIL_RATE; 
-        
-        private const float tickDelta   = 1 / tickRate; 
-        private const float loopDelta   = 1 / loopRate; 
-        private const float utilDelta   = 1 / utilRate; 
-
-        private float tickAccumulator;
-        private float loopAccumulator;
-        private float utilAccumulator;
-
-        private int   tick;
+        private float scale             = 1;
         private float time;
+        private float scaledTime;
 
-        private bool tickFired;
-        private bool loopFired;
-        private bool utilFired;
-
-        public event Action OnTick;
-        public event Action OnLoop;
-        public event Action OnUtil;
-
-        public event Action OnLate;
-
-        public Clock()
+        internal Clock()
         {
-            Time.fixedDeltaTime = Delta;
+            UnityEngine.Time.fixedDeltaTime = Delta;
         }
 
         public void Tick()
         {
-            time            += Delta;
-
-            tickAccumulator += Delta;
-            loopAccumulator += Delta;
-            utilAccumulator += Delta;
-
-            tickFired       = false;
-            loopFired       = false;
-            utilFired       = false;
-
-            while (tickAccumulator >= tickDelta) { tickAccumulator -= tickDelta; tickFired = true; tick++; }
-            while (loopAccumulator >= loopDelta) { loopAccumulator -= loopDelta; loopFired = true; }
-            while (utilAccumulator >= utilDelta) { utilAccumulator -= utilDelta; utilFired = true; }
-            
-            if (loopFired) OnLoop?.Invoke();
-            if (tickFired) OnTick?.Invoke();
-            if (utilFired) OnUtil?.Invoke();
+            time        += Delta;
+            scaledTime  += ScaledDelta;
         }
 
-        public void Late()
+        public void AdjustTimeScale(float value)
         {
-            OnLate?.Invoke();
-        }
-    
-        public void Dispose()
-        {
-
+            scale = value;
         }
 
-        public float Delta => tickDelta;
+        public float Time           => time;
+        public float ScaledTime     => scaledTime;
+        public float Delta          => delta;
+        public float ScaledDelta    => delta * scale;
     }
 }
-
-
 

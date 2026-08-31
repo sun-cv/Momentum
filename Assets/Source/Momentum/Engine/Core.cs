@@ -5,32 +5,33 @@ namespace Game.Engine
 {
     public class Core
     {
-        private Engine.Clock        clock;
-        private Engine.Scheduler    scheduler;
+        private readonly Engine.Clock       clock;
+        private readonly Engine.Tick        tick;
+        private readonly Engine.Scheduler   scheduler;
 
-        public void Initialize()
+        public Core()
         {
             clock       = new();
-            scheduler   = new();
-
-            scheduler.Initialize(clock);
+            tick        = new(clock);
+            scheduler   = new(tick );
         }
 
         public void Tick()
         {
-            clock.Tick();
+            tick.Execute();
         }        
 
         public void Late()
         {
-            clock.Late();
+            tick.Late();
         } 
 
         public void Shutdown()
         {
-            clock       .Dispose();
-            scheduler   .Dispose();
+            scheduler.Dispose();
         }
+
+        public Clock Clock => clock;
     }
 }
 

@@ -1,114 +1,66 @@
+using System;
+using Game.Common;
 using Game.Diagnostic;
-using UnityEngine;
 
 
 
 namespace Game.Engine
 {
-
     class Scheduler
     {
-        private Engine.Clock clock;
-
-        private float tick;
-        private float loop;
-        private float util;
-
-        private float tickHerz;
-        private float loopHerz;
-        private float utilHerz;
-
-        public void Initialize(Clock clock)
-        {
-            this.clock = clock;
-
-            this.clock.OnTick += Tick;
-
-            this.clock.OnTick += MeasureTick;
-            this.clock.OnLoop += MeasureLoop;
-            this.clock.OnUtil += MeasureUtil;
-
-            this.clock.OnTick += MeasureHerz;
-
-            this.clock.OnTick += MeasureTickHerz;
-            this.clock.OnLoop += MeasureLoopHerz;
-            this.clock.OnUtil += MeasureUtilHerz;
-
-            this.clock.OnLate += Late;
-
-            Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);
-        } 
-
-        private void Tick()
-        {
-        }
-
-        private void Late()
-        {
-        }
-
-        private void MeasureHerz()
-        {
-            tickHerz += clock.Delta;
-            loopHerz += clock.Delta;
-            utilHerz += clock.Delta;
-        }
-
-        private void MeasureTick()
-        {
-            tick++;
-        }
+        private readonly Engine.Tick tick;
         
-        private void MeasureLoop()
+        public Scheduler(Tick tick)
         {
-            loop++;
+            this.tick = tick;
+
+            this.tick.Lanes[TickRate.Base].OnTick += Tick;
+            this.tick.Lanes[TickRate.Half].OnTick += Half;
+            this.tick.Lanes[TickRate.Step].OnTick += Step;
+            this.tick.Lanes[TickRate.Util].OnTick += Util;
+            this.tick.Lanes[TickRate.Late].OnTick += Late;
         }
 
-        private void MeasureUtil()
+
+        public void Tick()
         {
-            util++;
+
         }
 
-
-        private void MeasureTickHerz()
+        public void Half()
         {
-            if (tickHerz >=1f)
-            {
-                Log<Scheduler>.Debug("Tick Rate", () => tick / tickHerz);
 
-                tick     = 0;
-                tickHerz = 0;
-            }
         }
 
-        private void MeasureLoopHerz()
+        public void Step()
         {
-            if (loopHerz >=1f)
-            {
-                Log<Scheduler>.Debug("loop Rate", () => loop / loopHerz);
 
-                loop     = 0;
-                loopHerz = 0;
-            }
         }
 
-        private void MeasureUtilHerz()
+        public void Util()
         {
-            if (utilHerz >=1f)
-            {
-                Log<Scheduler>.Debug("Util Rate", () => util / utilHerz);
 
-                util     = 0;
-                utilHerz = 0;
-            }
+        }
+
+        public void Late()
+        {
+
         }
 
         public void Dispose()
         {
 
         }
+
+        static Scheduler() => Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);                
+    }
+
+    readonly struct ScheduleEntry : IComparable<ScheduleEntry>
+    {
+        public readonly int Priority;
+
+        public int CompareTo(ScheduleEntry entry) => Priority.CompareTo(entry.Priority);
     }
 }
-
 
 
