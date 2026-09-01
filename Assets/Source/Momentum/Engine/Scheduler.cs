@@ -1,48 +1,41 @@
 using System;
+using System.Collections.Generic;
 using Game.Common;
 using Game.Diagnostic;
 
 
-
 namespace Game.Engine
 {
-    class Scheduler
+    internal class Scheduler
     {
-        private readonly Engine.Tick tick;
+        private readonly Engine.Execute execute;
         
-        public Scheduler(Tick tick)
+        private readonly Dictionary<TickRate, List<ServiceEntry>> lanes = new()
         {
-            this.tick = tick;
+            { TickRate.Base, new() },
+            { TickRate.Half, new() },
+            { TickRate.Step, new() },
+            { TickRate.Util, new() },
+            { TickRate.Late, new() },
+        };
 
-            this.tick.Lanes[TickRate.Base].OnTick += Tick;
-            this.tick.Lanes[TickRate.Half].OnTick += Half;
-            this.tick.Lanes[TickRate.Step].OnTick += Step;
-            this.tick.Lanes[TickRate.Util].OnTick += Util;
-            this.tick.Lanes[TickRate.Late].OnTick += Late;
+        public Scheduler(Execute execute)
+        {
+            this.execute = execute;
+
+            this.execute.Lanes[TickRate.Base].OnFire += Fire;
+            this.execute.Lanes[TickRate.Util].OnFire += Fire;
+            this.execute.Lanes[TickRate.Late].OnFire += Fire;
+
+            this.execute.OnTick += Tick;
         }
 
+        public void Fire()
+        {
+
+        }
 
         public void Tick()
-        {
-
-        }
-
-        public void Half()
-        {
-
-        }
-
-        public void Step()
-        {
-
-        }
-
-        public void Util()
-        {
-
-        }
-
-        public void Late()
         {
 
         }
@@ -50,6 +43,14 @@ namespace Game.Engine
         public void Dispose()
         {
 
+        }
+
+        private void CollectDue()
+        {
+            foreach (var (tickrate, lane) in execute.Lanes)
+            {
+                if (lane.fired) return;
+            }
         }
 
         static Scheduler() => Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);                

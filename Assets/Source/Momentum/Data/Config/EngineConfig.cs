@@ -18,6 +18,7 @@ namespace Game.Data
                 public const int Half  = 30;
                 public const int Step  = 15;
                 public const int Util  = 15;
+                public const int Late  = 60;
             }
         }
     }

@@ -6,13 +6,14 @@ using Game.Common;
 namespace Game.Engine
 {
 
-    public class Clock : IRateBase
+    internal class Clock : IRateBase
     {
-        private readonly float delta    = 1f / Config.Engine.Clock.Rate;
+        private readonly float delta        = 1f / Config.Engine.Clock.Rate;
 
-        private float scale             = 1;
+        private float scale                 = 1;
         private float time;
         private float scaledTime;
+        private int   frame;
 
         internal Clock()
         {
@@ -25,15 +26,22 @@ namespace Game.Engine
             scaledTime  += ScaledDelta;
         }
 
+        public void Late()
+        {
+            frame++;
+        }
+
         public void AdjustTimeScale(float value)
         {
             scale = value;
         }
 
         public float Time           => time;
-        public float ScaledTime     => scaledTime;
         public float Delta          => delta;
+        public float UnscaledDelta  => UnityEngine.Time.unscaledDeltaTime;
+        public float ScaledTime     => scaledTime;
         public float ScaledDelta    => delta * scale;
+        public int   Frame          => frame;
     }
 }
 

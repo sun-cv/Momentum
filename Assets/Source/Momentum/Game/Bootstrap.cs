@@ -18,8 +18,7 @@ namespace Game
 
         public void FixedUpdate()
         {
-            momentum.Engine         .Tick();
-            momentum.Engine.Clock   .Tick();
+            momentum.Engine.Tick();
         }
 
         public void LateUpdate()

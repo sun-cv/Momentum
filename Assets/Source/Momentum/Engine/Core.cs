@@ -6,24 +6,27 @@ namespace Game.Engine
     public class Core
     {
         private readonly Engine.Clock       clock;
-        private readonly Engine.Tick        tick;
+        private readonly Engine.Execute     execute;
         private readonly Engine.Scheduler   scheduler;
 
         public Core()
         {
             clock       = new();
-            tick        = new(clock);
-            scheduler   = new(tick );
+            execute     = new(clock);
+            scheduler   = new(execute);
         }
+
 
         public void Tick()
         {
-            tick.Execute();
+            clock   .Tick();
+            execute .Tick();
         }        
 
         public void Late()
         {
-            tick.Late();
+            clock   .Late();
+            execute .Late();
         } 
 
         public void Shutdown()

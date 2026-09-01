@@ -27,17 +27,17 @@ namespace Game.Engine
 
         public Lane next; 
 
-        public Action OnTick;
+        public Action OnFire;
     }
      
-    internal class Tick
+    internal class Execute
     {
         private readonly Clock clock; 
         private readonly Dictionary<TickRate, Lane> lanes;
            
-        public Action OnComplete;
+        public Action OnTick;
 
-        public Tick(Clock clock)
+        public Execute(Clock clock)
         {
             this.clock = clock;
 
@@ -47,13 +47,14 @@ namespace Game.Engine
                 { TickRate.Half, new Lane(){ rate = TickRate.Half, tick = Config.Engine.Tick.Half, delta = 1f/Config.Engine.Tick.Half, scaled = true,  origin = false }},
                 { TickRate.Step, new Lane(){ rate = TickRate.Step, tick = Config.Engine.Tick.Step, delta = 1f/Config.Engine.Tick.Step, scaled = true,  origin = false }},
                 { TickRate.Util, new Lane(){ rate = TickRate.Util, tick = Config.Engine.Tick.Util, delta = 1f/Config.Engine.Tick.Util, scaled = false, origin = true  }},
-                { TickRate.Late, new Lane(){ rate = TickRate.Late, tick = Config.Engine.Tick.Base, delta = 1f/Config.Engine.Tick.Base, scaled = false, origin = true  }}
+                { TickRate.Late, new Lane(){ rate = TickRate.Late, tick = Config.Engine.Tick.Late, delta = 1f/Config.Engine.Tick.Late, scaled = false, origin = true  }},
             };
 
-            AssignLanes();
+            lanes[TickRate.Base].next = Lanes[TickRate.Half];
+            lanes[TickRate.Half].next = Lanes[TickRate.Step];
         }
 
-        public void Execute()
+        public void Tick()
         {
             Drive(Lanes[TickRate.Base], clock.ScaledDelta); 
             Drive(Lanes[TickRate.Util], clock.Delta);
@@ -63,7 +64,7 @@ namespace Game.Engine
 
         public void Late()
         {
-            Drive(Lanes[TickRate.Late], clock.Delta); 
+            Drive(Lanes[TickRate.Late], clock.UnscaledDelta); 
         }
 
         private void Drive(Lane lane, float delta)
@@ -81,13 +82,14 @@ namespace Game.Engine
 
                 lane.tick++;
                 lane.count++;
-                lane.fired  = true;
 
-                lane.OnTick?.Invoke();
+                lane.fired = true;
+
+                lane.OnFire?.Invoke();
 
                 Drive(lane.next, lane.delta);
 
-                if (lane.origin) OnComplete?.Invoke();
+                if (lane.origin) OnTick?.Invoke();
             }
         }
         
@@ -100,21 +102,15 @@ namespace Game.Engine
         {
             if (lane.herz >=1f)
             {
-                Log<Tick>.Debug($"{lane.rate}", () => lane.tick / lane.herz);
+                Log<Execute>.Debug($"{lane.rate}", () => lane.tick / lane.herz);
 
                 lane.tick = 0;
                 lane.herz = 0;
             }
         }
 
-        private void AssignLanes()
-        {
-            lanes[TickRate.Base].next = Lanes[TickRate.Half];
-            lanes[TickRate.Half].next = Lanes[TickRate.Step];
-        }
-
         public IReadOnlyDictionary<TickRate, Lane> Lanes => lanes;
 
-        static Tick() => Log<Tick>.Level(Diagnostic.Log.Level.Admin);                
+        static Execute() => Log<Execute>.Level(Diagnostic.Log.Level.Admin);                
     }
 }

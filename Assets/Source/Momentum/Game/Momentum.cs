@@ -6,15 +6,13 @@ namespace Game
     
     public class Momentum
     {
-        private Engine.Core     engine;
-        private World.Context   world;
+        private readonly Engine.Core    engine;
+        private readonly World.Context  world;
         
         public Momentum()
         {
             engine  = new();
             world   = new();
-
-            world   .Initialize();
         }
 
         public void Shutdown()
