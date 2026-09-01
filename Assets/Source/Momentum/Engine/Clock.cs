@@ -6,7 +6,7 @@ using Game.Common;
 namespace Game.Engine
 {
 
-    internal class Clock : IRateBase
+    public class Clock : IRateBase
     {
         private readonly float delta        = 1f / Config.Engine.Clock.Rate;
 
