@@ -3,6 +3,8 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using Game.Common;
+using Game.Common.Events;
+using Game.Diagnostic;
 
 
 
@@ -41,44 +43,61 @@ namespace Game.Service
         {
 
         }
-
-        public static class Roster
-        {
-            public static void Register(ServiceEntry entry) 
-            { 
-                ServiceRoster.Register(entry); 
-            } 
-
-            public static void Deregister(IService service) 
-            { 
-                ServiceRoster.Deregister(service); 
-            }
-        }
     }
 
     public static class ServiceScanner
     {
         public static void Register()
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-
-            foreach (var type in assembly.GetTypes())
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
             {
-                if (type.IsAbstract) 
-                    continue;
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsAbstract) 
+                        continue;
 
-                if (type.GetCustomAttribute<ServiceAttribute>() == null) 
-                    continue;
+                    if (type.GetCustomAttribute<ServiceAttribute>() == null) 
+                        continue;
 
-                var constructor = type.GetConstructor(Type.EmptyTypes);
+                    var constructor = type.GetConstructor(Type.EmptyTypes);
 
-                if (constructor == null)
-                    throw new InvalidOperationException($"[Service] class {type.Name} has no public empty constructor.");
+                    if (constructor == null)
+                        throw new InvalidOperationException($"[Service] class {type.Name} has no public empty constructor.");
 
-                var service = Activator.CreateInstance(type);
+                    var service = Activator.CreateInstance(type);
 
-                ServiceRegistry.Register(type, service);
+                    ServiceRegistry.Register(type, service);
+
+                    bool ticked = service is IRateBase or IRateHalf or IRateStep or IRateUtil or IRateLate;
+
+                    if (!ticked)
+                        continue;
+
+                    UnityEngine.Debug.Log(ticked);
+                    Event.Send<RegisterService>(new(new((IService)service, ResolveSchedule(type))));
+                }
             }
+        }
+
+        private static ServiceSchedule ResolveSchedule(Type serviceType)
+        {
+            var config = typeof(Game.Data.Config.Service).GetNestedType(serviceType.Name, BindingFlags.Public);
+
+            if (config == null)
+                throw new InvalidOperationException($"[Service] class {serviceType.Name} implements a tick-rate interface but has no matching Config.Service.{serviceType.Name} entry.");
+
+            var phase    = config.GetField("Phase",    BindingFlags.Public | BindingFlags.Static);
+            var priority = config.GetField("Priority", BindingFlags.Public | BindingFlags.Static);
+
+            if (phase == null || priority == null)
+                throw new InvalidOperationException($"Config.Service.{serviceType.Name} is missing Phase or Priority.");
+
+            return new ServiceSchedule()
+            {
+                Phase    = (TickPhase)phase.GetValue(null),
+                Priority = (int)priority.GetValue(null)
+            };
         }
     }
 
@@ -120,7 +139,7 @@ namespace Game.Service
 
             services[type] = service;
         }
-
+            
         public static void Deregister<T>(T service)
         {
             services.Remove(typeof(T));
@@ -152,51 +171,4 @@ namespace Game.Service
         public static List<object> List                 => services.Values.ToList();
         public static Dictionary<Type, object> Services => services;
     }
-
-    internal static class ServiceRoster
-    {
-        private static readonly Dictionary<TickRate, List<ServiceEntry>> services;
-
-        static ServiceRoster()
-        {
-            services = new()
-            {
-                { TickRate.Base, new() },
-                { TickRate.Half, new() },
-                { TickRate.Step, new() },
-                { TickRate.Util, new() },
-                { TickRate.Late, new() }
-            };
-        }
-
-        public static void Register(ServiceEntry entry)
-        {
-            List<ServiceEntry> list = entry.Service switch
-            {
-                IRateBase => services[TickRate.Base],
-                IRateHalf => services[TickRate.Half],
-                IRateStep => services[TickRate.Step],
-                IRateUtil => services[TickRate.Util],
-                IRateLate => services[TickRate.Late],
-                _ => throw new ArgumentException($"{entry.Service.GetType()} does not implement a known IRate interface.")
-            };
-
-            list.Add(entry);
-            list.Sort();
-        }
-
-        public static void Deregister(IService service)
-        {
-            foreach (var entries in services.Values)
-            {
-                entries.RemoveAll(entry => entry.Service == service);
-            }
-        }
-
-        public static IReadOnlyDictionary<TickRate, List<ServiceEntry>> Services => services;
-    }
-
-
-
-
 }

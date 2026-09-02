@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Game.Common;
+using UnityEngine;
+
+
 
 namespace Game.Diagnostic
 {
@@ -40,9 +43,8 @@ namespace Game.Diagnostic
         {
             foreach (var log in instance.Values)
                 log.Tick();
-            
-            Event.Read<Logging, ServiceSchedule>();
-            
+
+            Debug.Log("tick");
         }
 
         public static Logger Get<T>(Log.Level level = Log.Level.None)

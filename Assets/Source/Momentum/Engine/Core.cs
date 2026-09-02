@@ -16,6 +16,10 @@ namespace Game.Engine
             scheduler   = new(execute);
         }
 
+        public void Initialize()
+        {
+            scheduler.Initialize();
+        }
 
         public void Tick()
         {

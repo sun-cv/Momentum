@@ -2,8 +2,9 @@
     "name": "Game.Diagnostic",
     "rootNamespace": "",
     "references": [
-        "GUID:82812b832f6f081478670c6c2e938fc5",
-        "GUID:ee695f8fdea1c2e45a2730361b1681cc"
+        "GUID:d50c3faf7e018a641acd614169c9361e",
+        "GUID:ee695f8fdea1c2e45a2730361b1681cc",
+        "GUID:82812b832f6f081478670c6c2e938fc5"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,6 +1,5 @@
 
 
-
 namespace Game
 {
     
@@ -13,6 +12,9 @@ namespace Game
         {
             engine  = new();
             world   = new();
+
+            Service.Service.Initialize();
+            engine.Initialize();
         }
 
         public void Shutdown()

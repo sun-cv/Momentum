@@ -27,7 +27,7 @@ namespace Game.Engine
 
         public Lane next; 
 
-        public Action OnFire;
+        public Action<TickRate> OnFire;
     }
      
     internal class Execute
@@ -85,7 +85,7 @@ namespace Game.Engine
 
                 lane.fired = true;
 
-                lane.OnFire?.Invoke();
+                lane.OnFire?.Invoke(lane.rate);
 
                 Drive(lane.next, lane.delta);
 

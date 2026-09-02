@@ -25,7 +25,13 @@ namespace Game.Common
     {
         public IService Service         { get; init; }
         public ServiceSchedule Schedule { get; init; }
-        
+       
+        public ServiceEntry(IService service, ServiceSchedule schedule)
+        {
+            Service     = service;
+            Schedule    = schedule;
+        }
+
         public int CompareTo(ServiceEntry other)
         {
             return Schedule.Phase.CompareTo(other.Schedule.Phase) != 0 ? Schedule.Phase.CompareTo(other.Schedule.Phase) : Schedule.Priority.CompareTo(other.Schedule.Priority);
@@ -36,6 +42,12 @@ namespace Game.Common
     {
         public TickPhase Phase          { get; init; }
         public int Priority             { get; init; }
+        
+        public ServiceSchedule(TickPhase phase, int priority)
+        {
+            Phase       = phase; 
+            Priority    = priority;
+        }
 
         public int CompareTo(ServiceSchedule other)
         {
