@@ -1,17 +1,30 @@
 using System;
 using System.Collections.Generic;
+using Game.Common;
 
 namespace Game.Diagnostic
 {
-
-    public class LoggingTickHandler
+    namespace Log
     {
-        public void Util()
+        public enum Level
+        {
+            None,
+            Trace,
+            Debug,
+            Event,
+            Admin,
+            Alert,
+            Error,
+        }
+    }
+
+    public class LoggingController : RegisteredService, IRateUtil
+    {
+        public void Tick()
         {
             Logging.Tick(); 
         }
     }
-
 
     public static class Logging
     {
@@ -27,6 +40,9 @@ namespace Game.Diagnostic
         {
             foreach (var log in instance.Values)
                 log.Tick();
+            
+            Event.Read<Logging, ServiceSchedule>();
+            
         }
 
         public static Logger Get<T>(Log.Level level = Log.Level.None)
@@ -186,7 +202,7 @@ namespace Game.Diagnostic
 
         public static  void Trace(object value)
         {
-            instance.Print($"{value}", Log.Level.Debug);
+            instance.Print($"{value}", Log.Level.Trace);
         }
 
         public static  void Debug(object value)
@@ -196,22 +212,22 @@ namespace Game.Diagnostic
 
         public static  void Event(object value)
         {
-            instance.Print($"{value}", Log.Level.Debug);
+            instance.Print($"{value}", Log.Level.Event);
         }
 
         public static  void Admin(object value)
         {
-            instance.Print($"{value}", Log.Level.Debug);
+            instance.Print($"{value}", Log.Level.Admin);
         }
 
         public static  void Alert(object value)
         {
-            instance.Print($"{value}", Log.Level.Debug);
+            instance.Print($"{value}", Log.Level.Alert);
         }
 
         public static  void Error(object value)
         {
-            instance.Print($"{value}", Log.Level.Debug);
+            instance.Print($"{value}", Log.Level.Error);
         }
 
         public static  void Trace(string tag, Func<object> value, bool clean = false)
@@ -229,19 +245,4 @@ namespace Game.Diagnostic
             instance.Print(tag, Log.Level.Event, value, clean);
         }
     }
-
-    namespace Log
-    {
-        public enum Level
-        {
-            None,
-            Trace,
-            Debug,
-            Event,
-            Admin,
-            Alert,
-            Error,
-        }
-    }
-
 }

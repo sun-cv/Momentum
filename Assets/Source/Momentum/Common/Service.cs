@@ -7,6 +7,20 @@ namespace Game.Common
 
     public interface IService : IDisposable   {};
 
+    [AttributeUsage(AttributeTargets.Class, Inherited = true)]
+    public class ServiceAttribute : Attribute {  }
+
+    [Service]
+    public abstract class RegisteredService : IService
+    {
+        public virtual void OnDispose() {} 
+
+        public void Dispose()
+        {
+            //REWORK REQUIRED DISPOSE REGISTER AND CLEAR TICK
+        }
+    }
+
     public readonly struct ServiceEntry       : IComparable<ServiceEntry>
     {
         public IService Service         { get; init; }

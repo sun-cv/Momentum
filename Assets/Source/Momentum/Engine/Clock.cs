@@ -43,5 +43,7 @@ namespace Game.Engine
         public float ScaledDelta    => delta * scale;
         public int   Frame          => frame;
     }
+
+    
 }
 
