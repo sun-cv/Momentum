@@ -17,11 +17,11 @@ namespace Game.Common
 
         public void Dispose()
         {
-            //REWORK REQUIRED DISPOSE REGISTER AND CLEAR TICK
+            //REWORK REQUIRED
         }
     }
 
-    public readonly struct ServiceEntry       : IComparable<ServiceEntry>
+    public class ServiceEntry : IComparable<ServiceEntry>
     {
         public IService Service         { get; init; }
         public ServiceSchedule Schedule { get; init; }
@@ -38,7 +38,7 @@ namespace Game.Common
         }
     }
 
-    public readonly struct ServiceSchedule    : IComparable<ServiceSchedule>
+    public readonly struct ServiceSchedule : IComparable<ServiceSchedule>
     {
         public TickPhase Phase          { get; init; }
         public int Priority             { get; init; }

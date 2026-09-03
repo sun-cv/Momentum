@@ -11,6 +11,7 @@ namespace Game.Engine
     {
         private readonly Engine.Execute execute;
         
+        private readonly Dictionary<Type, ServiceEntry> registry        = new();
         private readonly Dictionary<TickRate, List<ServiceEntry>> lanes = new()
         {
             { TickRate.Base, new() },
@@ -35,11 +36,7 @@ namespace Game.Engine
             this.execute.OnTick += Tick;
 
             Event.Register<Scheduler, RegisterService>();
-        }
-
-        public void Initialize()
-        {
-            Register();
+            Event.Register<ServiceScanCompleted>(Register);
         }
 
         public void Tick()
@@ -66,9 +63,10 @@ namespace Game.Engine
 
         public void Register()
         {
-            var messages = Event.Read<Scheduler, RegisterService>();
 
-            Log<Scheduler>.Debug(messages.Count);
+            Log<Scheduler>.Debug("Register");
+
+            var messages = Event.Read<Scheduler, RegisterService>();
 
             foreach (var message in messages)
             {
@@ -86,6 +84,8 @@ namespace Game.Engine
 
                 list.Add(serviceEntry);
                 list.Sort();
+
+                registry[serviceEntry.Service.GetType()] = serviceEntry;
             }
         }
 
@@ -95,13 +95,6 @@ namespace Game.Engine
         }
 
         static Scheduler() => Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);                
-    }
-
-    readonly struct ScheduleEntry : IComparable<ScheduleEntry>
-    {
-        public readonly int Priority;
-
-        public int CompareTo(ScheduleEntry entry) => Priority.CompareTo(entry.Priority);
     }
 }
 

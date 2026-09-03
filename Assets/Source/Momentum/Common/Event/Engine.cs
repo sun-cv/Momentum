@@ -12,5 +12,6 @@ namespace Game.Common.Events
             ServiceEntry = entry;
         }
     }
-}
 
+    public readonly struct ServiceScanCompleted : IEvent {}
+}

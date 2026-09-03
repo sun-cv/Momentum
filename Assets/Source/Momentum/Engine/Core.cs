@@ -8,17 +8,14 @@ namespace Game.Engine
         private readonly Engine.Clock       clock;
         private readonly Engine.Execute     execute;
         private readonly Engine.Scheduler   scheduler;
+        private readonly Engine.Scanner     scanner;
 
         public Core()
         {
             clock       = new();
             execute     = new(clock);
             scheduler   = new(execute);
-        }
-
-        public void Initialize()
-        {
-            scheduler.Initialize();
+            scanner     = new();
         }
 
         public void Tick()
