@@ -3,7 +3,7 @@ using Game.Common;
 
 
 
-namespace Game.Engine
+namespace Game.Core
 {
 
     public class Clock : IRateBase

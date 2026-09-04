@@ -1,3 +1,5 @@
+using Game.Core;
+using Game.Realm;
 
 
 
@@ -6,8 +8,8 @@ namespace Game
     
     public class Momentum
     {
-        private readonly Engine.Core    engine;
-        private readonly World.Context  world;
+        private readonly Engine  engine;
+        private readonly World    world;
         
         public Momentum()
         {
@@ -21,33 +23,7 @@ namespace Game
             world   .Shutdown();
         }
 
-        public Engine.Core Engine => engine;
+        public Core.Engine Engine => engine;
     }
 }
- 
-namespace Game
-{
-
-    public class Orchestrator
-    {
-
-    }
-}
-
-namespace Game.World
-{
-
-    class Context
-    {
-        public Context()
-        {
-
-        }
-
-        public void Shutdown()
-        {
-        }
-    }
-}
-
 

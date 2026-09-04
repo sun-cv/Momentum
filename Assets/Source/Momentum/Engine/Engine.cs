@@ -1,16 +1,16 @@
 
 
 
-namespace Game.Engine
+namespace Game.Core
 {
-    public class Core
+    public class Engine
     {
-        private readonly Engine.Clock       clock;
-        private readonly Engine.Execute     execute;
-        private readonly Engine.Scheduler   scheduler;
-        private readonly Engine.Scanner     scanner;
+        private readonly Clock      clock;
+        private readonly Execute    execute;
+        private readonly Scheduler  scheduler;
+        private readonly Scanner    scanner;
 
-        public Core()
+        public Engine()
         {
             clock       = new();
             execute     = new(clock);

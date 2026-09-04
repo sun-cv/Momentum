@@ -1,15 +1,19 @@
 
 
+
 namespace Game.Common.Events
 {
     
     public readonly struct RegisterService : IEvent
     {
-        public ServiceEntry ServiceEntry { get; init; }
 
-        public RegisterService(ServiceEntry entry)
+        public IService Service         { get; init; }
+        public ServiceSchedule Schedule { get; init; }
+
+        public RegisterService(IService service, ServiceSchedule schedule)
         {
-            ServiceEntry = entry;
+            Service     = service;
+            Schedule    = schedule;
         }
     }
 

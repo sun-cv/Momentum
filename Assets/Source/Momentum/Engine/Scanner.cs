@@ -5,7 +5,7 @@ using Game.Common.Events;
 
 
 
-namespace Game.Engine
+namespace Game.Core
 {
 
     internal class Scanner
@@ -41,7 +41,7 @@ namespace Game.Engine
                     if (!ticked)
                         continue;
 
-                    Event.Send<RegisterService>(new(new((IService)service, ResolveSchedule(type))));
+                    Event.Send<RegisterService>(new((IService)service, ResolveSchedule(type)));
                 }
             }
         }

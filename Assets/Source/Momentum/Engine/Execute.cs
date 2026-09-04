@@ -6,7 +6,7 @@ using Game.Common;
 using Game.Diagnostic;
 
 
-namespace Game.Engine
+namespace Game.Core
 {
 
     internal class Lane

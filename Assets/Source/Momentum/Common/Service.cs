@@ -25,11 +25,13 @@ namespace Game.Common
     {
         public IService Service         { get; init; }
         public ServiceSchedule Schedule { get; init; }
-       
-        public ServiceEntry(IService service, ServiceSchedule schedule)
+        public Action Tick              { get; set;  }
+
+        public ServiceEntry(IService service, ServiceSchedule schedule, Action tick)
         {
             Service     = service;
             Schedule    = schedule;
+            Tick        = tick;
         }
 
         public int CompareTo(ServiceEntry other)

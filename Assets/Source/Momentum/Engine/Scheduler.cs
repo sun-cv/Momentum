@@ -5,11 +5,11 @@ using Game.Common.Events;
 using Game.Diagnostic;
 
 
-namespace Game.Engine
+namespace Game.Core
 {
     internal class Scheduler
     {
-        private readonly Engine.Execute execute;
+        private readonly Execute execute;
         
         private readonly Dictionary<Type, ServiceEntry> registry        = new();
         private readonly Dictionary<TickRate, List<ServiceEntry>> lanes = new()
@@ -43,15 +43,9 @@ namespace Game.Engine
         {
             foreach (var entry in services)
             {
-                switch (entry.Service)
-                {
-                    case IRateBase baseRate: baseRate.Tick(); break;
-                    case IRateHalf halfRate: halfRate.Tick(); break;
-                    case IRateStep stepRate: stepRate.Tick(); break;
-                    case IRateUtil utilRate: utilRate.Tick(); break;
-                    case IRateLate lateRate: lateRate.Tick(); break;
-                }
+                entry.Tick();
             }
+
             services.Clear();
         }
 
@@ -63,29 +57,22 @@ namespace Game.Engine
 
         public void Register()
         {
-
-            Log<Scheduler>.Debug("Register");
-
             var messages = Event.Read<Scheduler, RegisterService>();
 
             foreach (var message in messages)
             {
-                var serviceEntry = message.ServiceEntry;
+                var service  = message.Service;
+                var schedule = message.Schedule;
 
-                List<ServiceEntry> list = serviceEntry.Service switch
-                {
-                    IRateBase => lanes[TickRate.Base],
-                    IRateHalf => lanes[TickRate.Half],
-                    IRateStep => lanes[TickRate.Step],
-                    IRateUtil => lanes[TickRate.Util],
-                    IRateLate => lanes[TickRate.Late],
-                    _ => throw new ArgumentException($"{serviceEntry.Service.GetType()} does not implement a known IRate interface.")
-                };
+                foreach (var (rate, iRate) in rates)                                 
+                {                                                                    
+                    if (!iRate.IsInstanceOfType(service)) 
+                        continue;  
 
-                list.Add(serviceEntry);
-                list.Sort();
+                    var tick = (Action)Delegate.CreateDelegate(typeof(Action), service, iRate.GetMethod("Tick"));                                   
 
-                registry[serviceEntry.Service.GetType()] = serviceEntry;
+                    lanes[rate].Add(new(service, schedule, tick));      
+                }                                                                    
             }
         }
 
@@ -94,7 +81,16 @@ namespace Game.Engine
             //REWORK REQUIRED DISPOSE SERVICE ENTRIES;
         }
 
-        static Scheduler() => Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);                
+        static readonly (TickRate Rate, Type IRate)[] rates =                
+        {                                                                    
+            (TickRate.Base, typeof(IRateBase)), 
+            (TickRate.Half, typeof(IRateHalf)),                                                  
+            (TickRate.Step, typeof(IRateStep)), 
+            (TickRate.Util, typeof(IRateUtil)),                                                  
+            (TickRate.Late, typeof(IRateLate)),                              
+        }; 
+
+        static Scheduler() => Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);          
     }
 }
 

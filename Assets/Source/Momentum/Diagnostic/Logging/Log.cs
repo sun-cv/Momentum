@@ -43,8 +43,6 @@ namespace Game.Diagnostic
         {
             foreach (var log in instance.Values)
                 log.Tick();
-
-            Debug.Log("tick");
         }
 
         public static Logger Get<T>(Log.Level level = Log.Level.None)
