@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Game.Common;
 using Game.Diagnostic;
 
@@ -25,13 +26,14 @@ namespace Game.Realm
 
         public Entity Create()
         {   
-            int index = renewed > 0 ? free[--renewed] : increment++;
-
+            int index       = renewed > 0 ? free[--renewed] : increment++;
+            
             EnsureCapacity(index);
 
-            alive[index] = true;
+            alive[index]    = true;
+            int generation  = generations[index]; 
 
-            return new Entity { Index = index, Generation = generations[index] };
+            return new Entity(index, generation);
         }
 
         public void Release(Entity entity)
@@ -41,11 +43,6 @@ namespace Game.Realm
 
             alive[entity.Index] = false;
             generations[entity.Index]++;
-
-            Log<EntityPool>.Debug("increment:", () => increment);
-            Log<EntityPool>.Debug("renewed:", () => renewed);
-            Log<EntityPool>.Debug("alive:", () => alive.Length);
-            Log<EntityPool>.Debug("free:", () => free.Length);
 
             if (renewed == free.Length)
                 Array.Resize(ref free, renewed * 2);
@@ -62,6 +59,13 @@ namespace Game.Realm
 
             Array.Resize(ref alive,       capacity);
             Array.Resize(ref generations, capacity);
+        }
+
+        public IEnumerable<Entity> Enumerate()
+        {
+            for (int index = 0; index < alive.Length; index++)
+                if (alive[index])
+                    yield return new Entity { Index = index, Generation = generations[index] };
         }
 
         public bool IsAlive(Entity entity)

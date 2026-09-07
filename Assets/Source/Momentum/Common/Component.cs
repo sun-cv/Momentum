@@ -10,4 +10,10 @@ namespace Game.Common
         public int Current { get; set; }
         public int Maximum { get; set; }
     }
+
+    public struct Energy : IComponent
+    {
+        public int Current { get; set; }
+        public int Maximum { get; set; }
+    }
 }
