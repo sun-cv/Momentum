@@ -1,5 +1,6 @@
 using Game.Realm;
 using Game.Common;
+using Game.Data;
 using Game.Diagnostic;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,18 +14,24 @@ namespace Game.Service
     {
 
         private readonly World World;
-
+        private readonly Definition definition;
         private readonly List<Entity> entities = new();
 
         private readonly Entity id;
+        private readonly ActorDefinition actor; 
 
         public Dev()
         {
-            World   = new();
-            id      = World.Entity.Create();
+            World       = new();
+            definition  = new(); 
+            id          = World.Entity.Create();
 
             World.Entity.Component.Add<Health>(id, new() { Current = 10, Maximum = 10 });
             World.Entity.Component.Add<Energy>(id, new() { Current = 10, Maximum = 10 });
+
+            var actor   = definition.Get<ActorDefinition>("Hero");
+
+            Log<Dev>.Debug(actor.Name);
         }
     
         void IRateBase.Tick() 

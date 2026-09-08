@@ -12,6 +12,8 @@ namespace Game.Realm
     { 
         private int capacity = Config.World.Component.Capacity;
 
+        private Modifier modify;
+
         private readonly Dictionary<Type, object> stores;
         private readonly Dictionary<ComponentMask, HashSet<Entity>> cache;
 
@@ -24,7 +26,7 @@ namespace Game.Realm
             cache       = new();
             masks       = new ComponentMask[capacity];
             identity    = new Entity[capacity];
-
+            modify      = new(this);
         }
 
         internal void Register<T>(ComponentStore<T> store) where T : IComponent
@@ -113,6 +115,20 @@ namespace Game.Realm
             Array.Resize(ref identity, capacity);
         }
 
+        public Modifier Modify => modify;
+         
+        public sealed class Modifier
+        {
+            readonly Components components;
+
+            internal Modifier(Components components)
+            {
+                this.components = components;
+            }
+            
+            public ref Health Health(Entity entity) => ref components.Access<Health>().Modify(entity);
+            public ref Energy Energy(Entity entity) => ref components.Access<Energy>().Modify(entity);
+        }
     }
 }
 

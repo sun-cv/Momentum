@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Game.Common;
 using Game.Diagnostic;
-
+using Game.Data;
 
 
 namespace Game.Realm
@@ -11,7 +11,7 @@ namespace Game.Realm
     {
         private int increment;
         private int renewed; 
-        private int capacity        = 10;
+        private int capacity        = Config.World.Entity.PoolCapacity;
 
         private int [] free;
         private bool[] alive;

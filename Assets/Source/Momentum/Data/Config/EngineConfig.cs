@@ -13,7 +13,7 @@ namespace Game.Data
             }
             public static class Tick
             {
-                public const int Base  = 30;
+                public const int Base  = 60;
                 public const int Half  = 30;
                 public const int Step  = 15;
                 public const int Util  = 15;

@@ -8,13 +8,11 @@ namespace Game.Realm
     {
         private readonly EntityPool pool;
         private readonly Components component;
-        private readonly ComponentModifierRegistry modifier;
 
         public Entities()
         {
             pool        = new();
             component   = new();
-            modifier    = new(component);
         }
         
         public Entity Create()
@@ -28,8 +26,8 @@ namespace Game.Realm
             component.Clear(entity);
         }
 
-        public Components Component             => component;
-        public ComponentModifierRegistry Modify => modifier;
+        public Components Component         => component;
+        public Components.Modifier Modify   => component.Modify;
     }
 
     public partial class Entities

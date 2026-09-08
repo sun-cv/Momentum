@@ -71,7 +71,7 @@ namespace Game.Core
 
                     var tick = (Action)Delegate.CreateDelegate(typeof(Action), service, iRate.GetMethod("Tick"));                                   
 
-                    lanes[rate].Add(new(service, schedule, tick));      
+                    lanes[rate].Add(new() { Service = service, Schedule = schedule, Tick = tick });      
                 }                                                                    
             }
         }
