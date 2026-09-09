@@ -2,6 +2,14 @@
 
 {
     "Id": "Hero",
-    "Name": "Hero"
+    "Health": 
+    {
+        "Maximum": 10,
+        "Current": 10 
+    }
+    
+
+
+
         
 }

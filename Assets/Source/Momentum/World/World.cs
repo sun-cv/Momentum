@@ -20,7 +20,7 @@ namespace Game.Realm
             
         }
 
-        public IReadOnlyCollection<Entity> Query(ComponentMask mask)
+        public IReadOnlyCollection<Entity> Query(Mask mask)
         {
             return entities.Component.Query(mask);
         }

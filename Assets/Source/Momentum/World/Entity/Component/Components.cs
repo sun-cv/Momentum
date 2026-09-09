@@ -15,31 +15,31 @@ namespace Game.Realm
         private Modifier modify;
 
         private readonly Dictionary<Type, object> stores;
-        private readonly Dictionary<ComponentMask, HashSet<Entity>> cache;
+        private readonly Dictionary<Mask, HashSet<Entity>> cache;
 
-        private ComponentMask[] masks;
+        private Mask[] masks;
         private Entity[] identity;
 
         public Components()
         {
             stores      = new();
             cache       = new();
-            masks       = new ComponentMask[capacity];
+            masks       = new Mask[capacity];
             identity    = new Entity[capacity];
             modify      = new(this);
         }
 
-        internal void Register<T>(ComponentStore<T> store) where T : IComponent
+        internal void Register<T>(Store<T> store) where T : IComponent
         {
             stores[typeof(T)] = store;
         }
         
-        internal ComponentStore<TComponent> Access<TComponent>() where TComponent : IComponent
+        internal Store<TComponent> Access<TComponent>() where TComponent : IComponent
         {
             if (!stores.ContainsKey(typeof(TComponent)))
                 Register<TComponent>(new());
 
-            return (ComponentStore<TComponent>)stores[typeof(TComponent)];
+            return (Store<TComponent>)stores[typeof(TComponent)];
         }
 
         internal TComponent View<TComponent>(Entity entity) where TComponent : IComponent
@@ -74,7 +74,7 @@ namespace Game.Realm
             OnChanged(entity);
         }
 
-        internal IReadOnlyCollection<Entity> Query(ComponentMask mask)
+        internal IReadOnlyCollection<Entity> Query(Mask mask)
         {
             if (cache.TryGetValue(mask, out var set))
                 return set;
@@ -107,7 +107,7 @@ namespace Game.Realm
         private void EnsureCapacity(int index)
         {
             if (index < capacity)
-                return;
+                return; 
 
             capacity = Math.Max(capacity * 2, index + 1);
 

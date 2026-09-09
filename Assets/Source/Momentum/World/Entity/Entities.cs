@@ -1,3 +1,4 @@
+using System;
 using Game.Common;
 
 
@@ -6,18 +7,20 @@ namespace Game.Realm
 {
     public partial class Entities
     {
-        private readonly EntityPool pool;
+        private readonly Pool pool;
+        private readonly Factory factory;
         private readonly Components component;
 
         public Entities()
         {
             pool        = new();
             component   = new();
+            factory     = new(this);
         }
         
-        public Entity Create()
+        internal Entity Allocate()
         {
-            return pool.Create();
+            return pool.Allocate();
         }
 
         public void Release(Entity entity)
@@ -26,8 +29,10 @@ namespace Game.Realm
             component.Clear(entity);
         }
 
-        public Components Component         => component;
-        public Components.Modifier Modify   => component.Modify;
+        
+        public Factory Create                   => factory;
+        public Components Component             => component;
+        public Components.Modifier Modify       => component.Modify;
     }
 
     public partial class Entities

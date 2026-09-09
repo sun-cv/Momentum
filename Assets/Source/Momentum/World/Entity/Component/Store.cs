@@ -1,5 +1,3 @@
-
-
 using System;
 using Game.Common;
 
@@ -8,12 +6,12 @@ using Game.Common;
 namespace Game.Realm
 {
 
-    public class ComponentStore<TComponent> where TComponent : IComponent
+    public class Store<TComponent> where TComponent : IComponent
     {
         bool[]          entity;
         TComponent[]    component;
 
-        public ComponentStore(int capacity = 10)
+        public Store(int capacity = 10)
         {
             entity      = new bool      [capacity];
             component   = new TComponent[capacity];

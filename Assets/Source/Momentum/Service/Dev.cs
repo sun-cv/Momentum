@@ -23,15 +23,14 @@ namespace Game.Service
         public Dev()
         {
             World       = new();
-            definition  = new(); 
-            id          = World.Entity.Create();
+            this.definition  = new(); 
 
-            World.Entity.Component.Add<Health>(id, new() { Current = 10, Maximum = 10 });
-            World.Entity.Component.Add<Energy>(id, new() { Current = 10, Maximum = 10 });
+            var definition   = this.definition.Get<ActorDefinition>("Hero");
 
-            var actor   = definition.Get<ActorDefinition>("Hero");
+            var id = World.Entity.Create.Actor(definition);
 
-            Log<Dev>.Debug(actor.Name);
+            Log<Dev>.Debug(World.Entity.Health(id).Current);
+
         }
     
         void IRateBase.Tick() 
@@ -60,7 +59,8 @@ namespace Game.Service
                 Log<Dev>.Debug($"Energy current: {World.Entity.Energy(ent).Current}");
             }
 
-            var ids = World.Entity.Create();
+            var ids = World.Entity.Create.Actor(definition.Get<ActorDefinition>("Hero"));
+
             entities.Add(ids);
             Log<Dev>.Debug( "Entity", () => $"Entity | Index: {ids.Index} Generation: {ids.Generation} ");
         }

@@ -7,7 +7,7 @@ using Game.Data;
 
 namespace Game.Realm
 {
-    public class Pool
+    public class EntityPool
     {
         private int increment;
         private int renewed; 
@@ -17,7 +17,7 @@ namespace Game.Realm
         private bool[] alive;
         private int [] generations;
 
-        public Pool()
+        public EntityPool()
         {
             free        = new int [capacity];
             alive       = new bool[capacity];
@@ -73,7 +73,7 @@ namespace Game.Realm
             return entity.Index < alive.Length && alive[entity.Index] && entity.Generation == generations[entity.Index];
         }
 
-        static Pool() => Log<Pool>.Level(Diagnostic.Log.Level.Debug);
+        static EntityPool() => Log<EntityPool>.Level(Diagnostic.Log.Level.Debug);
     }
 }
 

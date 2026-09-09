@@ -21,11 +21,11 @@ namespace Game.Realm
         public static readonly int Index = ComponentRegistry.Next();  
     } 
 
-    public struct ComponentMask : IEquatable<ComponentMask>
+    public struct Mask : IEquatable<Mask>
     {
         public ulong Bits0, Bits1, Bits2, Bits3;
 
-        public readonly ComponentMask With<TComponent>() where TComponent : IComponent
+        public readonly Mask With<TComponent>() where TComponent : IComponent
         {
             int index   = ComponentId<TComponent>.Index;
             ulong flag  = 1UL << (index % 64);
@@ -40,7 +40,7 @@ namespace Game.Realm
             return mask;
         }
 
-        public readonly ComponentMask Without<TComponent>() where TComponent : IComponent
+        public readonly Mask Without<TComponent>() where TComponent : IComponent
         {
             int index   = ComponentId<TComponent>.Index;
             ulong flag  = 1UL << (index % 64);
@@ -55,7 +55,7 @@ namespace Game.Realm
             return mask;
         }
 
-        public readonly bool Contains(ComponentMask required)
+        public readonly bool Contains(Mask required)
         {
             return  (Bits0 & required.Bits0) == required.Bits0 &&
                     (Bits1 & required.Bits1) == required.Bits1 &&
@@ -68,39 +68,39 @@ namespace Game.Realm
             return HashCode.Combine(Bits0, Bits1, Bits2, Bits3);
         }
 
-        public readonly bool Equals(ComponentMask other)
+        public readonly bool Equals(Mask other)
         {
             return Bits0 == other.Bits0 && Bits1 == other.Bits1 && Bits2 == other.Bits2 && Bits3 == other.Bits3;
         }
 
         public readonly override bool Equals(object obj)
         {
-            return obj is ComponentMask m && Equals(m);
+            return obj is Mask m && Equals(m);
         }
     }
 
     public static class Mask<T1> where T1 : IComponent
     {
-        public static readonly ComponentMask Key = new ComponentMask().With<T1>();
+        public static readonly Mask Key = new Mask().With<T1>();
     }
 
     public static class Mask<T1, T2> where T1 : IComponent where T2 : IComponent
     {
-        public static readonly ComponentMask Key = new ComponentMask().With<T1>().With<T2>();
+        public static readonly Mask Key = new Mask().With<T1>().With<T2>();
     }
 
     public static class Mask<T1, T2, T3> where T1 : IComponent where T2 : IComponent where T3 : IComponent
     {
-        public static readonly ComponentMask Key = new ComponentMask().With<T1>().With<T2>().With<T3>();
+        public static readonly Mask Key = new Mask().With<T1>().With<T2>().With<T3>();
     }
 
     public static class Mask<T1, T2, T3, T4> where T1 : IComponent where T2 : IComponent where T3 : IComponent where T4 : IComponent
     {
-        public static readonly ComponentMask Key = new ComponentMask().With<T1>().With<T2>().With<T3>().With<T4>();
+        public static readonly Mask Key = new Mask().With<T1>().With<T2>().With<T3>().With<T4>();
     }
 
     public static class Mask<T1, T2, T3, T4, T5> where T1 : IComponent where T2 : IComponent where T3 : IComponent where T4 : IComponent where T5 : IComponent
     {
-        public static readonly ComponentMask Key = new ComponentMask().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>();
+        public static readonly Mask Key = new Mask().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>();
     }
 }

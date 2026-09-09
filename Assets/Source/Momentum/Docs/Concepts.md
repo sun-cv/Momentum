@@ -17,3 +17,13 @@ next query.
 Open questions:
 - Cache key shape for arbitrary component-type combinations (order-independent — likely a sorted-type-set key, or a bitmask once component types carry stable indices).
 - Cost of maintaining many live archetype lists as more distinct combinations get queried over a session — may need a bound or eviction strategy if this grows unchecked.
+
+## Entity creation driven by definition, not per-type factory
+Spawning reads its component list off the definition instead of going
+through a hand-written factory per entity type — spawn-time lookup ("does
+this definition specify `Health`? add it") instead of one bespoke factory
+method per kind.
+
+Open question:
+- How a definition declares "these are the components I want" — a fixed
+  list field, presence-of-a-sub-object per component, or something else.

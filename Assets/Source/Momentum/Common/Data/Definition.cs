@@ -12,7 +12,7 @@ namespace Game.Common
     public class ActorDefinition : IDefinition
     {
         public string Id        { get; init; }
-        public string Name      { get; init; }
+        public Health? Health   { get; init; }
     }
 
     public class PropDefinition : IDefinition
