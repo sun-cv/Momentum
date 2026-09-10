@@ -48,7 +48,7 @@ namespace Game.Core
 
         private ServiceSchedule ResolveSchedule(Type serviceType)
         {
-            var config = typeof(Game.Data.Config.Service).GetNestedType(serviceType.Name, BindingFlags.Public);
+            var config = typeof(Game.Content.Config.Service).GetNestedType(serviceType.Name, BindingFlags.Public);
 
             if (config == null)
                 throw new InvalidOperationException($"[Service] class {serviceType.Name} implements a tick-rate interface but has no matching Config.Service.{serviceType.Name} entry.");

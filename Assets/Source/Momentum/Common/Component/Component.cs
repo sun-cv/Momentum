@@ -18,6 +18,9 @@ namespace Game.Common
     }
 
 
+    public struct Meta          : IComponent {}
+    public struct Ledger        : IComponent {}
+    
     public struct Spawner       : IComponent {}
     public struct Prop          : IComponent {}
     public struct Projectile    : IComponent {}

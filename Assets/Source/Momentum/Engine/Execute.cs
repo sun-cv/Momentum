@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Game.Data;
+using Game.Content;
 using Game.Common;
 using Game.Diagnostic;
 

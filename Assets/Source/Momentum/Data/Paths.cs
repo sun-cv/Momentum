@@ -4,14 +4,14 @@ using Game.Common;
 
 
 
-namespace Game.Data
+namespace Game.Content
 {
 
-    internal static class DefinitionRegistry
+    internal static class DataPath
     {
         internal static readonly Dictionary<Type, string> Locations = new()
         {
-            { typeof(ActorDefinition),    "World/Entity/Actor/Hero" }
+            { typeof(Definition.Actor),    "World/Entity/Actor" }
         };
     }
 }

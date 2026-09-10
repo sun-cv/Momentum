@@ -9,24 +9,30 @@ namespace Game.Common
         public string Id        { get; init; }     
     }
 
-    public class ActorDefinition : IDefinition
+    public static class Definition
     {
-        public string Id        { get; init; }
-        public Health? Health   { get; init; }
-    }
+        public class Actor : IDefinition
+        {
+            public string Id        { get; init; }
+            public Health? Health   { get; init; }
+        }
 
-    public class PropDefinition : IDefinition
-    {
-        public string Id        { get; init; }    
-    }
+        public class Prop : IDefinition
+        {
+            public string Id        { get; init; }    
+        }
 
-    public class SpawnerDefinition : IDefinition
-    {
-        public string Id        { get; init; }    
-    }
+        public class Spawner : IDefinition
+        {
+            public string Id        { get; init; }    
+        }
 
-    public class ItemDefinition : IDefinition
-    {
-        public string Id        { get; init; }    
+        public class Item : IDefinition
+        {
+            public string Id        { get; init; }    
+        }
     }
 }
+
+
+

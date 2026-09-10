@@ -15,7 +15,7 @@ namespace Game.Realm
                 actor   = new(entities);
             } 
 
-            public Entity Actor(ActorDefinition definiton)
+            public Entity Actor(Definition.Actor definiton)
             {
                 return actor.Create(definiton);
             }
@@ -36,7 +36,7 @@ namespace Game.Realm
                     component  = entities.Component;
                 } 
 
-                public Entity Create(ActorDefinition definition)
+                public Entity Create(Definition.Actor definition)
                 {
                     var id = entity.Allocate();
 

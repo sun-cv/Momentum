@@ -1,6 +1,6 @@
 using Game.Realm;
 using Game.Common;
-using Game.Data;
+using Game.Content;
 using Game.Diagnostic;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,23 +14,20 @@ namespace Game.Service
     {
 
         private readonly World World;
-        private readonly Definition definition;
+        private readonly Data Data;
         private readonly List<Entity> entities = new();
 
         private readonly Entity id;
-        private readonly ActorDefinition actor; 
+        private readonly Actor actor; 
 
         public Dev()
         {
-            World       = new();
-            this.definition  = new(); 
+            World   = new();
+            Data    = new(); 
 
-            var definition   = this.definition.Get<ActorDefinition>("Hero");
-
-            var id = World.Entity.Create.Actor(definition);
+            var id = World.Entity.Create.Actor(Data.Lookup.Actor("Hero"));
 
             Log<Dev>.Debug(World.Entity.Health(id).Current);
-
         }
     
         void IRateBase.Tick() 
@@ -59,7 +56,7 @@ namespace Game.Service
                 Log<Dev>.Debug($"Energy current: {World.Entity.Energy(ent).Current}");
             }
 
-            var ids = World.Entity.Create.Actor(definition.Get<ActorDefinition>("Hero"));
+            var ids = World.Entity.Create.Actor(Data.Lookup.Actor("Hero"));
 
             entities.Add(ids);
             Log<Dev>.Debug( "Entity", () => $"Entity | Index: {ids.Index} Generation: {ids.Generation} ");

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Game.Common;
 using Game.Diagnostic;
-using Game.Data;
+using Game.Content;
 
 
 namespace Game.Realm
