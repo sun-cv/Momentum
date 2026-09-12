@@ -27,3 +27,14 @@ method per kind.
 Open question:
 - How a definition declares "these are the components I want" — a fixed
   list field, presence-of-a-sub-object per component, or something else.
+
+## Meta components
+Small components for facts about an entity's existence rather than its
+gameplay state — `CreatedAt`/`CreatedBy` style, plain data fields same
+shape as `Health`.
+
+Also floated: a component for logging interactions an entity has been
+part of. Unresolved — unbounded growth per entity is a concern, "log"
+already means something specific in Diagnostic, and it's not decided
+what would actually read this or whether it belongs as a component at
+all versus something Diagnostic-side.

@@ -10,7 +10,7 @@ using System.Linq;
 namespace Game.Service
 {
 
-    public class Dev : RegisteredService, IRateBase, IRateHalf, IRateStep
+    public class Dev : RegisteredService, IRealBase, IRealHalf, IRealStep, IGameBase
     {
 
         private readonly World World;
@@ -19,6 +19,9 @@ namespace Game.Service
 
         private readonly Entity id;
         private readonly Actor actor; 
+
+        private int realCount;
+        private int gameCount;
 
         public Dev()
         {
@@ -30,11 +33,16 @@ namespace Game.Service
             Log<Dev>.Debug(World.Entity.Health(id).Current);
         }
     
-        void IRateBase.Tick() 
+        void IRealBase.Tick() 
         {
+            Log<Dev>.Debug( "RealBase", () => $"{realCount++}");
         }
 
-        void IRateHalf.Tick() 
+        void IGameBase.Tick() 
+        {
+            Log<Dev>.Debug( "GameBase", () => $"{gameCount++}");
+        }
+        void IRealHalf.Tick() 
         {
             if (entities.Count() == 10)
             {
@@ -43,7 +51,7 @@ namespace Game.Service
             }
         }
 
-        void IRateStep.Tick() 
+        void IRealStep.Tick() 
         {
 
             World.Entity.Modify.Health(id).Current += 1;

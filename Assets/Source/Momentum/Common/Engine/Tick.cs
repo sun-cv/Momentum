@@ -5,13 +5,18 @@ namespace Game.Common
 {
 
     public interface IRate              { }
-    public interface IRateBase : IRate  { public void Tick(); };
-    public interface IRateHalf : IRate  { public void Tick(); };
-    public interface IRateStep : IRate  { public void Tick(); };
-    public interface IRateUtil : IRate  { public void Tick(); };
-    public interface IRateLate : IRate  { public void Tick(); };
+    public interface IRealBase : IRate  { public void Tick(); };
+    public interface IRealHalf : IRate  { public void Tick(); };
+    public interface IRealStep : IRate  { public void Tick(); };
+    public interface IRealUtil : IRate  { public void Tick(); };
 
+    public interface IRealLate : IRate  { public void Tick(); };
 
+    public interface IGameBase : IRate  { public void Tick(); };
+    public interface IGameHalf : IRate  { public void Tick(); };
+    public interface IGameStep : IRate  { public void Tick(); };
+    public interface IGameUtil : IRate  { public void Tick(); };
+    
     public enum TickRate 
     { 
         Base,
@@ -21,6 +26,12 @@ namespace Game.Common
         Late,
     }
 
+    public enum TickMode
+    {
+        Real,
+        Game,
+    }
+       
     public enum TickPhase
     {
         System,

@@ -19,7 +19,7 @@ namespace Game.Diagnostic
         }
     }
 
-    public class LoggingController : RegisteredService, IRateUtil
+    public class LoggingController : RegisteredService, IRealUtil
     {
         public void Tick()
         {

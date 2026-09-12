@@ -9,7 +9,9 @@ namespace Game.Content
         {
             public static class Clock
             {
-                public const int Rate  = 60;
+                public const int Rate       = 60;
+                public const int Scale      = 1;
+                public const float Delta    = 1f / Rate ;
             }
             public static class Tick
             {

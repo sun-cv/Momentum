@@ -36,7 +36,7 @@ namespace Game.Core
 
                     var service = Activator.CreateInstance(type);
 
-                    bool ticked = service is IRateBase or IRateHalf or IRateStep or IRateUtil or IRateLate;
+                    bool ticked = service is IRealBase or IRealHalf or IRealStep or IRealUtil or IRealLate or IGameBase or IGameHalf or IGameStep or IGameUtil;
 
                     if (!ticked)
                         continue;

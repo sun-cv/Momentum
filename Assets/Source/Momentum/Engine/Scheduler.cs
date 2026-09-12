@@ -11,15 +11,8 @@ namespace Game.Core
     {
         private readonly Execute execute;
         
-        private readonly Dictionary<Type, ServiceEntry> registry        = new();
-        private readonly Dictionary<TickRate, List<ServiceEntry>> lanes = new()
-        {
-            { TickRate.Base, new() },
-            { TickRate.Half, new() },
-            { TickRate.Step, new() },
-            { TickRate.Util, new() },
-            { TickRate.Late, new() },
-        };
+        private readonly Dictionary<Type, ServiceEntry> registry         = new();
+        private readonly Dictionary<LaneEntry, List<ServiceEntry>> lanes = new();
 
         private readonly List<ServiceEntry> services = new();
 
@@ -27,13 +20,7 @@ namespace Game.Core
         {
             this.execute = execute;
 
-            this.execute.Lanes[TickRate.Base].OnFire += CollectDue;
-            this.execute.Lanes[TickRate.Half].OnFire += CollectDue;
-            this.execute.Lanes[TickRate.Step].OnFire += CollectDue;
-            this.execute.Lanes[TickRate.Util].OnFire += CollectDue;
-            this.execute.Lanes[TickRate.Late].OnFire += CollectDue;
-
-            this.execute.OnTick += Tick;
+            RegisterExecute();
 
             Event.Register<Scheduler, RegisterService>();
             Event.Register<ServiceScanCompleted>(Register);
@@ -49,9 +36,9 @@ namespace Game.Core
             services.Clear();
         }
 
-        private void CollectDue(TickRate rate)
+        private void CollectDue(LaneEntry entry)
         {
-            services.AddRange(lanes[rate]);
+            services.AddRange(lanes[entry]);
             services.Sort();
         }
 
@@ -64,16 +51,27 @@ namespace Game.Core
                 var service  = message.Service;
                 var schedule = message.Schedule;
 
-                foreach (var (rate, iRate) in rates)                                 
+                foreach (var (entry, iRate) in rates)                                 
                 {                                                                    
                     if (!iRate.IsInstanceOfType(service)) 
                         continue;  
 
                     var tick = (Action)Delegate.CreateDelegate(typeof(Action), service, iRate.GetMethod("Tick"));                                   
 
-                    lanes[rate].Add(new() { Service = service, Schedule = schedule, Tick = tick });      
+                    lanes[entry].Add(new() { Service = service, Schedule = schedule, Tick = tick });      
                 }                                                                    
             }
+        }
+
+        private void RegisterExecute()
+        {
+            foreach (var (entry, lane) in execute.Lanes)
+            {
+                lane.OnFire += CollectDue;
+                lanes[entry] = new(); 
+            }
+            
+            execute.OnTick += Tick;
         }
 
         public void Dispose()
@@ -81,13 +79,17 @@ namespace Game.Core
             //REWORK REQUIRED DISPOSE SERVICE ENTRIES;
         }
 
-        static readonly (TickRate Rate, Type IRate)[] rates =                
+        static readonly (LaneEntry entry, Type IRate)[] rates =                
         {                                                                    
-            (TickRate.Base, typeof(IRateBase)), 
-            (TickRate.Half, typeof(IRateHalf)),                                                  
-            (TickRate.Step, typeof(IRateStep)), 
-            (TickRate.Util, typeof(IRateUtil)),                                                  
-            (TickRate.Late, typeof(IRateLate)),                              
+            ( new() { Rate = TickRate.Base, Mode = TickMode.Real}, typeof(IRealBase)), 
+            ( new() { Rate = TickRate.Half, Mode = TickMode.Real}, typeof(IRealHalf)), 
+            ( new() { Rate = TickRate.Step, Mode = TickMode.Real}, typeof(IRealStep)), 
+            ( new() { Rate = TickRate.Util, Mode = TickMode.Real}, typeof(IRealUtil)), 
+            ( new() { Rate = TickRate.Late, Mode = TickMode.Real}, typeof(IRealLate)), 
+            ( new() { Rate = TickRate.Base, Mode = TickMode.Game}, typeof(IGameBase)), 
+            ( new() { Rate = TickRate.Half, Mode = TickMode.Game}, typeof(IGameHalf)), 
+            ( new() { Rate = TickRate.Step, Mode = TickMode.Game}, typeof(IGameStep)), 
+            ( new() { Rate = TickRate.Util, Mode = TickMode.Game}, typeof(IGameUtil)), 
         }; 
 
         static Scheduler() => Log<Scheduler>.Level(Diagnostic.Log.Level.Admin);          

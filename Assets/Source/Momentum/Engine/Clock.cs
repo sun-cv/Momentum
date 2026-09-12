@@ -6,13 +6,17 @@ using Game.Common;
 namespace Game.Core
 {
 
-    public class Clock : IRateBase
+    public class Clock : IRealBase
     {
-        private readonly float delta        = 1f / Config.Engine.Clock.Rate;
+        private float scale                 = Config.Engine.Clock.Scale;
 
-        private float scale                 = 1;
-        private float time;
-        private float scaledTime;
+        private float realDelta             = 1f / Config.Engine.Clock.Rate;
+        private float gameDelta             = 1f / Config.Engine.Clock.Rate;
+
+
+        private float realTime;
+        private float gameTime;
+
         private int   frame;
 
         internal Clock()
@@ -22,8 +26,10 @@ namespace Game.Core
 
         public void Tick()
         {
-            time        += Delta;
-            scaledTime  += ScaledDelta;
+            UpdateGameDelta();
+
+            realTime  += realDelta;
+            gameTime  += gameDelta;
         }
 
         public void Late()
@@ -31,17 +37,22 @@ namespace Game.Core
             frame++;
         }
 
-        public void AdjustTimeScale(float value)
+        private void UpdateGameDelta()
+        {
+            gameDelta = realDelta * scale;
+        }
+
+        private void AdjustTimeScale(float value)
         {
             scale = value;
         }
 
-        public float Time           => time;
-        public float Delta          => delta;
-        public float UnscaledDelta  => UnityEngine.Time.unscaledDeltaTime;
-        public float ScaledTime     => scaledTime;
-        public float ScaledDelta    => delta * scale;
-        public int   Frame          => frame;
+        public float Delta      => UnityEngine.Time.unscaledDeltaTime;
+        public float RealTime   => realTime;
+        public float GameTime   => gameTime;
+        public float RealDelta  => realDelta;
+        public float GameDelta  => gameDelta;
+        public int   Frame      => frame;
     }
 
     

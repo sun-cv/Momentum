@@ -11,8 +11,8 @@ namespace Game.Core
 
     internal class Lane
     {
-        public TickRate rate;
-        
+        public LaneEntry entry; 
+
         public int tick;
         public int count;
 
@@ -27,44 +27,55 @@ namespace Game.Core
 
         public Lane next; 
 
-        public Action<TickRate> OnFire;
+        public Action<LaneEntry> OnFire;
+    }
+
+    internal record LaneEntry
+    {
+        public TickRate Rate;
+        public TickMode Mode;
     }
      
     internal class Execute
     {
         private readonly Clock clock; 
-        private readonly Dictionary<TickRate, Lane> lanes;
+        private readonly Dictionary<LaneEntry, Lane> lanes;
            
         public Action OnTick;
 
-        public Execute(Clock clock)
+    public Execute(Clock clock)
+    {
+        this.clock = clock;
+
+        lanes = new()
         {
-            this.clock = clock;
+            { new LaneEntry{ Rate = TickRate.Base, Mode = TickMode.Game }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Base, Mode = TickMode.Game }, tick = Config.Engine.Tick.Base, delta = 1f/Config.Engine.Tick.Base, origin = true  }},
+            { new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Game }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Game }, tick = Config.Engine.Tick.Half, delta = 1f/Config.Engine.Tick.Half, origin = false }},
+            { new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Game }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Game }, tick = Config.Engine.Tick.Step, delta = 1f/Config.Engine.Tick.Step, origin = false }},
+            { new LaneEntry{ Rate = TickRate.Util, Mode = TickMode.Game }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Util, Mode = TickMode.Game }, tick = Config.Engine.Tick.Util, delta = 1f/Config.Engine.Tick.Util, origin = false  }},
 
-            lanes = new()
-            {
-                { TickRate.Base, new Lane(){ rate = TickRate.Base, tick = Config.Engine.Tick.Base, delta = 1f/Config.Engine.Tick.Base, scaled = true,  origin = true  }},
-                { TickRate.Half, new Lane(){ rate = TickRate.Half, tick = Config.Engine.Tick.Half, delta = 1f/Config.Engine.Tick.Half, scaled = true,  origin = false }},
-                { TickRate.Step, new Lane(){ rate = TickRate.Step, tick = Config.Engine.Tick.Step, delta = 1f/Config.Engine.Tick.Step, scaled = true,  origin = false }},
-                { TickRate.Util, new Lane(){ rate = TickRate.Util, tick = Config.Engine.Tick.Util, delta = 1f/Config.Engine.Tick.Util, scaled = false, origin = true  }},
-                { TickRate.Late, new Lane(){ rate = TickRate.Late, tick = Config.Engine.Tick.Late, delta = 1f/Config.Engine.Tick.Late, scaled = false, origin = true  }},
-            };
+            { new LaneEntry{ Rate = TickRate.Base, Mode = TickMode.Real }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Base, Mode = TickMode.Real }, tick = Config.Engine.Tick.Base, delta = 1f/Config.Engine.Tick.Base, origin = true  }},
+            { new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Real }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Real }, tick = Config.Engine.Tick.Half, delta = 1f/Config.Engine.Tick.Half, origin = false }},
+            { new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Real }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Real }, tick = Config.Engine.Tick.Step, delta = 1f/Config.Engine.Tick.Step, origin = false }},
+            { new LaneEntry{ Rate = TickRate.Util, Mode = TickMode.Real }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Util, Mode = TickMode.Real }, tick = Config.Engine.Tick.Util, delta = 1f/Config.Engine.Tick.Util, origin = false }},
 
-            lanes[TickRate.Base].next = Lanes[TickRate.Half];
-            lanes[TickRate.Half].next = Lanes[TickRate.Step];
-        }
+            { new LaneEntry{ Rate = TickRate.Late, Mode = TickMode.Real }, new Lane(){ entry = new LaneEntry{ Rate = TickRate.Late, Mode = TickMode.Real }, tick = Config.Engine.Tick.Late, delta = 1f/Config.Engine.Tick.Late, origin = true  }},
+        };
+
+        ConnectLanes();
+    }
 
         public void Tick()
         {
-            Drive(Lanes[TickRate.Base], clock.ScaledDelta); 
-            Drive(Lanes[TickRate.Util], clock.Delta);
+            Drive(Lanes[new() { Rate = TickRate.Base, Mode = TickMode.Real }], clock.RealDelta);
+            Drive(Lanes[new() { Rate = TickRate.Base, Mode = TickMode.Game }], clock.GameDelta);
 
             MeasureHerz();
         }
 
         public void Late()
         {
-            Drive(Lanes[TickRate.Late], clock.UnscaledDelta); 
+            Drive(Lanes[new() { Rate = TickRate.Late, Mode = TickMode.Real }], clock.RealTime);
         }
 
         private void Drive(Lane lane, float delta)
@@ -85,7 +96,7 @@ namespace Game.Core
 
                 lane.fired = true;
 
-                lane.OnFire?.Invoke(lane.rate);
+                lane.OnFire?.Invoke(lane.entry);
 
                 Drive(lane.next, lane.delta);
 
@@ -102,14 +113,25 @@ namespace Game.Core
         {
             if (lane.herz >=1f)
             {
-                Log<Execute>.Debug($"{lane.rate}", () => lane.tick / lane.herz);
+                Log<Execute>.Debug($"{lane.entry.Rate}", () => lane.tick / lane.herz);
 
                 lane.tick = 0;
                 lane.herz = 0;
             }
         }
 
-        public IReadOnlyDictionary<TickRate, Lane> Lanes => lanes;
+        public void ConnectLanes()
+        {
+            lanes[new LaneEntry{ Rate = TickRate.Base, Mode = TickMode.Game }].next = lanes[new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Game }];
+            lanes[new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Game }].next = lanes[new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Game }];
+            lanes[new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Game }].next = lanes[new LaneEntry{ Rate = TickRate.Util, Mode = TickMode.Game }];
+
+            lanes[new LaneEntry{ Rate = TickRate.Base, Mode = TickMode.Real }].next = lanes[new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Real }];
+            lanes[new LaneEntry{ Rate = TickRate.Half, Mode = TickMode.Real }].next = lanes[new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Real }];
+            lanes[new LaneEntry{ Rate = TickRate.Step, Mode = TickMode.Real }].next = lanes[new LaneEntry{ Rate = TickRate.Util, Mode = TickMode.Real }];
+        }
+
+        public IReadOnlyDictionary<LaneEntry, Lane> Lanes => lanes;
 
         static Execute() => Log<Execute>.Level(Diagnostic.Log.Level.Admin);                
     }
