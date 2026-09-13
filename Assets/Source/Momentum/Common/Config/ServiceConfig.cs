@@ -2,7 +2,7 @@ using Game.Common;
         
 
 
-namespace Game.Content
+namespace Game.Common
 {
     public static partial class Config
     {
@@ -13,6 +13,19 @@ namespace Game.Content
                 public const TickPhase Phase    = TickPhase.System;
                 public const int       Priority = 0;
             }
+
+            public static class Timers
+            {
+                public const TickPhase Phase    = TickPhase.System;
+                public const int       Priority = 10;
+            }
+
+            public static class InputDriver
+            {
+                public const TickPhase Phase    = TickPhase.Input;
+                public const int       Priority = 0;
+            }
+
             public static class Dev
             {
                 public const TickPhase Phase    = TickPhase.System;

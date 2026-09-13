@@ -2,8 +2,9 @@
     "name": "Interface",
     "rootNamespace": "",
     "references": [
+        "GUID:ee695f8fdea1c2e45a2730361b1681cc",
         "GUID:19f1b711ba0a4b24490dd0e2065cc452",
-        "GUID:ee695f8fdea1c2e45a2730361b1681cc"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,7 +1,7 @@
 
 
 
-namespace Game.Content
+namespace Game.Common
 {
     public static partial class Config
     {

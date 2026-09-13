@@ -10,8 +10,8 @@ namespace Game.Core
     {
         private float scale                 = Config.Engine.Clock.Scale;
 
-        private float realDelta             = 1f / Config.Engine.Clock.Rate;
-        private float gameDelta             = 1f / Config.Engine.Clock.Rate;
+        private float realDelta             = Config.Engine.Clock.Delta;
+        private float gameDelta             = Config.Engine.Clock.Delta;
 
 
         private float realTime;
@@ -47,12 +47,12 @@ namespace Game.Core
             scale = value;
         }
 
-        public float Delta      => UnityEngine.Time.unscaledDeltaTime;
-        public float RealTime   => realTime;
-        public float GameTime   => gameTime;
-        public float RealDelta  => realDelta;
-        public float GameDelta  => gameDelta;
-        public int   Frame      => frame;
+        public float Delta          => Config.Engine.Clock.Delta;
+        public float RealTime       => realTime;
+        public float GameTime       => gameTime;
+        public float RealDelta      => realDelta;
+        public float GameDelta      => gameDelta;
+        public int   Frame          => frame;
     }
 
     
