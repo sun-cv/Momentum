@@ -9,18 +9,26 @@ namespace Game.Common
     public interface ITimer 
     {
         public void Tick();
+        public TickMode Mode    { get; }
+        public TimeCount Count  { get; }
     }
 
-    public enum TimerMode { Up, Down }
+    public enum TimeCount
+    {
+        Increment,
+        Decrement,
+    }
 
     public abstract class Timer : ITimer 
     {
         public Action OnTimerStart = delegate { };
         public Action OnTimerStop  = delegate { };
 
-        public bool  HasRun         { get; protected set; }
-        public bool  IsRunning      { get; protected set; }
-        public bool  Disposed       { get; protected set; }
+        public bool  HasRun             { get; protected set; }
+        public bool  IsRunning          { get; protected set; }
+
+        public abstract TickMode Mode   { get; protected set; }
+        public abstract TimeCount Count { get; protected set; }
 
         public virtual void OnStart()   {}
         public virtual void OnStop()    {}
@@ -41,7 +49,7 @@ namespace Game.Common
             {
                 IsRunning   = true;
                 HasRun      = true;
-                Event.Push<RegisterTimer>(new(){ Timer = this });
+                Event.Send<RegisterTimer>(new(){ Timer = this });
                 OnTimerStart.Invoke();
             }
         }
@@ -53,7 +61,7 @@ namespace Game.Common
             if (IsRunning)
             {
                 IsRunning = false;
-                Event.Push<DeregisterTimer>(new(){ Timer = this });
+                Event.Send<DeregisterTimer>(new(){ Timer = this });
                 OnTimerStop.Invoke();
             }
             return this;
@@ -76,7 +84,7 @@ namespace Game.Common
         { 
             OnCancel();
             IsRunning = false; 
-            Event.Push<DeregisterTimer>(new(){ Timer = this });
+            Event.Send<DeregisterTimer>(new(){ Timer = this });
         }
 
         public void Reset()
@@ -95,19 +103,21 @@ namespace Game.Common
     }    
 
 
-    public class TickKeeper : Timer
+    public class TickCounter : Timer
     {
-        public int Starting         { get;}
-        public int Initial          { get; protected set; }
-        public int Current          { get; protected set; }
+        public int Starting             { get; protected set; }
+        public int Initial              { get; protected set; }
+        public int Current              { get; protected set; }
 
-        public TimerMode Mode       { get; }
+        public override TickMode Mode   { get; protected set; }
+        public override TimeCount Count { get; protected set; }
 
-        public TickKeeper(TimerMode mode, int initial)
+        public TickCounter(TickMode mode = TickMode.Real, TimeCount count = TimeCount.Increment, int initial = 0)
         {
             Mode        = mode;
-            Starting    = initial;
-            Initial     = Starting;
+            Count       = count;
+            Initial     = initial;
+            Starting    = Initial;
         }
 
         public override void Tick()
@@ -115,9 +125,9 @@ namespace Game.Common
             if (!IsRunning) 
                 return;
 
-            Current += Mode == TimerMode.Up ? 1 : -1;
+            Current += Count == TimeCount.Increment ? 1 : -1;
 
-            if (Mode == TimerMode.Down && Current <= 0)
+            if (Count == TimeCount.Decrement && Current <= 0)
                 Stop();
         }
 
@@ -144,22 +154,31 @@ namespace Game.Common
             Start();
         }
 
-        public override bool IsFinished => Mode == TimerMode.Up ? HasRun && !IsRunning : Current <= 0;
+        public void CountDown(int value)
+        {
+            Count       = TimeCount.Decrement;
+            Initial     = value;
+            Starting    = Initial;
+        }
+
+        public override bool IsFinished => Count == TimeCount.Increment ? HasRun && !IsRunning : Current <= 0;
     }
 
-    public class TimeKeeper: Timer
+    public class TimeCounter: Timer
     {
-        public float Starting       { get;}
-        public float Initial        { get; protected set; }
-        public float Current        { get; protected set; }
+        public float Starting           { get; protected set; }
+        public float Initial            { get; protected set; }
+        public float Current            { get; protected set; }
 
-        public TimerMode Mode       { get; }
+        public override TickMode Mode   { get; protected set; }
+        public override TimeCount Count { get; protected set; }
 
-        public TimeKeeper(TimerMode mode, float initial)
+        public TimeCounter(TickMode mode = TickMode.Real, TimeCount count = TimeCount.Increment, int initial = 0)
         {
             Mode        = mode;
-            Starting    = initial;
-            Initial     = Starting;
+            Count       = count;
+            Initial     = initial;
+            Starting    = Initial;
         }
     
         public override void Tick()
@@ -167,9 +186,9 @@ namespace Game.Common
             if (!IsRunning) 
                 return;
 
-            Current += Mode == TimerMode.Up ? Config.Engine.Clock.Delta : -Config.Engine.Clock.Delta;
+            Current += Count == TimeCount.Increment ? Config.Engine.Clock.Delta : -Config.Engine.Clock.Delta;
 
-            if (Mode == TimerMode.Down && Current <= 0)
+            if (Count == TimeCount.Decrement && Current <= 0)
                 Stop();
         }
 
@@ -196,6 +215,24 @@ namespace Game.Common
             Start();
         }
 
-        public override bool IsFinished => Mode == TimerMode.Up ? HasRun && !IsRunning : Current <= 0;
+        public void CountDown(int value)
+        {
+            Count       = TimeCount.Decrement;
+            Initial     = value;
+            Starting    = Initial;
+        }
+
+        public override bool IsFinished => Count == TimeCount.Increment ? HasRun && !IsRunning : Current <= 0;
+    }
+
+    
+    public class TimeScaled : TimeCounter
+    {
+        TimeScaled() : base(TickMode.Game, TimeCount.Increment, 0) {}
+    }
+
+    public class TickScaled : TimeCounter
+    {
+        TickScaled() : base(TickMode.Game, TimeCount.Increment, 0) {}
     }
 }

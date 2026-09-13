@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Game.Common;
 using Game.Common.Events;
@@ -18,7 +19,11 @@ namespace Game.Core
 
         public void Register()
         {
+
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            List<IInitialize> initialize    = new();
+
             foreach (var assembly in assemblies)
             {
                 foreach (var type in assembly.GetTypes())
@@ -36,6 +41,9 @@ namespace Game.Core
 
                     var service = Activator.CreateInstance(type);
 
+                    if (service is IInitialize init)
+                        initialize.Add(init);
+
                     bool ticked = service is IRealBase or IRealHalf or IRealStep or IRealUtil or IRealLate or IGameBase or IGameHalf or IGameStep or IGameUtil;
 
                     if (!ticked)
@@ -44,6 +52,8 @@ namespace Game.Core
                     Event.Send<RegisterService>(new((IService)service, ResolveSchedule(type)));
                 }
             }
+
+            initialize.ForEach(service => service.Initialize());
         }
 
         private ServiceSchedule ResolveSchedule(Type serviceType)

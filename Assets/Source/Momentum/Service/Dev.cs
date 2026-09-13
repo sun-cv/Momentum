@@ -10,7 +10,7 @@ using System.Linq;
 namespace Game.Service
 {
 
-    public class Dev : RegisteredService, IRealBase, IRealHalf, IRealStep, IGameBase
+    public class Dev : RegisteredService, IRealBase, IRealHalf, IRealStep, IGameBase, IInitialize
     {
 
         private readonly World World;
@@ -23,19 +23,34 @@ namespace Game.Service
         private int realCount;
         private int gameCount;
 
+        private TickCounter tick;
+        private TimeCounter time;
+
         public Dev()
         {
             World   = new();
             Data    = new(); 
 
-            var id = World.Entity.Create.Actor(Data.Lookup.Actor("Hero"));
-
             Log<Dev>.Debug(World.Entity.Health(id).Current);
+        }
+
+        public void Initialize()
+        {
+
+            tick = new(TickMode.Game);
+            time = new(TickMode.Real);
+
+            time.CountDown(20);
+
+            tick.Start();
+            time.Start();
         }
     
         void IRealBase.Tick() 
         {
-            Log<Dev>.Debug( "RealBase", () => $"{realCount++}");
+            Log<Dev>.Debug( "RealBase",     () => $"{realCount++}");
+            Log<Dev>.Debug( "Timer.Time",   () => $"{time.Current}");
+            Log<Dev>.Debug( "Timer.Tick",   () => $"{tick.Current}");
         }
 
         void IGameBase.Tick() 

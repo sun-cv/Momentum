@@ -8,7 +8,7 @@ namespace Game.Common
 
     public interface IEvent {};
 
-    public static class Event 
+    public static class Event
     {
         private static readonly Dictionary<Type, Dictionary<Type, object>> mailboxes    = new();
         private static readonly Dictionary<Type, Delegate> handlers                     = new();

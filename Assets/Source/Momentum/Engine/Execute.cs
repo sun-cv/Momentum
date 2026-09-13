@@ -75,7 +75,7 @@ namespace Game.Core
 
         public void Late()
         {
-            Drive(Lanes[new() { Rate = TickRate.Late, Mode = TickMode.Real }], clock.RealTime);
+            Drive(Lanes[new() { Rate = TickRate.Late, Mode = TickMode.Real }], clock.RealDelta);
         }
 
         private void Drive(Lane lane, float delta)
@@ -113,7 +113,7 @@ namespace Game.Core
         {
             if (lane.herz >=1f)
             {
-                Log<Execute>.Debug($"{lane.entry.Rate}", () => lane.tick / lane.herz);
+                Log<Execute>.Debug($"{lane.entry.Mode} : {lane.entry.Rate}", () => lane.tick / lane.herz);
 
                 lane.tick = 0;
                 lane.herz = 0;

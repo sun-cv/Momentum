@@ -12,4 +12,6 @@ namespace Game.Common.Events
     {
         public Timer Timer { get; init; }
     }
+
+    public readonly struct ClearTimers      : IEvent {}
 }

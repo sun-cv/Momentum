@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Game.Common;
+using Game.Common.Events;
 
 
 
@@ -7,12 +8,21 @@ namespace Game.Service
 {
     public class Timers : RegisteredService, IRealBase, IGameBase
     {
-        private readonly List<ITimer> tickTimers  = new();
-        private readonly List<ITimer> timeTimers  = new();
+        private readonly List<ITimer> realTimers  = new();
+        private readonly List<ITimer> gameTimers  = new();
+
+        public Timers()
+        {
+            Event.Register<Timers, ClearTimers>();
+            Event.Register<Timers, RegisterTimer>();
+            Event.Register<Timers, DeregisterTimer>();
+        }
 
         void IRealBase.Tick()
         {
-            foreach (var timer in new List<ITimer>(timeTimers))
+            ProcessRequests();
+
+            foreach (var timer in new List<ITimer>(realTimers))
             {
                 timer.Tick();
             }
@@ -20,46 +30,68 @@ namespace Game.Service
         
         void IGameBase.Tick()
         {
-            foreach (var timer in new List<ITimer>(tickTimers))
+            ProcessRequests();
+
+            foreach (var timer in new List<ITimer>(gameTimers))
             {
                 timer.Tick();
             }
         }
 
-        public void RegisterTimer(ITimer timer)
+        private void ProcessRequests()
         {
-            if (timer is TimeKeeper time)
-                timeTimers.Add(time);
-
-            if (timer is TickKeeper tick)
-                tickTimers.Add(tick);
+            ClearTimers();
+            RegisterTimers();
+            DeregisterTimers();
+        }
+        
+        private void ClearTimers()
+        {
+            foreach(var _ in Event.Read<Timers, ClearTimers>())
+            {
+                Clear();
+            }
         }
 
-        public void DeregisterTimer(ITimer timer)
+        private void RegisterTimers()
         {
-            if (timer is TimeKeeper time)
-                timeTimers.Remove(time);
-
-            if (timer is TickKeeper tick)
-                tickTimers.Remove(tick);
+            foreach(var message in Event.Read<Timers, RegisterTimer>())
+            {
+                Register(message.Timer);
+            }
         }
 
-        public void Clear()
+        private void DeregisterTimers()
         {
-            timeTimers.Clear();
-            tickTimers.Clear();
+            foreach(var message in Event.Read<Timers, DeregisterTimer>())
+            {
+                Deregister(message.Timer);
+            }
         }
-    }
 
+        private void Register(ITimer timer)
+        {
+            if (timer.Mode == TickMode.Real)
+                realTimers.Add(timer);
 
-    public readonly struct RegisterTimer    : IEvent
-    {
-        public Timer Timer { get; init; }
-    }
-    
-    public readonly struct DeregisterTimer  : IEvent
-    {
-        public Timer Timer { get; init; }
+            if (timer.Mode == TickMode.Game)
+                gameTimers.Add(timer);
+        }
+
+        private void Deregister(ITimer timer)
+        {
+            if (timer.Mode == TickMode.Real)
+                realTimers.Remove(timer);
+
+            if (timer.Mode == TickMode.Game)
+                gameTimers.Remove(timer);
+        }
+
+        private void Clear()
+        {
+            realTimers.Clear();
+            gameTimers.Clear();
+        }
     }
 }
 
