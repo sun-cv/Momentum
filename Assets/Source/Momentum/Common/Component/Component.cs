@@ -17,7 +17,6 @@ namespace Game.Common
         public int Maximum { get; set; }
     }
 
-
     public struct Meta          : IComponent {}
     public struct Ledger        : IComponent {}
     
@@ -33,4 +32,18 @@ namespace Game.Common
     public struct Interactable  : IComponent {}
     public struct Pushable      : IComponent {}
     public struct Openable      : IComponent {}
+
+    public struct Item          : IComponent {}
+    public struct Container     : IComponent {}
+
+    public struct PlayerController
+    {
+
+    }
+
+    public struct AiController
+    {
+
+    }
+
 }

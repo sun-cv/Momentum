@@ -35,7 +35,8 @@ namespace Game.Core
             scheduler.Dispose();
         }
 
-        public Clock Clock => clock;
+        public Clock Clock      => clock;
+        public Scanner Scanner  => scanner;
     }
 }
 

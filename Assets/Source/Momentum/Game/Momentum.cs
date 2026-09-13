@@ -18,6 +18,8 @@ namespace Game
             engine  = new();
             world   = new();
             data    = new();
+
+            engine.Scanner.Register(world, data);
         }
 
         public void Shutdown()

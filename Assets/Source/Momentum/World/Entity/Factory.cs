@@ -12,7 +12,7 @@ namespace Game.Realm
 
             internal Factory(Entities entities)
             {
-                actor   = new(entities);
+                actor = new(entities);
             } 
 
             public Entity Actor(Definition.Actor definiton)

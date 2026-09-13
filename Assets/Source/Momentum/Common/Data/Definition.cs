@@ -3,6 +3,7 @@
 
 namespace Game.Common
 {
+    public interface IData {}
 
     public interface IDefinition 
     {

@@ -7,7 +7,7 @@
             "id": "12935c97-4774-4890-a0e9-544b82a4f453",
             "actions": [
                 {
-                    "name": "Mouse",
+                    "name": "Aim",
                     "type": "Value",
                     "id": "9e74628a-4433-472b-a6f8-a8e901eaa9a6",
                     "expectedControlType": "Vector2",
@@ -87,7 +87,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Mouse",
+                    "action": "Aim",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

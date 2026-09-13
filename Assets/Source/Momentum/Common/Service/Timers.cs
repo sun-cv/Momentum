@@ -112,7 +112,7 @@ namespace Game.Common
         public override TickMode Mode   { get; protected set; }
         public override TimeCount Count { get; protected set; }
 
-        public TickCounter(TickMode mode = TickMode.Real, TimeCount count = TimeCount.Increment, int initial = 0)
+        public TickCounter(TickMode mode, TimeCount count = TimeCount.Increment, int initial = 0)
         {
             Mode        = mode;
             Count       = count;
@@ -127,25 +127,15 @@ namespace Game.Common
 
             Current += Count == TimeCount.Increment ? 1 : -1;
 
-            if (Count == TimeCount.Decrement && Current <= 0)
-                Stop();
-        }
-
-        public override void OnStart()
-        {
-            Current = Initial;
-        }
-
-        public override void OnReset()
-        {
-            Current = Initial;
+            HasRun  = false;
         }
 
         public void Reset(int value)
         {
             Stop();
-            Initial = value;
-            HasRun  = false;
+            Initial     = value;
+            Starting    = Initial;
+            HasRun      = false;
         }
 
         public void Restart(int value)
@@ -205,8 +195,9 @@ namespace Game.Common
         public void Reset(float value)
         {
             Stop();
-            Initial = value;
-            HasRun  = false;
+            Initial     = value;
+            Starting    = Initial;
+            HasRun      = false;
         }
 
         public void Restart(float value)

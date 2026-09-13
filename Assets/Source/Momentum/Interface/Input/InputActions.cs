@@ -95,7 +95,7 @@ namespace Game.Interface
             ""id"": ""12935c97-4774-4890-a0e9-544b82a4f453"",
             ""actions"": [
                 {
-                    ""name"": ""Mouse"",
+                    ""name"": ""Aim"",
                     ""type"": ""Value"",
                     ""id"": ""9e74628a-4433-472b-a6f8-a8e901eaa9a6"",
                     ""expectedControlType"": ""Vector2"",
@@ -175,7 +175,7 @@ namespace Game.Interface
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Mouse"",
+                    ""action"": ""Aim"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -318,7 +318,7 @@ namespace Game.Interface
 }");
             // Player
             m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
-            m_Player_Mouse = m_Player.FindAction("Mouse", throwIfNotFound: true);
+            m_Player_Aim = m_Player.FindAction("Aim", throwIfNotFound: true);
             m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
             m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
             m_Player_Action = m_Player.FindAction("Action", throwIfNotFound: true);
@@ -406,7 +406,7 @@ namespace Game.Interface
         // Player
         private readonly InputActionMap m_Player;
         private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
-        private readonly InputAction m_Player_Mouse;
+        private readonly InputAction m_Player_Aim;
         private readonly InputAction m_Player_Move;
         private readonly InputAction m_Player_Interact;
         private readonly InputAction m_Player_Action;
@@ -426,9 +426,9 @@ namespace Game.Interface
             /// </summary>
             public PlayerActions(@InputActions wrapper) { m_Wrapper = wrapper; }
             /// <summary>
-            /// Provides access to the underlying input action "Player/Mouse".
+            /// Provides access to the underlying input action "Player/Aim".
             /// </summary>
-            public InputAction @Mouse => m_Wrapper.m_Player_Mouse;
+            public InputAction @Aim => m_Wrapper.m_Player_Aim;
             /// <summary>
             /// Provides access to the underlying input action "Player/Move".
             /// </summary>
@@ -483,9 +483,9 @@ namespace Game.Interface
             {
                 if (instance == null || m_Wrapper.m_PlayerActionsCallbackInterfaces.Contains(instance)) return;
                 m_Wrapper.m_PlayerActionsCallbackInterfaces.Add(instance);
-                @Mouse.started += instance.OnMouse;
-                @Mouse.performed += instance.OnMouse;
-                @Mouse.canceled += instance.OnMouse;
+                @Aim.started += instance.OnAim;
+                @Aim.performed += instance.OnAim;
+                @Aim.canceled += instance.OnAim;
                 @Move.started += instance.OnMove;
                 @Move.performed += instance.OnMove;
                 @Move.canceled += instance.OnMove;
@@ -518,9 +518,9 @@ namespace Game.Interface
             /// <seealso cref="PlayerActions" />
             private void UnregisterCallbacks(IPlayerActions instance)
             {
-                @Mouse.started -= instance.OnMouse;
-                @Mouse.performed -= instance.OnMouse;
-                @Mouse.canceled -= instance.OnMouse;
+                @Aim.started -= instance.OnAim;
+                @Aim.performed -= instance.OnAim;
+                @Aim.canceled -= instance.OnAim;
                 @Move.started -= instance.OnMove;
                 @Move.performed -= instance.OnMove;
                 @Move.canceled -= instance.OnMove;
@@ -583,12 +583,12 @@ namespace Game.Interface
         public interface IPlayerActions
         {
             /// <summary>
-            /// Method invoked when associated input action "Mouse" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// Method invoked when associated input action "Aim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>
             /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-            void OnMouse(InputAction.CallbackContext context);
+            void OnAim(InputAction.CallbackContext context);
             /// <summary>
             /// Method invoked when associated input action "Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>

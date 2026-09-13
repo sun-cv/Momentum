@@ -5,6 +5,22 @@ using System.Collections.Generic;
 
 namespace Game.Common
 {
+    public enum Capability
+    {
+        Interact,
+        Action,
+        Attack1,
+        Attack2,
+        Modifier,
+        Movement,
+        Dodge,
+        Rotate,
+        Use,
+        Menu,
+        Item,
+    }
+
+    public interface IWorld {}
 
     public readonly struct Entity
     {

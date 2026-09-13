@@ -17,7 +17,7 @@ namespace Game.Common
 
         public void Dispose()
         {
-            //REWORK REQUIRED
+            OnDispose();
         }
     }
 
