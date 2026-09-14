@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Game.Common;
 using Game.Common.Events;
@@ -11,60 +12,67 @@ namespace Game.Core
 
     public class Scanner
     {
-        internal Scanner()
-        {
-            Event.Push<ServiceScanCompleted>();
-        }
+        internal Scanner() {}
 
         public void Register(object world, object data)
         {
-            Assembly[] assemblies           = AppDomain.CurrentDomain.GetAssemblies();
-            List<IInitialize> initialize    = new();
+            List<IInitialize> initialize = new();
 
-            foreach (var assembly in assemblies)
+            foreach (var type in DiscoverServiceTypes())
             {
-                foreach (var type in assembly.GetTypes())
-                {
-                    if (type.IsAbstract) 
-                        continue;
+                var service = CreateService(type, world, data);
 
-                    if (type.GetCustomAttribute<ServiceAttribute>() == null) 
-                        continue;
+                if (service is IInitialize init)
+                    initialize.Add(init);
 
-                    bool needsWorld = typeof(IWorld).IsAssignableFrom(type);
-                    bool needsData  = typeof(IData).IsAssignableFrom(type);
-
-                    ConstructorInfo constructor = (needsWorld, needsData) switch
-                    {
-                        (true,  true)  => type.GetConstructor(new[] { world.GetType(), data.GetType() }),
-                        (true,  false) => type.GetConstructor(new[] { world.GetType() }),
-                        (false, true)  => type.GetConstructor(new[] { data .GetType() }),
-                        (false, false) => type.GetConstructor(Type.EmptyTypes),
-                    };
-
-                    if (constructor == null)
-                        throw new InvalidOperationException($"[Service] class {type.Name} has no matching constructor for its declared dependencies.");
-
-                    object[] args = (needsWorld, needsData) switch
-                    {
-                        (true,  true)  => new object[] { world, data },
-                        (true,  false) => new object[] { world },
-                        (false, true)  => new object[] { data },
-                        (false, false) => Array.Empty<object>(),
-                    };
-
-                    var service = constructor.Invoke(args);
-
-                    if (service is IInitialize init)
-                        initialize.Add(init);
-
-                    if (service is not IRate)
-                        throw new InvalidOperationException($"[Service] class {type.Name} has no IRate assigned");
-
-                    Event.Send<RegisterService>(new((IService)service, ResolveSchedule(type)));
-                }
+                RegisterTicked(service, type);
             }
+
             initialize.ForEach(service => service.Initialize());
+
+            Event.Push<ServiceScanCompleted>();
+        }
+
+        private static IEnumerable<Type> DiscoverServiceTypes()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(type => !type.IsAbstract && type.GetCustomAttribute<ServiceAttribute>() != null);
+        }
+
+        private object CreateService(Type type, object world, object data)
+        {
+            bool needsWorld = typeof(IWorld).IsAssignableFrom(type);
+            bool needsData  = typeof(IData).IsAssignableFrom(type);
+
+            ConstructorInfo constructor = (needsWorld, needsData) switch
+            {
+                (true,  true)  => type.GetConstructor(new[] { world.GetType(), data.GetType() }),
+                (true,  false) => type.GetConstructor(new[] { world.GetType() }),
+                (false, true)  => type.GetConstructor(new[] { data .GetType() }),
+                (false, false) => type.GetConstructor(Type.EmptyTypes),
+            };
+
+            if (constructor == null)
+                throw new InvalidOperationException($"[Service] class {type.Name} has no matching constructor for its declared dependencies.");
+
+            object[] args = (needsWorld, needsData) switch
+            {
+                (true,  true)  => new object[] { world, data },
+                (true,  false) => new object[] { world },
+                (false, true)  => new object[] { data },
+                (false, false) => Array.Empty<object>(),
+            };
+
+            return constructor.Invoke(args);
+        }
+
+        private void RegisterTicked(object service, Type type)
+        {
+            if (service is not IRate)
+                throw new InvalidOperationException($"[Service] class {type.Name} has no IRate assigned");
+
+            Event.Send<RegisterService>(new((IService)service, ResolveSchedule(type)));
         }
 
         private ServiceSchedule ResolveSchedule(Type serviceType)

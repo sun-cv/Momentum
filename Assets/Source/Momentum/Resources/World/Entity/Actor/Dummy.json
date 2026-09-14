@@ -1,0 +1,10 @@
+
+{
+    "Id":               "Dummy",
+    "Health": 
+    {
+        "Maximum":      10,
+        "Current":      10 
+    },
+    "Actor":            {}
+}

@@ -1,69 +1,66 @@
 using System;
 using System.Collections.Generic;
 using Game.Common;
-using Game.Content;
+using Game.Diagnostic;
 
 
 
 namespace Game.Realm
 {
 
-    public class Components 
+    public partial class Components 
     { 
         private int capacity = Config.World.Component.Capacity;
 
-        private Modifier modify;
+        private readonly Modifier modify;
 
         private readonly Dictionary<Type, object> stores;
         private readonly Dictionary<Mask, HashSet<Entity>> cache;
 
-        private Mask[] masks;
-        private Entity[] identity;
+        private Mask[]      masks;
+        private Entity[]    identity;
 
         public Components()
         {
             stores      = new();
             cache       = new();
-            masks       = new Mask[capacity];
+            masks       = new Mask  [capacity];
             identity    = new Entity[capacity];
             modify      = new(this);
-        }
-
-        internal void Register<T>(Store<T> store) where T : IComponent
-        {
-            stores[typeof(T)] = store;
-        }
-        
-        internal Store<TComponent> Access<TComponent>() where TComponent : IComponent
-        {
-            if (!stores.ContainsKey(typeof(TComponent)))
-                Register<TComponent>(new());
-
-            return (Store<TComponent>)stores[typeof(TComponent)];
-        }
-
-        internal TComponent View<TComponent>(Entity entity) where TComponent : IComponent
-        {
-            return Access<TComponent>().View(entity);
         }
 
         public void Add<TComponent>(Entity entity, TComponent component) where TComponent : IComponent
         {
             EnsureCapacity(entity.Index);
-            Access<TComponent>().Add(entity, component);
-            OnChanged(entity);
+            AccessStore<TComponent>().Add(entity, component);
 
-            masks   [entity.Index] = masks   [entity.Index].With<TComponent>();
+            masks   [entity.Index] = masks[entity.Index].With<TComponent>();
             identity[entity.Index] = entity;
+
+            OnComponentChange(entity);
         }
 
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
         {
             EnsureCapacity(entity.Index);
-            Access<TComponent>().Remove(entity);
-            OnChanged(entity);
+            AccessStore<TComponent>().Remove(entity);
 
             masks[entity.Index] = masks[entity.Index].Without<TComponent>();
+
+            OnComponentChange(entity);
+        }
+
+        internal TComponent Passthrough<TComponent>(Entity entity) where TComponent : IComponent
+        {
+            return AccessStore<TComponent>().View(entity);
+        }
+
+        internal Store<TComponent> AccessStore<TComponent>() where TComponent : IComponent
+        {
+            if (!stores.ContainsKey(typeof(TComponent)))
+                stores[typeof(TComponent)] = new Store<TComponent>();
+
+            return (Store<TComponent>)stores[typeof(TComponent)];
         }
 
         internal void Clear(Entity entity)
@@ -71,7 +68,7 @@ namespace Game.Realm
             if (entity.Index < masks.Length)
                 masks[entity.Index] = default;
 
-            OnChanged(entity);
+            OnComponentChange(entity);
         }
 
         internal IReadOnlyCollection<Entity> Query(Mask mask)
@@ -83,19 +80,17 @@ namespace Game.Realm
 
             foreach (var entity in identity)
             {
-                var current = entity.Index < masks.Length ? masks[entity.Index] : default;
-
-                if (current.Contains(mask))
+                if (CurrentMask(entity).Contains(mask))
                     set.Add(entity);
             }
-                    
+
             cache[mask] = set;
             return set;
         }
 
-        private void OnChanged(Entity entity)
+        private void OnComponentChange(Entity entity)
         {
-            var current = entity.Index < masks.Length ? masks[entity.Index] : default;
+            var current = CurrentMask(entity);
 
             foreach (var (mask, set) in cache)
             {
@@ -104,10 +99,15 @@ namespace Game.Realm
             }
         }
 
+        private Mask CurrentMask(Entity entity)
+        {
+            return entity.Index < masks.Length ? masks[entity.Index] : default;
+        }
+
         private void EnsureCapacity(int index)
         {
             if (index < capacity)
-                return; 
+                return;
 
             capacity = Math.Max(capacity * 2, index + 1);
 
@@ -117,18 +117,9 @@ namespace Game.Realm
 
         public Modifier Modify => modify;
          
-        public sealed class Modifier
-        {
-            readonly Components components;
-
-            internal Modifier(Components components)
-            {
-                this.components = components;
-            }
-            
-            public ref Health Health(Entity entity) => ref components.Access<Health>().Modify(entity);
-            public ref Energy Energy(Entity entity) => ref components.Access<Energy>().Modify(entity);
-        }
+        static Components() => Log<Components>.Level(Diagnostic.Log.Level.Debug);
     }
+
+
 }
 

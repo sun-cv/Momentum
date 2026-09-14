@@ -43,6 +43,22 @@ namespace Game.Realm
                     if (definition.Health is Health health)
                         component.Add<Health>(id, health);
 
+                    if (definition.Energy is Energy energy)
+                        component.Add<Energy>(id, energy);
+
+                    if (definition.Intent is Intent intent)
+                        component.Add<Intent>(id, intent);
+
+                    if (definition.Aim is Aim aim)
+                        component.Add<Aim>(id, aim);
+                    
+                    if (definition.Pushable is Pushable pushable)
+                        component.Add<Pushable>(id, pushable);
+
+                    if (definition.PlayerController is PlayerController controller)
+                        component.Add<PlayerController>(id, controller);
+
+
                     return id;
                 }
             }

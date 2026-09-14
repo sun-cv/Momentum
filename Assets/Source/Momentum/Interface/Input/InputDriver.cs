@@ -60,8 +60,6 @@ namespace Game.Interface
                 _ => false,
             };
 
-            Debug.Log(condition);
-
             Event.Send(new InputEvent() { Capability = capability, Pressed = condition, Released = !condition });
         }
 

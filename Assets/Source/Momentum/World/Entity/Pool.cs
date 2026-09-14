@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using Game.Common;
 using Game.Diagnostic;
-using Game.Content;
 
 
 namespace Game.Realm
 {
-    public class EntityPool
+    public class Pool
     {
         private int increment;
         private int renewed; 
@@ -17,7 +16,7 @@ namespace Game.Realm
         private bool[] alive;
         private int [] generations;
 
-        public EntityPool()
+        public Pool()
         {
             free        = new int [capacity];
             alive       = new bool[capacity];
@@ -38,7 +37,7 @@ namespace Game.Realm
 
         public void Release(Entity entity)
         {
-            if (!IsAlive(entity))
+            if (!Alive(entity))
                 return;
 
             alive[entity.Index] = false;
@@ -68,12 +67,12 @@ namespace Game.Realm
                     yield return new Entity { Index = index, Generation = generations[index] };
         }
 
-        public bool IsAlive(Entity entity)
+        public bool Alive(Entity entity)
         {
             return entity.Index < alive.Length && alive[entity.Index] && entity.Generation == generations[entity.Index];
         }
 
-        static EntityPool() => Log<EntityPool>.Level(Diagnostic.Log.Level.Debug);
+        static Pool() => Log<Pool>.Level(Diagnostic.Log.Level.Debug);
     }
 }
 

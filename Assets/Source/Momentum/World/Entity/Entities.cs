@@ -28,18 +28,12 @@ namespace Game.Realm
             pool.Release(entity);
             component.Clear(entity);
         }
-
         
         public Factory Create                   => factory;
         public Components Component             => component;
         public Components.Modifier Modify       => component.Modify;
     }
 
-    public partial class Entities
-    {
-        public Health Health(Entity entity) => component.View<Health>(entity);
-        public Energy Energy(Entity entity) => component.View<Energy>(entity);
-    }
 }
 
 

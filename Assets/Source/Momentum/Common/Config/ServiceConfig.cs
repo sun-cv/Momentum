@@ -35,7 +35,7 @@ namespace Game.Common
             public static class PlayerInputSystem
             {
                 public const TickPhase Phase    = TickPhase.Logic;
-                public const int       Priority = 0;
+                public const int       Priority = 10;
             }
 
         }

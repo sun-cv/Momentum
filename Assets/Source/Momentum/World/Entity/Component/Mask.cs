@@ -6,7 +6,7 @@ using Game.Common;
 namespace Game.Realm
 {
 
-    public static class ComponentRegistry
+    public static class MaskIndex
     {
         private static int index;
 
@@ -16,9 +16,9 @@ namespace Game.Realm
         }
     }
 
-    public static class ComponentId<TComponent> where TComponent : IComponent
+    public static class ComponentBit<TComponent> where TComponent : IComponent
     {
-        public static readonly int Index = ComponentRegistry.Next();  
+        public static readonly int Index = MaskIndex.Next();  
     } 
 
     public struct Mask : IEquatable<Mask>
@@ -27,7 +27,7 @@ namespace Game.Realm
 
         public readonly Mask With<TComponent>() where TComponent : IComponent
         {
-            int index   = ComponentId<TComponent>.Index;
+            int index   = ComponentBit<TComponent>.Index;
             ulong flag  = 1UL << (index % 64);
             var mask    = this;
             switch (index / 64)
@@ -42,7 +42,7 @@ namespace Game.Realm
 
         public readonly Mask Without<TComponent>() where TComponent : IComponent
         {
-            int index   = ComponentId<TComponent>.Index;
+            int index   = ComponentBit<TComponent>.Index;
             ulong flag  = 1UL << (index % 64);
             var mask    = this;
             switch (index / 64)

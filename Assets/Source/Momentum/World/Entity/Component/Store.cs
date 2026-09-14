@@ -8,12 +8,10 @@ namespace Game.Realm
 
     public class Store<TComponent> where TComponent : IComponent
     {
-        bool[]          entity;
         TComponent[]    component;
 
         public Store(int capacity = 10)
         {
-            entity      = new bool      [capacity];
             component   = new TComponent[capacity];
         }
 
@@ -21,7 +19,6 @@ namespace Game.Realm
         {
             EnsureCapacity(entity.Index);
 
-            this.entity   [entity.Index] = true;
             this.component[entity.Index] = component;
         }
 
@@ -30,19 +27,14 @@ namespace Game.Realm
             return component[entity.Index];
         }
         
-        public ref TComponent Modify(Entity entity)
+        public ref TComponent Reference(Entity entity)
         {
             return ref component[entity.Index];
         }
 
-        public bool Has(Entity entity)
-        {
-            return entity.Index < this.entity.Length && this.entity[entity.Index];
-        }
-
         public void Remove(Entity entity)
         {
-            if (entity.Index < this.entity.Length) this.entity[entity.Index] = false;
+            component[entity.Index] = default;
         }
 
         void EnsureCapacity(int index)
@@ -52,7 +44,6 @@ namespace Game.Realm
 
             int newSize = Math.Max(component.Length * 2, index + 1);
 
-            Array.Resize(ref entity,    newSize);
             Array.Resize(ref component, newSize);
         }
     }    

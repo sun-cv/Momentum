@@ -1,15 +1,19 @@
 
 
 {
-    "Id": "Hero",
+    "Id":               "Hero",
     "Health": 
     {
-        "Maximum": 10,
-        "Current": 10 
-    }
-    
-
-
-
-        
+        "Maximum":      10,
+        "Current":      10 
+    },
+    "Energy":
+    {
+        "Maximum":      10,
+        "Current":      10 
+    },
+    "Aim":              {},
+    "Intent":           {},
+    "Pushable":         {},
+    "PlayerController": {}
 }
