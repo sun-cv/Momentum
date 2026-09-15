@@ -40,7 +40,7 @@ namespace Game.Realm
                 {
                     var id = entity.Allocate();
                     
-                    component.Add<Meta>(id, new() { Id = definition.Id, Created = Watch.RealTick });
+                    component.Add<Meta>(id, new() { Id = definition.Id, Created = Watch.Tick.Real });
                     component.Add<Actor>(id, new());
                     component.Add<Physics>(id, new());
                     component.Add<Transform>(id, new());

@@ -6,29 +6,34 @@ namespace Game.Common
 
     public class Watch : RegisteredService, IRealBase, IRealLate, IGameBase
     {
-
-        public static int RealTick      { get; private set; }
-        public static int GameTick      { get; private set; }
-        public static int LateTick      { get; private set; }
-
-        public static float RealTime    { get; private set; }
-        public static float GameTime    { get; private set; }
-
         void IRealBase.Tick()
         {
-            RealTime += Config.Engine.Clock.Delta;
-            RealTick ++;
+            Time.Real += Config.Engine.Clock.Delta;
+            Tick.Real ++;
         }
 
         void IGameBase.Tick()
         {
-            GameTime += Config.Engine.Clock.Delta;
-            GameTick ++;
+            Time.Game += Config.Engine.Clock.Delta;
+            Tick.Game ++;
         }
 
         void IRealLate.Tick()
         {
-            LateTick ++;
+            Tick.Late ++;
+        }
+
+        public static class Time
+        {
+            public static float Real  { get; set; }
+            public static float Game  { get; set; }
+        }
+
+        public static class Tick
+        {
+            public static int Real  { get; set; }
+            public static int Game  { get; set; }
+            public static int Late  { get; set; }
         }
     }
 }

@@ -71,7 +71,7 @@ namespace Game.Service
             {
                 if (pressed)
                 {
-                    World.Entity.Modify.Command(player).Buffer[capability] = new Command(){ Capability = capability, TickPressed = Watch.RealTick };
+                    World.Entity.Modify.Command(player).Buffer[capability] = new Command(){ Capability = capability, TickPressed = Watch.Tick.Real };
                 }
 
                 if (released)
@@ -79,13 +79,13 @@ namespace Game.Service
                     if (World.Entity.Modify.Command(player).Active.TryGetValue(capability, out var active))
                     {
                         active.Released     = true;
-                        active.TickReleased = Watch.RealTick;
+                        active.TickReleased = Watch.Tick.Real;
                     }
 
                     if (World.Entity.Modify.Command(player).Buffer.TryGetValue(capability, out var buffer))
                     {
                         buffer.Released     = true;
-                        buffer.TickReleased = Watch.RealTick;
+                        buffer.TickReleased = Watch.Tick.Real;
                     }
                 }
             }
