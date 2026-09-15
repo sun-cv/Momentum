@@ -15,11 +15,13 @@ namespace Game.Common
         public class Actor : IDefinition
         {
             public string Id                            { get; init; }
+            public Aim? Aim                             { get; init; }
+            public Intent? Intent                       { get; init; }
+            public Movement? Movement                   { get; init; }
             public Health? Health                       { get; init; }
             public Energy? Energy                       { get; init; }
-            public Intent? Intent                       { get; init; }
-            public Aim? Aim                             { get; init; }
-            public Pushable? Pushable                   { get; init; }
+            public CommandQueue? CommandQueue           { get; init; }
+            public AiController? AiController           { get; init; }
             public PlayerController? PlayerController   { get; init; }
         }
 

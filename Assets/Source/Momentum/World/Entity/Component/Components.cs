@@ -32,7 +32,7 @@ namespace Game.Realm
         public void Add<TComponent>(Entity entity, TComponent component) where TComponent : IComponent
         {
             EnsureCapacity(entity.Index);
-            AccessStore<TComponent>().Add(entity, component);
+            Access<TComponent>().Add(entity, component);
 
             masks   [entity.Index] = masks[entity.Index].With<TComponent>();
             identity[entity.Index] = entity;
@@ -43,19 +43,19 @@ namespace Game.Realm
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
         {
             EnsureCapacity(entity.Index);
-            AccessStore<TComponent>().Remove(entity);
+            Access<TComponent>().Remove(entity);
 
             masks[entity.Index] = masks[entity.Index].Without<TComponent>();
 
             OnComponentChange(entity);
         }
 
-        internal TComponent Passthrough<TComponent>(Entity entity) where TComponent : IComponent
+        internal TComponent View<TComponent>(Entity entity) where TComponent : IComponent
         {
-            return AccessStore<TComponent>().View(entity);
+            return Access<TComponent>().View(entity);
         }
 
-        internal Store<TComponent> AccessStore<TComponent>() where TComponent : IComponent
+        internal Store<TComponent> Access<TComponent>() where TComponent : IComponent
         {
             if (!stores.ContainsKey(typeof(TComponent)))
                 stores[typeof(TComponent)] = new Store<TComponent>();

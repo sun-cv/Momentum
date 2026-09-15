@@ -13,7 +13,6 @@
         "Current":      10 
     },
     "Aim":              {},
-    "Intent":           {},
-    "Pushable":         {},
+    "Movement":         {},
     "PlayerController": {}
 }

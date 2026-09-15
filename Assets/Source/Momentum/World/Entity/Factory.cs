@@ -39,6 +39,28 @@ namespace Game.Realm
                 public Entity Create(Definition.Actor definition)
                 {
                     var id = entity.Allocate();
+                    
+                    component.Add<Meta>(id, new() { Id = definition.Id, Created = Watch.RealTick });
+                    component.Add<Actor>(id, new());
+                    component.Add<Physics>(id, new());
+                    component.Add<Transform>(id, new());
+                    component.Add<TimeScale>(id, new());
+
+                    if (definition.PlayerController is PlayerController)
+                    {
+                        component.Add<Intent>(id, new());
+                        component.Add<CommandQueue>(id, new() { Active = new(), Buffer = new() });
+                        component.Add<PlayerController>(id, new());
+                    }
+                    if (definition.AiController is AiController)
+                    {
+                        component.Add<Intent>(id, new());
+                        component.Add<CommandQueue>(id, new() { Active = new(), Buffer = new() });
+                        component.Add<AiController>(id, new());
+                    }
+
+                    if (definition.Aim is Aim)
+                        component.Add<Aim>(id, new());
 
                     if (definition.Health is Health health)
                         component.Add<Health>(id, health);
@@ -46,18 +68,8 @@ namespace Game.Realm
                     if (definition.Energy is Energy energy)
                         component.Add<Energy>(id, energy);
 
-                    if (definition.Intent is Intent intent)
-                        component.Add<Intent>(id, intent);
-
-                    if (definition.Aim is Aim aim)
-                        component.Add<Aim>(id, aim);
-                    
-                    if (definition.Pushable is Pushable pushable)
-                        component.Add<Pushable>(id, pushable);
-
-                    if (definition.PlayerController is PlayerController controller)
-                        component.Add<PlayerController>(id, controller);
-
+                    if (definition.Movement is Movement)
+                        component.Add<Movement>(id, new());
 
                     return id;
                 }

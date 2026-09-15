@@ -2,6 +2,7 @@ using Game.Realm;
 using Game.Common;
 using Game.Content;
 using Game.Diagnostic;
+using System.Linq;
 
 
 
@@ -42,19 +43,14 @@ namespace Game.Service
 
         void IRealStep.Tick() 
         {
-            var test = World.Query(Mask<Intent>.Key);
-            
-            World.Entity.Health(id);
-            World.Entity.Modify.Health(id);
+            var direction = World.Entity.Intent(id).Direction;
+            var commands  = World.Entity.Command(id);
 
-            foreach (var entity in test)
-            {
-                var direction = World.Entity.Intent(entity).Direction;
+            Log<Dev>.Debug("Direction.X", () => $"{direction.x}");
+            Log<Dev>.Debug("Direction.Y", () => $"{direction.y}");
+       
+            Log<Dev>.Debug($"Command.Active", () => commands.Buffer.Count > 0 ? string.Join(", ", commands.Buffer.Values.Select(comp => comp.Capability)) : "");
 
-                Log<Dev>.Debug("Direction.X", () => $"{direction.x}");
-                Log<Dev>.Debug("Direction.Y", () => $"{direction.y}");
-
-            }
         }
 
         static Dev() => Log<Dev>.Level(Diagnostic.Log.Level.Debug);                

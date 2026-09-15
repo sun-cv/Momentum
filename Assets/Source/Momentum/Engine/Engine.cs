@@ -26,7 +26,6 @@ namespace Game.Core
 
         public void Late()
         {
-            clock   .Late();
             execute .Late();
         } 
 

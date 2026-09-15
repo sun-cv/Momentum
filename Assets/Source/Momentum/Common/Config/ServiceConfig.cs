@@ -11,7 +11,13 @@ namespace Game.Common
             public static class LoggingController
             {
                 public const TickPhase Phase    = TickPhase.System;
-                public const int       Priority = 0;
+                public const int       Priority = 00;
+            }
+
+            public static class Watch
+            {
+                public const TickPhase Phase    = TickPhase.System;
+                public const int       Priority = 05;
             }
 
             public static class Timers
@@ -33,6 +39,18 @@ namespace Game.Common
             }
 
             public static class PlayerInputSystem
+            {
+                public const TickPhase Phase    = TickPhase.Logic;
+                public const int       Priority = 10;
+            }
+
+            public static class AiInputSystem
+            {
+                public const TickPhase Phase    = TickPhase.Logic;
+                public const int       Priority = 11;
+            }
+
+            public static class CommandSystem
             {
                 public const TickPhase Phase    = TickPhase.Logic;
                 public const int       Priority = 10;

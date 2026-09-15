@@ -1,4 +1,3 @@
-using Game.Content;
 using Game.Common;
 
 
@@ -14,11 +13,6 @@ namespace Game.Core
         private float gameDelta             = Config.Engine.Clock.Delta;
 
 
-        private float realTime;
-        private float gameTime;
-
-        private int   frame;
-
         internal Clock()
         {
             UnityEngine.Time.fixedDeltaTime = Delta;
@@ -27,14 +21,6 @@ namespace Game.Core
         public void Tick()
         {
             UpdateGameDelta();
-
-            realTime  += realDelta;
-            gameTime  += gameDelta;
-        }
-
-        public void Late()
-        {
-            frame++;
         }
 
         private void UpdateGameDelta()
@@ -48,11 +34,8 @@ namespace Game.Core
         }
 
         public float Delta          => Config.Engine.Clock.Delta;
-        public float RealTime       => realTime;
-        public float GameTime       => gameTime;
         public float RealDelta      => realDelta;
         public float GameDelta      => gameDelta;
-        public int   Frame          => frame;
     }
 
     
