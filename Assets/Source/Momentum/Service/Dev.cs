@@ -22,7 +22,7 @@ namespace Game.Service
         {
             Data    = data;
             World   = world;
-            id      = World.Entity.Create.Actor(Data.Lookup.Actor("Hero"));
+            id      = World.Entity.Create.Actor(Data.Load.Definition<Definition.Actor>("Hero"));
         }
 
         public void Initialize()
