@@ -17,8 +17,7 @@ namespace Game.Service
         private readonly Assets Asset;
         private readonly World World;
 
-        private readonly Entity id;
-        private readonly Actor actor; 
+        private readonly Entity entity;
 
         public Dev(World world, Data data, Assets asset)
         {
@@ -29,10 +28,7 @@ namespace Game.Service
 
         public void Initialize()
         {
-            var definition  = Data.Get<Definition>("Hero");
-            var prefab      = Asset.Get<GameObject>("Hero");
-
-            World.Entity.Create.Spawn(definition, prefab, new());
+            World.Entity.Create(Asset.Get("Hero"), new());
         }
     
         void IRealBase.Tick() 
@@ -49,8 +45,8 @@ namespace Game.Service
 
         void IRealStep.Tick() 
         {
-            var direction = World.Entity.Intent(id).Direction;
-            var commands  = World.Entity.Command(id);
+            var direction = World.Entity.Intent(entity).Direction;
+            var commands  = World.Entity.Command(entity);
 
             Log<Dev>.Debug("Direction.X", () => $"{direction.x}");
             Log<Dev>.Debug("Direction.Y", () => $"{direction.y}");

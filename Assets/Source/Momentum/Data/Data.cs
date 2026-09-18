@@ -65,7 +65,7 @@ namespace Game.Content
                 var definition = JsonConvert.DeserializeObject<Definition>(asset.text);
 
                 if (definition == null || string.IsNullOrEmpty(definition.Id))
-                    throw new InvalidOperationException($"Definition file {asset.name} has no Id.");
+                    throw new Exception($"[Data.Loader] Definition file {asset.name} has no Id.");
 
                 registry.Register(definition.Id, definition);
             }

@@ -75,7 +75,7 @@ namespace Game.Realm
         public TValue Get<TValue>(string id) where TValue : TBase
         {
             if (!stores.TryGetValue(typeof(TValue), out var dictionary))
-                throw new KeyNotFoundException($"Registry<{typeof(TBase)}> missing <{typeof(TValue)}>key: {id}");
+                throw new Exception($"[TypedStore] Registry<{typeof(TBase)}> missing <{typeof(TValue)}>key: {id}");
 
             return (TValue)dictionary[id];
         }

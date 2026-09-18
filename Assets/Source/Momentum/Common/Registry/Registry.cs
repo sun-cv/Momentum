@@ -13,19 +13,19 @@ namespace Game.Common
         public void Register<T>(string id, T value)
         {
             if (!Store<T>().TryAdd(id, value))
-                throw new InvalidOperationException($"Registry already holds <{typeof(T).Name}> with id: {id}");
+                throw new Exception($"[Registry] Store already holds <{typeof(T).Name}> with id: {id}");
         }
 
         public void Deregister<T>(string id)
         {
             if (!Store<T>().Remove(id))
-                throw new InvalidOperationException($"Registry holds no <{typeof(T).Name}> to remove with id: {id}");
+                throw new Exception($"[Registry] Store holds no <{typeof(T).Name}> to remove with id: {id}");
         }
 
         public T Get<T>(string id)
         {
             if (!Store<T>().TryGetValue(id, out var value))
-                throw new KeyNotFoundException($"Registry holds no <{typeof(T).Name}> with id: {id}");
+                throw new Exception($"[Registry] Store holds no <{typeof(T).Name}> with id: {id}");
 
             return value;
         }

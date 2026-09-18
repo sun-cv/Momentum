@@ -5,6 +5,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Game.Common;
 using Game.Diagnostic;
+using System.Data;
 
 
 
@@ -39,7 +40,7 @@ namespace Game.Content
             return new Blueprint
             {
                 Definition  = definition,
-                Prefab      = definition.Prefab is string key ? registry.Get<GameObject>(key) : null,
+                Prefab      = definition.Prefab is string key ? registry.Get<GameObject>(key) : throw new Exception($"[Assets] Blueprint: Definition ({definition.Id}) is missing prefab Id"),
             };
         }
         

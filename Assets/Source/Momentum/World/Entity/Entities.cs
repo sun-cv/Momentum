@@ -1,5 +1,6 @@
 using System;
 using Game.Common;
+using UnityEngine;
 
 
 
@@ -8,14 +9,14 @@ namespace Game.Realm
     public partial class Entities
     {
         private readonly Pool pool;
-        private readonly Factory factory;
+        private readonly Assembler assembler;
         private readonly Components component;
 
         public Entities()
         {
             pool        = new();
             component   = new();
-            factory     = new(this);
+            assembler   = new(this);
         }
         
         internal Entity Allocate()
@@ -23,13 +24,20 @@ namespace Game.Realm
             return pool.Allocate();
         }
 
+        public Entity Create(Blueprint blueprint, Vector3 position)
+        {
+            return assembler.Assemble(blueprint, position);
+        }
+
         public void Release(Entity entity)
         {
+            if (!pool.Alive(entity))
+                throw new Exception($"Attemped to release dead entity")
+
+            assembler.Dismantle(entity);
             pool.Release(entity);
-            component.Clear(entity);
         }
         
-        public Factory Create                   => factory;
         public Components Component             => component;
         public Components.Modifier Modify       => component.Modify;
     }

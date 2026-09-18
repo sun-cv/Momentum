@@ -10,5 +10,6 @@ namespace Game.Common
     {
         public Definition Definition    { get; init; }
         public GameObject Prefab        { get; init; }
+        public Vector3 Position         { get; init; }
     }
 }

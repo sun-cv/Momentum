@@ -40,6 +40,11 @@ namespace Game.Realm
             OnComponentChange(entity);
         }
 
+        public bool Has<TComponent>(Entity entity) where TComponent : IComponent
+        {
+            return CurrentMask(entity).Contains(Mask<TComponent>.Key);
+        }
+
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
         {
             EnsureCapacity(entity.Index);

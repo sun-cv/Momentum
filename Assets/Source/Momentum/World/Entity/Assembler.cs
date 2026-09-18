@@ -11,26 +11,37 @@ namespace Game.Realm
 {
     public partial class Entities
     {
-        public class Factory
+        internal class Assembler
         {
             private readonly Entities entities;
             private readonly Components component;
 
-            internal Factory(Entities entities)
+            internal Assembler(Entities entities)
             {
                 this.entities = entities;
                 this.component = entities.Component;
             }
 
-            public Entity Spawn(Definition definition, GameObject prefab, Vector3 position)
+            public Entity Assemble(Blueprint blueprint, Vector3 position)
             {
-                var entity   = entities.Allocate();
-                var instance = Object.Instantiate(prefab, position, Quaternion.identity);
+                var entity      = entities.Allocate();
+
+                var prefab      = blueprint.Prefab;
+                var definition  = blueprint.Definition;
+                var instance    = Object.Instantiate(prefab, position, Quaternion.identity);
 
                 ProcessDefinition(entity, definition);
                 ProcessPrefab(entity, definition, instance);
 
                 return entity;
+            }
+
+            public void Dismantle(Entity entity)
+            {
+                if (component.Has<Instance>(entity))
+                    Object.Destroy(component.View<Instance>(entity).Transform.gameObject);
+
+                component.Clear(entity);
             }
 
             private void ProcessDefinition(Entity entity, Definition definition)

@@ -78,7 +78,7 @@ namespace Game.Common
     public struct Inventory         : IComponent
     {
 
-    }
+    
 
 
     public struct Target            : IComponent

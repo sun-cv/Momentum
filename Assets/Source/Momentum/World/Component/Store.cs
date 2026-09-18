@@ -74,7 +74,7 @@ namespace Game.Common
         public TType Get<TType>(string id) where TType : TValue
         {
             if (!stores.TryGetValue(typeof(TValue), out var dictionary))
-                throw new KeyNotFoundException($"Registry<{typeof(TValue)}> missing <{typeof(TValue)}>key: {id}");
+                throw new Exception($"[TypedStore] Registry<{typeof(TValue)}> missing <{typeof(TValue)}>key: {id}");
 
             return (TType)dictionary[id];
         }

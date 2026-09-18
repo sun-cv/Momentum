@@ -59,7 +59,7 @@ namespace Game.Core
             };
 
             if (constructor == null)
-                throw new InvalidOperationException($"[Service] class {type.Name} has no matching constructor for its declared dependencies.");
+                throw new Exception($"[Service] class {type.Name} has no matching constructor for its declared dependencies.");
 
             object[] args = (needsWorld, needsData, needsAsset) switch
             {
@@ -79,23 +79,23 @@ namespace Game.Core
         private void RegisterTicked(object service, Type type)
         {
             if (service is not IRate)
-                throw new InvalidOperationException($"[Service] class {type.Name} has no IRate assigned");
+                throw new Exception($"[Service] class {type.Name} has no IRate assigned");
 
             Event.Send<RegisterService>(new((IService)service, ResolveSchedule(type)));
         }
 
-        private ServiceSchedule ResolveSchedule(Type serviceType)
+        private ServiceSchedule ResolveSchedule(Type type)
         {
-            var config  = typeof(Config.Service).GetNestedType(serviceType.Name, BindingFlags.Public);
+            var config  = typeof(Config.Service).GetNestedType(type.Name, BindingFlags.Public);
 
             if (config == null)
-                throw new InvalidOperationException($"[Service] class {serviceType.Name} implements a tick-rate interface but has no matching Config.Service.{serviceType.Name} entry.");
+                throw new Exception($"[Service] class {type.Name} implements a tick-rate interface but has no matching Config.Service.{type.Name} entry.");
 
             var phase    = config.GetField("Phase",    BindingFlags.Public | BindingFlags.Static);
             var priority = config.GetField("Priority", BindingFlags.Public | BindingFlags.Static);
 
             if (phase  == null || priority == null)
-                throw new InvalidOperationException($"Config.Service.{serviceType.Name} is missing Phase or Priority.");
+                throw new Exception($"[Service] class {type.Name} is missing Phase or Priority.");
 
             return new ServiceSchedule()
             {
