@@ -12,32 +12,30 @@ using Game.Diagnostic;
 namespace Game.Content
 {
 
-
     public partial class Data
     {
-        private readonly Loader loader;
         private readonly Registry registry;
-        private readonly Catalogue catalog;
-        
-        public Data()
+        private readonly Loader loader;
+
+        public Data(Registry register)
         {
-            registry    = new();
+            registry    = register;
             loader      = new(registry);
-            catalog     = new(registry);
         }
 
         public List<AsyncOperationHandle> Boot()
         {
-            return catalog.Boot();
+            return loader.Boot();
         }
 
+        public TData Get<TData>(string id) where TData : IRecord
+        {
+            return registry.Get<TData>(id);
+        }
         public void Shutdown()
         {
 
         }
-
-        public Loader Load          => loader;
-        public Catalogue Catalog    => catalog;
 
         static Data() => Log<Data>.Level(Diagnostic.Log.Level.Debug);
     }
@@ -45,172 +43,32 @@ namespace Game.Content
 
     public partial class Data
     {
-        public sealed class Registry
-        {
-            private readonly TypedStore<GameObject> prefabs      = new();
-            private readonly TypedStore<IDefinition> definitions = new();
-
-            public TypedStore<GameObject> Prefabs      => prefabs;
-            public TypedStore<IDefinition> Definitions => definitions;
-            
-        }
-    }
-
-    public partial class Data
-    {
-        public sealed class Catalogue
-        {
-            private readonly Prefabs prefabs;
-            private readonly Definitions definitions;
-
-            public Prefabs Prefab           => prefabs;
-            public Definitions Definition   => definitions;
-
-            public Catalogue(Registry registry)
-            {
-                prefabs     = new(registry);
-                definitions = new(registry);
-            }
-
-            public List<AsyncOperationHandle> Boot()
-            {
-                var handles = new List<AsyncOperationHandle>
-                {
-                    Definition.Load<Definition.Actor>(new HashSet<string> { "Definition", "Actor" }),
-                    Definition.Load<Definition.Prop>(new HashSet<string> { "Definition", "Prop" }),
-                    // Prefab.Load(new HashSet<string> { "Prefab", "Actor" })
-                };
-
-                return handles;
-            }
-
-            public sealed class Definitions 
-            {
-            
-                private readonly Registry registry;
-                private readonly Dictionary<HashSet<string>, AsyncOperationHandle> handles = new(new LabelSetComparer());
-
-                public Definitions(Registry registry)
-                {
-                    this.registry = registry;
-                }
-
-                public AsyncOperationHandle<IList<TextAsset>> Load<TType>(HashSet<string> labels) where TType : IDefinition
-                {
-                    if (handles.TryGetValue(labels, out var existing))
-                        return existing.Convert<IList<TextAsset>>();
-
-                    var handle = Addressables.LoadAssetsAsync<TextAsset>(labels, asset =>
-                            {
-                                var definition = (TType)JsonConvert.DeserializeObject(asset.text, typeof(TType));
-                                registry.Definitions.Register<TType>(definition.Id, definition);
-                            }, Addressables.MergeMode.Intersection);
-
-                    handles[labels] = handle;
-
-                    return handle;
-                }
-
-                public void Unload(HashSet<string> labels)
-                {
-                    if (!handles.TryGetValue(labels, out var handle))
-                        return;
-
-                    Addressables.Release(handle);
-                    handles.Remove(labels);
-                }
-            }
-
-            public sealed class Prefabs
-            {
-            
-                private readonly Registry registry;
-                private readonly Dictionary<HashSet<string>, AsyncOperationHandle> handles = new(new LabelSetComparer());
-
-                public Prefabs(Registry registry)
-                {
-                    this.registry = registry;
-                }
-
-                public AsyncOperationHandle<IList<GameObject>> Load(HashSet<string> labels)
-                {
-                    if (handles.TryGetValue(labels, out var existing))
-                        return existing.Convert<IList<GameObject>>();
-
-                    var handle = Addressables.LoadAssetsAsync<GameObject>(labels, asset =>
-                            {
-                            registry.Prefabs.Register<GameObject>(asset.name, asset);
-                            }, Addressables.MergeMode.Intersection);
-
-                    handles[labels] = handle;
-
-                    return handle;
-                }
-
-                public void Unload(HashSet<string> labels)
-                {
-                    if (!handles.TryGetValue(labels, out var handle))
-                        return;
-
-                    Addressables.Release(handle);
-                    handles.Remove(labels);
-                }
-            }
-        }
-    }
-
-    public partial class Data
-    {
-        public sealed class Loader 
+        public sealed class Loader
         {
             private readonly Registry registry;
 
-            public Loader(Registry registry)
+            internal Loader(Registry registry)
             {
                 this.registry = registry;
             }
 
-            public TDefinition Definition<TDefinition>(string id) where TDefinition : IDefinition
+            internal List<AsyncOperationHandle> Boot()
             {
-                return registry.Definitions.Get<TDefinition>(id);
+                return new List<AsyncOperationHandle>
+                {
+                    Addressables.LoadAssetsAsync<TextAsset>(new HashSet<string> { "Definition" }, Parse, Addressables.MergeMode.Intersection)
+                };
             }
 
-            public GameObject Prefab(string id)
+            private void Parse(TextAsset asset)
             {
-                return registry.Prefabs.Get<GameObject>(id);
+                var definition = JsonConvert.DeserializeObject<Definition>(asset.text);
+
+                if (definition == null || string.IsNullOrEmpty(definition.Id))
+                    throw new InvalidOperationException($"Definition file {asset.name} has no Id.");
+
+                registry.Register(definition.Id, definition);
             }
-        }
-    }
-
-    public class TypedStore<TBase>
-    {   
-        private readonly Dictionary<Type, Dictionary<string, TBase>> stores = new();
-
-        public void Register<TValue>(string id, TValue value) where TValue : TBase
-        {
-            if (!stores.TryGetValue(typeof(TValue), out var dictionary))
-            {
-                dictionary = new();
-                stores[typeof(TValue)] = dictionary;
-            }
-
-            dictionary[id] = value;
-        }
-
-        public void Deregister<TValue>(string id) where TValue : TBase
-        {
-            if (!stores.TryGetValue(typeof(TValue), out var _))
-                return;
-
-            stores[typeof(TValue)].Remove(id);
-        }
-
-        public TValue Get<TValue>(string id) where TValue : TBase
-        {
-            if (!stores.TryGetValue(typeof(TValue), out var dictionary))
-                throw new KeyNotFoundException($"Registry<{typeof(TBase)}> missing <{typeof(TValue)}>key: {id}");
-
-            return (TValue)dictionary[id];
         }
     }
 }

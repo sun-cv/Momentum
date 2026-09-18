@@ -38,3 +38,8 @@ part of. Unresolved — unbounded growth per entity is a concern, "log"
 already means something specific in Diagnostic, and it's not decided
 what would actually read this or whether it belongs as a component at
 all versus something Diagnostic-side.
+
+## Helmet LED light
+A concept light on the helmet: it flashes or flickers, or can be turned
+off outright. Unresolved what drives the flash/flicker state or when
+it's toggled off.

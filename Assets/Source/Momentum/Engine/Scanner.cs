@@ -14,13 +14,13 @@ namespace Game.Core
     {
         internal Scanner() {}
 
-        public void Register(object world, object data)
+        public void Register(object world, object data, object asset)
         {
             List<IInitialize> initialize = new();
 
             foreach (var type in DiscoverServiceTypes())
             {
-                var service = CreateService(type, world, data);
+                var service = CreateService(type, world, data, asset);
 
                 if (service is IInitialize init)
                     initialize.Add(init);
@@ -40,28 +40,37 @@ namespace Game.Core
                 .Where(type => !type.IsAbstract && type.GetCustomAttribute<ServiceAttribute>() != null);
         }
 
-        private object CreateService(Type type, object world, object data)
+        private object CreateService(Type type, object world, object data, object asset)
         {
             bool needsWorld = typeof(IWorld).IsAssignableFrom(type);
             bool needsData  = typeof(IData).IsAssignableFrom(type);
+            bool needsAsset = typeof(IAsset).IsAssignableFrom(type);
 
-            ConstructorInfo constructor = (needsWorld, needsData) switch
+            ConstructorInfo constructor = (needsWorld, needsData, needsAsset) switch
             {
-                (true,  true)  => type.GetConstructor(new[] { world.GetType(), data.GetType() }),
-                (true,  false) => type.GetConstructor(new[] { world.GetType() }),
-                (false, true)  => type.GetConstructor(new[] { data .GetType() }),
-                (false, false) => type.GetConstructor(Type.EmptyTypes),
+                (true,  true, true)     => type.GetConstructor(new[] { world.GetType(), data.GetType(), asset.GetType() }),
+                (true,  true, false)    => type.GetConstructor(new[] { world.GetType(), data.GetType() }),
+                (true,  false, true)    => type.GetConstructor(new[] { world.GetType(), asset.GetType() }),
+                (false,  true, true)    => type.GetConstructor(new[] { data.GetType(), asset.GetType() }),
+                (true,  false, false)   => type.GetConstructor(new[] { world.GetType() }),
+                (false,  true, false)   => type.GetConstructor(new[] { data.GetType() }),
+                (false,  false, true)   => type.GetConstructor(new[] { asset.GetType() }),
+                (false, false, false)   => type.GetConstructor(Type.EmptyTypes),
             };
 
             if (constructor == null)
                 throw new InvalidOperationException($"[Service] class {type.Name} has no matching constructor for its declared dependencies.");
 
-            object[] args = (needsWorld, needsData) switch
+            object[] args = (needsWorld, needsData, needsAsset) switch
             {
-                (true,  true)  => new object[] { world, data },
-                (true,  false) => new object[] { world },
-                (false, true)  => new object[] { data },
-                (false, false) => Array.Empty<object>(),
+                (true,  true, true)     => new object[] { world, data, asset },
+                (true,  true, false)    => new object[] { world, data },
+                (true,  false, true)    => new object[] { world, asset },
+                (false,  true, true)    => new object[] { data, asset },
+                (true,  false, false)   => new object[] { world },
+                (false, true, false)    => new object[] { data },
+                (false,  false, true)   => new object[] { asset },
+                (false, false, false)   => Array.Empty<object>(),
             };
 
             return constructor.Invoke(args);

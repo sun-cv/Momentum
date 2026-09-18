@@ -3,30 +3,36 @@ using Game.Common;
 using Game.Content;
 using Game.Diagnostic;
 using System.Linq;
+using UnityEngine;
 
 
 
 namespace Game.Service
 {
 
-    public class Dev : RegisteredService, IWorld, IData, IInitialize, IRealBase, IRealHalf, IRealStep, IGameBase
+    public class Dev : RegisteredService, IWorld, IData, IAsset, IInitialize, IRealBase, IRealHalf, IRealStep, IGameBase
     {
 
-        private readonly World World;
         private readonly Data Data;
+        private readonly Assets Asset;
+        private readonly World World;
 
         private readonly Entity id;
         private readonly Actor actor; 
 
-        public Dev(World world, Data data)
+        public Dev(World world, Data data, Assets asset)
         {
             Data    = data;
+            Asset   = asset;
             World   = world;
-            id      = World.Entity.Create.Actor(Data.Load.Definition<Definition.Actor>("Hero"));
         }
 
         public void Initialize()
         {
+            var definition  = Data.Get<Definition>("Hero");
+            var prefab      = Asset.Get<GameObject>("Hero");
+
+            World.Entity.Create.Spawn(definition, prefab, new());
         }
     
         void IRealBase.Tick() 

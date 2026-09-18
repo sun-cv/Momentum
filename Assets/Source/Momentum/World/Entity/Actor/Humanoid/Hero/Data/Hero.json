@@ -1,7 +1,25 @@
-
-
 {
     "Id":               "Hero",
+    "Prefab":           "Hero",
+    "Actor":            {},
+    "Corpse":           {},
+    "Faction":          {},
+    "Allegiance":       {},
+    "Temperament":      {},
+    "Physics":          {},
+    "Force":            {},
+    "Contact":          {},
+    "Collision":        {},
+    "PlayerController": {},
+    "Intent":           {},
+    "Movement":         {},
+    "CommandQueue":     {},
+    "Abilities":        {},
+    "Loadout":          {},
+    "Equipment":        {},
+    "Inventory":        {},
+    "Target":           {},
+    "Aim":              {},
     "Health": 
     {
         "Maximum":      10,
@@ -12,7 +30,11 @@
         "Maximum":      10,
         "Current":      10 
     },
-    "Aim":              {},
-    "Movement":         {},
-    "PlayerController": {}
+    "TimeScale":        {},
+    "Instance":         {},
+    "Body":             {},
+    "Animation":        {},
+    "Rendering":        {},
+    "Sorting":          {},
+    "Hurtbox":          {}
 }

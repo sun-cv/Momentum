@@ -29,20 +29,12 @@ namespace Game.Realm
     }
 
 
-
     public class Location
     {
     }
 
-
-    public class Spawner
-    {
-
-    }
-
     public class Teleporter
     {
-
     }
 }
 
