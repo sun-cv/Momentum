@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Game.Common;
 
@@ -20,9 +21,9 @@ namespace Game.Realm
             
         }
 
-        public IReadOnlyCollection<Entity> Query(Mask mask)
+        public IReadOnlyCollection<Entity> Query<TDomain>(Mask<TDomain> mask)
         {
-            return entities.Component.Query(mask);
+            return Entity.Mask.Query<TDomain>(mask);
         }
 
         public Entities Entity => entities;

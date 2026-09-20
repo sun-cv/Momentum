@@ -8,123 +8,81 @@ using Game.Diagnostic;
 namespace Game.Realm
 {
 
-    public partial class Components 
-    { 
-        private int capacity = Config.World.Component.Capacity;
-
+    public partial class Components
+    {
+        private readonly Pool pool;
         private readonly Modifier modify;
-
+        private readonly MaskSet<Components> masks;
         private readonly Dictionary<Type, object> stores;
-        private readonly Dictionary<Mask, HashSet<Entity>> cache;
 
-        private Mask[]      masks;
-        private Entity[]    identity;
-
-        public Components()
+        public Components(Pool pool, MaskSet<Components> masks)
         {
+            this.pool   = pool;
+            this.masks  = masks;
             stores      = new();
-            cache       = new();
-            masks       = new Mask  [capacity];
-            identity    = new Entity[capacity];
             modify      = new(this);
         }
 
         public void Add<TComponent>(Entity entity, TComponent component) where TComponent : IComponent
         {
-            EnsureCapacity(entity.Index);
-            Access<TComponent>().Add(entity, component);
+            Guard(entity);
 
-            masks   [entity.Index] = masks[entity.Index].With<TComponent>();
-            identity[entity.Index] = entity;
-
-            OnComponentChange(entity);
+            Access<TComponent>().Add(entity.Index, component);
+            masks.Set(entity, masks.View(entity).With<TComponent>());
         }
 
         public bool Has<TComponent>(Entity entity) where TComponent : IComponent
         {
-            return CurrentMask(entity).Contains(Mask<TComponent>.Key);
+            return pool.Alive(entity) && masks.View(entity).Contains(Mask<Components, TComponent>.Key);
         }
 
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
         {
-            EnsureCapacity(entity.Index);
-            Access<TComponent>().Remove(entity);
+            Guard(entity);
 
-            masks[entity.Index] = masks[entity.Index].Without<TComponent>();
-
-            OnComponentChange(entity);
+            Access<TComponent>().Remove(entity.Index);
+            masks.Set(entity, masks.View(entity).Without<TComponent>());
         }
 
         internal TComponent View<TComponent>(Entity entity) where TComponent : IComponent
         {
-            return Access<TComponent>().View(entity);
+            Guard(entity);
+
+            return Access<TComponent>().View(entity.Index);
         }
 
-        internal Store<TAny, IComponent> Access<TAny>() where TAny : IComponent
+        internal ref TComponent Reference<TComponent>(Entity entity) where TComponent : IComponent
         {
-            if (!stores.ContainsKey(typeof(TAny)))
-                stores[typeof(TAny)] = new Store<TAny, IComponent>();
+            Guard(entity);
 
-            return (Store<TAny, IComponent>)stores[typeof(TAny)];
+            return ref Access<TComponent>().Reference(entity.Index);
         }
 
         internal void Clear(Entity entity)
         {
-            if (entity.Index < masks.Length)
-                masks[entity.Index] = default;
-
-            OnComponentChange(entity);
+            masks.Clear(entity);
         }
 
-        internal IReadOnlyCollection<Entity> Query(Mask mask)
+        private Store<TComponent> Access<TComponent>() where TComponent : IComponent
         {
-            if (cache.TryGetValue(mask, out var set))
-                return set;
-
-            set = new HashSet<Entity>(new EntityIdentityComparer());
-
-            foreach (var entity in identity)
+            if (!stores.TryGetValue(typeof(TComponent), out var store))
             {
-                if (CurrentMask(entity).Contains(mask))
-                    set.Add(entity);
+                store = new Store<TComponent>();
+                stores[typeof(TComponent)] = store;
             }
 
-            cache[mask] = set;
-            return set;
+            return (Store<TComponent>)store;
         }
 
-        private void OnComponentChange(Entity entity)
+        private void Guard(Entity entity)
         {
-            var current = CurrentMask(entity);
-
-            foreach (var (mask, set) in cache)
-            {
-                if (current.Contains(mask)) set.Add(entity);
-                else                        set.Remove(entity);
-            }
-        }
-
-        private Mask CurrentMask(Entity entity)
-        {
-            return entity.Index < masks.Length ? masks[entity.Index] : default;
-        }
-
-        private void EnsureCapacity(int index)
-        {
-            if (index < capacity)
-                return;
-
-            capacity = Math.Max(capacity * 2, index + 1);
-
-            Array.Resize(ref masks,    capacity);
-            Array.Resize(ref identity, capacity);
+            if (!pool.Alive(entity))
+                throw new Exception($"[Components] Stale entity {entity.Index}:{entity.Generation}");
         }
 
         public Modifier Modify => modify;
-         
+
         static Components() => Log<Components>.Level(Diagnostic.Log.Level.Debug);
     }
-
-
 }
 

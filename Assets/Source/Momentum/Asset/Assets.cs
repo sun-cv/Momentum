@@ -87,6 +87,8 @@ namespace Game.Content
 
             var ids = new List<string>();
 
+
+
             var handle = Addressables.LoadAssetsAsync<TAsset>(labels, asset =>
             {
                 var id = idOf(asset);

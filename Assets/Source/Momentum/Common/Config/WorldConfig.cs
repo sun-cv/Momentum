@@ -15,6 +15,10 @@ namespace Game.Common
             {
                 public const int Capacity       = 10;
             }
+            static public class Capability
+            {
+                public const int Capacity       = 10;
+            }
             static public class Mask
             {
                 public const int Capacity       = 10;

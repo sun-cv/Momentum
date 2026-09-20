@@ -56,6 +56,11 @@ namespace Game.Common
                 public const int       Priority = 10;
             }
 
+            public static class MovementSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 10;
+            }
         }
     }
 }

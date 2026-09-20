@@ -16,11 +16,11 @@ namespace Game.Realm
                 this.components = components;
             }
 
-            public ref Health Health(Entity entity) => ref components.Access<Health>() .Reference(entity);
-            public ref Energy Energy(Entity entity) => ref components.Access<Energy>() .Reference(entity);
-            public ref Intent Intent(Entity entity) => ref components.Access<Intent>() .Reference(entity);
-            public ref Aim Aim(Entity entity) => ref components.Access<Aim>().Reference(entity);
-            public ref CommandQueue Command(Entity entity) => ref components.Access<CommandQueue>().Reference(entity);
+            public ref Health Health(Entity entity)             => ref components.Reference<Health>(entity);
+            public ref Energy Energy(Entity entity)             => ref components.Reference<Energy>(entity);
+            public ref Intent Intent(Entity entity)             => ref components.Reference<Intent>(entity);
+            public ref Aim Aim(Entity entity)                   => ref components.Reference<Aim>(entity);
+            public ref CommandQueue Command(Entity entity)      => ref components.Reference<CommandQueue>(entity);
         }
     }
 

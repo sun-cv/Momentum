@@ -1,51 +1,111 @@
 using System;
 using System.Collections.Generic;
-using Game.Common;
+using System.Linq;
 
 
 
-namespace Game.Realm
+namespace Game.Common
 {
 
-    public class Store<TValue, TBase> where TValue : TBase
+    public class Store<TValue>
     {
-        TValue[]    component;
+        TValue[] values;
 
         public Store(int capacity = 10)
         {
-            component   = new TValue[capacity];
+            values = new TValue[capacity];
         }
 
-        public void Add(Entity entity, TValue component)
+        public void Add(int index, TValue component)
         {
-            EnsureCapacity(entity.Index);
+            EnsureCapacity(index);
 
-            this.component[entity.Index] = component;
+            this.values[index] = component;
         }
 
-        public TValue View(Entity entity)
+        public TValue View(int index)
         {
-            return component[entity.Index];
+            return index < values.Length ? values[index] : default;
         }
         
-        public ref TValue Reference(Entity entity)
+        public ref TValue Reference(int index)
         {
-            return ref component[entity.Index];
+            return ref values[index];
         }
 
-        public void Remove(Entity entity)
+        public void Remove(int index)
         {
-            component[entity.Index] = default;
+            values[index] = default;
         }
 
         void EnsureCapacity(int index)
         {
-            if (index < component.Length) 
+            if (index < values.Length) 
                 return;
 
-            int newSize = Math.Max(component.Length * 2, index + 1);
+            int newSize = Math.Max(values.Length * 2, index + 1);
 
-            Array.Resize(ref component, newSize);
+            Array.Resize(ref values, newSize);
+        }
+
+        public void CopyFrom(Store<TValue> other)
+        {
+            if (values.Length < other.values.Length)
+                Array.Resize(ref values, other.values.Length);
+
+            Array.Copy(other.values, values, other.values.Length);
+        }
+
+        public int Count => values.Count();
+    }    
+
+   public class Store<TValue, TConstraint> where TValue : TConstraint
+    {
+        TValue[] values;
+
+        public Store(int capacity = 10)
+        {
+            values = new TValue[capacity];
+        }
+
+        public void Add(int index, TValue value)
+        {
+            EnsureCapacity(index);
+
+            this.values[index] = value;
+        }
+
+        public TValue View(int index)
+        {
+            return values[index];
+        }
+        
+        public ref TValue Reference(int index)
+        {
+            return ref values[index];
+        }
+
+        public void Remove(int index)
+        {
+            values[index] = default;
+        }
+
+        void EnsureCapacity(int index)
+        {
+            if (index < values.Length) 
+                return;
+
+            int newSize = Math.Max(values.Length * 2, index + 1);
+
+            Array.Resize(ref values, newSize);
+        }
+
+        public void CopyFrom(Store<TValue, TConstraint> other)
+        {
+            if (values.Length < other.values.Length)
+                Array.Resize(ref values, other.values.Length);
+
+            Array.Copy(other.values, values, other.values.Length);
         }
     }    
 

@@ -14,12 +14,15 @@ namespace Game.Common
 
     public struct Ledger            : IComponent {}
     
+    public struct Parent            : IComponent {}
+    public struct Source            : IComponent {}
+
     public struct Prop              : IComponent {}
     public struct Actor             : IComponent {}
     public struct Spawner           : IComponent {}
     public struct Projectile        : IComponent {}
     public struct Corpse            : IComponent {}
-    
+
     public struct Faction           : IComponent {}
     public struct Allegiance        : IComponent {}
     public struct Temperament       : IComponent {}
@@ -38,20 +41,33 @@ namespace Game.Common
     public struct Container         : IComponent {}
     public struct Interactable      : IComponent {}
 
+    public struct Slowed            : IComponent 
+    {
+        public float Modifier       { get; set; }
+    }
+    public struct Stunned           : IComponent {}
+    public struct Cold              : IComponent {}
+    public struct Freezing          : IComponent {}
+    public struct Hot               : IComponent {}
+    public struct Burning           : IComponent {}
+    public struct Charging          : IComponent {}
+    public struct Electrified       : IComponent {}
+
+
     public struct Explosive         : IComponent {}
     public struct Destructible      : IComponent {}
 
     public struct AiController      : IComponent {}
     public struct PlayerController  : IComponent {}
 
-    public struct Intent            : IComponent
+    public struct Capabilities      : IComponent 
     {
-        public Vector2 Direction                        { get; set; }
+        
     }
 
-    public struct Movement          : IComponent
+    public struct Blocked           : IComponent 
     {
-        public Vector2 Directon                         { get; set; }
+
     }
 
     public struct CommandQueue      : IComponent
@@ -78,12 +94,21 @@ namespace Game.Common
     public struct Inventory         : IComponent
     {
 
-    
-
+    }
 
     public struct Target            : IComponent
     {
 
+    }
+
+    public struct Intent            : IComponent
+    {
+        public Vector2 Direction                        { get; set; }
+    }
+
+    public struct Movement          : IComponent
+    {
+        public Vector2 Directon                         { get; set; }
     }
 
     public struct Aim               : IComponent

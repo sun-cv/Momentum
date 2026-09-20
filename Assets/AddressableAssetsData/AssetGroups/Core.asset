@@ -22,6 +22,12 @@ MonoBehaviour:
     - Definition
     - Prop
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86ff72e8e02abf04fa8d81c0a0d9ad53
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Asset/Prefab/Hero.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d26b2b37fd62a224b848b9f9bd6dfb18
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Data/Hero.json
     m_ReadOnly: 0

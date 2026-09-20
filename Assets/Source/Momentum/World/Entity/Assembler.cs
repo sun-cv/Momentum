@@ -5,6 +5,7 @@ using Game.Common;
 using Physics   = Game.Common.Physics;
 using Collision = Game.Common.Collision;
 using Animation = Game.Common.Animation;
+using Game.Diagnostic;
 
 
 namespace Game.Realm
@@ -123,6 +124,8 @@ namespace Game.Realm
                 if (definition.HurtBox is HurtBox && nodes.TryGetValue("Hurt", out var hurtNode))
                     component.Add<HurtBox>(entity, new() { Collider = hurtNode.GetComponent<Collider2D>() });
             }
+
+            static Assembler() => Log<Assembler>.Level(Diagnostic.Log.Level.Debug);
         }
     }
 }

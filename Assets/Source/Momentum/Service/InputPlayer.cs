@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Game.Common;
 using Game.Diagnostic;
 using Game.Realm;
@@ -46,7 +45,7 @@ namespace Game.Service
 
         private void UpdateIntent(Vector2 vector)
         {
-            var players = World.Query(Mask<PlayerController>.Key);
+            var players = World.Query(Mask<Components, PlayerController>.Key);
 
             foreach ( var player in players )
             {
@@ -56,7 +55,6 @@ namespace Game.Service
 
         private void ProcessPlayerCapability(List<InputEvent> messages)
         {
-             
             foreach (var message in messages)
             {
                 UpdateCapability(message.Capability, message.Pressed, message.Released);
@@ -65,7 +63,7 @@ namespace Game.Service
 
         private void UpdateCapability(Capability capability, bool pressed, bool released)
         {
-            var players = World.Query(Mask<PlayerController>.Key);
+            var players = World.Query(Mask<Components, PlayerController>.Key);
 
             foreach (var player in players)
             {
@@ -76,6 +74,7 @@ namespace Game.Service
 
                 if (released)
                 {
+
                     if (World.Entity.Modify.Command(player).Active.TryGetValue(capability, out var active))
                     {
                         active.Released     = true;
