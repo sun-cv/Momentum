@@ -6,10 +6,16 @@ using Game.Common;
 
 namespace Game.Realm
 {
+
+    public interface IMaskSet
+    {
+        void Clear(Entity entity);
+    }
+
     public class Masks
     {
         private readonly Pool pool;
-        private readonly Dictionary<Type, object> sets = new();
+        private readonly Dictionary<Type, IMaskSet> sets = new();
 
         public Masks(Pool pool)
         {
@@ -33,9 +39,15 @@ namespace Game.Realm
         {
             return Get<TDomain>().Query(mask);
         }
+
+        public void Release(Entity entity)
+        {
+            foreach( var set in sets.Values )
+                set.Clear(entity);
+        }
     }
 
-    public class MaskSet<TDomain>
+    public class MaskSet<TDomain> : IMaskSet
     {
         private readonly Pool pool;
         private readonly Store<Mask<TDomain>> store = new();

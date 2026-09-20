@@ -14,8 +14,20 @@ namespace Game.Common
 
     public struct Ledger            : IComponent {}
     
-    public struct Parent            : IComponent {}
-    public struct Source            : IComponent {}
+    public struct Parent            : IComponent 
+    {
+        public Entity Entity                            { get; set; }
+    }
+
+    public struct Child             : IComponent
+    {
+        public List<Entity> Entities                    { get; set; }
+    }
+
+    public struct Source            : IComponent
+    {
+        public Entity Entity                            { get; set; }
+    }
 
     public struct Prop              : IComponent {}
     public struct Actor             : IComponent {}
@@ -43,8 +55,9 @@ namespace Game.Common
 
     public struct Slowed            : IComponent 
     {
-        public float Modifier       { get; set; }
+        public float Modifier                           { get; set; }
     }
+
     public struct Stunned           : IComponent {}
     public struct Cold              : IComponent {}
     public struct Freezing          : IComponent {}
@@ -60,14 +73,14 @@ namespace Game.Common
     public struct AiController      : IComponent {}
     public struct PlayerController  : IComponent {}
 
-    public struct Capabilities      : IComponent 
+    public struct Innate            : IComponent 
     {
-        
+        public List<Capability> Capabilities            { get; set; }
     }
 
-    public struct Blocked           : IComponent 
+    public struct Blocks            : IComponent 
     {
-
+        public List<Capability> Capabilities            { get; set; }
     }
 
     public struct CommandQueue      : IComponent

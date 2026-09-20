@@ -22,6 +22,9 @@ namespace Game.Common
         public Projectile? Projectile                           { get; init; }
         public Corpse? Corpse                                   { get; init; }
 
+        public Innate? Innate                                   { get; init; }
+        public Blocks? Blocks                                   { get; init; }
+
         public Faction? Faction                                 { get; init; }
         public Allegiance? Allegiance                           { get; init; }
         public Temperament? Temperament                         { get; init; }

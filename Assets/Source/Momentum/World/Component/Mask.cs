@@ -20,7 +20,7 @@ namespace Game.Realm
 
     public static class MaskBit<TDomain, TValue>
     {
-        public static readonly int Index = MaskIndex.Next<TValue>();  
+        public static readonly int Index = MaskIndex.Next<TDomain>();  
     } 
 
     public struct Mask<TDomain> : IEquatable<Mask<TDomain>>
@@ -42,6 +42,21 @@ namespace Game.Realm
             return mask;
         }
 
+        public readonly Mask<TDomain> With(int index)
+        {
+            ulong flag  = 1UL << (index % 64);
+            var mask    = this;
+            switch (index / 64)
+            {
+                case 0: mask.Bits0 |= flag; break;
+                case 1: mask.Bits1 |= flag; break;
+                case 2: mask.Bits2 |= flag; break;
+                case 3: mask.Bits3 |= flag; break;
+            }
+            return mask;
+        }
+
+
         public readonly Mask<TDomain> Without<TValue>()
         {
             int index   = MaskBit<TDomain, TValue>.Index;
@@ -60,11 +75,29 @@ namespace Game.Realm
         public readonly bool Contains(Mask<TDomain> required)
         {
             return  (Bits0 & required.Bits0) == required.Bits0 &&
-                    (Bits1 & required.Bits1) == required.Bits1 &&
-                    (Bits2 & required.Bits2) == required.Bits2 &&
-                    (Bits3 & required.Bits3) == required.Bits3;
+                (Bits1 & required.Bits1) == required.Bits1 &&
+                (Bits2 & required.Bits2) == required.Bits2 &&
+                (Bits3 & required.Bits3) == required.Bits3;
         }
 
+        public readonly Mask<TOther> To<TOther>()
+        {
+            return new Mask<TOther> { Bits0 = Bits0, Bits1 = Bits1, Bits2 = Bits2, Bits3 = Bits3 };
+        }
+
+        public readonly Mask<TDomain> Without(int index)
+        {
+            ulong flag  = 1UL << (index % 64);
+            var mask    = this;
+            switch (index / 64)
+            {
+                case 0: mask.Bits0 &= ~flag; break;
+                case 1: mask.Bits1 &= ~flag; break;
+                case 2: mask.Bits2 &= ~flag; break;
+                case 3: mask.Bits3 &= ~flag; break;
+            }
+            return mask;
+        }
         public readonly override int GetHashCode()
         {
             return HashCode.Combine(Bits0, Bits1, Bits2, Bits3);

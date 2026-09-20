@@ -1,0 +1,33 @@
+using Game.Common;
+
+
+
+namespace Game.Realm
+{
+    public class Capabilities
+    {
+        private readonly MaskSet<Innate>     innate;
+        private readonly MaskSet<Capability> active;
+
+        public Capabilities(Masks masks)
+        {
+            innate = masks.Get<Innate>();
+            active = masks.Get<Capability>();
+        }
+
+        public bool Has(Entity entity, Capability capability)
+        {
+            return active.View(entity).Contains(new Mask<Capability>().With((int)capability));
+        }
+
+        public void Reset(Entity entity)
+        {
+            active.Set(entity, innate.View(entity).To<Capability>());
+        }
+
+        public void Block(Entity entity, Capability capability)
+        {
+            active.Set(entity, active.View(entity).Without((int)capability));
+        }
+    }
+}

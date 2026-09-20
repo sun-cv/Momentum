@@ -10,15 +10,15 @@ namespace Game.Realm
 
     public partial class Components
     {
-        private readonly Pool pool;
+        private readonly Pool Pool;
         private readonly Modifier modify;
-        private readonly MaskSet<Components> masks;
+        private readonly Masks Mask;
         private readonly Dictionary<Type, object> stores;
 
-        public Components(Pool pool, MaskSet<Components> masks)
+        public Components(Masks masks, Pool pool)
         {
-            this.pool   = pool;
-            this.masks  = masks;
+            Pool        = pool;
+            Mask        = masks;
             stores      = new();
             modify      = new(this);
         }
@@ -28,12 +28,12 @@ namespace Game.Realm
             Guard(entity);
 
             Access<TComponent>().Add(entity.Index, component);
-            masks.Set(entity, masks.View(entity).With<TComponent>());
+            Mask.Get<Components>().Set(entity, Mask.Get<Components>().View(entity).With<TComponent>());
         }
 
         public bool Has<TComponent>(Entity entity) where TComponent : IComponent
         {
-            return pool.Alive(entity) && masks.View(entity).Contains(Mask<Components, TComponent>.Key);
+            return Pool.Alive(entity) && Mask.Get<Components>().View(entity).Contains(Mask<Components, TComponent>.Key);
         }
 
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
@@ -41,7 +41,7 @@ namespace Game.Realm
             Guard(entity);
 
             Access<TComponent>().Remove(entity.Index);
-            masks.Set(entity, masks.View(entity).Without<TComponent>());
+            Mask.Get<Components>().Set(entity, Mask.Get<Components>().View(entity).Without<TComponent>());
         }
 
         internal TComponent View<TComponent>(Entity entity) where TComponent : IComponent
@@ -60,7 +60,7 @@ namespace Game.Realm
 
         internal void Clear(Entity entity)
         {
-            masks.Clear(entity);
+            Mask.Get<Components>().Clear(entity);
         }
 
         private Store<TComponent> Access<TComponent>() where TComponent : IComponent
@@ -76,7 +76,7 @@ namespace Game.Realm
 
         private void Guard(Entity entity)
         {
-            if (!pool.Alive(entity))
+            if (!Pool.Alive(entity))
                 throw new Exception($"[Components] Stale entity {entity.Index}:{entity.Generation}");
         }
 
