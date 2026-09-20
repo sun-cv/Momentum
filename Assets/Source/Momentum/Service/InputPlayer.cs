@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using UnityEngine;
+
+using Game.Realm;
 using Game.Common;
 using Game.Diagnostic;
-using Game.Realm;
-using UnityEngine;
+
 using Event = Game.Common.Event;
 
 
@@ -49,7 +51,7 @@ namespace Game.Service
 
             foreach ( var player in players )
             {
-                World.Entity.Component.Modify.Intent(player).Direction = vector;
+                World.Entity.Modify.Intent(player).Direction = vector;
             }
         }
 

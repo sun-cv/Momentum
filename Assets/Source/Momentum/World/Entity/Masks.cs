@@ -7,12 +7,12 @@ using Game.Common;
 namespace Game.Realm
 {
 
-    public interface IMaskSet
+    internal interface IMaskSet
     {
         void Clear(Entity entity);
     }
 
-    public class Masks
+    internal class Masks
     {
         private readonly Pool pool;
         private readonly Dictionary<Type, IMaskSet> sets = new();
@@ -47,7 +47,7 @@ namespace Game.Realm
         }
     }
 
-    public class MaskSet<TDomain> : IMaskSet
+    internal class MaskSet<TDomain> : IMaskSet
     {
         private readonly Pool pool;
         private readonly Store<Mask<TDomain>> store = new();

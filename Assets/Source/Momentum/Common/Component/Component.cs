@@ -34,6 +34,7 @@ namespace Game.Common
     public struct Spawner           : IComponent {}
     public struct Projectile        : IComponent {}
     public struct Corpse            : IComponent {}
+    public struct Effect            : IComponent {}
 
     public struct Faction           : IComponent {}
     public struct Allegiance        : IComponent {}
@@ -153,7 +154,7 @@ namespace Game.Common
         public Transform Transform                      { get; set; }
     }
 
-    public struct Body          : IComponent 
+    public struct Body              : IComponent 
     {
         public Rigidbody2D Form                         { get; set; }
     }
@@ -163,7 +164,7 @@ namespace Game.Common
         public Animator Animator                        { get; set; }
     }
 
-    public struct Renderering       : IComponent
+    public struct Rendering         : IComponent
     {
         public SpriteRenderer Renderer                  { get; set; }
     }

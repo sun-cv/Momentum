@@ -52,7 +52,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Attack1",
+                    "name": "Primary",
                     "type": "Button",
                     "id": "70a25a94-6a62-4eac-b2a2-d7d20cc91ff0",
                     "expectedControlType": "",
@@ -61,7 +61,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Attack2",
+                    "name": "Secondary",
                     "type": "Button",
                     "id": "30862c6f-6c08-48f4-a9bd-13620da2266e",
                     "expectedControlType": "",
@@ -197,7 +197,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Attack1",
+                    "action": "Primary",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -208,7 +208,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Attack2",
+                    "action": "Secondary",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

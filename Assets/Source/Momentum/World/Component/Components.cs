@@ -11,11 +11,11 @@ namespace Game.Realm
     public partial class Components
     {
         private readonly Pool Pool;
-        private readonly Modifier modify;
         private readonly Masks Mask;
+        private readonly Modifier modify;
         private readonly Dictionary<Type, object> stores;
 
-        public Components(Masks masks, Pool pool)
+        internal Components(Masks masks, Pool pool)
         {
             Pool        = pool;
             Mask        = masks;
@@ -31,17 +31,17 @@ namespace Game.Realm
             Mask.Get<Components>().Set(entity, Mask.Get<Components>().View(entity).With<TComponent>());
         }
 
-        public bool Has<TComponent>(Entity entity) where TComponent : IComponent
-        {
-            return Pool.Alive(entity) && Mask.Get<Components>().View(entity).Contains(Mask<Components, TComponent>.Key);
-        }
-
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
         {
             Guard(entity);
 
             Access<TComponent>().Remove(entity.Index);
             Mask.Get<Components>().Set(entity, Mask.Get<Components>().View(entity).Without<TComponent>());
+        }
+
+        internal bool Has<TComponent>(Entity entity) where TComponent : IComponent
+        {
+            return Pool.Alive(entity) && Mask.Get<Components>().View(entity).Contains(Mask<Components, TComponent>.Key);
         }
 
         internal TComponent View<TComponent>(Entity entity) where TComponent : IComponent
@@ -56,11 +56,6 @@ namespace Game.Realm
             Guard(entity);
 
             return ref Access<TComponent>().Reference(entity.Index);
-        }
-
-        internal void Clear(Entity entity)
-        {
-            Mask.Get<Components>().Clear(entity);
         }
 
         private Store<TComponent> Access<TComponent>() where TComponent : IComponent
@@ -80,7 +75,7 @@ namespace Game.Realm
                 throw new Exception($"[Components] Stale entity {entity.Index}:{entity.Generation}");
         }
 
-        public Modifier Modify => modify;
+        internal Modifier Modify => modify;
 
         static Components() => Log<Components>.Level(Diagnostic.Log.Level.Debug);
     }

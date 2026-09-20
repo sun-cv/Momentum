@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Game.Realm
 {
 
-    public static class MaskIndex
+    internal static class MaskIndex
     {
         private static readonly Dictionary<Type, int> indexes = new();
 
@@ -18,7 +18,7 @@ namespace Game.Realm
         }
     }
 
-    public static class MaskBit<TDomain, TValue>
+    internal static class MaskBit<TDomain, TValue>
     {
         public static readonly int Index = MaskIndex.Next<TDomain>();  
     } 
@@ -98,6 +98,7 @@ namespace Game.Realm
             }
             return mask;
         }
+
         public readonly override int GetHashCode()
         {
             return HashCode.Combine(Bits0, Bits1, Bits2, Bits3);

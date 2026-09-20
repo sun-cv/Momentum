@@ -61,7 +61,7 @@ namespace Game.Common
 
         public static void Register<TEvent>(Action handler) where TEvent : IEvent
         {
-            handlersNoArgs[typeof(TEvent)] = handlers.TryGetValue(typeof(TEvent), out var existing)
+            handlersNoArgs[typeof(TEvent)] = handlersNoArgs.TryGetValue(typeof(TEvent), out var existing)
                 ? Delegate.Combine(existing, handler)
                 : handler;
         }
@@ -86,7 +86,7 @@ namespace Game.Common
             var result = Delegate.Remove(existing, handler);
 
             if (result == null)
-                handlers.Remove(typeof(TEvent));
+                handlersNoArgs.Remove(typeof(TEvent));
 
             else handlersNoArgs[typeof(TEvent)] = result;
         }

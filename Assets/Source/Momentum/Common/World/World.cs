@@ -1,3 +1,4 @@
+using UnityEngine;
 
 
 
@@ -5,17 +6,25 @@ namespace Game.Common
 {
     public enum Capability
     {
+        Use,
         Interact,
         Action,
-        Attack1,
-        Attack2,
+        Attack,
+        Primary,
+        Secondary,
         Modifier,
-        Movement,
         Dodge,
+        Move,
         Rotate,
-        Use,
-        Menu,
-        Item,
+        Equip,
+        Cast,
+        Rest,
+        Heal,
+        Repair,
+        Charge,
+        Regenerate,
+        Recharge,
+        Teleport,
     }
 
     public interface IWorld {}
@@ -30,6 +39,19 @@ namespace Game.Common
             Index       = index;
             Generation  = generation;
         }
+    }
+
+    public readonly struct Blueprint
+    {
+        public Definition Definition    { get; init; }
+        public GameObject Prefab        { get; init; }
+    }
+
+    public readonly struct ConstructionParameter
+    {
+        public Entity? Parent           { get; init; }
+        public Vector3 Position         { get; init; }
+        public Vector3 Rotation         { get; init; }
     }
 
 }

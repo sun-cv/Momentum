@@ -19,12 +19,12 @@ namespace Game.Interface
             input = new();
             input.Enable();
 
-            map[input.Player.Interact] = Capability.Interact;
-            map[input.Player.Action]   = Capability.Action;
-            map[input.Player.Attack1]  = Capability.Attack1;
-            map[input.Player.Attack2]  = Capability.Attack2;
-            map[input.Player.Modifier] = Capability.Modifier;
-            map[input.Player.Dodge]    = Capability.Dodge;
+            map[input.Player.Interact]  = Capability.Interact;
+            map[input.Player.Action]    = Capability.Action;
+            map[input.Player.Primary]   = Capability.Primary;
+            map[input.Player.Secondary] = Capability.Secondary;
+            map[input.Player.Modifier]  = Capability.Modifier;
+            map[input.Player.Dodge]     = Capability.Dodge;
 
             input.Player.Get().actionTriggered += OnAction;
         }

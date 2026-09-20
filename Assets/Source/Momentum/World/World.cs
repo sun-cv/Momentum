@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 using Game.Common;
 
 
@@ -22,7 +23,7 @@ namespace Game.Realm
 
         public IReadOnlyCollection<Entity> Query<TDomain>(Mask<TDomain> mask)
         {
-            return Entity.Mask.Query<TDomain>(mask);
+            return Entity.Query<TDomain>(mask);
         }
 
         public Entities Entity => entities;

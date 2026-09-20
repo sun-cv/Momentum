@@ -1,3 +1,4 @@
+using System;
 using Game.Common;
 using Game.Realm;
 
@@ -23,15 +24,18 @@ namespace Game.Service
 
         private void ProcessCapabilityMasks()
         {
+            
+            var innate  = World.Query(Mask<Components, Innate>.Key);
+            var blocks  = World.Query(Mask<Components, Blocks>.Key);
 
-            foreach (var entity in World.Query(Mask<Components, Innate>.Key))
+            foreach (var entity in innate)
             {
                 World.Entity.Capability.Reset(entity);
             }
 
-            foreach (var source in World.Query(Mask<Components, Blocks>.Key))
+            foreach (var source in blocks)
             {
-                foreach ( var capability in World.Entity.Blocks(source).Capabilities )
+                foreach (var capability in World.Entity.Blocks(source).Capabilities)
                 {
                     World.Entity.Capability.Block(World.Entity.Parent(source).Entity, capability);
                 }

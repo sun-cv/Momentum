@@ -3,7 +3,6 @@
 
 namespace Game.Common.Events
 {
-
     public readonly struct EntityCreated : IEvent
     {
         public Entity Entity { get; init; }

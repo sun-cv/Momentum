@@ -2,7 +2,6 @@
     "Id":               "Hero",
     "Prefab":           "Hero",
     "Actor":            {},
-    "Corpse":           {},
     "Faction":          {},
     "Allegiance":       {},
     "Temperament":      {},

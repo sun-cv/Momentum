@@ -3,7 +3,6 @@ using Game.Common;
 using Game.Content;
 using Game.Diagnostic;
 using System.Linq;
-using UnityEngine;
 
 
 
@@ -29,6 +28,7 @@ namespace Game.Service
         public void Initialize()
         {
             World.Entity.Create(Asset.Get("Hero"), new());
+            World.Entity.CanMove(entity);
         }
     
         void IRealBase.Tick() 

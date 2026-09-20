@@ -12,15 +12,16 @@ namespace Game.Common
     {
         public string Id                                        { get; init; }
         public string Prefab                                    { get; init; }
-        public Meta Meta                                        { get; init; }
 
+        public Meta Meta                                        { get; init; }
         public Ledger? Ledger                                   { get; init; }
 
         public Prop? Prop                                       { get; init; }
         public Actor? Actor                                     { get; init; }
+        public Corpse? Corpse                                   { get; init; }
         public Spawner? Spawner                                 { get; init; }
         public Projectile? Projectile                           { get; init; }
-        public Corpse? Corpse                                   { get; init; }
+        public Effect? Effect                                   { get; init; }
 
         public Innate? Innate                                   { get; init; }
         public Blocks? Blocks                                   { get; init; }
@@ -65,7 +66,7 @@ namespace Game.Common
         public Instance? Instance                               { get; init; }
         public Body? Body                                       { get; init; }
         public Animation? Animation                             { get; init; }
-        public Renderering? Renderering                         { get; init; }
+        public Rendering? Rendering                         { get; init; }
         public Sorting? Sorting                                 { get; init; }
         public HurtBox? HurtBox                                 { get; init; }
     }

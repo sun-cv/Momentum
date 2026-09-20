@@ -140,7 +140,7 @@ namespace Game.Interface
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Attack1"",
+                    ""name"": ""Primary"",
                     ""type"": ""Button"",
                     ""id"": ""70a25a94-6a62-4eac-b2a2-d7d20cc91ff0"",
                     ""expectedControlType"": """",
@@ -149,7 +149,7 @@ namespace Game.Interface
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Attack2"",
+                    ""name"": ""Secondary"",
                     ""type"": ""Button"",
                     ""id"": ""30862c6f-6c08-48f4-a9bd-13620da2266e"",
                     ""expectedControlType"": """",
@@ -285,7 +285,7 @@ namespace Game.Interface
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Attack1"",
+                    ""action"": ""Primary"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -296,7 +296,7 @@ namespace Game.Interface
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Attack2"",
+                    ""action"": ""Secondary"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -323,8 +323,8 @@ namespace Game.Interface
             m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
             m_Player_Action = m_Player.FindAction("Action", throwIfNotFound: true);
             m_Player_Modifier = m_Player.FindAction("Modifier", throwIfNotFound: true);
-            m_Player_Attack1 = m_Player.FindAction("Attack1", throwIfNotFound: true);
-            m_Player_Attack2 = m_Player.FindAction("Attack2", throwIfNotFound: true);
+            m_Player_Primary = m_Player.FindAction("Primary", throwIfNotFound: true);
+            m_Player_Secondary = m_Player.FindAction("Secondary", throwIfNotFound: true);
             m_Player_Dodge = m_Player.FindAction("Dodge", throwIfNotFound: true);
         }
 
@@ -411,8 +411,8 @@ namespace Game.Interface
         private readonly InputAction m_Player_Interact;
         private readonly InputAction m_Player_Action;
         private readonly InputAction m_Player_Modifier;
-        private readonly InputAction m_Player_Attack1;
-        private readonly InputAction m_Player_Attack2;
+        private readonly InputAction m_Player_Primary;
+        private readonly InputAction m_Player_Secondary;
         private readonly InputAction m_Player_Dodge;
         /// <summary>
         /// Provides access to input actions defined in input action map "Player".
@@ -446,13 +446,13 @@ namespace Game.Interface
             /// </summary>
             public InputAction @Modifier => m_Wrapper.m_Player_Modifier;
             /// <summary>
-            /// Provides access to the underlying input action "Player/Attack1".
+            /// Provides access to the underlying input action "Player/Primary".
             /// </summary>
-            public InputAction @Attack1 => m_Wrapper.m_Player_Attack1;
+            public InputAction @Primary => m_Wrapper.m_Player_Primary;
             /// <summary>
-            /// Provides access to the underlying input action "Player/Attack2".
+            /// Provides access to the underlying input action "Player/Secondary".
             /// </summary>
-            public InputAction @Attack2 => m_Wrapper.m_Player_Attack2;
+            public InputAction @Secondary => m_Wrapper.m_Player_Secondary;
             /// <summary>
             /// Provides access to the underlying input action "Player/Dodge".
             /// </summary>
@@ -498,12 +498,12 @@ namespace Game.Interface
                 @Modifier.started += instance.OnModifier;
                 @Modifier.performed += instance.OnModifier;
                 @Modifier.canceled += instance.OnModifier;
-                @Attack1.started += instance.OnAttack1;
-                @Attack1.performed += instance.OnAttack1;
-                @Attack1.canceled += instance.OnAttack1;
-                @Attack2.started += instance.OnAttack2;
-                @Attack2.performed += instance.OnAttack2;
-                @Attack2.canceled += instance.OnAttack2;
+                @Primary.started += instance.OnPrimary;
+                @Primary.performed += instance.OnPrimary;
+                @Primary.canceled += instance.OnPrimary;
+                @Secondary.started += instance.OnSecondary;
+                @Secondary.performed += instance.OnSecondary;
+                @Secondary.canceled += instance.OnSecondary;
                 @Dodge.started += instance.OnDodge;
                 @Dodge.performed += instance.OnDodge;
                 @Dodge.canceled += instance.OnDodge;
@@ -533,12 +533,12 @@ namespace Game.Interface
                 @Modifier.started -= instance.OnModifier;
                 @Modifier.performed -= instance.OnModifier;
                 @Modifier.canceled -= instance.OnModifier;
-                @Attack1.started -= instance.OnAttack1;
-                @Attack1.performed -= instance.OnAttack1;
-                @Attack1.canceled -= instance.OnAttack1;
-                @Attack2.started -= instance.OnAttack2;
-                @Attack2.performed -= instance.OnAttack2;
-                @Attack2.canceled -= instance.OnAttack2;
+                @Primary.started -= instance.OnPrimary;
+                @Primary.performed -= instance.OnPrimary;
+                @Primary.canceled -= instance.OnPrimary;
+                @Secondary.started -= instance.OnSecondary;
+                @Secondary.performed -= instance.OnSecondary;
+                @Secondary.canceled -= instance.OnSecondary;
                 @Dodge.started -= instance.OnDodge;
                 @Dodge.performed -= instance.OnDodge;
                 @Dodge.canceled -= instance.OnDodge;
@@ -618,19 +618,19 @@ namespace Game.Interface
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnModifier(InputAction.CallbackContext context);
             /// <summary>
-            /// Method invoked when associated input action "Attack1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// Method invoked when associated input action "Primary" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>
             /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-            void OnAttack1(InputAction.CallbackContext context);
+            void OnPrimary(InputAction.CallbackContext context);
             /// <summary>
-            /// Method invoked when associated input action "Attack2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// Method invoked when associated input action "Secondary" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>
             /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-            void OnAttack2(InputAction.CallbackContext context);
+            void OnSecondary(InputAction.CallbackContext context);
             /// <summary>
             /// Method invoked when associated input action "Dodge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
             /// </summary>
