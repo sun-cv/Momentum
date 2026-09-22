@@ -6,7 +6,7 @@ using Game.Diagnostic;
 
 namespace Game.Realm
 {
-    public class Pool
+    internal class Pool
     {
         private int increment;
         private int renewed; 
@@ -44,7 +44,9 @@ namespace Game.Realm
             generations[entity.Index]++;
 
             if (renewed == free.Length)
+            {
                 Array.Resize(ref free, renewed * 2);
+            }
 
             free[renewed++] = entity.Index; 
         }
@@ -63,13 +65,24 @@ namespace Game.Realm
         public IEnumerable<Entity> Enumerate()
         {
             for (int index = 0; index < alive.Length; index++)
+            {
                 if (alive[index])
+                {
+
                     yield return new Entity { Index = index, Generation = generations[index] };
+                }
+            }
         }
 
         public bool Alive(Entity entity)
         {
             return entity.Index < alive.Length && alive[entity.Index] && entity.Generation == generations[entity.Index];
+        }
+
+        public void Guard(Entity entity)
+        {
+            if (!Alive(entity))
+                throw new Exception($"[Entities.Pool] Guarded stale entity {entity.Index}:{entity.Generation}");
         }
 
         static Pool() => Log<Pool>.Level(Diagnostic.Log.Level.Debug);

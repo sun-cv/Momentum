@@ -27,12 +27,12 @@ namespace Game.Realm
 
         public void Reset(Entity entity)
         {
-            active.Set(entity, innate.View(entity).To<Capability>());
+            active.Add(entity, innate.View(entity).To<Capability>());
         }
 
         public void Block(Entity entity, Capability capability)
         {
-            active.Set(entity, active.View(entity).Without((int)capability));
+            active.Add(entity, active.View(entity).Without((int)capability));
         }
     }
 }

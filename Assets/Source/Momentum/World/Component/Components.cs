@@ -28,7 +28,7 @@ namespace Game.Realm
             Guard(entity);
 
             Access<TComponent>().Add(entity.Index, component);
-            Mask.Get<Components>().Set(entity, Mask.Get<Components>().View(entity).With<TComponent>());
+            Mask.Get<Components>().Add(entity, Mask.Get<Components>().View(entity).With<TComponent>());
         }
 
         public void Remove<TComponent>(Entity entity) where TComponent : IComponent
@@ -36,7 +36,7 @@ namespace Game.Realm
             Guard(entity);
 
             Access<TComponent>().Remove(entity.Index);
-            Mask.Get<Components>().Set(entity, Mask.Get<Components>().View(entity).Without<TComponent>());
+            Mask.Get<Components>().Add(entity, Mask.Get<Components>().View(entity).Without<TComponent>());
         }
 
         internal bool Has<TComponent>(Entity entity) where TComponent : IComponent
@@ -71,8 +71,7 @@ namespace Game.Realm
 
         private void Guard(Entity entity)
         {
-            if (!Pool.Alive(entity))
-                throw new Exception($"[Components] Stale entity {entity.Index}:{entity.Generation}");
+            Pool.Guard(entity);
         }
 
         internal Modifier Modify => modify;

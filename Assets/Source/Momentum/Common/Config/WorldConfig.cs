@@ -23,6 +23,11 @@ namespace Game.Common
             {
                 public const int Capacity       = 10;
             }
+
+            static public class Physics 
+            {
+                public const float Rest         = 0.01f;
+            }
         }
     }
 }

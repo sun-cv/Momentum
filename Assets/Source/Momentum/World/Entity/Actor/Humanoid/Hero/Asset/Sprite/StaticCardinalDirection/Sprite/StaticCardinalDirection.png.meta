@@ -1,19 +1,19 @@
 fileFormatVersion: 2
-guid: 5a418b0a34d003a4d8c5a1ab9ef2bbdc
+guid: 21fece4f50d163a4998eaa5ec202bcf5
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2856920241754413648
-    second: Hero_Static_Cardinal_0
+      213: -3177887187480766841
+    second: StaticCardinalDirection_0
   - first:
-      213: 4938355268746903487
-    second: Hero_Static_Cardinal_1
+      213: 2977569901489949841
+    second: StaticCardinalDirection_1
   - first:
-      213: 8637519300468911508
-    second: Hero_Static_Cardinal_2
+      213: 2099112845788196501
+    second: StaticCardinalDirection_2
   - first:
-      213: -2197182733981857040
-    second: Hero_Static_Cardinal_3
+      213: 5611926541234428351
+    second: StaticCardinalDirection_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -57,7 +57,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 16
@@ -110,7 +110,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -122,23 +122,89 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hero_Static_Cardinal_0
+      name: StaticCardinalDirection_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 32
-        height: 64
+        width: 16
+        height: 32
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0b5ea9e3d2e2a58d0800000000000000
-      internalID: -2856920241754413648
+      spriteID: d7e97a3611a9f8148bae0a6783c858ef
+      internalID: -3177887187480766841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StaticCardinalDirection_1
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e87eaf200ac888a4db76750869c682c3
+      internalID: 2977569901489949841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StaticCardinalDirection_2
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3fb9f47874600054f9f3ecf8edbd0b39
+      internalID: 2099112845788196501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StaticCardinalDirection_3
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 0
+        width: 16
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a18741b6f3c83f488d78c191c9f326f
+      internalID: 5611926541234428351
       vertices: []
       indices: 
       edges: []
@@ -147,7 +213,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 06546a7ca0f1e39409b817cb0025e0fa
+    spriteID: 2b41cf95171a90143b5202fa4be44c24
     internalID: 0
     vertices: []
     indices: 
@@ -155,11 +221,12 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      Hero_Static_Cardinal_0: -2856920241754413648
+      StaticCardinalDirection_0: -3177887187480766841
+      StaticCardinalDirection_1: 2977569901489949841
+      StaticCardinalDirection_2: 2099112845788196501
+      StaticCardinalDirection_3: 5611926541234428351
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

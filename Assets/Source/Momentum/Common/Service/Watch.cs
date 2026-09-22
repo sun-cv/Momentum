@@ -34,6 +34,8 @@ namespace Game.Common
             public static int Real  { get; set; }
             public static int Game  { get; set; }
             public static int Late  { get; set; }
+
+            public static float Delta => Config.Engine.Clock.Delta;
         }
     }
 }

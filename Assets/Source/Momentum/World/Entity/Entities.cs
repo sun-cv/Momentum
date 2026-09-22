@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 using Game.Common;
 using Game.Diagnostic;
-using System.Text;
 
 
 
@@ -17,7 +15,7 @@ namespace Game.Realm
         private readonly Components component;
         private readonly Capabilities capabilities;
 
-        public Entities()
+        internal Entities()
         {
             pool            = new();
             masks           = new(pool);

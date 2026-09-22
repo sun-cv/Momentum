@@ -2,6 +2,31 @@
     "Id":               "Hero",
     "Prefab":           "Hero",
     "Actor":            {},
+    "Innate":
+    {
+        "Capabilities":
+        [
+            "Use",
+            "Interact",
+            "Action",
+            "Attack",
+            "Primary",
+            "Secondary",
+            "Modifier",
+            "Dodge",
+            "Move",
+            "Rotate",
+            "Equip",
+            "Cast",
+            "Rest",
+            "Heal",
+            "Repair",
+            "Charge",
+            "Regenerate",
+            "Recharge",
+            "Teleport"
+        ]
+    },
     "Faction":          {},
     "Allegiance":       {},
     "Temperament":      {},
@@ -11,7 +36,18 @@
     "Collision":        {},
     "PlayerController": {},
     "Intent":           {},
-    "Movement":         {},
+    "Movement":         
+    {
+        "Speed":        1,
+        "Acceleration": 1
+    },
+    "Mass":             
+    {
+        "Weight":       1,
+        "Drag":         1,
+        "Friction":     1,
+        "Momentum":     1
+    },
     "CommandQueue":     {},
     "Abilities":        {},
     "Loadout":          {},
@@ -29,7 +65,6 @@
         "Maximum":      10,
         "Current":      10 
     },
-    "TimeScale":        {},
     "Instance":         {},
     "Body":             {},
     "Animation":        {},

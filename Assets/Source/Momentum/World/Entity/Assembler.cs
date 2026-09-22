@@ -10,6 +10,8 @@ using Physics   = Game.Common.Physics;
 using Collision = Game.Common.Collision;
 using Animation = Game.Common.Animation;
 
+
+
 namespace Game.Realm
 {
     public partial class Entities
@@ -27,6 +29,7 @@ namespace Game.Realm
                 (definition) => definition.Effect       is Effect,
                 (definition) => definition.Corpse       is Corpse, 
                 (definition) => definition.Spawner      is Spawner, 
+                (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
             };
 
@@ -39,7 +42,6 @@ namespace Game.Realm
 
             public Entity Assemble(Definition definition, Entity parent)
             {
-                RequireNoPrefab(definition);
                 RequireAlive(parent, definition);
 
                 var entity = Pool.Allocate();
@@ -79,18 +81,25 @@ namespace Game.Realm
 
             public void Release(Entity entity)
             {
-                if (!Pool.Alive(entity))
-                    throw new Exception($"[Assembler] Attempted to release dead entity");
+                Guard(entity);
 
                 if (Component.Has<Instance>(entity))
+                {
                     UnityEngine.Object.Destroy(Component.View<Instance>(entity).Transform.gameObject);
+                }
 
                 if (Component.Has<Child>(entity))
+                {
                     foreach (var child in Component.View<Child>(entity).Entities.ToList())
+                    {
                         Release(child);
+                    } 
+                }
 
                 if (Component.Has<Parent>(entity))
+                {
                     Component.Modify.Child(Component.View<Parent>(entity).Entity).Entities.Remove(entity);
+                }
 
                 Mask.Release(entity);
                 Pool.Release(entity);
@@ -98,9 +107,14 @@ namespace Game.Realm
 
             private void ProcessDefinition(Entity entity, Definition definition)
             {
-                Component.Add<Meta>(entity, definition.Meta);
+                GenerateComponents(entity, definition);
+                AssignInnateCapabilities(entity, definition);
+            }
 
-                ProcessCapabilities(entity, definition);
+            private void GenerateComponents(Entity entity, Definition definition)
+            {
+
+                Component.Add<Meta>(entity, definition.Meta);
 
                 if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
                 if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);
@@ -113,20 +127,31 @@ namespace Game.Realm
                 if (definition.Faction is Faction faction)              Component.Add<Faction>(entity, faction);
                 if (definition.Allegiance is Allegiance allegiance)     Component.Add<Allegiance>(entity, allegiance);
                 if (definition.Temperament is Temperament temperament)  Component.Add<Temperament>(entity, temperament);
-                if (definition.Physics is Physics physics)              Component.Add<Physics>(entity, physics);
-                if (definition.Force is Force force)                    Component.Add<Force>(entity, force);
-                if (definition.Contact is Contact contact)              Component.Add<Contact>(entity, contact);
-                if (definition.Collision is Collision collision)        Component.Add<Collision>(entity, collision);
                 if (definition.Movement is Movement movement)           Component.Add<Movement>(entity, movement);
+                if (definition.Physics is Physics physics)              Component.Add<Physics>(entity, physics);
+                if (definition.Force is Force)                          Component.Add<Force>(entity, new());
+                if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
+                if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
                 if (definition.Abilities is Abilities abilities)        Component.Add<Abilities>(entity, abilities);
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
                 if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
                 if (definition.Inventory is Inventory inventory)        Component.Add<Inventory>(entity, inventory);
-                if (definition.Target is Target target)                 Component.Add<Target>(entity, target);
-                if (definition.Aim is Aim aim)                          Component.Add<Aim>(entity, aim);
+                if (definition.Target is Target)                        Component.Add<Target>(entity, new());
+                if (definition.Aim is Aim)                              Component.Add<Aim>(entity, new());
                 if (definition.Health is Health health)                 Component.Add<Health>(entity, health);
                 if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
-                if (definition.TimeScale is TimeScale timeScale)        Component.Add<TimeScale>(entity, timeScale);
+                if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
+
+                if (definition.Mass is Mass mass)
+                {
+                    Component.Add<Mass>(entity, mass);
+                    Component.Add<Kinematic>(entity, new());
+                    Component.Add<Control>(entity, new());
+                    Component.Add<Impulse>(entity, new());
+                    Component.Add<Velocity>(entity, new());
+                    Component.Add<TimeScale>(entity, new() { Scale = 1});
+                }
+
 
                 if (definition.PlayerController is PlayerController)
                 {
@@ -208,7 +233,7 @@ namespace Game.Realm
                 Component.Modify.Child(parent).Entities.Add(child);
             }
 
-            private void ProcessCapabilities(Entity entity, Definition definition)
+            private void AssignInnateCapabilities(Entity entity, Definition definition)
             {
                 Mask<Innate> mask = default;
 
@@ -220,19 +245,18 @@ namespace Game.Realm
                     }
                 }
 
-                Mask.Get<Innate>().Set(entity, mask);
+                Mask.Get<Innate>().Add(entity, mask);
+            }
+
+            private void Guard(Entity entity)
+            {
+                Pool.Guard(entity);
             }
 
             private void RequireAlive(Entity? parent, Definition definition)
             {
-                if (parent is Entity entity && !Pool.Alive(entity))
-                    throw new Exception($"[Assembler] Parent is dead for {definition.Id}");
-            }
-
-            private void RequireNoPrefab(Definition definition)
-            {
-                if (definition.Prefab != null)
-                    throw new Exception($"[Assembler] {definition.Id} names a prefab, create it from a Blueprint");
+                if (parent is Entity entity)
+                    Pool.Guard(entity);
             }
 
             private bool ValidateEntity(Entity entity, Definition definition)
@@ -247,31 +271,67 @@ namespace Game.Realm
                 if (kinds != 1)
                     throw new Exception($"[Assembler.Validation] Entity {definition.Id} has {kinds} archetypes, expected 1");
 
-                foreach (var (type, predicates) in required)
+                foreach (var (matches, rules) in ArchetypeComponentRequirement)
                 {
-                    if (type(definition))
+                    if (!matches(definition))
+                        continue;
+
+                    foreach (var (check, message) in rules)
                     {
-                        foreach(var predicate in predicates)
-                        {
-                            if (!predicate(Component, entity, definition))
-                                throw new Exception($"[Assembler.Validation] Entity {definition.Id} failed component validation check");
-                        }
+                        if (!check(Component, entity, definition))
+                            throw new Exception($"[Assembler.Validation] {definition.Id}: {message}");
+                    }
+                }
+
+                foreach (var (matches, rules) in ComponentRequirement)
+                {
+                    if (!matches(Component, entity))
+                        continue;
+
+                    foreach (var (check, message) in rules)
+                    {
+                        if (!check(Component, entity))
+                            throw new Exception($"[Assembler.Validation] {definition.Id}: {message}");
                     }
                 }
                 return true;
             }
 
-            public Dictionary<Func<Definition, bool>, List<Func<Components, Entity, Definition, bool>>> required = new()
+            private static readonly Dictionary<Func<Definition, bool>, List<(Func<Components, Entity, Definition, bool> Check, string Message)>> ArchetypeComponentRequirement = new()
             {
-                { 
-                    (definition) => definition.Effect is Effect, new() 
-                    {
-                        (Component, entity, definition) => Component.Has<Parent>(entity),
-                        (Component, entity, definition) => Component.Has<Blocks>(entity),
-                    }},
                 {
-                    (definition) => definition.Effect is Effect, new() 
-                }
+                    definition => definition.Effect is Effect, new()
+                    {
+                        ((Component, entity, definition) => Component.Has<Parent>(entity),      "Effect requires Parent"),
+                        ((Component, entity, definition) => Component.Has<Blocks>(entity),      "Effect requires Blocks"),
+                        ((Component, entity, definition) => definition.Prefab is null,          "Effect must not name a prefab"),
+                    }
+                },
+                {
+                    definition => definition.Directive is Directive, new()
+                    {
+                        ((Component, entity, definition) => Component.Has<Parent>(entity),      "Directive requires Parent"),
+                        ((Component, entity, definition) => Component.Has<Blocks>(entity),      "Directive requires Blocks"),
+                        ((Component, entity, definition) => Component.Has<Displacement>(entity),"Directive requires Displacement"),
+                        ((Component, entity, definition) => definition.Prefab is null,          "Directive must not name a prefab"),
+                    }
+                },
+                {
+                    definition => definition.Actor is Actor, new()
+                    {
+                        ((Component, entity, definition) => Component.Has<Instance>(entity),    "Actor requires Instance"),
+                    }
+                },
+            };
+
+            private static readonly Dictionary<Func<Components, Entity, bool>, List<(Func<Components, Entity, bool> Check, string Message)>> ComponentRequirement = new()
+            {
+                {
+                    (Component, entity) => Component.Has<Movement>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Mass>(entity),                    "Movable entity requires Mass component"),
+                    }
+                },
             };
 
             static Assembler() => Log<Assembler>.Level(Diagnostic.Log.Level.Debug);

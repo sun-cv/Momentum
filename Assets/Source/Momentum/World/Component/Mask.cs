@@ -12,7 +12,9 @@ namespace Game.Realm
         public static int Next<TDomain>()
         {
             if (!indexes.TryGetValue(typeof(TDomain), out var _))
+            {
                 indexes[typeof(TDomain)] = 0;
+            }
 
             return indexes[typeof(TDomain)]++;
         }
@@ -32,6 +34,7 @@ namespace Game.Realm
             int index   = MaskBit<TDomain, TValue>.Index;
             ulong flag  = 1UL << (index % 64);
             var mask    = this;
+
             switch (index / 64)
             {
                 case 0: mask.Bits0 |= flag; break;
@@ -46,6 +49,7 @@ namespace Game.Realm
         {
             ulong flag  = 1UL << (index % 64);
             var mask    = this;
+
             switch (index / 64)
             {
                 case 0: mask.Bits0 |= flag; break;
@@ -62,6 +66,7 @@ namespace Game.Realm
             int index   = MaskBit<TDomain, TValue>.Index;
             ulong flag  = 1UL << (index % 64);
             var mask    = this;
+
             switch (index / 64)
             {
                 case 0: mask.Bits0 &= ~flag; break;
@@ -75,9 +80,9 @@ namespace Game.Realm
         public readonly bool Contains(Mask<TDomain> required)
         {
             return  (Bits0 & required.Bits0) == required.Bits0 &&
-                (Bits1 & required.Bits1) == required.Bits1 &&
-                (Bits2 & required.Bits2) == required.Bits2 &&
-                (Bits3 & required.Bits3) == required.Bits3;
+                    (Bits1 & required.Bits1) == required.Bits1 &&
+                    (Bits2 & required.Bits2) == required.Bits2 &&
+                    (Bits3 & required.Bits3) == required.Bits3;
         }
 
         public readonly Mask<TOther> To<TOther>()
@@ -89,6 +94,7 @@ namespace Game.Realm
         {
             ulong flag  = 1UL << (index % 64);
             var mask    = this;
+
             switch (index / 64)
             {
                 case 0: mask.Bits0 &= ~flag; break;
@@ -138,5 +144,10 @@ namespace Game.Realm
     public static class Mask<TDomain, T1, T2, T3, T4, T5>
     {
         public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>();
+    }
+
+    public static class Mask<TDomain, T1, T2, T3, T4, T5, T6>
+    {
+        public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>().With<T6>();
     }
 }

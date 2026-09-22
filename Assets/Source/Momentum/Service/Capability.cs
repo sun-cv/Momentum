@@ -1,4 +1,3 @@
-using System;
 using Game.Common;
 using Game.Realm;
 
@@ -9,7 +8,6 @@ namespace Game.Service
 
     public class CapabilitySystem : RegisteredService, IWorld, IRealBase
     {
-
         private readonly World World;
 
         public CapabilitySystem(World world)
@@ -24,7 +22,6 @@ namespace Game.Service
 
         private void ProcessCapabilityMasks()
         {
-            
             var innate  = World.Query(Mask<Components, Innate>.Key);
             var blocks  = World.Query(Mask<Components, Blocks>.Key);
 

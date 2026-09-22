@@ -62,11 +62,40 @@ namespace Game.Common
                 public const int       Priority = 05;
             }
 
+            public static class ControlSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 01;
+            }
+
+            public static class DirectiveSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 02;
+            }
+
+            public static class ImpulseSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 03;
+            }
+
+            public static class ResolveSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 04;
+            }
+
             public static class MovementSystem
             {
                 public const TickPhase Phase    = TickPhase.Physics;
-                public const int       Priority = 10;
+                public const int       Priority = 05;
             }
-        }
+
+            public static class SimulationSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 10;
+            }        }
     }
 }

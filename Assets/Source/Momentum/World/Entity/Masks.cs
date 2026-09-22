@@ -60,18 +60,22 @@ namespace Game.Realm
 
         public Mask<TDomain> View(Entity entity)
         {
+            Guard(entity);
+
             return store.View(entity.Index);
         }
 
-        public void Set(Entity entity, Mask<TDomain> mask)
+        public void Add(Entity entity, Mask<TDomain> mask)
         {
+            Guard(entity);
+
             store.Add(entity.Index, mask);
             Patch(entity, mask);
         }
 
         public void Clear(Entity entity)
         {
-            Set(entity, default);
+            Add(entity, default);
         }
 
         public IReadOnlyCollection<Entity> Query(Mask<TDomain> mask)
@@ -98,6 +102,11 @@ namespace Game.Realm
                 if (current.Contains(mask)) set.Add(entity);
                 else                        set.Remove(entity);
             }
+        }
+
+        private void Guard(Entity entity)
+        {
+            pool.Guard(entity);
         }
     }
 }
