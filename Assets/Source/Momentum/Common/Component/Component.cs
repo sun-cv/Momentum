@@ -117,10 +117,8 @@ namespace Game.Common
     }
     public struct Mass              : IComponent 
     {
-        public float Drag                               { get; set; }
         public float Weight                             { get; set; }
         public float Friction                           { get; set; }
-        public float Momentum                           { get; set; }
     }
 
     public struct Movement          : IComponent
@@ -194,7 +192,7 @@ namespace Game.Common
 
     public struct TimeModifier      : IComponent 
     {
-        public float Value                              { get; set; }     
+        public float Scale                              { get; set; }     
     }
 
     public struct Instance          : IComponent 
@@ -229,5 +227,6 @@ namespace Game.Common
         public Collider2D Collider                      { get; set; }
     }
     
+    public struct CameraTarget      : IComponent {}
 
 }

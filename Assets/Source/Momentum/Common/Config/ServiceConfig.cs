@@ -96,6 +96,13 @@ namespace Game.Common
             {
                 public const TickPhase Phase    = TickPhase.Physics;
                 public const int       Priority = 10;
-            }        }
+            }        
+            
+            public static class CameraRig
+            {
+                public const TickPhase Phase    = TickPhase.Render;
+                public const int       Priority = 90;
+            }               
+        }
     }
 }

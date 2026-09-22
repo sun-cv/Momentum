@@ -37,28 +37,28 @@ namespace Game.Service
 
         private void CalculateControlModifier(Entity entity)
         {
-            if (!World.Entity.Has<Child>(entity))
-                return;
-
             float slowest = 0f;
             float fastest = 0f;
 
-            foreach (var child in World.Entity.Child(entity).Entities)
+            if (World.Entity.Has<Child>(entity))
             {
-                if (World.Entity.Has<SpeedModifier>(child))
+                foreach (var child in World.Entity.Child(entity).Entities)
                 {
-                    var value   = World.Entity.SpeedModifier(child).Value;
+                    if (World.Entity.Has<SpeedModifier>(child))
+                    {
+                        var value = World.Entity.SpeedModifier(child).Value;
 
-                    slowest     = Mathf.Min(slowest, value);
-                    fastest     = Mathf.Max(fastest, value);
+                        slowest = Mathf.Min(slowest, value);
+                        fastest = Mathf.Max(fastest, value);
+                    }
                 }
             }
+
             World.Entity.Modify.Control(entity).Modifier = (1f + slowest) * (1f + fastest);
         }
 
         private void CalculateControlVelocity(Entity entity)
         {
-            var mass        = World.Entity.Mass(entity);
             var intent      = World.Entity.Intent(entity);
             var movement    = World.Entity.Movement(entity);
             var control     = World.Entity.Control(entity);
@@ -66,9 +66,9 @@ namespace Game.Service
 
             var direction   = Vector2.ClampMagnitude(intent.Direction, 1f);
             var target      = World.Entity.CanMove(entity)
-                ? direction * movement.Speed * (1f - control.Modifier)
+                ? direction * movement.Speed * control.Modifier
                 : Vector2.zero;
-            var step        = movement.Acceleration / mass.Weight * Watch.Tick.Delta * scale;
+            var step        = movement.Acceleration * Watch.Tick.Delta * scale;
 
 
             World.Entity.Modify.Control(entity).Velocity = Vector2.MoveTowards(control.Velocity, target, step);
@@ -76,8 +76,6 @@ namespace Game.Service
 
         static ControlSystem() => Log<ControlSystem>.Level(Diagnostic.Log.Level.Debug);
     }
-
-    // DirectiveSystem     zero every Kinematic, then each Displacement -> its Parent's Kinematic
 
     public class DirectiveSystem : RegisteredService, IWorld, IGameBase
     {
@@ -146,6 +144,9 @@ namespace Game.Service
             ref var displacement    = ref World.Entity.Modify.Displacement(entity);
             var scale               = World.Entity.TimeScale(parent).Scale;
 
+            if (scale <= 0f)
+                return false;
+
             var before = Shape((float)displacement.Progress / displacement.Duration);
             displacement.Progress++;
             var after  = Shape((float)displacement.Progress / displacement.Duration);
@@ -181,10 +182,10 @@ namespace Game.Service
             foreach (var entity in World.Query(Mask<Components, Impulse, Mass>.Key))
             {
                 ref var impulse = ref World.Entity.Modify.Impulse(entity);
-                var drag        = World.Entity.Mass(entity).Drag;
+                var friction    = World.Entity.Mass(entity).Friction;
                 var scale       = World.Entity.TimeScale(entity).Scale;
 
-                impulse.Velocity *= Mathf.Exp(-drag * Watch.Tick.Delta * scale);
+                impulse.Velocity *= Mathf.Exp(-friction * Watch.Tick.Delta * scale);
 
                 if (impulse.Velocity.sqrMagnitude < Rest * Rest)
                 {
@@ -249,12 +250,12 @@ namespace Game.Service
     {
         public SimulationSystem()
         {
-            Physics2D.simulationMode = SimulationMode2D.Script;
+            // Physics2D.simulationMode = SimulationMode2D.Script;
         }
 
         public void Tick()
         {
-            Physics2D.Simulate(Watch.Tick.Delta);
+            // Physics2D.Simulate(Watch.Tick.Delta);
         }
     }
 }

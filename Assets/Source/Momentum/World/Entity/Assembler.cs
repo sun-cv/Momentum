@@ -141,6 +141,7 @@ namespace Game.Realm
                 if (definition.Health is Health health)                 Component.Add<Health>(entity, health);
                 if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
+                if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
 
                 if (definition.Mass is Mass mass)
                 {
@@ -187,9 +188,16 @@ namespace Game.Realm
                     Component.Add<Instance>(entity, new() { Transform = instance.transform });
                 }
 
-                if (definition.Body is Body && nodes.TryGetValue("Body", out var bodyNode))
+                if (definition.Body is Body)
                 {
-                    Component.Add<Body>(entity, new() { Form = bodyNode.GetComponent<Rigidbody2D>() });
+                    var body = instance.GetComponent<Rigidbody2D>();
+
+                    body.freezeRotation = true;
+                    body.gravityScale   = 0;
+                    body.interpolation  = RigidbodyInterpolation2D.Interpolate; 
+                    body.mass           = 1;
+
+                    Component.Add<Body>(entity, new() { Form = body });
                 }
 
                 if (definition.Animation is Animation && nodes.TryGetValue("Animator", out var animatorNode))

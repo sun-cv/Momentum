@@ -30,7 +30,6 @@
     "Faction":          {},
     "Allegiance":       {},
     "Temperament":      {},
-    "Physics":          {},
     "Force":            {},
     "Contact":          {},
     "Collision":        {},
@@ -38,12 +37,12 @@
     "Intent":           {},
     "Movement":         
     {
-        "Speed":        1,
-        "Acceleration": 1
+        "Speed":        5,
+        "Acceleration": 50
     },
     "Mass":             
     {
-        "Weight":       1,
+        "Weight":       200,
         "Drag":         1,
         "Friction":     1,
         "Momentum":     1
@@ -70,5 +69,6 @@
     "Animation":        {},
     "Rendering":        {},
     "Sorting":          {},
-    "Hurtbox":          {}
+    "Hurtbox":          {},
+    "CameraTarget":     {}
 }

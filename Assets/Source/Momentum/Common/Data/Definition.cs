@@ -75,9 +75,6 @@ namespace Game.Common
         public Kinematic? Kinematic                             { get; init; }
         public Displacement? Displacement                       { get; init; }
 
-
-
-        
         public SpeedModifier? SpeedModifier                     { get; init; }
         public AttackModifier? AttackModifier                   { get; init; }
 
@@ -94,5 +91,7 @@ namespace Game.Common
         public Rendering? Rendering                             { get; init; }
         public Sorting? Sorting                                 { get; init; }
         public HurtBox? HurtBox                                 { get; init; }
+
+        public CameraTarget? CameraTarget                       { get; init; }
     }
 }

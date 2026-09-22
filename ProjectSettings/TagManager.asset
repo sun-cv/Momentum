@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags: []
   layers:
   - Default
@@ -15,29 +15,68 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - Enemy
+  - NPC
+  - Prop
+  - Projectile
+  - Environment
+  - Hitbox_Player
+  - Hitbox_Enemy
+  - Hitbox_NPC
+  - Hitbox_Prop
+  - Hitbox_Projectile
+  - Hitbox_Environment
+  - Hurtbox_Player
+  - Hurtbox_Enemy
+  - Hurtbox_NPC
+  - Hurtbox_Prop
+  - Hurtbox_Projectile
+  - Hurtbox_Environment
+  - Deflect_Player
+  - Deflect_Enemy
   - 
   - 
   m_SortingLayers:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Horizon
+    uniqueID: 1992551791
+    locked: 0
+  - name: Background
+    uniqueID: 4173389167
+    locked: 0
+  - name: Element
+    uniqueID: 3982344959
+    locked: 0
+  - name: Ground
+    uniqueID: 566834999
+    locked: 0
+  - name: Environment
+    uniqueID: 1555430163
+    locked: 0
+  - name: Aft-Props
+    uniqueID: 3338869595
+    locked: 0
+  - name: Entity
+    uniqueID: 763208097
+    locked: 0
+  - name: Depth-Sorted
+    uniqueID: 2574701975
+    locked: 0
+  - name: Fore-Props
+    uniqueID: 2683736197
+    locked: 0
+  - name: Foreground
+    uniqueID: 1142189183
+    locked: 0
+  - name: Sightline
+    uniqueID: 2044150129
+    locked: 0
+  - name: UI
+    uniqueID: 2185794911
+    locked: 0
+  m_RenderingLayers:
+  - Default
+  m_MigratedRenderPipelines: []

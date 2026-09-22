@@ -1,10 +1,39 @@
-
 {
     "Id":               "Dummy",
+    "Prefab":           "Dummy",
+    "Actor":            {},
+    "Innate":
+    {
+        "Capabilities":
+        [
+            "Move"
+        ]
+    },
+    "Force":            {},
+    "Contact":          {},
+    "Collision":        {},
+    "Movement":         
+    {
+        "Speed":        0,
+        "Acceleration": 0
+    },
+    "Mass":             
+    {
+        "Weight":       200,
+        "Drag":         1,
+        "Friction":     1,
+        "Momentum":     1
+    },
     "Health": 
     {
         "Maximum":      10,
         "Current":      10 
     },
-    "Actor":            {}
+    "Instance":         {},
+    "Body":             {},
+    "Animation":        {},
+    "Rendering":        {},
+    "Sorting":          {},
+    "Hurtbox":          {}
 }
+

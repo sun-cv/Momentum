@@ -28,6 +28,13 @@ MonoBehaviour:
     m_SerializedLabels:
     - Prefab
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc72d2829638e524f96accef9fc7c3cb
+    m_Address: Assets/Source/Momentum/World/Entity/Prop/Dummy/Asset/Prefab/Dummy.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    - Prop
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d26b2b37fd62a224b848b9f9bd6dfb18
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Data/Hero.json
     m_ReadOnly: 0
