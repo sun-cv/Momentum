@@ -98,6 +98,12 @@ namespace Game.Common
                 public const int       Priority = 10;
             }        
             
+            public static class InterpolationSystem
+            {
+                public const TickPhase Phase    = TickPhase.Render;
+                public const int       Priority = 80;
+            }
+
             public static class CameraRig
             {
                 public const TickPhase Phase    = TickPhase.Render;

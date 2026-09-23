@@ -1,3 +1,5 @@
+using UnityEngine;
+
 using Game.Common;
 
 
@@ -5,26 +7,16 @@ using Game.Common;
 namespace Game.Core
 {
 
-    public class Clock : IRealBase
+    public class Clock
     {
-        private float scale                 = Config.Engine.Clock.Scale;
+        private float scale = Config.Engine.Clock.Scale;
 
-        private float realDelta             = Config.Engine.Clock.Delta;
-        private float gameDelta             = Config.Engine.Clock.Delta;
-
-
-        internal Clock()
-        {
-            UnityEngine.Time.fixedDeltaTime = Delta;
-        }
+        private float realDelta;
+        private float gameDelta;
 
         public void Tick()
         {
-            UpdateGameDelta();
-        }
-
-        private void UpdateGameDelta()
-        {
+            realDelta = Mathf.Min(Watch.Tick.UnscaledDelta, Config.Engine.Clock.MaxDelta);
             gameDelta = realDelta * scale;
         }
 
@@ -33,11 +25,8 @@ namespace Game.Core
             scale = value;
         }
 
-        public float Delta          => Config.Engine.Clock.Delta;
         public float RealDelta      => realDelta;
         public float GameDelta      => gameDelta;
     }
-
-    
 }
 

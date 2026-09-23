@@ -2,6 +2,7 @@
     "name": "Graphics",
     "rootNamespace": "",
     "references": [
+        "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:4307f53044263cf4b835bd812fc161a4",
         "GUID:287fbc2e9de83594ca103d4639104600",
         "GUID:19f1b711ba0a4b24490dd0e2065cc452",

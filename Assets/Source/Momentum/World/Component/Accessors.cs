@@ -95,6 +95,7 @@ namespace Game.Realm
 
             public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
             public ref Body Body(Entity entity)                             => ref Component.Reference<Body>(entity);
+            public ref Visual Visual(Entity entity)                         => ref Component.Reference<Visual>(entity);
             public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
             public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
             public ref Sorting Sorting(Entity entity)                       => ref Component.Reference<Sorting>(entity);
@@ -186,6 +187,7 @@ namespace Game.Realm
 
         public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
         public Body Body(Entity entity)                                     => Component.View<Body>(entity);
+        public Visual Visual(Entity entity)                                 => Component.View<Visual>(entity);
         public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
         public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
         public Sorting Sorting(Entity entity)                               => Component.View<Sorting>(entity);

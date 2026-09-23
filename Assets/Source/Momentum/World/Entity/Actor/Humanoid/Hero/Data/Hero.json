@@ -64,8 +64,8 @@
         "Maximum":      10,
         "Current":      10 
     },
-    "Instance":         {},
     "Body":             {},
+    "Visual":           {},
     "Animation":        {},
     "Rendering":        {},
     "Sorting":          {},

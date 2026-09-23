@@ -125,10 +125,10 @@ TextureImporter:
       name: StaticCardinalDirection_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 3
         y: 0
-        width: 16
-        height: 32
+        width: 10
+        height: 29
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d7e97a3611a9f8148bae0a6783c858ef
+      spriteID: 1f6d7ac4f58516f42861823daf537bae
       internalID: -3177887187480766841
       vertices: []
       indices: 
@@ -147,10 +147,10 @@ TextureImporter:
       name: StaticCardinalDirection_1
       rect:
         serializedVersion: 2
-        x: 16
+        x: 19
         y: 0
-        width: 16
-        height: 32
+        width: 10
+        height: 29
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e87eaf200ac888a4db76750869c682c3
+      spriteID: ecb3a798e6285004ba598be9b6d1e78e
       internalID: 2977569901489949841
       vertices: []
       indices: 
@@ -169,10 +169,10 @@ TextureImporter:
       name: StaticCardinalDirection_2
       rect:
         serializedVersion: 2
-        x: 32
+        x: 35
         y: 0
-        width: 16
-        height: 32
+        width: 10
+        height: 29
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3fb9f47874600054f9f3ecf8edbd0b39
+      spriteID: 0cd103897bcb60944be696eb840c9b41
       internalID: 2099112845788196501
       vertices: []
       indices: 
@@ -191,10 +191,10 @@ TextureImporter:
       name: StaticCardinalDirection_3
       rect:
         serializedVersion: 2
-        x: 48
+        x: 51
         y: 0
-        width: 16
-        height: 32
+        width: 10
+        height: 29
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4a18741b6f3c83f488d78c191c9f326f
+      spriteID: 0f355016a09457c4e9ad71feca88a599
       internalID: 5611926541234428351
       vertices: []
       indices: 

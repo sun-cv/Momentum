@@ -205,6 +205,13 @@ namespace Game.Common
         public Rigidbody2D Form                         { get; set; }
     }
 
+    public struct Visual            : IComponent
+    {
+        public Transform Transform                      { get; set; }
+        public Vector2 Current                          { get; set; }
+        public Vector2 Previous                         { get; set; }
+    }
+
     public struct Animation         : IComponent
     {
         public Animator Animator                        { get; set; }

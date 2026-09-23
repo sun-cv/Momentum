@@ -173,20 +173,9 @@ namespace Game.Realm
             {
                 var nodes = new Dictionary<string, Transform>();
 
-                void Walk(Transform transform)
-                {
-                    nodes[transform.name] = transform;
+                Walk(nodes, instance.transform);
 
-                    for (var i = 0; i < transform.childCount; i++)
-                        Walk(transform.GetChild(i));
-                }
-
-                Walk(instance.transform);
-
-                if (definition.Instance is Instance)
-                {
-                    Component.Add<Instance>(entity, new() { Transform = instance.transform });
-                }
+                Component.Add<Instance>(entity, new() { Transform = instance.transform });
 
                 if (definition.Body is Body)
                 {
@@ -194,10 +183,15 @@ namespace Game.Realm
 
                     body.freezeRotation = true;
                     body.gravityScale   = 0;
-                    body.interpolation  = RigidbodyInterpolation2D.Interpolate; 
+                    body.interpolation  = RigidbodyInterpolation2D.None; 
                     body.mass           = 1;
 
                     Component.Add<Body>(entity, new() { Form = body });
+                }
+
+                if (definition.Visual is Visual && nodes.TryGetValue("Visual", out var visualNode))
+                {
+                    Component.Add<Visual>(entity, new() { Transform = visualNode.transform, Current = instance.transform.position, Previous = instance .transform.position});
                 }
 
                 if (definition.Animation is Animation && nodes.TryGetValue("Animator", out var animatorNode))
@@ -210,6 +204,11 @@ namespace Game.Realm
                     Component.Add<Rendering>(entity, new() { Renderer = rendererNode.GetComponent<SpriteRenderer>() });
                 }
 
+                if (definition.HurtBox is HurtBox && nodes.TryGetValue("Hurt", out var hurtNode))
+                {
+                    Component.Add<HurtBox>(entity, new() { Collider = hurtNode.GetComponent<Collider2D>() });
+                }
+
                 if (definition.Sorting is Sorting && nodes.TryGetValue("Sort", out var sortNode))
                 {
                     Component.Add<Sorting>(entity, new()
@@ -219,10 +218,15 @@ namespace Game.Realm
                         Back  = nodes.TryGetValue("Back", out var back)   ? back.GetComponent<Collider2D>()  : null,
                     });
                 }
+            }
 
-                if (definition.HurtBox is HurtBox && nodes.TryGetValue("Hurt", out var hurtNode))
+            private void Walk(Dictionary<string, Transform> nodes, Transform transform)
+            {
+                nodes[transform.name] = transform;
+
+                for (var i = 0; i < transform.childCount; i++)
                 {
-                    Component.Add<HurtBox>(entity, new() { Collider = hurtNode.GetComponent<Collider2D>() });
+                    Walk(nodes, transform.GetChild(i));
                 }
             }
 

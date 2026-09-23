@@ -12,6 +12,7 @@ namespace Game.Common
                 public const int Rate       = 60;
                 public const int Scale      = 1;
                 public const float Delta    = 1f / Rate ;
+                public const float MaxDelta = .25f;
             }
             public static class Tick
             {

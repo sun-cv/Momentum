@@ -246,16 +246,41 @@ namespace Game.Service
         }
     }
 
-    public class SimulationSystem : RegisteredService, IGameBase
+    public class SimulationSystem : RegisteredService, IWorld, IGameBase
     {
-        public SimulationSystem()
+        private readonly World World;
+
+        public SimulationSystem(World world)
         {
-            // Physics2D.simulationMode = SimulationMode2D.Script;
+            World = world;
+
+            Physics2D.simulationMode = SimulationMode2D.Script;
         }
 
         public void Tick()
         {
-            // Physics2D.Simulate(Watch.Tick.Delta);
+            Record();
+
+            Physics2D.Simulate(Watch.Tick.Delta);
+
+            Capture();
+        }
+
+        private void Record()
+        {
+            foreach (var entity in World.Query(Mask<Components, Visual, Body>.Key))
+            {
+                ref var visual  = ref World.Entity.Modify.Visual(entity);
+                visual.Previous = visual.Current;
+            }
+        }
+
+        private void Capture()
+        {
+            foreach (var entity in World.Query(Mask<Components, Visual, Body>.Key))
+            {
+                World.Entity.Modify.Visual(entity).Current = World.Entity.Body(entity).Form.position;
+            }
         }
     }
 }

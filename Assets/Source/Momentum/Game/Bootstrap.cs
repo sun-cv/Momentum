@@ -28,7 +28,7 @@ namespace Game
             enabled = true;
         }
 
-        public void FixedUpdate()
+        public void Update()
         {
             momentum.Engine.Tick();
         }

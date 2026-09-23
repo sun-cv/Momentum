@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Game.Content;
+
+using UnityEngine;
+
 using Game.Common;
 using Game.Diagnostic;
 
@@ -71,11 +73,12 @@ namespace Game.Core
             Drive(Lanes[new() { Rate = TickRate.Base, Mode = TickMode.Game }], clock.GameDelta);
 
             MeasureHerz();
+            MeasureAlpha();
         }
 
         public void Late()
         {
-            Drive(Lanes[new() { Rate = TickRate.Late, Mode = TickMode.Real }], clock.RealDelta);
+            Lanes[new() { Rate = TickRate.Late, Mode = TickMode.Real }].OnFire?.Invoke(new() { Rate = TickRate.Late, Mode = TickMode.Real }); OnTick?.Invoke();
         }
 
         private void Drive(Lane lane, float delta)
@@ -106,7 +109,12 @@ namespace Game.Core
         
         private void MeasureHerz()
         {
-            Lanes.Values.ToList().ForEach(lane => lane.herz += clock.Delta);
+            Lanes.Values.ToList().ForEach(lane => lane.herz += Time.unscaledDeltaTime);
+        }
+
+        private void MeasureAlpha()
+        {
+            Watch.Tick.Alpha = Lanes[new() { Rate = TickRate.Base, Mode = TickMode.Game }].accumulator / Lanes[new() { Rate = TickRate.Base, Mode = TickMode.Game }].delta;
         }
 
         private void MeasureTick(Lane lane)

@@ -85,8 +85,8 @@ namespace Game.Common
 
         public TimeScale? TimeScale                             { get; init; }
 
-        public Instance? Instance                               { get; init; }
         public Body? Body                                       { get; init; }
+        public Visual? Visual                                   { get; init; }
         public Animation? Animation                             { get; init; }
         public Rendering? Rendering                             { get; init; }
         public Sorting? Sorting                                 { get; init; }
