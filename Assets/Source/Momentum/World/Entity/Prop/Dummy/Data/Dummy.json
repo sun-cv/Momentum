@@ -6,7 +6,8 @@
     {
         "Capabilities":
         [
-            "Move"
+            "Move",
+            "Yield"
         ]
     },
     "Force":            {},
@@ -20,17 +21,15 @@
     "Mass":             
     {
         "Weight":       200,
-        "Drag":         1,
-        "Friction":     1,
-        "Momentum":     1
+        "Friction":     10
     },
     "Health": 
     {
         "Maximum":      10,
         "Current":      10 
     },
-    "Instance":         {},
-    "Body":             {},
+    "Form":             {},
+    "Visual":           {},
     "Animation":        {},
     "Rendering":        {},
     "Sorting":          {},

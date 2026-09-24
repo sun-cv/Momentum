@@ -15,6 +15,8 @@ namespace Game.Common
         Modifier,
         Dodge,
         Move,
+        Yield,
+        Carry,
         Rotate,
         Equip,
         Cast,

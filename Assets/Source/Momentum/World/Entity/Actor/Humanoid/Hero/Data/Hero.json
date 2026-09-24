@@ -64,7 +64,7 @@
         "Maximum":      10,
         "Current":      10 
     },
-    "Body":             {},
+    "Form":             {},
     "Visual":           {},
     "Animation":        {},
     "Rendering":        {},

@@ -48,7 +48,7 @@ namespace Game.Realm
             public ref Freezing Freezing(Entity entity)                     => ref Component.Reference<Freezing>(entity);
             public ref Hot Hot(Entity entity)                               => ref Component.Reference<Hot>(entity);
             public ref Burning Burning(Entity entity)                       => ref Component.Reference<Burning>(entity);
-            public ref Charging Charging(Entity entity)                     => ref Component.Reference<Charging>(entity);
+            public ref Shocked Shocked(Entity entity)                       => ref Component.Reference<Shocked>(entity);
             public ref Electrified Electrified(Entity entity)               => ref Component.Reference<Electrified>(entity);
 
             public ref Explosive Explosive(Entity entity)                   => ref Component.Reference<Explosive>(entity);
@@ -94,11 +94,10 @@ namespace Game.Realm
             public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
 
             public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
-            public ref Body Body(Entity entity)                             => ref Component.Reference<Body>(entity);
+            public ref Form Body(Entity entity)                             => ref Component.Reference<Form>(entity);
             public ref Visual Visual(Entity entity)                         => ref Component.Reference<Visual>(entity);
             public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
             public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
-            public ref Sorting Sorting(Entity entity)                       => ref Component.Reference<Sorting>(entity);
             public ref HurtBox HurtBox(Entity entity)                       => ref Component.Reference<HurtBox>(entity);
 
             public ref CameraTarget CameraRigTarget(Entity entity)          => ref Component.Reference<CameraTarget>(entity);
@@ -140,7 +139,7 @@ namespace Game.Realm
         public Freezing Freezing(Entity entity)                             => Component.View<Freezing>(entity);
         public Hot Hot(Entity entity)                                       => Component.View<Hot>(entity);
         public Burning Burning(Entity entity)                               => Component.View<Burning>(entity);
-        public Charging Charging(Entity entity)                             => Component.View<Charging>(entity);
+        public Shocked Shocked(Entity entity)                               => Component.View<Shocked>(entity);
         public Electrified Electrified(Entity entity)                       => Component.View<Electrified>(entity);
 
         public Explosive Explosive(Entity entity)                           => Component.View<Explosive>(entity);
@@ -186,11 +185,10 @@ namespace Game.Realm
         public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);
 
         public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
-        public Body Body(Entity entity)                                     => Component.View<Body>(entity);
+        public Form Form(Entity entity)                                     => Component.View<Form>(entity);
         public Visual Visual(Entity entity)                                 => Component.View<Visual>(entity);
         public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
         public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
-        public Sorting Sorting(Entity entity)                               => Component.View<Sorting>(entity);
         public HurtBox HurtBox(Entity entity)                               => Component.View<HurtBox>(entity);
 
         public CameraTarget CameraRigTarget(Entity entity)                  => Component.View<CameraTarget>(entity);
@@ -209,6 +207,8 @@ namespace Game.Realm
 
         public bool CanDodge(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Dodge);
         public bool CanMove(Entity entity)                                  => capabilities.Can(entity, Common.Capability.Move);
+        public bool CanYield(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Yield);
+        public bool CanCarry(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Carry);
         public bool CanRotate(Entity entity)                                => capabilities.Can(entity, Common.Capability.Rotate);
 
         public bool CanEquip(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Equip);

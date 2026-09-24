@@ -28,7 +28,7 @@ namespace Game.Service
         public void Initialize()
         {
             World.Entity.Create(Asset.Get("Hero"), new());
-            World.Entity.Create(Asset.Get("Dummy"), new());
+            World.Entity.Create(Asset.Get("Dummy"), new() { Position = new() { x = 4, y = 4, z = 0 }});
             World.Entity.CanMove(entity);
         }
     

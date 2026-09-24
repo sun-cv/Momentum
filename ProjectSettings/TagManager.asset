@@ -56,17 +56,20 @@ TagManager:
   - name: Environment
     uniqueID: 1555430163
     locked: 0
+  - name: Aft-Structure
+    uniqueID: 183080195
+    locked: 0
   - name: Aft-Props
     uniqueID: 3338869595
     locked: 0
   - name: Entity
     uniqueID: 763208097
     locked: 0
-  - name: Depth-Sorted
-    uniqueID: 2574701975
-    locked: 0
   - name: Fore-Props
     uniqueID: 2683736197
+    locked: 0
+  - name: Fore-Structure
+    uniqueID: 2861098963
     locked: 0
   - name: Foreground
     uniqueID: 1142189183

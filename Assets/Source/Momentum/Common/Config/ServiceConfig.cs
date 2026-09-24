@@ -86,10 +86,16 @@ namespace Game.Common
                 public const int       Priority = 04;
             }
 
-            public static class MovementSystem
+            public static class StepSystem
             {
                 public const TickPhase Phase    = TickPhase.Physics;
                 public const int       Priority = 05;
+            }
+
+            public static class ContactSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 06;
             }
 
             public static class SimulationSystem
@@ -99,6 +105,12 @@ namespace Game.Common
             }        
             
             public static class InterpolationSystem
+            {
+                public const TickPhase Phase    = TickPhase.Render;
+                public const int       Priority = 70;
+            }
+
+            public static class DepthSortingSystem
             {
                 public const TickPhase Phase    = TickPhase.Render;
                 public const int       Priority = 80;

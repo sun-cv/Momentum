@@ -192,7 +192,7 @@ namespace Game.Graphics
     public class ExploreMode : CameraMode
     {
         private const float Idle        = 1f;
-        private const float Moved       = 5f;
+        private const float Moved       = 0.5f;
         private const float Handover    = 1f;
 
         private static readonly Vector3 Mouse = new(0.5f, 0.5f, 0f);
@@ -250,11 +250,11 @@ namespace Game.Graphics
 
     public class MouseBehavior : CameraBehavior
     {
-        private const float Range       = 5f;
+        private const float Range       = 7f;
         private const float Horizontal  = 1f;
         private const float Vertical    = 2f;
-        private const float SpeedX      = 10f;
-        private const float SpeedY      = 10f;
+        private const float SpeedX      = 4f;
+        private const float SpeedY      = 4f;
 
         private readonly Camera                  view;
         private readonly CinemachineCameraOffset lean;
@@ -288,12 +288,12 @@ namespace Game.Graphics
     public class LeadBehavior : CameraBehavior
     {
         private const float Horizontal  = 1f;
-        private const float Vertical    = 3f;
-        private const float SpeedX      = 10f;
-        private const float SpeedY      = 10f;
+        private const float Vertical    = 2f;
+        private const float SpeedX      = 8f;
+        private const float SpeedY      = 4f;
         private const float Moving      = 0.1f;
 
-        private Vector2 direction = Vector2.right;
+        private Vector2 direction = Vector2.zero;
         private Vector2 lead;
 
         protected override void Tick(World world, Entity focus)
@@ -301,7 +301,14 @@ namespace Game.Graphics
             var velocity = world.Entity.Velocity(focus).Value;
 
             if (velocity.sqrMagnitude > Moving * Moving)
-                direction = velocity.normalized;
+            {
+                direction   = velocity.normalized;
+            }
+            
+            if (velocity.sqrMagnitude < Moving * Moving)
+            {
+                direction   = Vector2.zero;
+            }
 
             lead = new Vector2(
                     Mathf.Lerp(lead.x, direction.x, 1f - Mathf.Exp(-(SpeedX / Horizontal) * Watch.Tick.UnscaledDelta)),

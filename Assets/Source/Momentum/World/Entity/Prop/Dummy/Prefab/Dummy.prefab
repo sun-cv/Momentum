@@ -83,7 +83,7 @@ PrefabInstance:
       objectReference: {fileID: 3696284141028136107, guid: 0b8d4ce0ff3782e40a1a5b77911299e6, type: 3}
     - target: {fileID: 1254212718861131846, guid: 97bb6479bb3c0be4eb87a5e14dbd3204, type: 3}
       propertyPath: m_SortingLayer
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1254212718861131846, guid: 97bb6479bb3c0be4eb87a5e14dbd3204, type: 3}
       propertyPath: m_SortingLayerID
@@ -96,6 +96,10 @@ PrefabInstance:
     - target: {fileID: 2939991779319931709, guid: 97bb6479bb3c0be4eb87a5e14dbd3204, type: 3}
       propertyPath: m_Layer
       value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 2939991779319931709, guid: 97bb6479bb3c0be4eb87a5e14dbd3204, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3531687685993592150, guid: 97bb6479bb3c0be4eb87a5e14dbd3204, type: 3}
       propertyPath: m_Name
@@ -168,6 +172,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3086867422798575395}
     m_Modifications:
+    - target: {fileID: 517475931573609977, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4226162706911493324, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
       propertyPath: m_Layer
       value: 13
@@ -216,6 +224,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 13
       objectReference: {fileID: 0}
+    - target: {fileID: 5045034085494401638, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5045034085494401638, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5646844990364611180, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
       propertyPath: m_Layer
       value: 13
@@ -232,6 +248,26 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 13
       objectReference: {fileID: 0}
+    - target: {fileID: 8434462861221102385, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Size.x
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 8434462861221102385, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Size.y
+      value: 1.99
+      objectReference: {fileID: 0}
+    - target: {fileID: 8434462861221102385, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8434462861221102385, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Offset.x
+      value: 0.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8434462861221102385, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8776620543513361896, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
       propertyPath: m_Name
       value: Collider
@@ -239,6 +275,30 @@ PrefabInstance:
     - target: {fileID: 8776620543513361896, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
       propertyPath: m_Layer
       value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 8776620543513361896, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9040279139348660979, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Size.x
+      value: 0.91
+      objectReference: {fileID: 0}
+    - target: {fileID: 9040279139348660979, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Size.y
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 9040279139348660979, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Offset.x
+      value: 0.09
+      objectReference: {fileID: 0}
+    - target: {fileID: 9040279139348660979, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Offset.y
+      value: -0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9040279139348660979, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_EdgeRadius
+      value: 0.2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -35,6 +35,13 @@ MonoBehaviour:
     - Actor
     - Definition
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e86cae101ca27f34189fb5bcf5895207
+    m_Address: Assets/Source/Momentum/World/Entity/Prop/Dummy/Prefab/Dummy.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    - Prop
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c6a355874c2bfc14c9aa62c30b82bdd1, type: 2}
   m_SchemaSet:

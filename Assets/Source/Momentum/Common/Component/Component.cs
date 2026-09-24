@@ -47,17 +47,20 @@ namespace Game.Common
     public struct Interactable      : IComponent {}
 
     public struct Slowed            : IComponent {}
-
     public struct Stunned           : IComponent {}
+
     public struct Cold              : IComponent {}
     public struct Freezing          : IComponent {}
     public struct Hot               : IComponent {}
     public struct Burning           : IComponent {}
-    public struct Charging          : IComponent {}
+    public struct Shocked           : IComponent {}
     public struct Electrified       : IComponent {}
 
     public struct Explosive         : IComponent {}
     public struct Destructible      : IComponent {}
+    
+    public struct Unstoppable       : IComponent {}
+    public struct Anchored          : IComponent {}
 
     public struct AiController      : IComponent {}
     public struct PlayerController  : IComponent {}
@@ -115,6 +118,7 @@ namespace Game.Common
     {
         public Vector2 Value                            { get; set; }
     }
+
     public struct Mass              : IComponent 
     {
         public float Weight                             { get; set; }
@@ -200,9 +204,9 @@ namespace Game.Common
         public Transform Transform                      { get; set; }
     }
 
-    public struct Body              : IComponent 
+    public struct Form              : IComponent 
     {
-        public Rigidbody2D Form                         { get; set; }
+        public Rigidbody2D Body                         { get; set; }
     }
 
     public struct Visual            : IComponent
@@ -220,13 +224,6 @@ namespace Game.Common
     public struct Rendering         : IComponent
     {
         public SpriteRenderer Renderer                  { get; set; }
-    }
-
-    public struct Sorting           : IComponent        
-    {
-        public Collider2D Layer                         { get; set; }
-        public Collider2D Front                         { get; set; }
-        public Collider2D Back                          { get; set; }
     }
 
     public struct HurtBox           : IComponent

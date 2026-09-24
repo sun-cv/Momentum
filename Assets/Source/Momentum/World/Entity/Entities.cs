@@ -14,6 +14,7 @@ namespace Game.Realm
         private readonly Assembler assembler;
         private readonly Components component;
         private readonly Capabilities capabilities;
+        private readonly Bodies bodies;
 
         internal Entities()
         {
@@ -27,7 +28,9 @@ namespace Game.Realm
             capabilities    = new(masks);
             component       = new(masks, pool);
 
-            assembler       = new(masks, pool, component);
+            bodies          = new();
+
+            assembler       = new(masks, pool, component, bodies);
         }
         
         public Entity Create(Definition definition, Entity parent)
@@ -62,6 +65,7 @@ namespace Game.Realm
 
         public Components Component             => component;
         public Capabilities Capability          => capabilities;
+        public Bodies Body                      => bodies;
         public Components.Modifier Modify       => component.Modify;
 
         static Entities() => Log<Entities>.Level(Diagnostic.Log.Level.Debug);

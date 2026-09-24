@@ -27,6 +27,7 @@ namespace Game.Common
             static public class Physics 
             {
                 public const float Rest         = 0.01f;
+                public const float Knockback    = 8;
             }
         }
     }

@@ -21,6 +21,7 @@ namespace Game.Realm
             private readonly Pool Pool;
             private readonly Masks Mask;
             private readonly Components Component;
+            private readonly Bodies Bodies;
 
             public List<Func<Definition, bool>> archetype = new()
             {
@@ -33,11 +34,12 @@ namespace Game.Realm
                 (definition) => definition.Projectile   is Projectile,
             };
 
-            internal Assembler(Masks mask, Pool pool, Components component)
+            internal Assembler(Masks mask, Pool pool, Components component, Bodies bodies)
             {
                 Pool        = pool;
                 Mask        = mask;
                 Component   = component;
+                Bodies      = bodies;
             }
 
             public Entity Assemble(Definition definition, Entity parent)
@@ -82,6 +84,11 @@ namespace Game.Realm
             public void Release(Entity entity)
             {
                 Guard(entity);
+
+                if (Component.Has<Form>(entity))
+                {
+                    Bodies.Remove(Component.View<Form>(entity).Body);
+                }
 
                 if (Component.Has<Instance>(entity))
                 {
@@ -153,7 +160,6 @@ namespace Game.Realm
                     Component.Add<TimeScale>(entity, new() { Scale = 1});
                 }
 
-
                 if (definition.PlayerController is PlayerController)
                 {
                     Component.Add<PlayerController>(entity, new());
@@ -177,16 +183,17 @@ namespace Game.Realm
 
                 Component.Add<Instance>(entity, new() { Transform = instance.transform });
 
-                if (definition.Body is Body)
+                if (definition.Form is Form)
                 {
                     var body = instance.GetComponent<Rigidbody2D>();
 
                     body.freezeRotation = true;
                     body.gravityScale   = 0;
                     body.interpolation  = RigidbodyInterpolation2D.None; 
-                    body.mass           = 1;
+                    body.bodyType       = RigidbodyType2D.Kinematic;
 
-                    Component.Add<Body>(entity, new() { Form = body });
+                    Component.Add<Form>(entity, new() { Body = body });
+                    Bodies.Add(body, entity);
                 }
 
                 if (definition.Visual is Visual && nodes.TryGetValue("Visual", out var visualNode))
@@ -207,16 +214,6 @@ namespace Game.Realm
                 if (definition.HurtBox is HurtBox && nodes.TryGetValue("Hurt", out var hurtNode))
                 {
                     Component.Add<HurtBox>(entity, new() { Collider = hurtNode.GetComponent<Collider2D>() });
-                }
-
-                if (definition.Sorting is Sorting && nodes.TryGetValue("Sort", out var sortNode))
-                {
-                    Component.Add<Sorting>(entity, new()
-                    {
-                        Layer = sortNode.GetComponent<Collider2D>(),
-                        Front = nodes.TryGetValue("Front", out var front) ? front.GetComponent<Collider2D>() : null,
-                        Back  = nodes.TryGetValue("Back", out var back)   ? back.GetComponent<Collider2D>()  : null,
-                    });
                 }
             }
 
