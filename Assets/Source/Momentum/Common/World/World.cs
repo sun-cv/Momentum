@@ -14,6 +14,7 @@ namespace Game.Common
         Secondary,
         Modifier,
         Dodge,
+        Parry,
         Move,
         Yield,
         Carry,

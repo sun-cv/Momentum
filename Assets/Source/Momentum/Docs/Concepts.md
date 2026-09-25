@@ -43,3 +43,19 @@ all versus something Diagnostic-side.
 A concept light on the helmet: it flashes or flickers, or can be turned
 off outright. Unresolved what drives the flash/flicker state or when
 it's toggled off.
+
+## Shield skill upgrade: absorb or deflect
+The shield skill upgrades down one of two branches.
+
+- Absorb: the shield takes in a number of projectiles, and each one
+  absorbed speeds up energy regen.
+- Deflect: the shield deflects projectiles. A second upgrade on this
+  branch sends them straight back at the attacker.
+
+Open questions:
+- Whether the branches are exclusive or both can be taken.
+- How the absorb count and the regen boost scale.
+
+## Upgraded parry: dash behind
+An upgraded parry lets the player dash behind the enemy instantly,
+so the follow-up attack starts from behind.

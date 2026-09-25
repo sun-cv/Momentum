@@ -22,6 +22,7 @@ namespace Game.Realm
 
             public ref Parent Parent(Entity entity)                         => ref Component.Reference<Parent>(entity);
             public ref Child Child(Entity entity)                           => ref Component.Reference<Child>(entity);
+            public ref Anchor Anchor(Entity entity)                         => ref Component.Reference<Anchor>(entity);
             public ref Source Source(Entity entity)                         => ref Component.Reference<Source>(entity);
 
             public ref Prop Prop(Entity entity)                             => ref Component.Reference<Prop>(entity);
@@ -89,6 +90,7 @@ namespace Game.Realm
             public ref Aim Aim(Entity entity)                               => ref Component.Reference<Aim>(entity);
 
             public ref Health Health(Entity entity)                         => ref Component.Reference<Health>(entity);
+            public ref Armor Armor(Entity entity)                           => ref Component.Reference<Armor>(entity);
             public ref Energy Energy(Entity entity)                         => ref Component.Reference<Energy>(entity);
 
             public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
@@ -113,6 +115,7 @@ namespace Game.Realm
 
         public Parent Parent(Entity entity)                                 => Component.View<Parent>(entity);
         public Child Child(Entity entity)                                   => Component.View<Child>(entity);
+        public Anchor Anchor(Entity entity)                                 => Component.View<Anchor>(entity);
         public Source Source(Entity entity)                                 => Component.View<Source>(entity);
 
         public Prop Prop(Entity entity)                                     => Component.View<Prop>(entity);
@@ -180,6 +183,7 @@ namespace Game.Realm
         public Aim Aim(Entity entity)                                       => Component.View<Aim>(entity);
 
         public Health Health(Entity entity)                                 => Component.View<Health>(entity);
+        public Armor Armor(Entity entity)                                   => Component.View<Armor>(entity);
         public Energy Energy(Entity entity)                                 => Component.View<Energy>(entity);
 
         public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);

@@ -24,9 +24,21 @@ namespace Game.Common
         public List<Entity> Entities                    { get; set; }
     }
 
+    public struct Anchor            : IComponent
+    {
+        public Entity Entity                            { get; set; }
+        public Vector3 Offset                           { get; set; }
+    }
+
     public struct Source            : IComponent
     {
         public Entity Entity                            { get; set; }
+    }
+
+    public struct Duration          : IComponent
+    {
+        public int Length                               { get; set; }
+        public int Elapsed                              { get; set; }
     }
 
     public struct Prop              : IComponent {}
@@ -67,12 +79,12 @@ namespace Game.Common
 
     public struct Innate            : IComponent 
     {
-        public List<Capability> Capabilities            { get; set; }
+        public IReadOnlyList<Capability> Capabilities   { get; set; }
     }
 
     public struct Blocks            : IComponent 
     {
-        public List<Capability> Capabilities            { get; set; }
+        public IReadOnlyList<Capability> Capabilities   { get; set; }
     }
 
     public struct CommandQueue      : IComponent
@@ -114,6 +126,7 @@ namespace Game.Common
     public struct Force             : IComponent {}
     public struct Contact           : IComponent {}
     public struct Collision         : IComponent {}
+
     public struct Velocity          : IComponent 
     {
         public Vector2 Value                            { get; set; }
@@ -162,16 +175,6 @@ namespace Game.Common
         public int Progress                             { get; set; }
     }
 
-    public struct SpeedModifier     : IComponent
-    {
-        public float Value                              { get; set; }
-    }
-
-    public struct AttackModifier    : IComponent
-    {
-        public float Value                              { get; set; }
-    }
-
     public struct Aim               : IComponent
     {
         public Vector2 Direction                        { get; set; }
@@ -183,20 +186,36 @@ namespace Game.Common
         public int Maximum                              { get; set; }
     }
 
+    public struct Armor             : IComponent
+    {
+        public int Current                              { get; set; }
+        public int Maximum                              { get; set; }
+    }
+
     public struct Energy            : IComponent
     {
         public int Current                              { get; set; }
         public int Maximum                              { get; set; }
     }
 
+    public struct Parry             : IComponent
+    {
+        public int Start                                { get; set; }
+    }
+
+    public struct Damage            : IComponent
+    {
+        public int Amount                               { get; set; }
+    }
+    
+    public struct Hitbox            : IComponent
+    {
+        public Collider2D Collider                      { get; set; }
+    }
+
     public struct TimeScale         : IComponent 
     {
         public float Scale                              { get; set; } 
-    }
-
-    public struct TimeModifier      : IComponent 
-    {
-        public float Scale                              { get; set; }     
     }
 
     public struct Instance          : IComponent 
@@ -216,6 +235,11 @@ namespace Game.Common
         public Vector2 Previous                         { get; set; }
     }
 
+    public struct Facing            : IComponent
+    {
+
+    }
+
     public struct Animation         : IComponent
     {
         public Animator Animator                        { get; set; }
@@ -232,5 +256,20 @@ namespace Game.Common
     }
     
     public struct CameraTarget      : IComponent {}
+
+    public struct SpeedModifier     : IComponent
+    {
+        public float Value                              { get; set; }
+    }
+
+    public struct AttackModifier    : IComponent
+    {
+        public float Value                              { get; set; }
+    }
+
+    public struct TimeModifier      : IComponent 
+    {
+        public float Scale                              { get; set; }     
+    }
 
 }

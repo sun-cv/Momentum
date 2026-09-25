@@ -39,10 +39,18 @@ namespace Game.Service
         {
             foreach (var entity in World.Query(Mask<Components, Velocity, Form>.Key))
             {
-                var body    = World.Entity.Form(entity).Body;
-                var result  = body.Slide(World.Entity.Velocity(entity).Value, Watch.Tick.Delta, slide);
+                var body        = World.Entity.Form(entity).Body;
+                var result      = body.Slide(World.Entity.Velocity(entity).Value, Watch.Tick.Delta, slide);
 
                 Report(entity, result.slideHit);
+            }
+
+            foreach (var anchored in World.Query(Mask<Components, Anchor>.Key))
+            {
+                var instance    = World.Entity.Instance(anchored); 
+                var anchor      = World.Entity.Anchor(anchored);
+
+                instance.Transform.position = World.Entity.Instance(anchor.Entity).Transform.position + anchor.Offset;
             }
         }
 
