@@ -6,6 +6,7 @@ using Game.Common;
 using Game.Diagnostic;
 
 using Event = Game.Common.Event;
+using System;
 
 
 namespace Game.Service
@@ -18,7 +19,7 @@ namespace Game.Service
         public PlayerInputSystem(World world)
         {
             World = world;
-            Event.Register<PlayerInputSystem, IntentVector>();
+            Event.Register<PlayerInputSystem, MovementIntent>();
         }
 
         public void Tick()
@@ -29,15 +30,19 @@ namespace Game.Service
 
         private void UpdatePlayerInput()
         {
-            var intent      = Event.Read<PlayerInputSystem, IntentVector>();
+            var intent      = Event.Read<PlayerInputSystem, MovementIntent>();
             var capability  = Event.Read<PlayerInputSystem, InputEvent>();
 
             ProcessPlayerIntent(intent);      
             ProcessPlayerCapability(capability); 
         }
 
+        private void ProcessPlayerAim(List<MousePosition> messages)
+        {
 
-        private void ProcessPlayerIntent(List<IntentVector> messages)
+        }
+
+        private void ProcessPlayerIntent(List<MovementIntent> messages)
         {
             foreach (var message in messages)
             {

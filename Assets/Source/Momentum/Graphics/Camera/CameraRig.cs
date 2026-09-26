@@ -7,6 +7,9 @@ using UnityEngine.InputSystem;
 using Game.Common;
 using Game.Diagnostic;
 using Game.Realm;
+using Game.Common.Events;
+
+using Event = Game.Common.Event;
 
 
 
@@ -63,6 +66,8 @@ namespace Game.Graphics
 
             to          = new ExploreMode(view, composer, lean);
             blend       = 1f;
+
+            Event.Push<CameraCreated>(new() { View = view });
         }
 
         public void Tick()

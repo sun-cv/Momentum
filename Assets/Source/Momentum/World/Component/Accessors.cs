@@ -25,6 +25,8 @@ namespace Game.Realm
             public ref Anchor Anchor(Entity entity)                         => ref Component.Reference<Anchor>(entity);
             public ref Source Source(Entity entity)                         => ref Component.Reference<Source>(entity);
 
+            public ref Duration Duration(Entity entity)                     => ref Component.Reference<Duration>(entity);
+
             public ref Prop Prop(Entity entity)                             => ref Component.Reference<Prop>(entity);
             public ref Actor Actor(Entity entity)                           => ref Component.Reference<Actor>(entity);
             public ref Corpse Corpse(Entity entity)                         => ref Component.Reference<Corpse>(entity);
@@ -32,6 +34,8 @@ namespace Game.Realm
             public ref Projectile Projectile(Entity entity)                 => ref Component.Reference<Projectile>(entity);
             public ref Directive Directive(Entity entity)                   => ref Component.Reference<Directive>(entity);
             public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
+            public ref Hitbox Hitbox(Entity entity)                         => ref Component.Reference<Hitbox>(entity);
+            public ref Ability Ability(Entity entity)                       => ref Component.Reference<Ability>(entity);
 
             public ref Faction Faction(Entity entity)                       => ref Component.Reference<Faction>(entity);
             public ref Allegiance Allegiance(Entity entity)                 => ref Component.Reference<Allegiance>(entity);
@@ -55,6 +59,9 @@ namespace Game.Realm
             public ref Explosive Explosive(Entity entity)                   => ref Component.Reference<Explosive>(entity);
             public ref Destructible Destructible(Entity entity)             => ref Component.Reference<Destructible>(entity);
 
+            public ref Unstoppable Unstoppable(Entity entity)               => ref Component.Reference<Unstoppable>(entity);
+            public ref Anchored Anchored(Entity entity)                     => ref Component.Reference<Anchored>(entity);
+
             public ref AiController AiController(Entity entity)             => ref Component.Reference<AiController>(entity);
             public ref PlayerController PlayerController(Entity entity)     => ref Component.Reference<PlayerController>(entity);
 
@@ -64,6 +71,8 @@ namespace Game.Realm
             public ref CommandQueue Command(Entity entity)                  => ref Component.Reference<CommandQueue>(entity);
 
             public ref Abilities Abilities(Entity entity)                   => ref Component.Reference<Abilities>(entity);
+            public ref Hitboxes Hitboxes(Entity entity)                     => ref Component.Reference<Hitboxes>(entity);
+            public ref Struck Struck(Entity entity)                         => ref Component.Reference<Struck>(entity);
             public ref Loadout Loadout(Entity entity)                       => ref Component.Reference<Loadout>(entity);
             public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
             public ref Inventory Inventory(Entity entity)                   => ref Component.Reference<Inventory>(entity);
@@ -86,12 +95,18 @@ namespace Game.Realm
 
             public ref SpeedModifier SpeedModifier(Entity entity)           => ref Component.Reference<SpeedModifier>(entity);
             public ref AttackModifier AttackModifier(Entity entity)         => ref Component.Reference<AttackModifier>(entity);
+            public ref TimeModifier TimeModifier(Entity entity)             => ref Component.Reference<TimeModifier>(entity);
 
             public ref Aim Aim(Entity entity)                               => ref Component.Reference<Aim>(entity);
+            public ref Track Track(Entity entity)                           => ref Component.Reference<Track>(entity);
+            public ref Facing Facing(Entity entity)                         => ref Component.Reference<Facing>(entity);
 
             public ref Health Health(Entity entity)                         => ref Component.Reference<Health>(entity);
             public ref Armor Armor(Entity entity)                           => ref Component.Reference<Armor>(entity);
             public ref Energy Energy(Entity entity)                         => ref Component.Reference<Energy>(entity);
+
+            public ref Parry Parry(Entity entity)                           => ref Component.Reference<Parry>(entity);
+            public ref Damage Damage(Entity entity)                         => ref Component.Reference<Damage>(entity);
 
             public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
 
@@ -102,7 +117,7 @@ namespace Game.Realm
             public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
             public ref HurtBox HurtBox(Entity entity)                       => ref Component.Reference<HurtBox>(entity);
 
-            public ref CameraTarget CameraRigTarget(Entity entity)          => ref Component.Reference<CameraTarget>(entity);
+            public ref CameraTarget CameraTarget(Entity entity)             => ref Component.Reference<CameraTarget>(entity);
         }
     }
 
@@ -118,6 +133,8 @@ namespace Game.Realm
         public Anchor Anchor(Entity entity)                                 => Component.View<Anchor>(entity);
         public Source Source(Entity entity)                                 => Component.View<Source>(entity);
 
+        public Duration Duration(Entity entity)                             => Component.View<Duration>(entity);
+        
         public Prop Prop(Entity entity)                                     => Component.View<Prop>(entity);
         public Actor Actor(Entity entity)                                   => Component.View<Actor>(entity);
         public Corpse Corpse(Entity entity)                                 => Component.View<Corpse>(entity);
@@ -125,6 +142,8 @@ namespace Game.Realm
         public Projectile Projectile(Entity entity)                         => Component.View<Projectile>(entity);
         public Directive Directive(Entity entity)                           => Component.View<Directive>(entity);
         public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
+        public Hitbox Hitbox(Entity entity)                                 => Component.View<Hitbox>(entity);
+        public Ability Ability(Entity entity)                               => Component.View<Ability>(entity);
 
         public Faction Faction(Entity entity)                               => Component.View<Faction>(entity);
         public Allegiance Allegiance(Entity entity)                         => Component.View<Allegiance>(entity);
@@ -148,6 +167,9 @@ namespace Game.Realm
         public Explosive Explosive(Entity entity)                           => Component.View<Explosive>(entity);
         public Destructible Destructible(Entity entity)                     => Component.View<Destructible>(entity);
 
+        public Unstoppable Unstoppable(Entity entity)                       => Component.View<Unstoppable>(entity);
+        public Anchored Anchored(Entity entity)                             => Component.View<Anchored>(entity);
+
         public AiController AiController(Entity entity)                     => Component.View<AiController>(entity);
         public PlayerController PlayerController(Entity entity)             => Component.View<PlayerController>(entity);
 
@@ -157,6 +179,8 @@ namespace Game.Realm
         public CommandQueue Command(Entity entity)                          => Component.View<CommandQueue>(entity);
 
         public Abilities Abilities(Entity entity)                           => Component.View<Abilities>(entity);
+        public Hitboxes Hitboxes(Entity entity)                             => Component.View<Hitboxes>(entity);
+        public Struck Struck(Entity entity)                                 => Component.View<Struck>(entity);
         public Loadout Loadout(Entity entity)                               => Component.View<Loadout>(entity);
         public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);
         public Inventory Inventory(Entity entity)                           => Component.View<Inventory>(entity);
@@ -179,12 +203,18 @@ namespace Game.Realm
 
         public SpeedModifier SpeedModifier(Entity entity)                   => Component.View<SpeedModifier>(entity);
         public AttackModifier AttackModifier(Entity entity)                 => Component.View<AttackModifier>(entity);
+        public TimeModifier TimeModifier(Entity entity)                     => Component.View<TimeModifier>(entity);
 
         public Aim Aim(Entity entity)                                       => Component.View<Aim>(entity);
+        public Track Track(Entity entity)                                   => Component.View<Track>(entity);
+        public Facing Facing(Entity entity)                                 => Component.View<Facing>(entity);
 
         public Health Health(Entity entity)                                 => Component.View<Health>(entity);
         public Armor Armor(Entity entity)                                   => Component.View<Armor>(entity);
         public Energy Energy(Entity entity)                                 => Component.View<Energy>(entity);
+
+        public Parry Parry(Entity entity)                                   => Component.View<Parry>(entity);
+        public Damage Damage(Entity entity)                                 => Component.View<Damage>(entity);
 
         public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);
 
@@ -195,7 +225,7 @@ namespace Game.Realm
         public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
         public HurtBox HurtBox(Entity entity)                               => Component.View<HurtBox>(entity);
 
-        public CameraTarget CameraRigTarget(Entity entity)                  => Component.View<CameraTarget>(entity);
+        public CameraTarget CameraTarget(Entity entity)                     => Component.View<CameraTarget>(entity);
     }
 
     public partial class Entities

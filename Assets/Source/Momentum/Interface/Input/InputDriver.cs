@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Game.Common;
+using Game.Common.Events;
 using Game.Diagnostic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,6 +12,7 @@ namespace Game.Interface
 {
     public class InputDriver : RegisteredService, IRealBase
     {
+        private Camera view;
         private InputActions input;
         private readonly Dictionary<InputAction, Capability> map = new();
 
@@ -27,22 +29,27 @@ namespace Game.Interface
             map[input.Player.Dodge]     = Capability.Dodge;
 
             input.Player.Get().actionTriggered += OnAction;
+
+            Event.Register<CameraCreated>(AssignCamera);            
         }
 
         void IRealBase.Tick()
         {
-            PollAimPosition();
             PollIntentVector();
+            PollMousePosition();
         }
 
-        void PollAimPosition()
+        void PollMousePosition()
         {
-            Event.Send(new AimVector() { Vector = input.Player.Aim.ReadValue<Vector2>()});
+            var mouse   = input.Player.Aim.ReadValue<Vector2>();
+            var cursor  = (Vector2)view.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, 0f));
+
+            Event.Send(new MousePosition()  { World = cursor, Screen = mouse });
         }
 
         void PollIntentVector()
         {
-            Event.Send(new IntentVector() { Vector = input.Player.Move.ReadValue<Vector2>()});
+            Event.Send(new MovementIntent() { Vector = input.Player.Move.ReadValue<Vector2>()});
         }
 
         void OnAction(InputAction.CallbackContext context)
@@ -61,6 +68,11 @@ namespace Game.Interface
             };
 
             Event.Send(new InputEvent() { Capability = capability, Pressed = condition, Released = !condition });
+        }
+
+        private void AssignCamera(CameraCreated message)
+        {
+            view = message.View;
         }
 
         public override void OnDispose()

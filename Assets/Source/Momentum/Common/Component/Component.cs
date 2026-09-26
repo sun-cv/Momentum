@@ -9,36 +9,35 @@ namespace Game.Common
 
     public struct Meta              : IComponent 
     {
-        public int Created                              { get; set; }
+        public int Created                                  { get; set; }
     }
 
     public struct Ledger            : IComponent {}
     
     public struct Parent            : IComponent 
     {
-        public Entity Entity                            { get; set; }
+        public Entity Entity                                { get; set; }
     }
 
     public struct Child             : IComponent
     {
-        public List<Entity> Entities                    { get; set; }
+        public List<Entity> Entities                        { get; set; }
     }
 
     public struct Anchor            : IComponent
     {
-        public Entity Entity                            { get; set; }
-        public Vector3 Offset                           { get; set; }
+        public Vector2 Offset                               { get; set; }
     }
 
     public struct Source            : IComponent
     {
-        public Entity Entity                            { get; set; }
+        public Entity Entity                                { get; set; }
     }
 
     public struct Duration          : IComponent
     {
-        public int Length                               { get; set; }
-        public int Elapsed                              { get; set; }
+        public int Length                                   { get; set; }
+        public int Elapsed                                  { get; set; }
     }
 
     public struct Prop              : IComponent {}
@@ -48,6 +47,8 @@ namespace Game.Common
     public struct Projectile        : IComponent {}
     public struct Directive         : IComponent {}
     public struct Effect            : IComponent {}
+    public struct Hitbox            : IComponent {}
+    public struct Ability           : IComponent {}
 
     public struct Faction           : IComponent {}
     public struct Allegiance        : IComponent {}
@@ -79,23 +80,33 @@ namespace Game.Common
 
     public struct Innate            : IComponent 
     {
-        public IReadOnlyList<Capability> Capabilities   { get; set; }
+        public IReadOnlyList<Capability> Capabilities       { get; set; }
     }
 
     public struct Blocks            : IComponent 
     {
-        public IReadOnlyList<Capability> Capabilities   { get; set; }
+        public IReadOnlyList<Capability> Capabilities       { get; set; }
     }
 
     public struct CommandQueue      : IComponent
     {
-        public Dictionary<Capability, Command> Active   { get; set; }
-        public Dictionary<Capability, Command> Buffer   { get; set; }
+        public Dictionary<Capability, Command> Active       { get; set; }
+        public Dictionary<Capability, Command> Buffer       { get; set; }
     }
 
     public struct Abilities         : IComponent
     {
 
+    }
+
+    public struct Hitboxes          : IComponent
+    {
+        public List<HitboxEntry> Entries                    { get; set; }
+    }
+    
+    public struct Struck            : IComponent
+    {
+        public List<Entity> Entities                        { get ; set; }
     }
 
     public struct Loadout           : IComponent
@@ -115,12 +126,12 @@ namespace Game.Common
 
     public struct Target            : IComponent
     {
-
+        public Entity Entity                                { get; set; }
     }
 
     public struct Physics           : IComponent 
     {
-        public Vector2 Force                            { get; set; }
+        public Vector2 Force                                { get; set; }
     }
 
     public struct Force             : IComponent {}
@@ -129,110 +140,109 @@ namespace Game.Common
 
     public struct Velocity          : IComponent 
     {
-        public Vector2 Value                            { get; set; }
+        public Vector2 Value                                { get; set; }
     }
 
     public struct Mass              : IComponent 
     {
-        public float Weight                             { get; set; }
-        public float Friction                           { get; set; }
+        public float Weight                                 { get; set; }
+        public float Friction                               { get; set; }
     }
 
     public struct Movement          : IComponent
     {
-        public float Speed                              { get; set; }
-        public float Acceleration                       { get; set; }
+        public float Speed                                  { get; set; }
+        public float Acceleration                           { get; set; }
     }
 
     public struct Intent            : IComponent
     {
-        public Vector2 Direction                        { get; set; }
+        public Vector2 Direction                            { get; set; }
     }
 
     public struct Control           : IComponent
     {
-        public Vector2 Velocity                         { get; set; }
-        public float Modifier                           { get; set; }
+        public Vector2 Velocity                             { get; set; }
+        public float Modifier                               { get; set; }
     }
 
     public struct Impulse           : IComponent 
     {
-        public Vector2 Velocity                         { get; set; }
+        public Vector2 Velocity                             { get; set; }
     }
 
     public struct Kinematic         : IComponent 
     {
-        public Vector2 Velocity                         { get; set; }
+        public Vector2 Velocity                             { get; set; }
     }
 
     public struct Displacement      : IComponent 
     {
-        public Vector2 Direction                        { get; set; }
-        public float Distance                           { get; set; }
-        public float Speed                              { get; set; }
-        public float SteerRate                          { get; set; }
-        public int Duration                             { get; set; }
-        public int Progress                             { get; set; }
+        public Vector2 Direction                            { get; set; }
+        public float Distance                               { get; set; }
+        public float Speed                                  { get; set; }
+        public float SteerRate                              { get; set; }
+        public int Duration                                 { get; set; }
+        public int Progress                                 { get; set; }
     }
 
     public struct Aim               : IComponent
     {
-        public Vector2 Direction                        { get; set; }
+        public Vector2 Direction                            { get; set; }
+        public Vector2 World                                { get; set; }
     }
+
+    public struct Track             : IComponent {}
+
 
     public struct Health            : IComponent
     {
-        public int Current                              { get; set; }
-        public int Maximum                              { get; set; }
+        public int Current                                  { get; set; }
+        public int Maximum                                  { get; set; }
     }
 
     public struct Armor             : IComponent
     {
-        public int Current                              { get; set; }
-        public int Maximum                              { get; set; }
+        public int Current                                  { get; set; }
+        public int Maximum                                  { get; set; }
     }
 
     public struct Energy            : IComponent
     {
-        public int Current                              { get; set; }
-        public int Maximum                              { get; set; }
+        public int Current                                  { get; set; }
+        public int Maximum                                  { get; set; }
     }
 
     public struct Parry             : IComponent
     {
-        public int Start                                { get; set; }
+        public int Start                                    { get; set; }
     }
 
     public struct Damage            : IComponent
     {
-        public int Amount                               { get; set; }
+        public int Amount                                   { get; set; }
     }
     
-    public struct Hitbox            : IComponent
-    {
-        public Collider2D Collider                      { get; set; }
-    }
-
     public struct TimeScale         : IComponent 
     {
-        public float Scale                              { get; set; } 
+        public float Scale                                  { get; set; } 
     }
 
     public struct Instance          : IComponent 
     {
-        public Transform Transform                      { get; set; }
+        public Transform Transform                          { get; set; }
     }
 
     public struct Form              : IComponent 
     {
-        public Rigidbody2D Body                         { get; set; }
+        public Rigidbody2D Body                             { get; set; }
     }
 
     public struct Visual            : IComponent
     {
-        public Transform Transform                      { get; set; }
-        public Vector2 Current                          { get; set; }
-        public Vector2 Previous                         { get; set; }
+        public Transform Transform                          { get; set; }
+        public Vector2 Current                              { get; set; }
+        public Vector2 Previous                             { get; set; }
     }
 
     public struct Facing            : IComponent
@@ -242,34 +252,34 @@ namespace Game.Common
 
     public struct Animation         : IComponent
     {
-        public Animator Animator                        { get; set; }
+        public Animator Animator                            { get; set; }
     }
 
     public struct Rendering         : IComponent
     {
-        public SpriteRenderer Renderer                  { get; set; }
+        public SpriteRenderer Renderer                      { get; set; }
     }
 
     public struct HurtBox           : IComponent
     {
-        public Collider2D Collider                      { get; set; }
+        public Collider2D Collider                          { get; set; }
     }
     
     public struct CameraTarget      : IComponent {}
 
     public struct SpeedModifier     : IComponent
     {
-        public float Value                              { get; set; }
+        public float Value                                  { get; set; }
     }
 
     public struct AttackModifier    : IComponent
     {
-        public float Value                              { get; set; }
+        public float Value                                  { get; set; }
     }
 
     public struct TimeModifier      : IComponent 
     {
-        public float Scale                              { get; set; }     
+        public float Scale                                  { get; set; }     
     }
 
 }

@@ -59,3 +59,17 @@ Open questions:
 ## Upgraded parry: dash behind
 An upgraded parry lets the player dash behind the enemy instantly,
 so the follow-up attack starts from behind.
+
+## Upgraded dash: chain strike
+An upgraded dash goes to the nearest enemy, deals attack damage to
+it, and lets the player fire the dash again.
+
+Combo with the upgraded parry: a perfect parry at long range gives
+the option to dash in behind the enemy and attack. With the upgraded
+dash, that chain keeps going and the player can do it again.
+
+## Drone cursor
+A small drone floats with the player in place of an onscreen mouse
+cursor. It hovers toward the mouse but never sits exactly on it.
+When aiming, the drone projects a laser from its own position that
+points exactly at the mouse.

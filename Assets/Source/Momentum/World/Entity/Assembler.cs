@@ -27,8 +27,10 @@ namespace Game.Realm
             {
                 (definition) => definition.Prop         is Prop, 
                 (definition) => definition.Actor        is Actor, 
-                (definition) => definition.Effect       is Effect,
                 (definition) => definition.Corpse       is Corpse, 
+                (definition) => definition.Effect       is Effect,
+                (definition) => definition.Hitbox       is Hitbox,
+                (definition) => definition.Ability      is Ability,
                 (definition) => definition.Spawner      is Spawner, 
                 (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
@@ -130,6 +132,12 @@ namespace Game.Realm
                 if (definition.Corpse is Corpse)                        Component.Add<Corpse>(entity, new());
                 if (definition.Spawner is Spawner)                      Component.Add<Spawner>(entity, new());
                 if (definition.Projectile is Projectile)                Component.Add<Projectile>(entity, new());
+                if (definition.Directive is Directive)                  Component.Add<Directive>(entity, new());
+                if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
+                if (definition.Hitbox is Hitbox)                        Component.Add<Hitbox>(entity, new());
+                if (definition.Ability is Ability)                      Component.Add<Ability>(entity, new());
+                if (definition.Anchor is Anchor anchor)                 Component.Add<Anchor>(entity, anchor);
+                if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, duration);
                 if (definition.Ledger is Ledger)                        Component.Add<Ledger>(entity, new());
                 if (definition.Faction is Faction faction)              Component.Add<Faction>(entity, faction);
                 if (definition.Allegiance is Allegiance allegiance)     Component.Add<Allegiance>(entity, allegiance);
@@ -140,12 +148,14 @@ namespace Game.Realm
                 if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
                 if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
                 if (definition.Abilities is Abilities abilities)        Component.Add<Abilities>(entity, abilities);
+                if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, hitboxes);
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
                 if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
                 if (definition.Inventory is Inventory inventory)        Component.Add<Inventory>(entity, inventory);
                 if (definition.Target is Target)                        Component.Add<Target>(entity, new());
                 if (definition.Aim is Aim)                              Component.Add<Aim>(entity, new());
                 if (definition.Health is Health health)                 Component.Add<Health>(entity, health);
+                if (definition.Armor is Armor armor)                    Component.Add<Armor>(entity, armor);
                 if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());

@@ -38,6 +38,12 @@ namespace Game.Common
                 public const int       Priority = 00;
             }
 
+            public static class AimSystem
+            {
+                public const TickPhase Phase    = TickPhase.Input;
+                public const int       Priority = 03;
+            }
+
             public static class PlayerInputSystem
             {
                 public const TickPhase Phase    = TickPhase.Input;
@@ -61,6 +67,13 @@ namespace Game.Common
                 public const TickPhase Phase    = TickPhase.Logic;
                 public const int       Priority = 05;
             }
+
+            public static class AbilitySystem
+            {
+                public const TickPhase Phase    = TickPhase.Logic;
+                public const int       Priority = 10;
+            }
+
 
             public static class ControlSystem
             {
@@ -92,18 +105,54 @@ namespace Game.Common
                 public const int       Priority = 05;
             }
 
-            public static class ContactSystem
+            public static class AnchorSystem
             {
                 public const TickPhase Phase    = TickPhase.Physics;
                 public const int       Priority = 06;
+            }
+
+            public static class HitboxSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 07;
+            }
+
+            public static class ContactSystem
+            {
+                public const TickPhase Phase    = TickPhase.Physics;
+                public const int       Priority = 08;
             }
 
             public static class SimulationSystem
             {
                 public const TickPhase Phase    = TickPhase.Physics;
                 public const int       Priority = 10;
-            }        
+            }
             
+            public static class HealthSystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 01;
+            }
+
+            public static class ArmorSystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 02;
+            }
+
+            public static class EnergySystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 03;
+            }
+
+            public static class DurationSystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 10;
+            }
+
             public static class InterpolationSystem
             {
                 public const TickPhase Phase    = TickPhase.Render;

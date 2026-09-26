@@ -24,7 +24,7 @@ namespace Game.Service
 
         private void CalculateVelocity()
         {
-            var control = World.Query<Components>(Mask<Components, Control, Mass, Intent, Movement>.Key);
+            var control = World.Query(Mask<Components, Control, Mass, Intent, Movement>.Key);
 
             foreach(var entity in control)
             {

@@ -21,6 +21,8 @@ namespace Game.Realm
             free        = new int [capacity];
             alive       = new bool[capacity];
             generations = new int [capacity];
+
+            BurnDefaultEntity();
         }
 
         public Entity Allocate()
@@ -68,7 +70,6 @@ namespace Game.Realm
             {
                 if (alive[index])
                 {
-
                     yield return new Entity { Index = index, Generation = generations[index] };
                 }
             }
@@ -85,9 +86,15 @@ namespace Game.Realm
                 throw new Exception($"[Entities.Pool] Guarded stale entity {entity.Index}:{entity.Generation}");
         }
 
+        private void BurnDefaultEntity()
+        {
+            Release(Allocate());
+        }
+
         static Pool() => Log<Pool>.Level(Diagnostic.Log.Level.Debug);
     }
 }
+
 
 
 

@@ -1,6 +1,7 @@
+using UnityEngine;
+
 using Game.Realm;
 using Game.Common;
-using System;
 
 
 
@@ -32,24 +33,13 @@ namespace Game.Service
 
         private void MoveAnchor(Entity entity)
         {
-            var parent      = FindAnchorRoot(World.Entity.Parent(entity).Entity);
-            var anchor      = World.Entity.Anchor(entity);
-            var instance    = World.Entity.Instance(entity);
+            var root    = World.Entity.Root(entity);
+            var aim     = World.Entity.Aim(World.Entity.Parent(entity).Entity).Direction;
+            var angle   = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
+            var body    = World.Entity.Form(entity).Body;
 
-            instance.Transform.position = World.Entity.Instance(parent).Transform.position + anchor.Offset;
-        }
-
-        private Entity FindAnchorRoot(Entity parent)
-        {
-            if (!World.Entity.Has<Parent>(parent))
-            {
-                if (!World.Entity.Has<Form>(parent))
-                    throw new Exception("[AnchorSystem] Root anchor entity is missing form");
-
-                return parent;
-            }
-            
-            return FindAnchorRoot(World.Entity.Parent(parent).Entity);
+            body.position = World.Entity.Form(root).Body.position + (Vector2)(Quaternion.Euler(0f, 0f, angle) * World.Entity.Anchor(entity).Offset);
+            body.rotation = angle;
         }
     }
 }

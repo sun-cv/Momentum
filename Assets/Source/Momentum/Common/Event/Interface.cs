@@ -11,12 +11,15 @@ namespace Game.Common
         public bool Released            { get; init; }
     }
 
-    public readonly struct AimVector : IEvent
+    
+    public readonly struct MousePosition : IEvent
     {
-        public Vector2 Vector           { get; init; }
+        public Vector2 World            { get; init; }
+        public Vector2 Screen           { get; init; }
     }
 
-    public readonly struct IntentVector : IEvent
+
+    public readonly struct MovementIntent : IEvent
     {
         public Vector2 Vector           { get; init; }
     }

@@ -44,14 +44,6 @@ namespace Game.Service
 
                 Report(entity, result.slideHit);
             }
-
-            foreach (var anchored in World.Query(Mask<Components, Anchor>.Key))
-            {
-                var instance    = World.Entity.Instance(anchored); 
-                var anchor      = World.Entity.Anchor(anchored);
-
-                instance.Transform.position = World.Entity.Instance(anchor.Entity).Transform.position + anchor.Offset;
-            }
         }
 
         private void Report(Entity entity, RaycastHit2D hit)

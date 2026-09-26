@@ -19,10 +19,16 @@ namespace Game.Common
         public Prop? Prop                                       { get; init; }
         public Actor? Actor                                     { get; init; }
         public Corpse? Corpse                                   { get; init; }
-        public Spawner? Spawner                                 { get; init; }
-        public Projectile? Projectile                           { get; init; }
-        public Directive? Directive                             { get; init; }
         public Effect? Effect                                   { get; init; }
+        public Hitbox? Hitbox                                   { get; init; }
+        public Ability? Ability                                 { get; init; }
+        public Spawner? Spawner                                 { get; init; }
+        public Directive? Directive                             { get; init; }
+        public Projectile? Projectile                           { get; init; }
+
+        public Anchor? Anchor                                   { get; init; }
+
+        public Duration? Duration                               { get; init; }
 
         public Faction? Faction                                 { get; init; }
         public Allegiance? Allegiance                           { get; init; }
@@ -55,6 +61,7 @@ namespace Game.Common
         public CommandQueue? CommandQueue                       { get; init; }
 
         public Abilities? Abilities                             { get; init; }
+        public Hitboxes? Hitboxes                               { get; init; }
         public Loadout? Loadout                                 { get; init; }
         public Equipment? Equipment                             { get; init; }
         public Inventory? Inventory                             { get; init; }
@@ -81,6 +88,7 @@ namespace Game.Common
         public Aim? Aim                                         { get; init; }
 
         public Health? Health                                   { get; init; }
+        public Armor? Armor                                     { get; init; }
         public Energy? Energy                                   { get; init; }
 
         public TimeScale? TimeScale                             { get; init; }

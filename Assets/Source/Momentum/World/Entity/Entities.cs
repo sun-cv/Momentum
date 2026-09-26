@@ -63,6 +63,11 @@ namespace Game.Realm
             return masks.Query<TDomain>(mask);
         }
 
+        public Entity Root(Entity parent)
+        {
+            return !component.Has<Parent>(parent) ? parent : Root(Parent(parent).Entity);
+        }
+
         public Components Component             => component;
         public Capabilities Capability          => capabilities;
         public Bodies Body                      => bodies;
