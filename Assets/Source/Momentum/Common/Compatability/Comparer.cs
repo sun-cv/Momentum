@@ -15,6 +15,11 @@ namespace Game.Common
         {
             return HashCode.Combine(instance.Index, instance.Generation);
         }
+
+        public static bool Default(Entity entity)
+        {
+            return entity.Index == 0 && entity.Generation == 0;
+        }
     }    
 
     public class LabelSetComparer : IEqualityComparer<HashSet<string>>

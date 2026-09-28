@@ -13,7 +13,8 @@ namespace Game.Service
     public class StepSystem : RegisteredService, IWorld, IGameBase
     {
         private readonly World World;
-        private readonly Rigidbody2D.SlideMovement slide;
+
+        private Rigidbody2D.SlideMovement slide;
 
         public StepSystem(World world)
         {
@@ -35,16 +36,25 @@ namespace Game.Service
             Step();
         }
 
+
         private void Step()
         {
             foreach (var entity in World.Query(Mask<Components, Velocity, Form>.Key))
             {
+                var velocity = World.Entity.Velocity(entity).Value;
+
+                if (velocity.sqrMagnitude <= 0f)
+                    continue;
+
+                slide.surfaceUp = -velocity.normalized;
+
                 var body        = World.Entity.Form(entity).Body;
-                var result      = body.Slide(World.Entity.Velocity(entity).Value, Watch.Tick.Delta, slide);
+                var result      = body.Slide(velocity, Watch.Tick.Delta, slide);
 
                 Report(entity, result.slideHit);
             }
         }
+
 
         private void Report(Entity entity, RaycastHit2D hit)
         {

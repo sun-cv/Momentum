@@ -80,6 +80,11 @@ namespace Game.Realm
             return entity.Index < alive.Length && alive[entity.Index] && entity.Generation == generations[entity.Index];
         }
 
+        public bool Default(Entity entity)
+        {
+            return EntityIdentityComparer.Default(entity);
+        }
+
         public void Guard(Entity entity)
         {
             if (!Alive(entity))

@@ -16,7 +16,7 @@ namespace Game.Service
         private readonly Assets Asset;
         private readonly World World;
 
-        private readonly Entity entity;
+        private Entity entity;
 
         public Dev(World world, Data data, Assets asset)
         {
@@ -27,9 +27,8 @@ namespace Game.Service
 
         public void Initialize()
         {
-            World.Entity.Create(Asset.Get("Hero"), new());
+            entity = World.Entity.Create(Asset.Get("Hero"), new());
             World.Entity.Create(Asset.Get("Dummy"), new() { Position = new() { x = 4, y = 4, z = 0 }});
-            World.Entity.CanMove(entity);
         }
     
         void IRealBase.Tick() 

@@ -85,6 +85,26 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1043534971138955017, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Size.x
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1043534971138955017, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Size.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1043534971138955017, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Offset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1043534971138955017, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_Offset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1043534971138955017, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
+      propertyPath: m_EdgeRadius
+      value: 0.15
+      objectReference: {fileID: 0}
     - target: {fileID: 1092370793004608644, guid: 9cf51f43df91f664aa96a34d2351124d, type: 3}
       propertyPath: m_Size.x
       value: 0.15
