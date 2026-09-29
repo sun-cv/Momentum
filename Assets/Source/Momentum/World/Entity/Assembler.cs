@@ -9,7 +9,7 @@ using Game.Diagnostic;
 using Physics   = Game.Common.Physics;
 using Collision = Game.Common.Collision;
 using Animation = Game.Common.Animation;
-
+using Pose      = Game.Common.Pose;
 
 
 namespace Game.Realm
@@ -159,10 +159,12 @@ namespace Game.Realm
                 if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
+                if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
 
                 if (definition.Mass is Mass mass)
                 {
                     Component.Add<Mass>(entity, mass);
+                    Component.Add<Facing>(entity, new() { Direction = Vector2.right });
                     Component.Add<Kinematic>(entity, new());
                     Component.Add<Control>(entity, new() { Modifier = new() });
                     Component.Add<Impulse>(entity, new());
@@ -206,19 +208,17 @@ namespace Game.Realm
                     Bodies.Add(body, entity);
                 }
 
-                if (definition.Visual is Visual && nodes.TryGetValue("Visual", out var visualNode))
+                if (definition.Rendering is Rendering rendering)
                 {
-                    Component.Add<Visual>(entity, new() { Transform = visualNode.transform, Current = instance.transform.position, Previous = instance .transform.position});
-                }
+                    var renderer = CreateRenderer(definition, rendering, instance.transform);
 
-                if (definition.Animation is Animation && nodes.TryGetValue("Animator", out var animatorNode))
-                {
-                    Component.Add<Animation>(entity, new() { Animator = animatorNode.GetComponent<Animator>() });
-                }
+                    Component.Add<Rendering>(entity, new() { Layer = rendering.Layer, Renderer = renderer });
+                    Component.Add<Animation>(entity, new() { Sheet = string.Empty, State = string.Empty });
 
-                if (definition.Rendering is Rendering && nodes.TryGetValue("Renderer", out var rendererNode))
-                {
-                    Component.Add<Rendering>(entity, new() { Renderer = rendererNode.GetComponent<SpriteRenderer>() });
+                    if (Component.Has<Form>(entity))
+                    {
+                        Component.Add<Visual>(entity, new() { Transform = renderer.transform, Current = instance.transform.position, Previous = instance.transform.position });
+                    }
                 }
 
                 if (definition.HurtBox is HurtBox && nodes.TryGetValue("Hurt", out var hurtNode))
@@ -265,6 +265,23 @@ namespace Game.Realm
                 }
 
                 Mask.Get<Innate>().Add(entity, mask);
+            }
+
+            private SpriteRenderer CreateRenderer(Definition definition, Rendering rendering, Transform parent)
+            {
+                if (string.IsNullOrEmpty(rendering.Layer) || !SortingLayer.IsValid(SortingLayer.NameToID(rendering.Layer)))
+                    throw new Exception($"[Assembler.Validation] {definition.Id}: Rendering layer '{rendering.Layer}' is not a sorting layer");
+
+                var node     = new GameObject("Visual");
+                var renderer = node.AddComponent<SpriteRenderer>();
+
+                node.layer = parent.gameObject.layer;
+                node.transform.SetParent(parent, false);
+
+                renderer.sortingLayerID  = SortingLayer.NameToID(rendering.Layer);
+                renderer.spriteSortPoint = SpriteSortPoint.Pivot;
+
+                return renderer;
             }
 
             private void Guard(Entity entity)
@@ -349,6 +366,12 @@ namespace Game.Realm
                     (Component, entity) => Component.Has<Movement>(entity), new()
                     {
                         ((Component, entity) => Component.Has<Mass>(entity),                    "Movable entity requires Mass component"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Rendering>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Pose>(entity),                    "Rendering requires Pose"),
                     }
                 },
             };

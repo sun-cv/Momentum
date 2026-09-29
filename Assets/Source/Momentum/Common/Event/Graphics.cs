@@ -9,4 +9,5 @@ namespace Game.Common.Events
     {
         public Camera View                  { get; init; }
     }
+
 }

@@ -29,27 +29,43 @@ namespace Game.Service
 
         private void FaceVelocity(Entity entity)
         {
-            var velocity    = World.Entity.Control(entity).Velocity;
+            var velocity    = World.Entity.Intent(entity).Direction;
             ref var facing  = ref World.Entity.Modify.Facing(entity);
 
-            if (velocity.sqrMagnitude < Config.Graphics.Facing.MinimumSpeed)
+            if (velocity.sqrMagnitude < Config.Graphics.Facing.MinimumSpeed * Config.Graphics.Facing.MinimumSpeed)
                 return;
 
-            var target = Orientation.Cardinal(velocity);
+            var direction = velocity.normalized;
 
-            if (target == facing.Direction)
+            if (Mathf.Abs(direction.y) < Config.Graphics.Facing.Axis)
             {
-                facing.Ticks = 0;
+                facing.Direction = new Vector2(Mathf.Sign(direction.x), 0f);
+                facing.Ticks     = 0;
                 return;
             }
 
-            if (++facing.Ticks < Config.Graphics.Facing.TurnDelay)
+            if (Mathf.Abs(direction.x) < Config.Graphics.Facing.Axis)
+            {
+                facing.Direction = new Vector2(0f, Mathf.Sign(direction.y));
+                facing.Ticks     = 0;
+                return;
+            }
+
+            if (++facing.Ticks < TurnDelay(facing.Direction, direction))
                 return;
 
-            facing.Direction = target;
-            facing.Ticks     = 0;
+            facing.Direction = new Vector2(Mathf.Sign(direction.x), 0f);
         }
 
+        private int TurnDelay(Vector2 current, Vector2 target)
+        {
+            var clockwise = current.y > 0f ? target.x > 0f
+                : current.y < 0f ? target.x < 0f
+                : current.x > 0f ? target.y < 0f
+                :                  target.y > 0f;
+
+            return clockwise ? Config.Graphics.Facing.Clockwise : Config.Graphics.Facing.Counterclockwise;
+        }
         private void FaceAim(Entity ability)
         {
             var aim = World.Entity.Aim(ability).Direction;

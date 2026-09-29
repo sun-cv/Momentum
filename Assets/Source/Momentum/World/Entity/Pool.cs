@@ -82,7 +82,7 @@ namespace Game.Realm
 
         public bool Default(Entity entity)
         {
-            return EntityIdentityComparer.Default(entity);
+            return entity.Index == 0 && entity.Generation == 0;
         }
 
         public void Guard(Entity entity)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -34,8 +35,8 @@ namespace Game.Common
 
     public readonly struct Entity
     {
-        public int Index        { get; init; }
-        public int Generation   { get; init; } 
+        public int Index                    { get; init; }
+        public int Generation               { get; init; } 
 
         public Entity(int index, int generation)
         {
@@ -46,15 +47,16 @@ namespace Game.Common
 
     public readonly struct Blueprint
     {
-        public Definition Definition    { get; init; }
-        public GameObject Prefab        { get; init; }
+        public Definition Definition        { get; init; }
+        public GameObject Prefab            { get; init; }
+        public IReadOnlyList<Sheet> Sheets  { get; init; }
     }
 
     public readonly struct ConstructionParameter
     {
-        public Entity? Parent           { get; init; }
-        public Vector3 Position         { get; init; }
-        public Vector3 Rotation         { get; init; }
+        public Entity? Parent               { get; init; }
+        public Vector3 Position             { get; init; }
+        public Vector3 Rotation             { get; init; }
     }
 
 }

@@ -131,7 +131,7 @@ namespace Game.Common
             public static class FacingSystem
             {
                 public const TickPhase Phase    = TickPhase.Physics;
-                public const int       Priority = 30;
+                public const int       Priority = 20;
             }
 
             public static class HealthSystem
@@ -156,6 +156,12 @@ namespace Game.Common
             {
                 public const TickPhase Phase    = TickPhase.Resolve;
                 public const int       Priority = 10;
+            }
+
+            public static class AnimationSystem
+            {
+                public const TickPhase Phase    = TickPhase.Render;
+                public const int       Priority = 05;
             }
 
             public static class InterpolationSystem

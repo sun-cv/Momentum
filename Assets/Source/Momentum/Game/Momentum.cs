@@ -30,7 +30,11 @@ namespace Game
         public List<AsyncOperationHandle> Boot()
         {
             asset.Load.Prefab.Load(new() {"Prefab"});
-            return data.Boot();
+
+            var handles = data.Boot();
+            handles.Add(asset.Load.Sheet.Load(new() {"Sheet"}));
+
+            return handles;
         }
 
         public void Initialize()

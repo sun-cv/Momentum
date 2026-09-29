@@ -1,12 +1,13 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+
 using Game.Common;
 using Game.Diagnostic;
-using System.Data;
-
 
 
 namespace Game.Content
@@ -31,6 +32,12 @@ namespace Game.Content
         public TAsset Get<TAsset>(string id) where TAsset : UnityEngine.Object
         {
             return registry.Get<TAsset>(id);
+        
+        }
+
+        public Sheet Sheet(string id)
+        {
+            return registry.Get<Sheet>(id);
         }
 
         public Blueprint Get(string id)
@@ -43,7 +50,7 @@ namespace Game.Content
                 Prefab      = definition.Prefab is string key ? registry.Get<GameObject>(key) : throw new Exception($"[Assets] Blueprint: Definition ({definition.Id}) is missing prefab Id"),
             };
         }
-        
+
         public Loader Load  => loader;
 
         static Assets() => Log<Assets>.Level(Diagnostic.Log.Level.Debug);
@@ -55,13 +62,16 @@ namespace Game.Content
         public sealed class Loader
         {
             private readonly AssetLoader<GameObject> prefabs;
+            private readonly SheetLoader sheets;
 
             internal Loader(Registry registry)
             {
                 prefabs = new AssetLoader<GameObject>(idOf: asset => asset.name, onLoaded: registry.Register<GameObject>, onUnloaded: registry.Deregister<GameObject>);
+                sheets  = new SheetLoader(registry);
             }
 
             public AssetLoader<GameObject> Prefab => prefabs;
+            public SheetLoader Sheet => sheets;
         }
     }
 

@@ -1,7 +1,7 @@
 {
     "Id":               "Hero",
-    "Prefab":           "Hero",
     "Actor":            {},
+    "Prefab":           "Hero",
     "Innate":
     {
         "Capabilities":
@@ -68,10 +68,15 @@
         "Current":      10 
     },
     "Form":             {},
-    "Visual":           {},
-    "Animation":        {},
-    "Rendering":        {},
-    "Sorting":          {},
+    "Pose":
+    {
+        "Sheet":        "StaticIdle",
+        "State":        "Idle"
+    },    
+    "Rendering":           
+    {
+        "Layer":        "Entity"
+    },
     "Hurtbox":          {},
     "CameraTarget":     {}
 }

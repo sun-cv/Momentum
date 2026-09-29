@@ -126,7 +126,7 @@ namespace Game.Common
 
     public struct Target            : IComponent
     {
-
+        public Entity Entity                                { get; set; }
     }
 
     public struct Physics           : IComponent 
@@ -189,7 +189,7 @@ namespace Game.Common
     public struct Aim               : IComponent
     {
         public Vector2 Direction                            { get; set; }
-        public Vector2 Point                                { get; set; }
+        public Vector2 World                                { get; set; }
     }
 
     public struct Track             : IComponent {}
@@ -248,17 +248,28 @@ namespace Game.Common
     public struct Facing            : IComponent
     {
         public Vector2 Direction                            { get; set; }
+        public bool Horizontal                              { get; set; }
         public int Ticks                                    { get; set; }
+    }
+
+    public struct Pose              : IComponent
+    {
+        public string Sheet                                 { get; set; }
+        public string State                                 { get; set; }
     }
 
     public struct Animation         : IComponent
     {
-        public Animator Animator                            { get; set; }
+        public string Sheet                                 { get; set; }
+        public string State                                 { get; set; }
+        public int Elapsed                                  { get; set; }
+        public Vector2 Shown                                { get; set; }
     }
 
     public struct Rendering         : IComponent
     {
         public SpriteRenderer Renderer                      { get; set; }
+        public string Layer                                 { get; set; }
     }
 
     public struct HurtBox           : IComponent

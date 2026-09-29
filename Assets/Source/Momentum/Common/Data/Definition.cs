@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 using UnityEngine;
 
 
@@ -92,10 +94,9 @@ namespace Game.Common
         public Energy? Energy                                   { get; init; }
 
         public TimeScale? TimeScale                             { get; init; }
-
+        
         public Form? Form                                       { get; init; }
-        public Visual? Visual                                   { get; init; }
-        public Animation? Animation                             { get; init; }
+        public Pose? Pose                                       { get; init; }
         public Rendering? Rendering                             { get; init; }
         public HurtBox? HurtBox                                 { get; init; }
 

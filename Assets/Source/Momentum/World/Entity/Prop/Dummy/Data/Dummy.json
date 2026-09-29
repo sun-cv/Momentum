@@ -29,10 +29,15 @@
         "Current":      10 
     },
     "Form":             {},
-    "Visual":           {},
-    "Animation":        {},
-    "Rendering":        {},
-    "Sorting":          {},
+    "Pose":
+    {
+        "Sheet":        "StaticIdleDummy",
+        "State":        "Idle"
+    },    
+    "Rendering":           
+    {
+        "Layer":        "Entity"
+    },
     "Hurtbox":          {}
 }
 

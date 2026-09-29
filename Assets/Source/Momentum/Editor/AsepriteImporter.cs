@@ -1,10 +1,14 @@
-using UnityEditor;
-using UnityEditor.U2D.Sprites;
-using UnityEngine;
+
+using System;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System;
+
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.U2D.Sprites;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 
 [InitializeOnLoad]
 public static class AsepriteWatcher
@@ -77,6 +81,25 @@ public static class AsepriteWatcher
         return true;
     }
 
+    private static void MarkAddressable(string assetPath, string address, string label)
+    {
+        var settings = AddressableAssetSettingsDefaultObject.Settings;
+
+        if (settings == null)
+        {
+            UnityEngine.Debug.LogError($"[AsepriteWatcher] Addressables settings missing, {assetPath} not registered");
+            return;
+        }
+
+        var guid  = AssetDatabase.AssetPathToGUID(assetPath);
+        var entry = settings.FindAssetEntry(guid) ?? settings.CreateOrMoveEntry(guid, settings.DefaultGroup);
+
+        entry.address = address;
+
+        if (label != null)
+            entry.SetLabel(label, true, true);
+    }
+
     private static void ProcessAseprite(string sourceFullPath)
     {
         if (!File.Exists(sourceFullPath)) return;
@@ -101,7 +124,7 @@ public static class AsepriteWatcher
         var psi = new ProcessStartInfo
         {
             FileName               = AsepritePath,
-            Arguments              = $"-b \"{sourceFullPath}\" --sheet \"{pngPath}\" --sheet-type rows --data \"{jsonPath}\" --format json-array",
+            Arguments              = $"-b \"{sourceFullPath}\" --sheet \"{pngPath}\" --sheet-type rows --data \"{jsonPath}\" --format json-array --list-tags",
             UseShellExecute        = false,
             CreateNoWindow         = true,
             RedirectStandardError  = true,
@@ -207,10 +230,10 @@ public static class AsepriteWatcher
                     importer.SaveAndReimport();
                 }
 
-                if (File.Exists(jsonPath))
-                    File.Delete(jsonPath);
-
                 AssetDatabase.Refresh();
+
+                MarkAddressable(GetAssetPathRelativeToUnity(jsonPath), filename, "Sheet");
+                MarkAddressable(assetPath, $"{filename}.Sprites", null);
 
                 UnityEngine.Debug.Log($"[AsepriteWatcher] Exported {filename}.png ({frameSize.x}x{frameSize.y} frames) → {assetPath}");
             };
@@ -290,8 +313,6 @@ public static class AsepriteWatcher
             UnityEngine.Debug.LogError("[AsepriteWatcher] Failed to read PNG dimensions: " + ex.Message);
         }
     }
-
-    // ===============================================================================
 
     private static string GetAssetPathRelativeToUnity(string fullPath)
     {

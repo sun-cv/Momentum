@@ -47,7 +47,6 @@ namespace Game.Realm
             public ref Interactable Interactable(Entity entity)             => ref Component.Reference<Interactable>(entity);
 
             public ref Slowed Slowed(Entity entity)                         => ref Component.Reference<Slowed>(entity);
-
             public ref Stunned Stunned(Entity entity)                       => ref Component.Reference<Stunned>(entity);
             public ref Cold Cold(Entity entity)                             => ref Component.Reference<Cold>(entity);
             public ref Freezing Freezing(Entity entity)                     => ref Component.Reference<Freezing>(entity);
@@ -110,12 +109,13 @@ namespace Game.Realm
 
             public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
 
-            public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
-            public ref Form Body(Entity entity)                             => ref Component.Reference<Form>(entity);
+            public ref Pose Pose(Entity entity)                             => ref Component.Reference<Pose>(entity);
+            public ref Form Form(Entity entity)                             => ref Component.Reference<Form>(entity);
             public ref Visual Visual(Entity entity)                         => ref Component.Reference<Visual>(entity);
-            public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
-            public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
             public ref HurtBox HurtBox(Entity entity)                       => ref Component.Reference<HurtBox>(entity);
+            public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
+            public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
+            public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
 
             public ref CameraTarget CameraTarget(Entity entity)             => ref Component.Reference<CameraTarget>(entity);
         }
@@ -155,7 +155,6 @@ namespace Game.Realm
         public Interactable Interactable(Entity entity)                     => Component.View<Interactable>(entity);
 
         public Slowed Slowed(Entity entity)                                 => Component.View<Slowed>(entity);
-
         public Stunned Stunned(Entity entity)                               => Component.View<Stunned>(entity);
         public Cold Cold(Entity entity)                                     => Component.View<Cold>(entity);
         public Freezing Freezing(Entity entity)                             => Component.View<Freezing>(entity);
@@ -218,12 +217,13 @@ namespace Game.Realm
 
         public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);
 
-        public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
+        public Pose Pose(Entity entity)                                     => Component.View<Pose>(entity);
         public Form Form(Entity entity)                                     => Component.View<Form>(entity);
         public Visual Visual(Entity entity)                                 => Component.View<Visual>(entity);
-        public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
-        public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
         public HurtBox HurtBox(Entity entity)                               => Component.View<HurtBox>(entity);
+        public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
+        public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
+        public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
 
         public CameraTarget CameraTarget(Entity entity)                     => Component.View<CameraTarget>(entity);
     }
