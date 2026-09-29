@@ -164,7 +164,7 @@ namespace Game.Realm
                 {
                     Component.Add<Mass>(entity, mass);
                     Component.Add<Kinematic>(entity, new());
-                    Component.Add<Control>(entity, new());
+                    Component.Add<Control>(entity, new() { Modifier = new() });
                     Component.Add<Impulse>(entity, new());
                     Component.Add<Velocity>(entity, new());
                     Component.Add<TimeScale>(entity, new() { Scale = 1});

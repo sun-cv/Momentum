@@ -38,14 +38,12 @@
     "Movement":         
     {
         "Speed":        5,
-        "Acceleration": 50
+        "Acceleration": 25
     },
     "Mass":             
     {
         "Weight":       200,
-        "Drag":         1,
-        "Friction":     1,
-        "Momentum":     1
+        "Friction":     1
     },
     "CommandQueue":     {},
     "Abilities":        {},
@@ -55,6 +53,11 @@
     "Target":           {},
     "Aim":              {},
     "Health": 
+    {
+        "Maximum":      10,
+        "Current":      10 
+    },
+    "Armor": 
     {
         "Maximum":      10,
         "Current":      10 

@@ -24,35 +24,32 @@ namespace Game.Service
 
         private void CalculateVelocity()
         {
-            var control = World.Query(Mask<Components, Control, Mass, Intent, Movement>.Key);
+            var movers = World.Query(Mask<Components, Control, Mass, Intent, Movement>.Key);
 
-            foreach(var entity in control)
+            foreach (var entity in movers)
             {
-                CalculateControlModifier(entity);
+                ClearControlModifier(entity);
+            }
+
+            CalculateControlModifiers();
+
+            foreach (var entity in movers)
+            {
                 CalculateControlVelocity(entity);
             }
         }
 
-        private void CalculateControlModifier(Entity entity)
+        private void ClearControlModifier(Entity entity)
         {
-            float slowest = 0f;
-            float fastest = 0f;
+            World.Entity.Modify.Control(entity).Modifier.Reset();
+        }
 
-            if (World.Entity.Has<Child>(entity))
+        private void CalculateControlModifiers()
+        {
+            foreach (var modifier in World.Query(Mask<Components, SpeedModifier, Parent>.Key))
             {
-                foreach (var child in World.Entity.Child(entity).Entities)
-                {
-                    if (World.Entity.Has<SpeedModifier>(child))
-                    {
-                        var value = World.Entity.SpeedModifier(child).Value;
-
-                        slowest = Mathf.Min(slowest, value);
-                        fastest = Mathf.Max(fastest, value);
-                    }
-                }
+                World.Entity.Modify.Control(World.Entity.Parent(modifier).Entity).Modifier.Fold(World.Entity.SpeedModifier(modifier).Value);
             }
-
-            World.Entity.Modify.Control(entity).Modifier = (1f + slowest) * (1f + fastest);
         }
 
         private void CalculateControlVelocity(Entity entity)
@@ -64,7 +61,7 @@ namespace Game.Service
 
             var direction   = Vector2.ClampMagnitude(intent.Direction, 1f);
             var target      = World.Entity.CanMove(entity)
-                ? direction * movement.Speed * control.Modifier
+                ? direction * movement.Speed * control.Modifier.Value
                 : Vector2.zero;
             var step        = movement.Acceleration * Watch.Tick.Delta * scale;
 
