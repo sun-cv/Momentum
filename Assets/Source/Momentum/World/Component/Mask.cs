@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Common;
 
 
 namespace Game.Realm
@@ -121,33 +122,38 @@ namespace Game.Realm
         }
     }
 
-    public static class Mask<TDomain, T1>
+    public static class Mask<TDomain, T1> where T1 : IComponent
     {
         public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>();
     }
 
     public static class Mask<TDomain, T1, T2>
-    {
-        public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>();
-    }
+        where T1 : IComponent where T2 : IComponent
+        {
+            public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>();
+        }
 
     public static class Mask<TDomain, T1, T2, T3>
-    {
-        public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>();
-    }
+        where T1 : IComponent where T2 : IComponent where T3 : IComponent
+        {
+            public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>();
+        }
 
     public static class Mask<TDomain, T1, T2, T3, T4>
-    {
-        public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>();
-    }
+        where T1 : IComponent where T2 : IComponent where T3 : IComponent where T4 : IComponent
+        {
+            public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>();
+        }
 
     public static class Mask<TDomain, T1, T2, T3, T4, T5>
-    {
-        public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>();
-    }
+        where T1 : IComponent where T2 : IComponent where T3 : IComponent where T4 : IComponent where T5 : IComponent
+        {
+            public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>();
+        }
 
     public static class Mask<TDomain, T1, T2, T3, T4, T5, T6>
-    {
-        public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>().With<T6>();
-    }
+        where T1 : IComponent where T2 : IComponent where T3 : IComponent where T4 : IComponent where T5 : IComponent where T6 : IComponent
+        {
+            public static readonly Mask<TDomain> Key = new Mask<TDomain>().With<T1>().With<T2>().With<T3>().With<T4>().With<T5>().With<T6>();
+        }
 }

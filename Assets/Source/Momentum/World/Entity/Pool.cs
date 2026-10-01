@@ -10,7 +10,7 @@ namespace Game.Realm
     {
         private int increment;
         private int renewed; 
-        private int capacity        = Config.World.Entity.PoolCapacity;
+        private int capacity        = Config.Engine.Capacity.Pool;
 
         private int [] free;
         private bool[] alive;

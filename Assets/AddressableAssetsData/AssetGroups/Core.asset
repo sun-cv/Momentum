@@ -15,12 +15,28 @@ MonoBehaviour:
   m_GroupName: Core
   m_GUID: 48c4f8a4443bcde43b18ecd4d26f2895
   m_SerializeEntries:
+  - m_GUID: 0b8d4ce0ff3782e40a1a5b77911299e6
+    m_Address: StaticIdleDummy.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17c20ca2b1ab59e4ea3145764d6051eb
+    m_Address: StaticIdleDummy
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 22fabeb2ec187344088762876700eee8
     m_Address: Assets/Source/Momentum/World/Entity/Prop/Dummy/Data/Dummy.json
     m_ReadOnly: 0
     m_SerializedLabels:
     - Definition
     - Prop
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6606d4047a2f390479512bcc52ed68ba
+    m_Address: StaticIdle.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86ff72e8e02abf04fa8d81c0a0d9ad53
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Asset/Prefab/Hero.prefab
@@ -34,6 +50,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Actor
     - Definition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd9767b0d2209f442bf39b70c7ffdfd3
+    m_Address: StaticIdle
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e86cae101ca27f34189fb5bcf5895207
     m_Address: Assets/Source/Momentum/World/Entity/Prop/Dummy/Prefab/Dummy.prefab

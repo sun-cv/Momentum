@@ -6,7 +6,7 @@ using Game.Realm;
 namespace Game.Service
 {
 
-    public class CapabilitySystem : RegisteredService, IWorld, IRealBase
+    public class CapabilitySystem : RegisteredService, IWorld, IGameBase
     {
         private readonly World World;
 

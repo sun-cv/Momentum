@@ -147,7 +147,6 @@ namespace Game.Realm
                 if (definition.Force is Force)                          Component.Add<Force>(entity, new());
                 if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
                 if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
-                if (definition.Abilities is Abilities abilities)        Component.Add<Abilities>(entity, abilities);
                 if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, hitboxes);
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
                 if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
@@ -176,14 +175,14 @@ namespace Game.Realm
                 {
                     Component.Add<PlayerController>(entity, new());
                     Component.Add<Intent>(entity, new());
-                    Component.Add<CommandQueue>(entity, new() { Active = new(), Buffer = new() });
+                    Component.Add<Commands>(entity, new() { Active = new(), Buffer = new() });
                 } 
 
                 if (definition.AiController is AiController)
                 {
                     Component.Add<AiController>(entity, new());
                     Component.Add<Intent>(entity, new());
-                    Component.Add<CommandQueue>(entity, new() { Active = new(), Buffer = new() });
+                    Component.Add<Commands>(entity, new() { Active = new(), Buffer = new() });
                 }
             }
 

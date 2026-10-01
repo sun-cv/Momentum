@@ -9,7 +9,7 @@ namespace Game.Service
 {
     public class ImpulseSystem : RegisteredService, IWorld, IGameBase
     {
-        private const float Rest = Config.World.Physics.Rest;
+        private const float Rest = Config.Physics.Rest;
 
         private readonly World World;
 

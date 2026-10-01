@@ -17,8 +17,7 @@
   "size": { "w": 32, "h": 32 },
   "scale": "1",
   "frameTags": [
-   { "name": "Idle", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" },
-   { "name": "South", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" }
+   { "name": "Idle", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" }
   ]
  }
 }

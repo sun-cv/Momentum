@@ -26,7 +26,9 @@ namespace Game.Graphics
         public void Tick()
         {
             foreach (var entity in World.Query(Mask<Components, Animation, Pose, Facing, Rendering>.Key))
+            {
                 Draw(entity);
+            }
         }
 
         private void Draw(Entity entity)

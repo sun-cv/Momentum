@@ -32,19 +32,19 @@ namespace Game.Service
             var velocity    = World.Entity.Intent(entity).Direction;
             ref var facing  = ref World.Entity.Modify.Facing(entity);
 
-            if (velocity.sqrMagnitude < Config.Graphics.Facing.MinimumSpeed * Config.Graphics.Facing.MinimumSpeed)
+            if (velocity.sqrMagnitude < Config.Facing.MinimumSpeed * Config.Facing.MinimumSpeed)
                 return;
 
             var direction = velocity.normalized;
 
-            if (Mathf.Abs(direction.y) < Config.Graphics.Facing.Axis)
+            if (Mathf.Abs(direction.y) < Config.Facing.Axis)
             {
                 facing.Direction = new Vector2(Mathf.Sign(direction.x), 0f);
                 facing.Ticks     = 0;
                 return;
             }
 
-            if (Mathf.Abs(direction.x) < Config.Graphics.Facing.Axis)
+            if (Mathf.Abs(direction.x) < Config.Facing.Axis)
             {
                 facing.Direction = new Vector2(0f, Mathf.Sign(direction.y));
                 facing.Ticks     = 0;
@@ -64,7 +64,7 @@ namespace Game.Service
                 : current.x > 0f ? target.y < 0f
                 :                  target.y > 0f;
 
-            return clockwise ? Config.Graphics.Facing.Clockwise : Config.Graphics.Facing.Counterclockwise;
+            return clockwise ? Config.Facing.Clockwise : Config.Facing.Counterclockwise;
         }
         private void FaceAim(Entity ability)
         {

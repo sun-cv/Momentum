@@ -28,10 +28,16 @@ namespace Game.Content
             return loader.Boot();
         }
 
-        public TData Get<TData>(string id) where TData : IRecord
+        private TData Get<TData>(string id) where TData : IRecord
         {
             return registry.Get<TData>(id);
         }
+        
+        public Definition Definition(string id)
+        {
+            return Get<Definition>(id);
+        }
+
         public void Shutdown()
         {
 

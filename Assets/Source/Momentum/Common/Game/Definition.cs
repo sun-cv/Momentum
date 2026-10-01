@@ -60,9 +60,8 @@ namespace Game.Common
         public Innate? Innate                                   { get; init; }
         public Blocks? Blocks                                   { get; init; }
 
-        public CommandQueue? CommandQueue                       { get; init; }
+        public Commands? Commands                               { get; init; }
 
-        public Abilities? Abilities                             { get; init; }
         public Hitboxes? Hitboxes                               { get; init; }
         public Loadout? Loadout                                 { get; init; }
         public Equipment? Equipment                             { get; init; }

@@ -47,7 +47,10 @@
     },
     "CommandQueue":     {},
     "Abilities":        {},
-    "Loadout":          {},
+    "Loadout":          
+    {
+        "Abilities":    {}
+    },
     "Equipment":        {},
     "Inventory":        {},
     "Target":           {},

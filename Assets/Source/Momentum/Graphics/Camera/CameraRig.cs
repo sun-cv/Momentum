@@ -59,7 +59,7 @@ namespace Game.Graphics
 
             view.orthographic               = true;
             brain.UpdateMethod              = CinemachineBrain.UpdateMethods.ManualUpdate;
-            follow.Lens.OrthographicSize    = Config.Graphics.Camera.OrthographicSize;
+            follow.Lens.OrthographicSize    = Config.Engine.Camera.OrthographicSize;
             follow.Target.TrackingTarget    = target;
             lean.ApplyAfter                 = CinemachineCore.Stage.Body;
             lean.PreserveComposition        = false;

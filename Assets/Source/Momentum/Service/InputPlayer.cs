@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 using UnityEngine;
 
 using Game.Realm;
@@ -6,7 +7,6 @@ using Game.Common;
 using Game.Diagnostic;
 
 using Event = Game.Common.Event;
-using System;
 
 
 namespace Game.Service
@@ -81,7 +81,6 @@ namespace Game.Service
 
                 if (released)
                 {
-
                     if (World.Entity.Modify.Command(player).Active.TryGetValue(capability, out var active))
                     {
                         active.Released     = true;

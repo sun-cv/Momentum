@@ -6,7 +6,7 @@ namespace Game.Common
 {
     public static partial class Config
     {
-        public static class Service
+        public static class Schedule
         {
             public static class LoggingController
             {

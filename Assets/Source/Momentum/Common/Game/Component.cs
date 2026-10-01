@@ -88,15 +88,10 @@ namespace Game.Common
         public IReadOnlyList<Capability> Capabilities       { get; set; }
     }
 
-    public struct CommandQueue      : IComponent
+    public struct Commands          : IComponent
     {
         public Dictionary<Capability, Command> Active       { get; set; }
         public Dictionary<Capability, Command> Buffer       { get; set; }
-    }
-
-    public struct Abilities         : IComponent
-    {
-
     }
 
     public struct Hitboxes          : IComponent
@@ -111,7 +106,7 @@ namespace Game.Common
 
     public struct Loadout           : IComponent
     {
-
+        public Dictionary<Capability, string> Abilities     { get; set; }
     }
 
     public struct Equipment         : IComponent

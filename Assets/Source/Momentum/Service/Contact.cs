@@ -12,7 +12,7 @@ namespace Game.Service
 {
     public class ContactSystem : RegisteredService, IWorld, IGameBase
     {
-        private const float Knockback = Config.World.Physics.Knockback;
+        private const float Knockback = Config.Physics.Knockback;
 
         private readonly World World;
 

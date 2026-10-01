@@ -86,10 +86,10 @@ namespace Game.Core
 
         private ServiceSchedule ResolveSchedule(Type type)
         {
-            var config  = typeof(Config.Service).GetNestedType(type.Name, BindingFlags.Public);
+            var config  = typeof(Config.Schedule).GetNestedType(type.Name, BindingFlags.Public);
 
             if (config == null)
-                throw new Exception($"[Service] class {type.Name} implements a tick-rate interface but has no matching Config.Service.{type.Name} entry.");
+                throw new Exception($"[Service] class {type.Name} implements a tick-rate interface but has no matching Config.Schedule.{type.Name} entry.");
 
             var phase    = config.GetField("Phase",    BindingFlags.Public | BindingFlags.Static);
             var priority = config.GetField("Priority", BindingFlags.Public | BindingFlags.Static);

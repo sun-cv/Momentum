@@ -67,9 +67,8 @@ namespace Game.Realm
             public ref Innate Innate(Entity entity)                         => ref Component.Reference<Innate>(entity);
             public ref Blocks Blocks(Entity entity)                         => ref Component.Reference<Blocks>(entity);
 
-            public ref CommandQueue Command(Entity entity)                  => ref Component.Reference<CommandQueue>(entity);
+            public ref Commands Command(Entity entity)                      => ref Component.Reference<Commands>(entity);
 
-            public ref Abilities Abilities(Entity entity)                   => ref Component.Reference<Abilities>(entity);
             public ref Hitboxes Hitboxes(Entity entity)                     => ref Component.Reference<Hitboxes>(entity);
             public ref Struck Struck(Entity entity)                         => ref Component.Reference<Struck>(entity);
             public ref Loadout Loadout(Entity entity)                       => ref Component.Reference<Loadout>(entity);
@@ -175,9 +174,8 @@ namespace Game.Realm
         public Innate Innate(Entity entity)                                 => Component.View<Innate>(entity);
         public Blocks Blocks(Entity entity)                                 => Component.View<Blocks>(entity);
 
-        public CommandQueue Command(Entity entity)                          => Component.View<CommandQueue>(entity);
+        public Commands Command(Entity entity)                              => Component.View<Commands>(entity);
 
-        public Abilities Abilities(Entity entity)                           => Component.View<Abilities>(entity);
         public Hitboxes Hitboxes(Entity entity)                             => Component.View<Hitboxes>(entity);
         public Struck Struck(Entity entity)                                 => Component.View<Struck>(entity);
         public Loadout Loadout(Entity entity)                               => Component.View<Loadout>(entity);
