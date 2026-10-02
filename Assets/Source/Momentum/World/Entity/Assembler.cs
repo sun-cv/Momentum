@@ -123,7 +123,7 @@ namespace Game.Realm
             private void GenerateComponents(Entity entity, Definition definition)
             {
 
-                Component.Add<Meta>(entity, definition.Meta);
+                Component.Add<Meta>(entity, new() { Created = Watch.Tick.Game });
 
                 if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
                 if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);

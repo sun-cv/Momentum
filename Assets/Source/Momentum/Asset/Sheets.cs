@@ -22,6 +22,12 @@ namespace Game.Content
             { "West",   Vector2.left    },
         };
 
+        private static readonly HashSet<string>[] Shapes =
+        {
+            new() { "North", "East", "South", "West" },
+            new() { "East", "West" },
+        };
+
         private readonly Registry registry;
 
         internal SheetLoader(Registry registry)
@@ -34,16 +40,16 @@ namespace Game.Content
             var texts   = Addressables.LoadAssetsAsync<TextAsset>(labels, null, Addressables.MergeMode.Intersection);
 
             var sprites = Addressables.ResourceManager.CreateChainOperation<IList<AsyncOperationHandle>, IList<TextAsset>>(texts, loaded =>
-                    {
+                {
                     var handles = new List<AsyncOperationHandle>();
 
                     foreach (var text in loaded.Result)
                     {
-                    handles.Add(Addressables.LoadAssetAsync<IList<Sprite>>($"{text.name}.Sprites"));
+                        handles.Add(Addressables.LoadAssetAsync<IList<Sprite>>($"{text.name}.Sprites"));
                     }
 
                     return Addressables.ResourceManager.CreateGenericGroupOperation(handles);
-                    });
+                });
 
             sprites.Completed += loaded => Register(texts.Result, loaded.Result);
 
@@ -86,6 +92,8 @@ namespace Game.Content
                     continue;
                 }
 
+                RequireShape(id, state, covering);
+
                 var covered = 0;
 
                 foreach (var tag in covering)
@@ -99,9 +107,6 @@ namespace Game.Content
 
                 if (covered != state.To - state.From + 1)
                     throw new Exception($"[SheetLoader] {id}: direction tags over state {state.Name} leave frames uncovered or overlap");
-
-                if (covering.Count == 1)
-                    clips.TryAdd((state.Name, Vector2.zero), clips[(state.Name, Directions[covering[0].Name])]);
             }
 
             return new Sheet(id, clips);
@@ -117,6 +122,14 @@ namespace Game.Content
                         throw new Exception($"[SheetLoader] {id}: states {states[i].Name} and {states[j].Name} overlap; is one a misspelled direction?");
                 }
             }
+        }
+
+        private static void RequireShape(string id, ExportTag state, List<ExportTag> covering)
+        {
+            var names = covering.Select(tag => tag.Name).ToHashSet();
+
+            if (!Shapes.Any(shape => shape.SetEquals(names)))
+                throw new Exception($"[SheetLoader] {id}: state {state.Name} has directions {string.Join(", ", names)}; expected North, East, South, West or East, West");
         }
 
         private static void Add(string id, Dictionary<(string State, Vector2 Direction), Clip> clips, Clip clip)

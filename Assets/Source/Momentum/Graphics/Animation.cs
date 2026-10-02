@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 using Game.Common;
@@ -17,6 +18,8 @@ namespace Game.Graphics
         private readonly World World;
         private readonly Assets Assets;
 
+        private readonly Dictionary<Entity, Entity> Resolved = new();
+
         public AnimationSystem(World world, Assets assets)
         {
             World   = world;
@@ -25,15 +28,63 @@ namespace Game.Graphics
 
         public void Tick()
         {
+            ProcessAnimations();
+        }
+
+        private void ProcessAnimations()
+        {
+            CollectDrawers();
+            ResolvePoses();
+            DrawResolved();
+        }
+
+        private void CollectDrawers()
+        {
+            Resolved.Clear();
+
             foreach (var entity in World.Query(Mask<Components, Animation, Pose, Facing, Rendering>.Key))
             {
-                Draw(entity);
+                Resolved[entity] = entity;
             }
         }
 
-        private void Draw(Entity entity)
+        private void ResolvePoses()
         {
-            var pose          = World.Entity.Pose(entity);
+            foreach (var child in World.Query(Mask<Components, Pose, Parent>.Key))
+            {
+                if (Resolved.ContainsKey(child))
+                    continue;
+
+                var parent = World.Entity.Parent(child).Entity;
+
+                if (!Resolved.TryGetValue(parent, out var current))
+                    continue;
+
+                if (current.Equals(parent) || Newer(child, current))
+                {
+                    Resolved[parent] = child;
+                }
+            }
+        }
+
+        private void DrawResolved()
+        {
+            foreach (var (drawer, source) in Resolved)
+            {
+                Draw(drawer, World.Entity.Pose(source));
+            }
+        }
+
+        private bool Newer(Entity child, Entity current)
+        {
+            var created = World.Entity.Meta(child).Created;
+            var against = World.Entity.Meta(current).Created;
+
+            return created != against ? created > against : child.Index < current.Index;
+        }
+
+        private void Draw(Entity entity, Pose pose)
+        {
             var direction     = World.Entity.Facing(entity).Direction;
             var renderer      = World.Entity.Rendering(entity).Renderer;
             var sheet         = Assets.Sheet(pose.Sheet);
@@ -41,32 +92,15 @@ namespace Game.Graphics
 
             Advance(ref animation, pose.Sheet, pose.State);
 
-            if (TryResolve(sheet, animation.State, direction, out var clip, out var flip))
+            if (sheet.Clips.TryGetValue((animation.State, direction), out var clip))
             {
                 animation.Shown = direction;
             }
-            else if (!TryResolve(sheet, animation.State, animation.Shown, out clip, out flip))
-            {
-                flip = false;
 
-                if (!sheet.Clips.TryGetValue((animation.State, Vector2.zero), out clip))
-                    throw new System.Exception($"[AnimationSystem] Entity {entity.Index} has no clip {animation.State} facing {direction} in sheet {animation.Sheet}");
-            }
+            else if (!sheet.Clips.TryGetValue((animation.State, animation.Shown), out clip) && !sheet.Clips.TryGetValue((animation.State, Vector2.zero), out clip))
+                throw new System.Exception($"[AnimationSystem] Entity {entity.Index} has no clip {animation.State} facing {direction} in sheet {animation.Sheet}");
 
             renderer.sprite = Frame(clip, animation.Elapsed);
-            renderer.flipX  = flip;
-        }
-
-        private static bool TryResolve(Sheet sheet, string state, Vector2 direction, out Clip clip, out bool flip)
-        {
-            flip = false;
-
-            if (sheet.Clips.TryGetValue((state, direction), out clip))
-                return true;
-
-            flip = direction == Vector2.left;
-
-            return flip && sheet.Clips.TryGetValue((state, Vector2.right), out clip);
         }
 
         private static void Advance(ref Animation animation, string sheet, string state)

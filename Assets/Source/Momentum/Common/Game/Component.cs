@@ -49,6 +49,7 @@ namespace Game.Common
     public struct Effect            : IComponent {}
     public struct Hitbox            : IComponent {}
     public struct Ability           : IComponent {}
+    public struct Cooldown          : IComponent {}
 
     public struct Faction           : IComponent {}
     public struct Allegiance        : IComponent {}
@@ -109,6 +110,70 @@ namespace Game.Common
         public Dictionary<Capability, string> Abilities     { get; set; }
     }
 
+    public struct Activation        : IComponent
+    {
+        public enum Trigger { Buffer, Active }
+
+        public Capability Capability                        { get; set; }
+        public Trigger From                                 { get; set; }
+    }
+
+    public struct Phases            : IComponent
+    {
+        public List<PhaseEntry> Entry                       { get; set; }
+    }
+
+    public struct Phase             : IComponent
+    {
+        public int Index                                    { get; set; }
+        public int Elapsed                                  { get; set; }
+    }
+
+    public struct PhaseEntry
+    {
+        public string State                                 { get; set; }
+        public int Length                                   { get; set; }
+        public int Cancel                                   { get; set; }
+        public IReadOnlyList<Capability> Until              { get; set; }
+    }
+
+    public struct Interrupts        : IComponent
+    {
+        public IReadOnlyList<InterruptEntry> Capabilities       { get; set; }
+    }
+
+    public struct InterruptEntry
+    {
+        public int After;
+        public int Phase;
+        public Capability Capability;
+    }
+
+
+    public struct Sustain           : IComponent
+    {
+        public IReadOnlyList<SustainEntry> Entries          { get; set; }
+    }
+
+    public struct SustainEntry
+    {
+        public Capability Capability                        { get; set; }
+        public int UntilPhase                               { get; set; }
+    }
+
+    public struct Chains            : IComponent
+    {
+        public int Window                                   { get; set; }
+        public List<ChainEntry> Entry                       { get; set; }
+    }
+
+    public struct ChainEntry
+    {
+        public string State;                                
+        public string Ability; 
+        
+    }
+    
     public struct Equipment         : IComponent
     {
 

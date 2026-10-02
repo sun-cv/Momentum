@@ -227,7 +227,6 @@ namespace Game.Graphics
             blend   = Mathf.MoveTowards(blend, still >= Idle ? 1f : 0f, Watch.Tick.UnscaledDelta / Handover);
 
             Find<LeadBehavior>() .Target = blend;
-            Find<MouseBehavior>().Target = 1f - blend;
         }
 
         protected override Vector3 Damping => Vector3.Lerp(Mouse, Lead, blend);

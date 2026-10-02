@@ -1,0 +1,33 @@
+{
+    "Id":               "TestAbility",
+    "Ability":          {},
+    "Activation":    
+    {
+        "Capability":   "Primary",
+        "From":         "Buffer" 
+    },
+    "Phases":
+    {
+        {
+            "State":    "Charge",
+            "Length":   60,
+            "Until":
+            {
+                {
+                        "Primary"
+                }
+            }
+        },
+        {
+            "State":    "Fire",
+            "Length":   60
+        },
+        {
+            "State":    "FireEnd",
+            "Length":   60
+        }
+    },
+    "Phase":            {},
+    "Sustain":          {},
+    "Chains":           {}
+}

@@ -15,7 +15,6 @@ namespace Game.Common
         public string Id                                        { get; init; }
         public string Prefab                                    { get; init; }
 
-        public Meta Meta                                        { get; init; }
         public Ledger? Ledger                                   { get; init; }
 
         public Prop? Prop                                       { get; init; }
