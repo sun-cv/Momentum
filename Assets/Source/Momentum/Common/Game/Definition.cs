@@ -23,6 +23,8 @@ namespace Game.Common
         public Effect? Effect                                   { get; init; }
         public Hitbox? Hitbox                                   { get; init; }
         public Ability? Ability                                 { get; init; }
+        public Cooldown? Cooldown                               { get; init; }
+        public Cooldowns? Cooldowns                             { get; init; }
         public Spawner? Spawner                                 { get; init; }
         public Directive? Directive                             { get; init; }
         public Projectile? Projectile                           { get; init; }
@@ -63,6 +65,11 @@ namespace Game.Common
 
         public Hitboxes? Hitboxes                               { get; init; }
         public Loadout? Loadout                                 { get; init; }
+        public Activation? Activation                           { get; init; }
+        public Phases? Phases                                   { get; init; }
+        public Interrupts? Interrupts                           { get; init; }
+        public Sustain? Sustain                                 { get; init; }
+        public Chains? Chains                                   { get; init; }
         public Equipment? Equipment                             { get; init; }
         public Inventory? Inventory                             { get; init; }
 

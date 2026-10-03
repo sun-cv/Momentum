@@ -31,6 +31,7 @@ namespace Game.Realm
                 (definition) => definition.Effect       is Effect,
                 (definition) => definition.Hitbox       is Hitbox,
                 (definition) => definition.Ability      is Ability,
+                (definition) => definition.Cooldown     is Cooldown,
                 (definition) => definition.Spawner      is Spawner, 
                 (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
@@ -136,6 +137,9 @@ namespace Game.Realm
                 if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
                 if (definition.Hitbox is Hitbox)                        Component.Add<Hitbox>(entity, new());
                 if (definition.Ability is Ability)                      Component.Add<Ability>(entity, new());
+                if (definition.Cooldown is Cooldown)                    Component.Add<Cooldown>(entity, new());
+                if (definition.Cooldowns is Cooldowns cooldowns)        Component.Add<Cooldowns>(entity, cooldowns);
+                if (definition.CooldownTarget is CooldownTarget)        Component.Add<CooldownTarget>(entity, new());
                 if (definition.Anchor is Anchor anchor)                 Component.Add<Anchor>(entity, anchor);
                 if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, duration);
                 if (definition.Ledger is Ledger)                        Component.Add<Ledger>(entity, new());
@@ -149,6 +153,10 @@ namespace Game.Realm
                 if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
                 if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, hitboxes);
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
+                if (definition.Activation is Activation activation)     Component.Add<Activation>(entity, activation);
+                if (definition.Interrupts is Interrupts interrupts)     Component.Add<Interrupts>(entity, interrupts);
+                if (definition.Sustain is Sustain sustain)              Component.Add<Sustain>(entity, sustain);
+                if (definition.Chains is Chains chains)                 Component.Add<Chains>(entity, chains);
                 if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
                 if (definition.Inventory is Inventory inventory)        Component.Add<Inventory>(entity, inventory);
                 if (definition.Target is Target)                        Component.Add<Target>(entity, new());
@@ -159,6 +167,12 @@ namespace Game.Realm
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
                 if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
+
+                if (definition.Phases is Phases phases)
+                {
+                    Component.Add<Phases>(entity, phases);
+                    Component.Add<Phase>(entity, new() { Index = 0, Elapsed = 0 });
+                }
 
                 if (definition.Mass is Mass mass)
                 {

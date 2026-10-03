@@ -31,6 +31,21 @@ namespace Game.Common
         Teleport,
     }
 
+    public enum AbilityTag
+    {
+        Action,
+        Toggle,
+        Instant,
+        Movement
+    }
+
+    public enum AbilityResult
+    {
+        Deny,
+        Cancel,
+        Coexist,
+    }
+
     public interface IWorld {}
 
     public readonly struct Entity

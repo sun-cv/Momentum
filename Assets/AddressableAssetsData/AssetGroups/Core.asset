@@ -33,6 +33,13 @@ MonoBehaviour:
     - Definition
     - Prop
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24470a8b4e1f8274599eecf21630c1cc
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/TestAbility.json
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Ability
+    - Definition
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6606d4047a2f390479512bcc52ed68ba
     m_Address: StaticIdle.Sprites
     m_ReadOnly: 0

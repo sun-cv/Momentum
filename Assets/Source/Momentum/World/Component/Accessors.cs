@@ -36,6 +36,9 @@ namespace Game.Realm
             public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
             public ref Hitbox Hitbox(Entity entity)                         => ref Component.Reference<Hitbox>(entity);
             public ref Ability Ability(Entity entity)                       => ref Component.Reference<Ability>(entity);
+            public ref Cooldown Cooldown(Entity entity)                     => ref Component.Reference<Cooldown>(entity);
+            public ref Cooldowns Cooldowns(Entity entity)                   => ref Component.Reference<Cooldowns>(entity);
+            public ref CooldownTarget CooldownTarget(Entity entity)         => ref Component.Reference<CooldownTarget>(entity);
 
             public ref Faction Faction(Entity entity)                       => ref Component.Reference<Faction>(entity);
             public ref Allegiance Allegiance(Entity entity)                 => ref Component.Reference<Allegiance>(entity);
@@ -72,6 +75,12 @@ namespace Game.Realm
             public ref Hitboxes Hitboxes(Entity entity)                     => ref Component.Reference<Hitboxes>(entity);
             public ref Struck Struck(Entity entity)                         => ref Component.Reference<Struck>(entity);
             public ref Loadout Loadout(Entity entity)                       => ref Component.Reference<Loadout>(entity);
+            public ref Activation Activation(Entity entity)                 => ref Component.Reference<Activation>(entity);
+            public ref Phases Phases(Entity entity)                         => ref Component.Reference<Phases>(entity);
+            public ref Phase Phase(Entity entity)                           => ref Component.Reference<Phase>(entity);
+            public ref Interrupts Interrupts(Entity entity)                 => ref Component.Reference<Interrupts>(entity);
+            public ref Sustain Sustain(Entity entity)                       => ref Component.Reference<Sustain>(entity);
+            public ref Chains Chains(Entity entity)                         => ref Component.Reference<Chains>(entity);
             public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
             public ref Inventory Inventory(Entity entity)                   => ref Component.Reference<Inventory>(entity);
 
@@ -143,6 +152,9 @@ namespace Game.Realm
         public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
         public Hitbox Hitbox(Entity entity)                                 => Component.View<Hitbox>(entity);
         public Ability Ability(Entity entity)                               => Component.View<Ability>(entity);
+        public Cooldown Cooldown(Entity entity)                             => Component.View<Cooldown>(entity);
+        public Cooldowns Cooldowns(Entity entity)                           => Component.View<Cooldowns>(entity);
+        public CooldownTarget CooldownTarget(Entity entity)                 => Component.View<CooldownTarget>(entity);
 
         public Faction Faction(Entity entity)                               => Component.View<Faction>(entity);
         public Allegiance Allegiance(Entity entity)                         => Component.View<Allegiance>(entity);
@@ -179,6 +191,12 @@ namespace Game.Realm
         public Hitboxes Hitboxes(Entity entity)                             => Component.View<Hitboxes>(entity);
         public Struck Struck(Entity entity)                                 => Component.View<Struck>(entity);
         public Loadout Loadout(Entity entity)                               => Component.View<Loadout>(entity);
+        public Activation Activation(Entity entity)                         => Component.View<Activation>(entity);
+        public Phases Phases(Entity entity)                                 => Component.View<Phases>(entity);
+        public Phase Phase(Entity entity)                                   => Component.View<Phase>(entity);
+        public Interrupts Interrupts(Entity entity)                         => Component.View<Interrupts>(entity);
+        public Sustain Sustain(Entity entity)                               => Component.View<Sustain>(entity);
+        public Chains Chains(Entity entity)                                 => Component.View<Chains>(entity);
         public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);
         public Inventory Inventory(Entity entity)                           => Component.View<Inventory>(entity);
 

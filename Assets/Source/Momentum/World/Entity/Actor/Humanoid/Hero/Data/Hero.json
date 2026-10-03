@@ -49,7 +49,10 @@
     "Abilities":        {},
     "Loadout":          
     {
-        "Abilities":    {"TestAbility"}
+        "Abilities":     
+        {
+            "Primary":  "TestAbility" 
+        }
     },
     "Equipment":        {},
     "Inventory":        {},

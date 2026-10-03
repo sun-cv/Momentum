@@ -27,6 +27,7 @@ namespace Game.Core
 
         public float RealDelta      => realDelta;
         public float GameDelta      => gameDelta;
+        public float Scale          => scale;
     }
 }
 

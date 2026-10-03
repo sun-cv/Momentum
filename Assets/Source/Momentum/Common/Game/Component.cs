@@ -114,8 +114,9 @@ namespace Game.Common
     {
         public enum Trigger { Buffer, Active }
 
-        public Capability Capability                        { get; set; }
         public Trigger From                                 { get; set; }
+        public AbilityTag Kind                              { get; set; }    
+        public Capability Capability                        { get; set; }
     }
 
     public struct Phases            : IComponent
@@ -133,22 +134,21 @@ namespace Game.Common
     {
         public string State                                 { get; set; }
         public int Length                                   { get; set; }
-        public int Cancel                                   { get; set; }
         public IReadOnlyList<Capability> Until              { get; set; }
     }
 
     public struct Interrupts        : IComponent
     {
-        public IReadOnlyList<InterruptEntry> Capabilities       { get; set; }
+        public IReadOnlyList<InterruptEntry> Entries   { get; set; }
     }
 
     public struct InterruptEntry
     {
         public int After;
         public int Phase;
-        public Capability Capability;
+        public AbilityTag Kind;
+        public AbilityResult Result;
     }
-
 
     public struct Sustain           : IComponent
     {
@@ -164,16 +164,30 @@ namespace Game.Common
     public struct Chains            : IComponent
     {
         public int Window                                   { get; set; }
-        public List<ChainEntry> Entry                       { get; set; }
+        public Dictionary<Capability, string> Abilities     { get; set; }
     }
 
-    public struct ChainEntry
+    public struct Cooldowns         : IComponent 
     {
-        public string State;                                
-        public string Ability; 
-        
+        public IReadOnlyList<CooldownEntry> Entries         { get; set; }
     }
+
+    public struct CooldownEntry
+    {
+        public int Phase; 
+        public int Length;
+        public string Ability;
+    }
+
+    public struct CooldownTarget    : IComponent 
+    {
+        public string Ability                               { get; set; }
+    }
+
+    public struct ControlWindow     : IComponent {}
     
+    public struct Lingering         : IComponent {}
+
     public struct Equipment         : IComponent
     {
 

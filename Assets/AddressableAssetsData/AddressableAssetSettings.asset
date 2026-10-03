@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 48c4f8a4443bcde43b18ecd4d26f2895
   m_currentHash:
     serializedVersion: 2
-    Hash: 1b839a9506ccd555c9d9a8c91d3a90bc
+    Hash: 00000000000000000000000000000000
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -106,6 +106,7 @@ MonoBehaviour:
     - Prop
     - Prefab
     - Sheet
+    - Ability
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: d6e7bd5b227b79b4d91feb1ad6ce3552, type: 2}
