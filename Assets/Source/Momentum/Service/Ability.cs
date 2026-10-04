@@ -169,7 +169,44 @@ namespace Game.Service
                 }
             }
 
+            id      = null;
+            chained = default;
+
+            return false;
         }
+
+        private void ProcessDefault(Entity entity)
+        {
+            keys.Clear();
+            keys.AddRange(World.Entity.Command(entity).Buffer.Keys);
+
+            foreach (var capability in keys)
+            {
+                if (reserved.Contains(capability))
+                    continue;
+
+                if (!World.Entity.Loadout(entity).Abilities.TryGetValue(capability, out var id))
+                    continue;
+
+                ProcessAbility(entity, capability, Data.Definition(id));
+            }
+        }
+
+        private bool ProcessAbility(Entity entity, Capability capability, Definition definition)
+        {
+            if (!CanResolve(entity, capability, definition))
+                return false;
+
+            if (!CanActivate(entity, definition))
+                return false;
+
+            if (!Validate(entity, definition))
+                return false;
+
+            Commit(entity, capability, definition);
+            return true;
+        }
+
 
         private void Commit(Entity parent, Capability capability, Definition definition)
         {

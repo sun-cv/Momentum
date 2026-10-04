@@ -69,8 +69,5 @@ namespace Game.Service
             World.Entity.Modify.Aim(entity).World       = targetLocation;
             World.Entity.Modify.Aim(entity).Direction   = (targetLocation - entityPosition).normalized;
         }
-
-
-
     }
 }
