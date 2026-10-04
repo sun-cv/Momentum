@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -39,25 +40,26 @@ namespace Game.Common
         Movement
     }
 
-    public enum AbilityResult
-    {
-        Deny,
-        Cancel,
-        Coexist,
-    }
 
     public interface IWorld {}
 
-    public readonly struct Entity
+    public readonly struct Entity : IEquatable<Entity>
     {
         public int Index                    { get; init; }
-        public int Generation               { get; init; } 
+        public int Generation               { get; init; }
 
         public Entity(int index, int generation)
         {
             Index       = index;
             Generation  = generation;
         }
+
+        public bool Equals(Entity other)                    => Index == other.Index && Generation == other.Generation;
+        public override bool Equals(object instance)        => instance is Entity other && Equals(other);
+        public override int GetHashCode()                   => HashCode.Combine(Index, Generation);
+
+        public static bool operator ==(Entity a, Entity b)  =>  a.Equals(b);
+        public static bool operator !=(Entity a, Entity b)  => !a.Equals(b);
     }
 
     public readonly struct Blueprint

@@ -12,6 +12,11 @@ namespace Game.Common
         public int Created                                  { get; set; }
     }
 
+    public struct Identity          : IComponent
+    {
+        public string Id                                    { get; set; }
+    }
+
     public struct Ledger            : IComponent {}
     
     public struct Parent            : IComponent 
@@ -137,17 +142,19 @@ namespace Game.Common
         public IReadOnlyList<Capability> Until              { get; set; }
     }
 
-    public struct Interrupts        : IComponent
+    public struct Controls        : IComponent
     {
-        public IReadOnlyList<InterruptEntry> Entries   { get; set; }
+        public enum Result { Deny, Cancel, Coexist }
+
+        public IReadOnlyList<ControlEntry> Entries   { get; set; }
     }
 
-    public struct InterruptEntry
+    public struct ControlEntry
     {
         public int After;
         public int Phase;
         public AbilityTag Kind;
-        public AbilityResult Result;
+        public Controls.Result Result;
     }
 
     public struct Sustain           : IComponent

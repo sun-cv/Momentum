@@ -76,7 +76,7 @@ namespace Game.Service
             {
                 if (pressed)
                 {
-                    World.Entity.Modify.Command(player).Buffer[capability] = new Command(){ Capability = capability, TickPressed = Watch.Tick.Real };
+                    World.Entity.Modify.Command(player).Buffer[capability] = new Command(){ Capability = capability, TickPressed = Watch.Tick.Real, Aim = World.Entity.Aim(player) };
                 }
 
                 if (released)

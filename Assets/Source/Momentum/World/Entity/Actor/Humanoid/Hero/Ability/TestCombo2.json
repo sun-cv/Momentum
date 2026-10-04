@@ -1,0 +1,16 @@
+{
+    "Id":               "TestCombo2",
+    "Ability":          {},
+    "Activation":       { "Capability": "Interact", "From": "Buffer", "Kind": "Action" },
+    "Phases":
+    {
+        "Entry":
+        [
+            { "State": "Swing2",    "Length": 30,  "Until": [] }
+        ]
+    },
+    "Phase":            {},
+    "Sustain":          { "Entries": [] },
+    "Controls":         { "Entries": [] },
+    "Chains":           { "Abilities": {} }
+}

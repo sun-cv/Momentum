@@ -17,6 +17,7 @@ namespace Game.Realm
             }
 
             public ref Meta Meta(Entity entity)                             => ref Component.Reference<Meta>(entity);
+            public ref Identity Identity(Entity entity)                     => ref Component.Reference<Identity>(entity);
 
             public ref Ledger Ledger(Entity entity)                         => ref Component.Reference<Ledger>(entity);
 
@@ -78,7 +79,7 @@ namespace Game.Realm
             public ref Activation Activation(Entity entity)                 => ref Component.Reference<Activation>(entity);
             public ref Phases Phases(Entity entity)                         => ref Component.Reference<Phases>(entity);
             public ref Phase Phase(Entity entity)                           => ref Component.Reference<Phase>(entity);
-            public ref Interrupts Interrupts(Entity entity)                 => ref Component.Reference<Interrupts>(entity);
+            public ref Controls Controls(Entity entity)                     => ref Component.Reference<Controls>(entity);
             public ref Sustain Sustain(Entity entity)                       => ref Component.Reference<Sustain>(entity);
             public ref Chains Chains(Entity entity)                         => ref Component.Reference<Chains>(entity);
             public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
@@ -133,6 +134,7 @@ namespace Game.Realm
     public partial class Entities
     {
         public Meta Meta(Entity entity)                                     => Component.View<Meta>(entity);
+        public Identity Identity(Entity entity)                             => Component.View<Identity>(entity);
 
         public Ledger Ledger(Entity entity)                                 => Component.View<Ledger>(entity);
 
@@ -194,7 +196,7 @@ namespace Game.Realm
         public Activation Activation(Entity entity)                         => Component.View<Activation>(entity);
         public Phases Phases(Entity entity)                                 => Component.View<Phases>(entity);
         public Phase Phase(Entity entity)                                   => Component.View<Phase>(entity);
-        public Interrupts Interrupts(Entity entity)                         => Component.View<Interrupts>(entity);
+        public Controls Controls(Entity entity)                             => Component.View<Controls>(entity);
         public Sustain Sustain(Entity entity)                               => Component.View<Sustain>(entity);
         public Chains Chains(Entity entity)                                 => Component.View<Chains>(entity);
         public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);

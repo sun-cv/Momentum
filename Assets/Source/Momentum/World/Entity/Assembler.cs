@@ -10,6 +10,7 @@ using Physics   = Game.Common.Physics;
 using Collision = Game.Common.Collision;
 using Animation = Game.Common.Animation;
 using Pose      = Game.Common.Pose;
+using UnityEngine.Identifiers;
 
 
 namespace Game.Realm
@@ -125,6 +126,7 @@ namespace Game.Realm
             {
 
                 Component.Add<Meta>(entity, new() { Created = Watch.Tick.Game });
+                Component.Add<Identity>(entity, new() { Id  = definition.Id });
 
                 if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
                 if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);
@@ -136,10 +138,9 @@ namespace Game.Realm
                 if (definition.Directive is Directive)                  Component.Add<Directive>(entity, new());
                 if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
                 if (definition.Hitbox is Hitbox)                        Component.Add<Hitbox>(entity, new());
-                if (definition.Ability is Ability)                      Component.Add<Ability>(entity, new());
                 if (definition.Cooldown is Cooldown)                    Component.Add<Cooldown>(entity, new());
                 if (definition.Cooldowns is Cooldowns cooldowns)        Component.Add<Cooldowns>(entity, cooldowns);
-                if (definition.CooldownTarget is CooldownTarget)        Component.Add<CooldownTarget>(entity, new());
+                if (definition.CooldownTarget is CooldownTarget target) Component.Add<CooldownTarget>(entity, target);
                 if (definition.Anchor is Anchor anchor)                 Component.Add<Anchor>(entity, anchor);
                 if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, duration);
                 if (definition.Ledger is Ledger)                        Component.Add<Ledger>(entity, new());
@@ -154,7 +155,7 @@ namespace Game.Realm
                 if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, hitboxes);
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
                 if (definition.Activation is Activation activation)     Component.Add<Activation>(entity, activation);
-                if (definition.Interrupts is Interrupts interrupts)     Component.Add<Interrupts>(entity, interrupts);
+                if (definition.Controls is Controls Controls)           Component.Add<Controls>(entity, Controls);
                 if (definition.Sustain is Sustain sustain)              Component.Add<Sustain>(entity, sustain);
                 if (definition.Chains is Chains chains)                 Component.Add<Chains>(entity, chains);
                 if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
@@ -168,10 +169,15 @@ namespace Game.Realm
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
                 if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
 
-                if (definition.Phases is Phases phases)
+                if (definition.Ability is Ability) 
                 {
-                    Component.Add<Phases>(entity, phases);
-                    Component.Add<Phase>(entity, new() { Index = 0, Elapsed = 0 });
+                    Component.Add<Ability>(entity, new());
+
+                    if (definition.Phases is Phases phases)
+                    {
+                        Component.Add<Phases>(entity, phases);
+                        Component.Add<Phase>(entity, new() { Index = 0, Elapsed = 0 });
+                    }
                 }
 
                 if (definition.Mass is Mass mass)
@@ -369,6 +375,14 @@ namespace Game.Realm
                     definition => definition.Actor is Actor, new()
                     {
                         ((Component, entity, definition) => Component.Has<Instance>(entity),    "Actor requires Instance"),
+                    }
+                },
+                {
+                    definition => definition.Ability is Ability, new()
+                    {
+                        ((Component, entity, definition) => Component.Has<Activation>(entity),  "Ability requires Activation"),
+                        ((Component, entity, definition) => Component.Has<Phases>(entity),      "Ability requires Phases"),
+                        ((Component, entity, definition) => Component.Has<Phase>(entity),       "Ability requires Phase"),
                     }
                 },
             };

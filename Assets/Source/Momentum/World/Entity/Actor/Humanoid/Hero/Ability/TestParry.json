@@ -1,0 +1,22 @@
+{
+    "Id":               "TestParry",
+    "Ability":          {},
+    "Activation":       { "Capability": "Secondary", "From": "Buffer", "Kind": "Action" },
+    "Phases":
+    {
+        "Entry":
+        [
+            { "State": "Parry",    "Length": 20,  "Until": [] }
+        ]
+    },
+    "Phase":            {},
+    "Sustain":          { "Entries": [] },
+    "Controls":
+    {
+        "Entries":
+        [
+            { "Phase": 0, "After": 15, "Kind": "Action", "Result": "Cancel" }
+        ]
+    },
+    "Chains":           { "Abilities": { "Secondary": "TestBlock" } }
+}

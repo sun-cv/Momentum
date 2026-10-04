@@ -47,7 +47,7 @@ namespace Game.Service
             Log<Dev>.Debug($"Command.Active", () => commands.Active.Count > 0 ? string.Join(", ", commands.Active.Values.Select(comp => comp.Capability)) : "");
             Log<Dev>.Debug($"Command.Buffer", () => commands.Buffer.Count > 0 ? string.Join(", ", commands.Buffer.Values.Select(comp => comp.Capability)) : "");
 
-            Log<Dev>.Debug($"Ability.Active", () => children.Count > 0 ? string.Join(", ", children.Select(entity => World.Entity.Activation(entity).Capability)) : "");
+            Log<Dev>.Debug($"Ability.Active", () => children.Count > 0 ? string.Join(", ", children.Select(entity => World.Entity.Identity(entity).Id)) : "");
 
             foreach(var ability in children)
             {

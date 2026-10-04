@@ -1,0 +1,23 @@
+{
+    "Id":               "TestBlock",
+    "Ability":          {},
+    "Activation":       { "Capability": "Secondary", "From": "Active", "Kind": "Action" },
+    "Phases":
+    {
+        "Entry":
+        [
+            { "State": "Block",    "Length": 600, "Until": [] },
+            { "State": "Lower",    "Length": 10,  "Until": [] }
+        ]
+    },
+    "Phase":            {},
+    "Sustain":          { "Entries": [ { "Capability": "Secondary", "UntilPhase": 1 } ] },
+    "Controls":
+    {
+        "Entries":
+        [
+            { "Phase": 0, "After": 0, "Kind": "Movement", "Result": "Coexist" }
+        ]
+    },
+    "Chains":           { "Abilities": {} }
+}

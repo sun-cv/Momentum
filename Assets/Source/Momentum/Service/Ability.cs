@@ -1,12 +1,11 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 
 using Game.Realm;
 using Game.Common;
 using Game.Content;
-using System.Collections.Generic;
-using System.Linq;
 using Game.Diagnostic;
-
 
 
 
@@ -18,7 +17,11 @@ namespace Game.Service
         private readonly Data Data;
         private readonly World World;
 
-        private readonly List<Entity> release = new();
+        private readonly List<Entity>     cancel    = new();
+        private readonly List<Entity>     release   = new();
+        private readonly List<Entity>     windows   = new();
+        private readonly List<Capability> keys      = new();
+        private readonly List<Capability> reserved  = new();
 
         public AbilitySystem(World world, Data data)
         {
@@ -28,6 +31,7 @@ namespace Game.Service
 
         public void Tick()
         {
+        
             Process();
         }
 
@@ -38,9 +42,10 @@ namespace Game.Service
             ReleaseAbilities();
         }
 
+        // Advance
         private void AdvanceAbilities()
         {
-            foreach (var entity in World.Query(Mask<Components, Ability>.Key))
+            foreach (var entity in World.Query(Mask<Components, Ability, Phase>.Key))
             {
                 AdvanceAbility(entity);
             }
@@ -48,16 +53,22 @@ namespace Game.Service
 
         private void AdvanceAbility(Entity ability)
         {
-            if (ShouldTerminate(ability))
+            if (SustainBroken(ability))
             {
-                // Deactivate(ability);
-                // Make inert, check control window, add duration component, remove render etc.
-                return; 
+                release.Add(ability);
+                return;
             }
 
             if (PhaseSustainReleased(ability) || PhaseDurationElapsed(ability))
             {
-                AdvancePhase(ability); 
+                AdvancePhase(ability);
+                ProcessCooldowns(ability);
+            }
+
+            if (Finished(ability))
+            {
+                Deactivate(ability);
+                return;
             }
             
             Advance(ability);
@@ -66,18 +77,146 @@ namespace Game.Service
         private void AdvancePhase(Entity ability)
         {
             World.Entity.Modify.Phase(ability).Index++;
-            World.Entity.Modify.Phase(ability).Elapsed  = 0;
+            World.Entity.Modify.Phase(ability).Elapsed = 0;
         }
 
         private void Advance(Entity ability)
         {
-            if (PhaseDurationElapsed(ability))
+            World.Entity.Modify.Phase(ability).Elapsed++;
+        }
+
+        private void Deactivate(Entity ability)
+        {
+            if (World.Entity.Has<Chains>(ability) && World.Entity.Chains(ability).Window > 0)
             {
-                Advance(ability);
+                windows.Add(ability);
                 return;
+            }
+            
+            release.Add(ability);
+        }
+
+        // Process
+        private void ProcessAbilities()
+        {
+            OpenWindows();
+
+            foreach (var entity in World.Query(Mask<Components, Commands, Loadout>.Key))
+            {
+                ClearReserved();
+                ProcessChained(entity);
+                ProcessDefault(entity);
+            }
+        }
+    
+        private void OpenWindows()
+        {
+            foreach (var ability in windows)
+            {
+                World.Entity.Component.Remove<Phase>(ability);
+
+                if (World.Entity.Has<Pose>(ability))
+                {
+                    World.Entity.Component.Remove<Pose>(ability);
+                }
+
+                World.Entity.Component.Add(ability, new Duration { Length = World.Entity.Chains(ability).Window });
+                World.Entity.Component.Add(ability, new ControlWindow());
+            }
+
+            windows.Clear();
+        }        
+
+        private void ClearReserved()
+        {
+            reserved.Clear();
+        }
+
+        private void ProcessChained(Entity entity)
+        {
+            var command = World.Entity.Command(entity);
+
+            keys.Clear();
+            keys.AddRange(command.Active.Keys);
+            keys.AddRange(command.Buffer.Keys);
+
+            foreach (var capability in keys)
+            {
+                if (!ResolveChained(entity, capability, out var id, out var chained))
+                    continue;
+
+                reserved.Add(capability);
+
+                if (!ProcessAbility(entity, capability, Data.Definition(id)))
+                    continue;
+
+                if (World.Entity.Has<ControlWindow>(chained))
+                    release.Add(chained);
             }
         }
 
+        private bool ResolveChained(Entity entity, Capability capability, out string id, out Entity chained)
+        {
+            foreach (var ability in World.Query(Mask<Components, Chains, Parent>.Key))
+            {
+                if (World.Entity.Parent(ability).Entity != entity)
+                    continue;
+
+                if (World.Entity.Chains(ability).Abilities.TryGetValue(capability, out id))
+                {
+                    chained = ability;
+                    return true;
+                }
+            }
+
+        }
+
+        private void Commit(Entity parent, Capability capability, Definition definition)
+        {
+            var ability = World.Entity.Create(definition, parent);
+            release.AddRange(cancel);
+            ProcessCooldowns(ability);
+            Promote(parent, capability);
+        }
+
+        private void ProcessCooldowns(Entity ability)
+        {
+            if (!World.Entity.Has<Cooldowns>(ability))
+                return;
+
+            foreach(var entry in World.Entity.Cooldowns(ability).Entries)
+            {
+                if (World.Entity.Phase(ability).Index != entry.Phase)
+                    continue;
+
+                CreateCooldown(World.Entity.Parent(ability).Entity, entry);
+            }
+        }
+
+        private void CreateCooldown(Entity parent, CooldownEntry entry)
+        {
+            var cooldown = new Definition()
+            {
+                Id              = $"{entry.Ability} Cooldown",
+                Cooldown        = new Cooldown(),
+                Duration        = new Duration()        { Length  = entry.Length },
+                CooldownTarget  = new CooldownTarget()  { Ability = entry.Ability },
+            };
+
+            World.Entity.Create(cooldown, parent);
+        }
+
+        private void Promote(Entity entity, Capability capability)
+        {
+            var command = World.Entity.Command(entity);
+
+            if (!command.Buffer.Remove(capability, out var press))
+                return;
+
+            command.Active[capability] = press;
+        }
+
+        // Release
         private void ReleaseAbilities()
         {
             foreach (var ability in release)
@@ -88,103 +227,22 @@ namespace Game.Service
             release.Clear();
         }
 
-        // ControlWindow requires implementation - designates control window open on ability
-        private void ProcessAbilities()
+        // Advance resolvers
+        private bool SustainBroken(Entity ability)
         {
-            foreach (var ability in World.Query(Mask<Components, Ability, Chains, ControlWindow>.Key))
-            {
-                ProcessLoadout(World.Entity.Parent(ability).Entity, World.Entity.Chains(ability).Abilities);
-            }
-
-            foreach (var entity in World.Query(Mask<Components, Commands>.Key))
-            {
-                ProcessLoadout(entity, World.Entity.Loadout(entity).Abilities);
-            }
-        }
-
-        private void ProcessLoadout(Entity parent, Dictionary<Capability, string> loadout)
-        {
-            foreach (var (capability, ability) in loadout)
-            {
-                ProcessAbility(parent, capability, ability);
-            }
-        }
-
-        private void ProcessAbility(Entity parent, Capability capability, string name)
-        {
-            Definition ability = Data.Definition(name);
-                
-            if (!CanResolve(parent, capability, ability))
-                return;
-
-            if (!CanActivate(parent, ability))
-                return;
-
-            if (!Validate(parent, ability))
-                return;
-
-            Create(parent, ability);
-        }
-
-        private bool CanResolve(Entity parent, Capability capability, Definition ability)
-        {
-            if (ability.Activation is { } activation && activation.From == Activation.Trigger.Active != World.Entity.Command(parent).Active.ContainsKey(capability))
-                return false
-
-            if (!World.Entity.Command(parent).Buffer.ContainsKey(capability))
+            if (!World.Entity.Has<Sustain>(ability))
                 return false;
 
-            return true;
-        }
+            var index  = World.Entity.Phase(ability).Index;
+            var active = World.Entity.Command(World.Entity.Parent(ability).Entity).Active;
 
-        private bool CanActivate(Entity parent, Definition ability)
-        {
-            if (HasCooldown(parent, ability))
-                return false;
-
-            if (!HasSustainTriggers(parent, ability))
-                return false;
-
-            return true;
-        }
-
-        private bool HasSustainTriggers(Entity parent, Definition ability)
-        {
-            if (ability.Activation is not Activation activation || ability.Sustain is not Sustain sustain)
-                return false;
-
-            if (activation.From == Activation.Trigger.Active )
-                return false;
-            
-            foreach(var entry in sustain.Entries)
+            foreach (var entry in World.Entity.Sustain(ability).Entries)
             {
-                if (!World.Entity.Command(parent).Active.ContainsKey(entry.Capability))
-                {
-                    return false;
-                }
+                if (index < entry.UntilPhase && !active.ContainsKey(entry.Capability))
+                    return true;
             }
-            return true;
-        }
 
-        private void Create(Entity parent, string ability)
-        {
-            World.Entity.Create(Data.Definition(ability), parent);
-        }
-
-        private void PromoteCapability(Entity entity, List<Capability> capabilities)
-        {
-            var active = World.Entity.Command(entity).Active;
-            var buffer = World.Entity.Command(entity).Buffer;
-
-            foreach(var capability in capabilities)
-            {
-                if (active.Keys.Contains(capability))
-                    continue;
-
-                active[capability] = buffer[capability];
-
-                buffer.Remove(capability);
-            }
+            return false;
         }
 
         private bool PhaseSustainReleased(Entity ability)
@@ -193,10 +251,6 @@ namespace Game.Service
             var phases  = World.Entity.Phases(ability);
             var parent  = World.Entity.Parent(ability).Entity;
             var active  = World.Entity.Command(parent).Active; 
-
-            Log<AbilitySystem>.Debug(phase.Index);
-            Log<AbilitySystem>.Debug(phase.Elapsed);
-            Log<AbilitySystem>.Debug(phases.Entry[phase.Index].Until.Any(capability => !active.ContainsKey(capability)));
 
             return phases.Entry[phase.Index].Until.Any(capability => !active.ContainsKey(capability));
         }
@@ -209,27 +263,37 @@ namespace Game.Service
             return phase.Elapsed >= phases.Entry[phase.Index].Length;
         }
 
-        private bool ShouldTerminate(Entity ability)
+        private bool Finished(Entity ability)
         {
-            var phase   = World.Entity.Phase(ability);   
-            var phases  = World.Entity.Phases(ability);
-            var parent  = World.Entity.Parent(ability).Entity;
-            var active  = World.Entity.Command(parent).Active; 
-            var sustain = World.Entity.Sustain(ability).Entries;
+            return World.Entity.Phase(ability).Index >= World.Entity.Phases(ability).Entry.Count;
+        }
 
-            foreach(var entry in sustain)
-            {
-                if (phase.Index <= entry.UntilPhase && !active.ContainsKey(entry.Capability))
-                {
-                    return true;
-                }
-            }
+        // Process Resolvers
+        private bool CanResolve(Entity parent, Capability capability, Definition definition)
+        {
+            var command = World.Entity.Command(parent);
 
-            return phase.Index >= phases.Entry.Count - 1;
+            return ((Activation)definition.Activation).From == Activation.Trigger.Active
+                ? command.Active.ContainsKey(capability)
+                : command.Buffer.ContainsKey(capability);
+        }
+
+        private bool CanActivate(Entity parent, Definition definition)
+        {
+            if (HasCooldown(parent, definition))
+                return false;
+
+            if (!HasSustainTriggers(parent, definition))
+                return false;
+
+            return true;
         }
 
         private bool HasCooldown(Entity parent, Definition ability)
         {
+            if (!World.Entity.Has<Child>(parent))
+                return false;
+
             foreach (var child in World.Entity.Child(parent).Entities)
             {
                 if (!World.Entity.Has<Cooldown>(child))
@@ -242,6 +306,62 @@ namespace Game.Service
             return false;
         }
 
+        private bool HasSustainTriggers(Entity parent, Definition definition)
+        {
+            if (definition.Sustain is not Sustain sustain)
+                return true;
+
+            var command = World.Entity.Command(parent);
+
+            foreach (var entry in sustain.Entries)
+            {
+                if (!command.Active.ContainsKey(entry.Capability) && !command.Buffer.ContainsKey(entry.Capability))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool Validate(Entity parent, Definition definition)
+        {
+            var kind = ((Activation)definition.Activation).Kind;
+
+            cancel.Clear();
+
+            foreach (var ability in World.Query(Mask<Components, Controls, Phase, Parent>.Key))
+            {
+                if (World.Entity.Parent(ability).Entity != parent)
+                    continue;
+
+                if (release.Contains(ability))
+                    continue;
+
+                var result = ControlResult(ability, kind);
+
+                if (result == Controls.Result.Deny)
+                    return false;
+
+                if (result == Controls.Result.Cancel)
+                    cancel.Add(ability);
+            }
+
+            return true;
+        }
+
+        private Controls.Result ControlResult(Entity ability, AbilityTag kind)
+        {
+            var phase = World.Entity.Phase(ability);
+
+            foreach (var entry in World.Entity.Controls(ability).Entries)
+            {
+                if (entry.Kind != kind || entry.Phase != phase.Index || phase.Elapsed < entry.After)
+                    continue;
+
+                return entry.Result;
+            }
+
+            return kind == AbilityTag.Instant ? Controls.Result.Coexist : Controls.Result.Deny;
+        }
 
         static AbilitySystem() => Log<AbilitySystem>.Level(Diagnostic.Log.Level.Debug);
     }

@@ -1,0 +1,26 @@
+{
+    "Id":               "TestCharge",
+    "Ability":          {},
+    "Activation":       { "Capability": "Primary", "From": "Buffer", "Kind": "Action" },
+    "Phases":
+    {
+        "Entry":
+        [
+            { "State": "Charge",   "Length": 30,  "Until": [] },
+            { "State": "Charge",   "Length": 90,  "Until": [ "Primary" ] },
+            { "State": "Fire",     "Length": 20,  "Until": [] },
+            { "State": "FireEnd",  "Length": 30,  "Until": [] }
+        ]
+    },
+    "Phase":            {},
+    "Sustain":          { "Entries": [ { "Capability": "Primary", "UntilPhase": 1 } ] },
+    "Controls":
+    {
+        "Entries":
+        [
+            { "Phase": 0, "After": 0, "Kind": "Movement", "Result": "Cancel" },
+            { "Phase": 1, "After": 0, "Kind": "Movement", "Result": "Cancel" }
+        ]
+    },
+    "Chains":           { "Abilities": {} }
+}

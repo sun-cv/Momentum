@@ -47,11 +47,14 @@
     },
     "CommandQueue":     {},
     "Abilities":        {},
-    "Loadout":          
+    "Loadout":
     {
-        "Abilities":     
+        "Abilities":
         {
-            "Primary":  "TestAbility" 
+            "Primary":      "TestCharge",
+            "Secondary":    "TestParry",
+            "Modifier":     "TestDash",
+            "Interact":     "TestCombo1"
         }
     },
     "Equipment":        {},

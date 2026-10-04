@@ -1,0 +1,17 @@
+{
+    "Id":               "TestDash",
+    "Ability":          {},
+    "Activation":       { "Capability": "Modifier", "From": "Buffer", "Kind": "Movement" },
+    "Phases":
+    {
+        "Entry":
+        [
+            { "State": "Dash",     "Length": 15,  "Until": [] }
+        ]
+    },
+    "Phase":            {},
+    "Sustain":          { "Entries": [] },
+    "Controls":         { "Entries": [] },
+    "Chains":           { "Abilities": {} },
+    "Cooldowns":        { "Entries": [ { "Phase": 0, "Length": 300, "Ability": "TestDash" } ] } 
+}

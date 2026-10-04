@@ -1,3 +1,4 @@
+using UnityEngine;
 
 
 
@@ -11,5 +12,8 @@ namespace Game.Common
         public int TickReleased         { get; set; }
 
         public bool Released            { get; set; }
+
+        public Aim Aim                  { get; set; }
     }
+
 }
