@@ -71,7 +71,7 @@ namespace Game.Graphics
         {
             foreach (var (drawer, source) in Resolved)
             {
-                Draw(drawer, World.Entity.Pose(source));
+                Draw(drawer, source);
             }
         }
 
@@ -83,14 +83,15 @@ namespace Game.Graphics
             return created != against ? created > against : child.Index < current.Index;
         }
 
-        private void Draw(Entity entity, Pose pose)
+        private void Draw(Entity entity, Entity source)
         {
-            var direction     = World.Entity.Facing(entity).Direction;
-            var renderer      = World.Entity.Rendering(entity).Renderer;
-            var sheet         = Assets.Sheet(pose.Sheet);
-            ref var animation = ref World.Entity.Modify.Animation(entity);
+            var pose            = World.Entity.Pose(source);
+            var direction       = World.Entity.Facing(entity).Direction;
+            var renderer        = World.Entity.Rendering(entity).Renderer;
+            var sheet           = Assets.Sheet(pose.Sheet);
+            ref var animation   = ref World.Entity.Modify.Animation(entity);
 
-            Advance(ref animation, pose.Sheet, pose.State);
+            Advance(ref animation, source, pose.Sheet, pose.State);
 
             if (sheet.Clips.TryGetValue((animation.State, direction), out var clip))
             {
@@ -103,17 +104,18 @@ namespace Game.Graphics
             renderer.sprite = Frame(clip, animation.Elapsed);
         }
 
-        private static void Advance(ref Animation animation, string sheet, string state)
+        private static void Advance(ref Animation animation, Entity source, string sheet, string state)
         {
-            if (animation.Sheet == sheet && animation.State == state)
+            if (animation.Source.Equals(source) && animation.Sheet == sheet && animation.State == state)
             {
                 animation.Elapsed++;
                 return;
             }
 
-            animation.Sheet   = sheet;
-            animation.State   = state;
-            animation.Elapsed = 0;
+            animation.Source    = source;
+            animation.Sheet     = sheet;
+            animation.State     = state;
+            animation.Elapsed   = 0;
         }
 
         private static Sprite Frame(Clip clip, int elapsed)

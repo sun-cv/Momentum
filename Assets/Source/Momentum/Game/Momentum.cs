@@ -1,7 +1,8 @@
 using Game.Core;
+using Game.Realm;
 using Game.Common;
 using Game.Content;
-using Game.Realm;
+using Game.Tooling;
 using System.Collections.Generic;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -17,6 +18,8 @@ namespace Game
         private readonly Registry   registry; 
         private readonly Data       data ;
         private readonly Assets     asset;
+        
+        private readonly HitboxGizmos gizmos;
 
         public Momentum()
         {
@@ -25,6 +28,8 @@ namespace Game
             registry    = new();
             data        = new(registry);
             asset       = new(registry);
+
+            gizmos      = new(world);
 
         }
         public List<AsyncOperationHandle> Boot()
@@ -47,6 +52,11 @@ namespace Game
             engine  .Shutdown();
             world   .Shutdown();
             data    .Shutdown();
+        }
+
+        public void DrawGizmos()
+        {
+            gizmos.Draw();
         }
 
         public Core.Engine Engine => engine;

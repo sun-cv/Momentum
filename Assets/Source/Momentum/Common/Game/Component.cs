@@ -105,6 +105,14 @@ namespace Game.Common
         public List<HitboxEntry> Entries                    { get; set; }
     }
     
+    public struct HitboxEntry
+    {
+        public int Tick;
+        public int Phase;
+        public int Duration;
+        public string Definition;
+    }
+
     public struct Struck            : IComponent
     {
         public List<Entity> Entities                        { get ; set; }
@@ -139,7 +147,7 @@ namespace Game.Common
     {
         public string State                                 { get; set; }
         public int Length                                   { get; set; }
-        public IReadOnlyList<Capability> Until              { get; set; }
+        public IReadOnlyList<Capability> UntilRelease       { get; set; }
     }
 
     public struct Controls        : IComponent
@@ -273,8 +281,10 @@ namespace Game.Common
         public Vector2 World                                { get; set; }
     }
 
-    public struct Track             : IComponent {}
-
+    public struct Track             : IComponent            
+    {
+        public int UntilPhase                               { get; set; }
+    }
 
     public struct Health            : IComponent
     {
@@ -341,6 +351,7 @@ namespace Game.Common
 
     public struct Animation         : IComponent
     {
+        public Entity Source                                { get; set; }
         public string Sheet                                 { get; set; }
         public string State                                 { get; set; }
         public int Elapsed                                  { get; set; }

@@ -51,17 +51,15 @@ namespace Game.Service
         {
             var blueprint   = Asset.Get(request.Definition);
             var source      = World.Entity.Root(request.Parent);
-            var rotation    = Rotation(source);
+            var rotation    = Rotation(request.Parent);
             var offset      = blueprint.Definition.Anchor is Anchor anchor ? rotation * anchor.Offset : Vector3.zero;
             var position    = (Vector3)World.Entity.Form(source).Body.position + offset;
 
             var hitbox      = World.Entity.Create(blueprint, new ConstructionParameter { Parent = request.Parent, Position = position, Rotation = rotation.eulerAngles });
 
-            World.Entity.Component.Add(hitbox, new Source { Entity = source });
-            World.Entity.Component.Add(hitbox, new Struck { Entities = new() });
-
-            if (World.Entity.Has<Anchor>(hitbox))
-                World.Entity.Modify.Anchor(hitbox).Offset = offset;
+            World.Entity.Component.Add(hitbox, new Source   { Entity    = source });
+            World.Entity.Component.Add(hitbox, new Struck   { Entities  = new() });
+            World.Entity.Component.Add(hitbox, new Duration { Length    = request.Duration });
         }
 
         private Quaternion Rotation(Entity source)

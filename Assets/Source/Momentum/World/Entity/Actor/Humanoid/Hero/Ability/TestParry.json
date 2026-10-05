@@ -1,16 +1,15 @@
 {
     "Id":               "TestParry",
     "Ability":          {},
-    "Activation":       { "Capability": "Secondary", "From": "Buffer", "Kind": "Action" },
+    "Activation":       { "Capability": "Secondary", "From": "Buffer", "Kind": "Instant" },
+    "Sustain":          { "Entries": [] },
     "Phases":
     {
         "Entry":
         [
-            { "State": "Parry",    "Length": 20,  "Until": [] }
+            { "State": "Parry",    "Length": 20,  "UntilRelease": [] }
         ]
     },
-    "Phase":            {},
-    "Sustain":          { "Entries": [] },
     "Controls":
     {
         "Entries":

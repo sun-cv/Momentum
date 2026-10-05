@@ -1,22 +1,37 @@
 {
     "Id":               "TestCombo1",
     "Ability":          {},
-    "Activation":       { "Capability": "Interact", "From": "Buffer", "Kind": "Action" },
+    "Aim":              {},
+    "Activation":       { "Capability": "Primary", "From": "Buffer", "Kind": "Action" },
+    "Sustain":          { "Entries": [] },
+    "Pose":             { "Sheet": "SwordStrike", "State": "Fire" },
     "Phases":
     {
         "Entry":
         [
-            { "State": "Swing1",    "Length": 120,  "Until": [] }
+            { "State": "Fire",    "Length": 60,  "UntilRelease": [] }
         ]
     },
-    "Phase":            {},
-    "Sustain":          { "Entries": [] },
     "Controls":
     {
         "Entries":
         [
-            { "Phase": 0, "After": 60, "Kind": "Action", "Result": "Cancel" }
+            { "Phase": 0, "After": 30, "Kind": "Action", "Result": "Cancel" }
         ]
     },
-    "Chains":           { "Window": 20, "Abilities": { "Interact": "TestCombo2" } }
+    "Chains": 
+    { 
+        "Window": 20, 
+        "Abilities": 
+        { 
+            "Primary": "TestCombo2" 
+        } 
+    },
+    "Hitboxes":
+    {
+        "Entries":
+        [
+            { "Phase": 0, "Tick": 10, "Duration": 20, "Definition": "TestHitbox" }
+        ]
+    }
 }

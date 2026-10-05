@@ -334,7 +334,7 @@ namespace Game.Realm
                     foreach (var (check, message) in rules)
                     {
                         if (!check(Component, entity, definition))
-                            throw new Exception($"[Assembler.Validation] {definition.Id}: {message}");
+                            throw new Exception($"[Assembler.Validation.Archetype] {definition.Id}: {message}");
                     }
                 }
 
@@ -346,7 +346,7 @@ namespace Game.Realm
                     foreach (var (check, message) in rules)
                     {
                         if (!check(Component, entity))
-                            throw new Exception($"[Assembler.Validation] {definition.Id}: {message}");
+                            throw new Exception($"[Assembler.Validation.Component] {definition.Id}: {message}");
                     }
                 }
                 return true;
@@ -399,6 +399,12 @@ namespace Game.Realm
                     (Component, entity) => Component.Has<Rendering>(entity), new()
                     {
                         ((Component, entity) => Component.Has<Pose>(entity),                    "Rendering requires Pose"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Track>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Aim>(entity),                     "Tracking requires Aim"),
                     }
                 },
             };

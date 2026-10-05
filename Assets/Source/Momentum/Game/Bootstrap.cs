@@ -42,6 +42,14 @@ namespace Game
         {
             momentum.Shutdown();
         }
+
+        public void OnDrawGizmos()
+        {
+            if (!Application.isPlaying || !enabled)
+                return;
+
+            momentum.DrawGizmos();
+        }
     }
 }
 

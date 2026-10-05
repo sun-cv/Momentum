@@ -1,19 +1,18 @@
 {
     "Id":               "TestCharge",
     "Ability":          {},
-    "Activation":       { "Capability": "Primary", "From": "Buffer", "Kind": "Action" },
+    "Activation":       { "Capability": "Interact", "From": "Buffer", "Kind": "Action" },
+    "Sustain":          { "Entries": [ { "Capability": "Interact", "UntilPhase": 1 } ] },
     "Phases":
     {
         "Entry":
         [
-            { "State": "Charge",   "Length": 30,  "Until": [] },
-            { "State": "Charge",   "Length": 90,  "Until": [ "Primary" ] },
-            { "State": "Fire",     "Length": 20,  "Until": [] },
-            { "State": "FireEnd",  "Length": 30,  "Until": [] }
+            { "State": "Charge",   "Length": 30,  "UntilRelease": [] },
+            { "State": "Charge",   "Length": 90,  "UntilRelease": [ "Interact" ] },
+            { "State": "Fire",     "Length": 20,  "UntilRelease": [] },
+            { "State": "FireEnd",  "Length": 30,  "UntilRelease": [] }
         ]
     },
-    "Phase":            {},
-    "Sustain":          { "Entries": [ { "Capability": "Primary", "UntilPhase": 1 } ] },
     "Controls":
     {
         "Entries":

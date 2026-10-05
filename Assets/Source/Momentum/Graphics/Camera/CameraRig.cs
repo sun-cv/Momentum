@@ -257,8 +257,8 @@ namespace Game.Graphics
         private const float Range       = 7f;
         private const float Horizontal  = 1f;
         private const float Vertical    = 2f;
-        private const float SpeedX      = 4f;
-        private const float SpeedY      = 4f;
+        private const float SpeedX      = 3f;
+        private const float SpeedY      = 3f;
 
         private readonly Camera                  view;
         private readonly CinemachineCameraOffset lean;

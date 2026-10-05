@@ -18,6 +18,7 @@ namespace Game.Common.Events
     public readonly struct CreateHitbox     : IEvent
     {
         public Entity Parent                    { get; init; }
+        public int Duration                     { get; init; }
         public string Definition                { get; init; }
     }
 

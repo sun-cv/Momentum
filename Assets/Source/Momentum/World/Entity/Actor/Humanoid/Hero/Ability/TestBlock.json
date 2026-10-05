@@ -6,11 +6,10 @@
     {
         "Entry":
         [
-            { "State": "Block",    "Length": 600, "Until": [] },
-            { "State": "Lower",    "Length": 10,  "Until": [] }
+            { "State": "Block",    "Length": 600, "UntilRelease": [] },
+            { "State": "Lower",    "Length": 10,  "UntilRelease": [] }
         ]
     },
-    "Phase":            {},
     "Sustain":          { "Entries": [ { "Capability": "Secondary", "UntilPhase": 1 } ] },
     "Controls":
     {

@@ -1,0 +1,7 @@
+{
+    "Id":               "TestHitbox",
+    "Prefab":           "TestHitbox",
+    "Hitbox":           {},
+    "Form":             {},
+    "Anchor":           { "Offset": { "x": 1, "y": 0 } }
+}

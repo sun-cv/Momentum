@@ -51,10 +51,10 @@
     {
         "Abilities":
         {
-            "Primary":      "TestCharge",
-            "Secondary":    "TestParry",
-            "Modifier":     "TestDash",
-            "Interact":     "TestCombo1"
+            "Interact": "TestCharge",
+            "Secondary":"TestParry",
+            "Modifier": "TestDash",
+            "Primary":  "TestCombo1"
         }
     },
     "Equipment":        {},

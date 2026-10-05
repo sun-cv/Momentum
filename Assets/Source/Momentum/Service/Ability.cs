@@ -6,6 +6,7 @@ using Game.Realm;
 using Game.Common;
 using Game.Content;
 using Game.Diagnostic;
+using Game.Common.Events;
 
 
 
@@ -71,7 +72,52 @@ namespace Game.Service
                 return;
             }
             
+            Update(ability);
             Advance(ability);
+        }
+
+        private void Update(Entity ability)
+        {
+            ProcessAim(ability);
+            ProcessHitboxes(ability);
+        }
+
+        private void ProcessAim(Entity ability)
+        {
+            if (!World.Entity.Has<Aim>(ability))
+                return;
+
+            if (!World.Entity.Has<Track>(ability))
+                return;
+
+            if (World.Entity.Phase(ability).Index >= World.Entity.Track(ability).UntilPhase)
+                return;
+
+            World.Entity.Modify.Aim(ability) = World.Entity.Aim(World.Entity.Parent(ability).Entity);
+        }
+
+        private void ProcessHitboxes(Entity ability)
+        {
+            if (!World.Entity.Has<Hitboxes>(ability))
+                return;
+
+            foreach (var entry in World.Entity.Hitboxes(ability).Entries)
+            {
+                if (World.Entity.Phase(ability).Index != entry.Phase)
+                    continue;
+
+                if (World.Entity.Phase(ability).Elapsed != entry.Tick)
+                    continue;
+
+                CreateHitbox message = new()
+                {
+                    Parent      = ability,
+                    Duration    = entry.Duration,
+                    Definition  = entry.Definition,
+                };
+
+                Event.Send<CreateHitbox>(message);   
+            }
         }
 
         private void AdvancePhase(Entity ability)
@@ -169,6 +215,7 @@ namespace Game.Service
                 }
             }
 
+
             id      = null;
             chained = default;
 
@@ -212,8 +259,20 @@ namespace Game.Service
         {
             var ability = World.Entity.Create(definition, parent);
             release.AddRange(cancel);
+            ProcessHitboxes(ability);
             ProcessCooldowns(ability);
             Promote(parent, capability);
+            CommitAim(ability, capability);
+        }
+
+        private void CommitAim(Entity ability, Capability capability)
+        {
+            if (!World.Entity.Has<Aim>(ability))
+                return;
+
+            World.Entity.Modify.Aim(ability) = World.Entity.Command(World.Entity.Parent(ability).Entity).Active[capability].Aim;
+
+            ProcessAim(ability);
         }
 
         private void ProcessCooldowns(Entity ability)
@@ -289,7 +348,7 @@ namespace Game.Service
             var parent  = World.Entity.Parent(ability).Entity;
             var active  = World.Entity.Command(parent).Active; 
 
-            return phases.Entry[phase.Index].Until.Any(capability => !active.ContainsKey(capability));
+            return phases.Entry[phase.Index].UntilRelease.Any(capability => !active.ContainsKey(capability));
         }
 
         private bool PhaseDurationElapsed(Entity ability)

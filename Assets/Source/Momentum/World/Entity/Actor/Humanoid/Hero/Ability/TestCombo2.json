@@ -1,16 +1,24 @@
 {
     "Id":               "TestCombo2",
     "Ability":          {},
-    "Activation":       { "Capability": "Interact", "From": "Buffer", "Kind": "Action" },
+    "Activation":       { "Capability": "Primary", "From": "Buffer", "Kind": "Action" },
     "Phases":
     {
         "Entry":
         [
-            { "State": "Swing2",    "Length": 30,  "Until": [] }
+            { "State": "Fire",    "Length": 60,  "UntilRelease": [] }
         ]
     },
-    "Phase":            {},
     "Sustain":          { "Entries": [] },
     "Controls":         { "Entries": [] },
-    "Chains":           { "Abilities": {} }
+    "Chains":           { "Abilities": {} },
+    "Aim":              {},
+    "Hitboxes":
+    {
+        "Entries":
+        [
+            { "Phase": 0, "Tick": 10, "Duration": 20, "Definition": "TestHitbox" }
+        ]
+    },
+    "Pose":             { "Sheet": "SwordStrike", "State": "Fire" }
 }

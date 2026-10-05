@@ -6,10 +6,9 @@
     {
         "Entry":
         [
-            { "State": "Dash",     "Length": 15,  "Until": [] }
+            { "State": "Dash",     "Length": 15,  "UntilRelease": [] }
         ]
     },
-    "Phase":            {},
     "Sustain":          { "Entries": [] },
     "Controls":         { "Entries": [] },
     "Chains":           { "Abilities": {} },
