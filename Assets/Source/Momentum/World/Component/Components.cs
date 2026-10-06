@@ -27,6 +27,9 @@ namespace Game.Realm
         {
             Guard(entity);
 
+            if (Has<TComponent>(entity))
+                throw new Exception($"Attempted to add Existing Component {typeof(TComponent).Name}");
+
             Access<TComponent>().Add(entity.Index, component);
             Mask.Get<Components>().Add(entity, Mask.Get<Components>().View(entity).With<TComponent>());
         }

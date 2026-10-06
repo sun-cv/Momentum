@@ -14,6 +14,8 @@ namespace Game.Common
     {
         public string Id                                        { get; init; }
         public string Prefab                                    { get; init; }
+        
+        public List<string> Includes                            { get; init; }
 
         public Ledger? Ledger                                   { get; init; }
 
@@ -23,6 +25,7 @@ namespace Game.Common
         public Effect? Effect                                   { get; init; }
         public Hitbox? Hitbox                                   { get; init; }
         public Ability? Ability                                 { get; init; }
+        public Payload? Payload                                 { get; init; }
         public Cooldown? Cooldown                               { get; init; }
         public Cooldowns? Cooldowns                             { get; init; }
         public CooldownTarget? CooldownTarget                   { get; init; }
@@ -104,7 +107,7 @@ namespace Game.Common
         public Form? Form                                       { get; init; }
         public Pose? Pose                                       { get; init; }
         public Rendering? Rendering                             { get; init; }
-        public HurtBox? HurtBox                                 { get; init; }
+        public Hurtbox? Hurtbox                                 { get; init; }
 
         public CameraTarget? CameraTarget                       { get; init; }
     }

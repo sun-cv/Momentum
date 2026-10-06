@@ -34,11 +34,18 @@ namespace Game.Service
         private void MoveAnchor(Entity entity)
         {
             var root    = World.Entity.Root(entity);
-            var aim     = World.Entity.Aim(World.Entity.Parent(entity).Entity).Direction;
-            var angle   = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
             var body    = World.Entity.Form(entity).Body;
+            var parent  = World.Entity.Parent(entity).Entity;
+            var offset  = World.Entity.Anchor(entity).Offset;
+            var angle   = 0f;
 
-            body.position = World.Entity.Form(root).Body.position + (Vector2)(Quaternion.Euler(0f, 0f, angle) * World.Entity.Anchor(entity).Offset);
+            if (World.Entity.Has<Aim>(parent))
+            {
+                var aim = World.Entity.Aim(parent).Direction;
+                angle   = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
+            }
+
+            body.position = World.Entity.Form(root).Body.position + (Vector2)(Quaternion.Euler(0f, 0f, angle) * offset);
             body.rotation = angle;
         }
     }

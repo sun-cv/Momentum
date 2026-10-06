@@ -3,5 +3,5 @@
     "Prefab":           "TestHitbox",
     "Hitbox":           {},
     "Form":             {},
-    "Anchor":           { "Offset": { "x": 1, "y": 0 } }
+    "Anchor":           { "Offset": { "x": 0, "y": 0 } }
 }

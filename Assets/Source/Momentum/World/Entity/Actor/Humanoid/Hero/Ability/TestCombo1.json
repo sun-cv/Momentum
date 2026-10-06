@@ -1,5 +1,5 @@
 {
-    "Id":               "TestCombo1",
+    "Id":               "SwordStrike",
     "Ability":          {},
     "Aim":              {},
     "Activation":       { "Capability": "Primary", "From": "Buffer", "Kind": "Action" },
@@ -31,7 +31,7 @@
     {
         "Entries":
         [
-            { "Phase": 0, "Tick": 10, "Duration": 20, "Definition": "TestHitbox" }
+            { "Phase": 0, "Tick": 0, "Duration": 30, "Definition": "SwordStrikeHitbox" }
         ]
     }
 }

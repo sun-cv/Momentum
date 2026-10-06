@@ -63,7 +63,6 @@ namespace Game.Service
             if (PhaseSustainReleased(ability) || PhaseDurationElapsed(ability))
             {
                 AdvancePhase(ability);
-                ProcessCooldowns(ability);
             }
 
             if (Finished(ability))
@@ -80,6 +79,8 @@ namespace Game.Service
         {
             ProcessAim(ability);
             ProcessHitboxes(ability);
+            ProcessCooldowns(ability);
+            ProcessPoseState(ability);
         }
 
         private void ProcessAim(Entity ability)
@@ -101,7 +102,7 @@ namespace Game.Service
             if (!World.Entity.Has<Hitboxes>(ability))
                 return;
 
-            foreach (var entry in World.Entity.Hitboxes(ability).Entries)
+            foreach (var entry in World.Entity.Hitboxes(ability).Entry)
             {
                 if (World.Entity.Phase(ability).Index != entry.Phase)
                     continue;
@@ -205,6 +206,9 @@ namespace Game.Service
         {
             foreach (var ability in World.Query(Mask<Components, Chains, Parent>.Key))
             {
+                if (release.Contains(ability))
+                    continue;
+
                 if (World.Entity.Parent(ability).Entity != entity)
                     continue;
 
@@ -257,22 +261,24 @@ namespace Game.Service
 
         private void Commit(Entity parent, Capability capability, Definition definition)
         {
-            var ability = World.Entity.Create(definition, parent);
-            release.AddRange(cancel);
-            ProcessHitboxes(ability);
-            ProcessCooldowns(ability);
             Promote(parent, capability);
-            CommitAim(ability, capability);
-        }
 
-        private void CommitAim(Entity ability, Capability capability)
-        {
-            if (!World.Entity.Has<Aim>(ability))
-                return;
+            release.AddRange(cancel);
 
-            World.Entity.Modify.Aim(ability) = World.Entity.Command(World.Entity.Parent(ability).Entity).Active[capability].Aim;
+            var ability = World.Entity.Create(definition, parent);
 
-            ProcessAim(ability);
+            if (World.Entity.Has<Aim>(ability))
+            {
+                World.Entity.Modify.Aim(ability) = World.Entity.Command(World.Entity.Parent(ability).Entity).Active[capability].Aim;
+            }
+
+            if (World.Entity.Has<Pose>(ability))
+            {
+                World.Entity.Modify.Pose(ability).State = World.Entity.Phases(ability).Entry[World.Entity.Phase(ability).Index].State;;
+            }
+
+            Update(ability);
+            Advance(ability);
         }
 
         private void ProcessCooldowns(Entity ability)
@@ -280,13 +286,27 @@ namespace Game.Service
             if (!World.Entity.Has<Cooldowns>(ability))
                 return;
 
-            foreach(var entry in World.Entity.Cooldowns(ability).Entries)
+            if (World.Entity.Phase(ability).Elapsed != 0)
+                return;
+
+            foreach(var entry in World.Entity.Cooldowns(ability).Entry)
             {
                 if (World.Entity.Phase(ability).Index != entry.Phase)
                     continue;
 
                 CreateCooldown(World.Entity.Parent(ability).Entity, entry);
             }
+        }
+
+        private void ProcessPoseState(Entity entity)
+        {
+            if (!World.Entity.Has<Pose>(entity))
+                return;
+
+            if (World.Entity.Phase(entity).Elapsed != 0)
+                return;
+
+            World.Entity.Modify.Pose(entity).State = World.Entity.Phases(entity).Entry[World.Entity.Phase(entity).Index].State;;
         }
 
         private void CreateCooldown(Entity parent, CooldownEntry entry)
@@ -332,7 +352,7 @@ namespace Game.Service
             var index  = World.Entity.Phase(ability).Index;
             var active = World.Entity.Command(World.Entity.Parent(ability).Entity).Active;
 
-            foreach (var entry in World.Entity.Sustain(ability).Entries)
+            foreach (var entry in World.Entity.Sustain(ability).Entry)
             {
                 if (index < entry.UntilPhase && !active.ContainsKey(entry.Capability))
                     return true;
@@ -409,7 +429,7 @@ namespace Game.Service
 
             var command = World.Entity.Command(parent);
 
-            foreach (var entry in sustain.Entries)
+            foreach (var entry in sustain.Entry)
             {
                 if (!command.Active.ContainsKey(entry.Capability) && !command.Buffer.ContainsKey(entry.Capability))
                     return false;
@@ -448,7 +468,7 @@ namespace Game.Service
         {
             var phase = World.Entity.Phase(ability);
 
-            foreach (var entry in World.Entity.Controls(ability).Entries)
+            foreach (var entry in World.Entity.Controls(ability).Entry)
             {
                 if (entry.Kind != kind || entry.Phase != phase.Index || phase.Elapsed < entry.After)
                     continue;

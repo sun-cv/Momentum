@@ -33,14 +33,29 @@ namespace Game.Realm
             assembler       = new(masks, pool, component, bodies);
         }
         
+        public Entity Allocate()
+        {
+            return pool.Allocate();
+        }
+
         public Entity Create(Definition definition, Entity parent)
         {
             return assembler.Assemble(definition, parent);
         }
 
+        public Entity Create(Definition definition, List<Definition> definitions, Entity parent)
+        {
+            return assembler.Composite(assembler.Assemble(definition, parent), definitions);
+        }
+
         public Entity Create(Blueprint blueprint, ConstructionParameter parameter)
         {
             return assembler.Assemble(blueprint, parameter);
+        }
+
+        public Entity Create(Blueprint blueprint, ConstructionParameter parameter, List<Definition> definitions)
+        {
+            return assembler.Composite(assembler.Assemble(blueprint, parameter), definitions);
         }
 
         public void Release(Entity entity)

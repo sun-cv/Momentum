@@ -37,6 +37,7 @@ namespace Game.Realm
             public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
             public ref Hitbox Hitbox(Entity entity)                         => ref Component.Reference<Hitbox>(entity);
             public ref Ability Ability(Entity entity)                       => ref Component.Reference<Ability>(entity);
+            public ref Payload Payload(Entity entity)                       => ref Component.Reference<Payload>(entity);
             public ref Cooldown Cooldown(Entity entity)                     => ref Component.Reference<Cooldown>(entity);
             public ref Cooldowns Cooldowns(Entity entity)                   => ref Component.Reference<Cooldowns>(entity);
             public ref CooldownTarget CooldownTarget(Entity entity)         => ref Component.Reference<CooldownTarget>(entity);
@@ -121,7 +122,8 @@ namespace Game.Realm
             public ref Pose Pose(Entity entity)                             => ref Component.Reference<Pose>(entity);
             public ref Form Form(Entity entity)                             => ref Component.Reference<Form>(entity);
             public ref Visual Visual(Entity entity)                         => ref Component.Reference<Visual>(entity);
-            public ref HurtBox HurtBox(Entity entity)                       => ref Component.Reference<HurtBox>(entity);
+            public ref Hurtbox Hurtbox(Entity entity)                       => ref Component.Reference<Hurtbox>(entity);
+            public ref Bodybox Bodybox(Entity entity)                       => ref Component.Reference<Bodybox>(entity);
             public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
             public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
             public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
@@ -154,6 +156,7 @@ namespace Game.Realm
         public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
         public Hitbox Hitbox(Entity entity)                                 => Component.View<Hitbox>(entity);
         public Ability Ability(Entity entity)                               => Component.View<Ability>(entity);
+        public Payload Payload(Entity entity)                               => Component.View<Payload>(entity);
         public Cooldown Cooldown(Entity entity)                             => Component.View<Cooldown>(entity);
         public Cooldowns Cooldowns(Entity entity)                           => Component.View<Cooldowns>(entity);
         public CooldownTarget CooldownTarget(Entity entity)                 => Component.View<CooldownTarget>(entity);
@@ -238,7 +241,8 @@ namespace Game.Realm
         public Pose Pose(Entity entity)                                     => Component.View<Pose>(entity);
         public Form Form(Entity entity)                                     => Component.View<Form>(entity);
         public Visual Visual(Entity entity)                                 => Component.View<Visual>(entity);
-        public HurtBox HurtBox(Entity entity)                               => Component.View<HurtBox>(entity);
+        public Hurtbox Hurtbox(Entity entity)                               => Component.View<Hurtbox>(entity);
+        public Bodybox Bodybox(Entity entity)                               => Component.View<Bodybox>(entity);
         public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
         public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
         public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);

@@ -1,0 +1,87 @@
+{
+    "Id":                           "SwordStrike",
+    "Ability":                      {},
+    "Aim":                          {},
+    "Activation":       
+    { 
+        "Capability":               "Primary", 
+        "From":                     "Buffer", 
+        "Kind":                     "Action" 
+    },
+    "Pose":             
+    { 
+        "State":                    "Fire",
+        "Sheet":                    "SwordStrike"
+    },
+    "Phases":
+    {
+        "Entry":
+        [
+            { 
+                "State":            "Fire",    
+                "Length":           60,  
+                "UntilRelease":     [] 
+            }
+        ]
+    },
+    "Controls":
+    {
+        "Entries":
+        [
+            { 
+                "Phase":            0, 
+                "After":            30, 
+                "Kind":             "Action", 
+                "Result":           "Cancel" 
+            }
+        ]
+    },
+    "Chains": 
+    { 
+        "Window": 20, 
+        "Abilities":                { "Primary": "TestCombo2" } 
+    },
+    "Payloads": 
+    {
+        "Entry":
+        {
+            "SwordStrike": 
+            {    
+                "Id":               "SwordStrikeDamage",
+                "Damage":           10,
+                "Afflictions":      
+                [
+                    {
+                        "Id":       "Burn", 
+                        "Burn":     {}, 
+                        "Effect":   {}, 
+                        "Damage":   5, 
+                        "Interval": 1, 
+                        "Duration": 8 
+                    },
+                    { 
+                        "Id":       "Stun",
+                        "Stun":     {},
+                        "Effect":   {},
+                        "Duration": 1.5f,
+                        "Includes": ["StunBlocks"] 
+                    }
+                ] 
+            }
+        }
+    },
+    "Hitboxes":
+    {
+        "Entry":
+        [
+            { 
+                "Phase":            0, 
+                "Tick":             0, 
+                "Duration":         30, 
+                "Definition":       "SwordStrikeHitbox", 
+                "Payloads":         ["SwordStrike"] 
+            }
+        ]
+    }
+
+}

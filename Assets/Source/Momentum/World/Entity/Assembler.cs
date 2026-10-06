@@ -10,7 +10,6 @@ using Physics   = Game.Common.Physics;
 using Collision = Game.Common.Collision;
 using Animation = Game.Common.Animation;
 using Pose      = Game.Common.Pose;
-using UnityEngine.Identifiers;
 
 
 namespace Game.Realm
@@ -33,6 +32,7 @@ namespace Game.Realm
                 (definition) => definition.Hitbox       is Hitbox,
                 (definition) => definition.Ability      is Ability,
                 (definition) => definition.Cooldown     is Cooldown,
+                (definition) => definition.Payload      is Payload,
                 (definition) => definition.Spawner      is Spawner, 
                 (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
@@ -48,41 +48,65 @@ namespace Game.Realm
 
             public Entity Assemble(Definition definition, Entity parent)
             {
-                RequireAlive(parent, definition);
+                RequireAlive(parent);
+                ValidateArchetype(definition);
 
                 var entity = Pool.Allocate();
 
                 ProcessParent(entity, parent);
                 Build(entity, definition);
-
                 return entity;
             }
 
             public Entity Assemble(Blueprint blueprint, ConstructionParameter parameter)
             {
-                RequireAlive(parameter.Parent, blueprint.Definition);
+                RequireAlive(parameter.Parent);
+                ValidateArchetype(blueprint.Definition);
 
-                var entity = Pool.Allocate();
+                var entity      = Pool.Allocate();
+                var instance    = UnityEngine.Object.Instantiate(blueprint.Prefab, parameter.Position, Quaternion.Euler(parameter.Rotation));
+                var definition  = blueprint.Definition;
 
                 ProcessParent(entity, parameter.Parent);
-                Build(entity, blueprint, parameter);
-
+                ProcessPrefab(entity, definition, instance);
+                Build(entity, definition);
                 return entity;
+            }
+
+            public Entity Composite(Entity existing, List<Definition> definitions)
+            {
+                ExcludeArchetype(definitions);
+
+                foreach(var definition in definitions)
+                {
+                    Build(existing, definition);
+                }
+
+                return existing; 
+            }
+
+            private void InitializeMeta(Entity entity, Definition definition)
+            {
+                if (!Component.Has<Meta>(entity))
+                {
+                    Component.Add<Meta>(entity, new() { Created = Watch.Tick.Game });
+                }
+
+                if (!Component.Has<Identity>(entity))
+                {
+                    if (IsArchetype(definition))
+                    {
+                        Component.Add<Identity>(entity, new() { Id = definition.Id }) ;
+                    }
+                }
             }
 
             private void Build(Entity entity, Definition definition)
             {
-                ProcessDefinition(entity, definition);
+                InitializeMeta(entity, definition);
+                GenerateComponents(entity, definition);
+                AssignInnateCapabilities(entity, definition);
                 ValidateEntity(entity, definition);
-            }
-
-            private void Build(Entity entity, Blueprint blueprint, ConstructionParameter parameter)
-            {
-                var instance = UnityEngine.Object.Instantiate(blueprint.Prefab, parameter.Position, Quaternion.Euler(parameter.Rotation));
-
-                ProcessDefinition(entity, blueprint.Definition);
-                ProcessPrefab(entity, blueprint.Definition, instance);
-                ValidateEntity(entity, blueprint.Definition);
             }
 
             public void Release(Entity entity)
@@ -116,17 +140,8 @@ namespace Game.Realm
                 Pool.Release(entity);
             }
 
-            private void ProcessDefinition(Entity entity, Definition definition)
-            {
-                GenerateComponents(entity, definition);
-                AssignInnateCapabilities(entity, definition);
-            }
-
             private void GenerateComponents(Entity entity, Definition definition)
             {
-
-                Component.Add<Meta>(entity, new() { Created = Watch.Tick.Game });
-                Component.Add<Identity>(entity, new() { Id  = definition.Id });
 
                 if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
                 if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);
@@ -240,9 +255,14 @@ namespace Game.Realm
                     }
                 }
 
-                if (definition.HurtBox is HurtBox && nodes.TryGetValue("Hurt", out var hurtNode))
+                if (definition.Hurtbox is Hurtbox && nodes.TryGetValue("Hurt", out var hurtNode))
                 {
-                    Component.Add<HurtBox>(entity, new() { Collider = hurtNode.GetComponent<Collider2D>() });
+                    Component.Add<Hurtbox>(entity, new() { Collider = hurtNode.GetComponent<Collider2D>() });
+                }
+
+                if (nodes.TryGetValue("Body", out var bodyNode))
+                {
+                    Component.Add<Bodybox>(entity, new() { Collider = bodyNode.GetComponent<Collider2D>() });
                 }
             }
 
@@ -308,13 +328,25 @@ namespace Game.Realm
                 Pool.Guard(entity);
             }
 
-            private void RequireAlive(Entity? parent, Definition definition)
+            private void RequireAlive(Entity? parent)
             {
                 if (parent is Entity entity)
                     Pool.Guard(entity);
             }
 
-            private bool ValidateEntity(Entity entity, Definition definition)
+            private bool IsArchetype(Definition definition)
+            {
+                foreach (var archetype in archetype)
+                {
+                    if (archetype(definition)) 
+                        return true;
+                }
+
+                return false;
+            }
+                
+
+            private void ValidateArchetype(Definition definition)
             {
                 int kinds = 0;
 
@@ -325,7 +357,37 @@ namespace Game.Realm
 
                 if (kinds != 1)
                     throw new Exception($"[Assembler.Validation] Entity {definition.Id} has {kinds} archetypes, expected 1");
+            }
 
+            private void ExcludeArchetype(List<Definition> definitions)
+            {
+                int kinds = 0;
+
+                foreach (var definition in definitions)
+                {
+                    foreach (var archetype in archetype)
+                    {
+                        if (archetype(definition)) kinds++;
+                    }
+                }
+
+                if (kinds > 0)
+                    throw new Exception($"[Assembler.Validation] Composite Entity {string.Join(", ", definitions.Select(definition => definition.Id))} has {kinds} archetypes, expected 1");
+            }
+
+
+            private void ValidateEntity(Entity entity, Definition definition)
+            {
+                if (IsArchetype(definition))
+                {
+                    ValidateArchetypeComponents(entity, definition);
+                }
+                
+                ValidateComponents(entity, definition);
+            }
+
+            private void ValidateArchetypeComponents(Entity entity, Definition definition)
+            {
                 foreach (var (matches, rules) in ArchetypeComponentRequirement)
                 {
                     if (!matches(definition))
@@ -337,7 +399,10 @@ namespace Game.Realm
                             throw new Exception($"[Assembler.Validation.Archetype] {definition.Id}: {message}");
                     }
                 }
+            }
 
+            private void ValidateComponents(Entity entity, Definition definition)
+            {
                 foreach (var (matches, rules) in ComponentRequirement)
                 {
                     if (!matches(Component, entity))
@@ -349,7 +414,6 @@ namespace Game.Realm
                             throw new Exception($"[Assembler.Validation.Component] {definition.Id}: {message}");
                     }
                 }
-                return true;
             }
 
             private static readonly Dictionary<Func<Definition, bool>, List<(Func<Components, Entity, Definition, bool> Check, string Message)>> ArchetypeComponentRequirement = new()

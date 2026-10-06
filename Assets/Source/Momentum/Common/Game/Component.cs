@@ -55,6 +55,7 @@ namespace Game.Common
     public struct Hitbox            : IComponent {}
     public struct Ability           : IComponent {}
     public struct Cooldown          : IComponent {}
+    public struct Payload           : IComponent {}
 
     public struct Faction           : IComponent {}
     public struct Allegiance        : IComponent {}
@@ -69,9 +70,12 @@ namespace Game.Common
     public struct Stunned           : IComponent {}
 
     public struct Cold              : IComponent {}
+    public struct Frost             : IComponent {}
     public struct Freezing          : IComponent {}
     public struct Hot               : IComponent {}
+    public struct Burn              : IComponent {}
     public struct Burning           : IComponent {}
+    public struct Shock             : IComponent {}
     public struct Shocked           : IComponent {}
     public struct Electrified       : IComponent {}
 
@@ -102,7 +106,7 @@ namespace Game.Common
 
     public struct Hitboxes          : IComponent
     {
-        public List<HitboxEntry> Entries                    { get; set; }
+        public List<HitboxEntry> Entry                      { get; set; }
     }
     
     public struct HitboxEntry
@@ -111,6 +115,7 @@ namespace Game.Common
         public int Phase;
         public int Duration;
         public string Definition;
+        public List<string> Payloads;
     }
 
     public struct Struck            : IComponent
@@ -154,7 +159,7 @@ namespace Game.Common
     {
         public enum Result { Deny, Cancel, Coexist }
 
-        public IReadOnlyList<ControlEntry> Entries   { get; set; }
+        public IReadOnlyList<ControlEntry> Entry            { get; set; }
     }
 
     public struct ControlEntry
@@ -167,7 +172,7 @@ namespace Game.Common
 
     public struct Sustain           : IComponent
     {
-        public IReadOnlyList<SustainEntry> Entries          { get; set; }
+        public IReadOnlyList<SustainEntry> Entry          { get; set; }
     }
 
     public struct SustainEntry
@@ -184,7 +189,7 @@ namespace Game.Common
 
     public struct Cooldowns         : IComponent 
     {
-        public IReadOnlyList<CooldownEntry> Entries         { get; set; }
+        public IReadOnlyList<CooldownEntry> Entry         { get; set; }
     }
 
     public struct CooldownEntry
@@ -309,9 +314,25 @@ namespace Game.Common
         public int Start                                    { get; set; }
     }
 
+    public struct Payloads          : IComponent
+    {
+        public Dictionary<string, Definition> Entry       { get; set; }
+    }
+
     public struct Damage            : IComponent
     {
         public int Amount                                   { get; set; }
+    }
+
+    public struct Interval          : IComponent
+    {
+        public int Length                                   { get; set; }
+        public int Elapsed                                  { get; set; }
+    }
+
+    public struct Affliction        : IComponent 
+    {
+        public List<Definition> Entry                     { get; set; }
     }
     
     public struct TimeScale         : IComponent 
@@ -364,11 +385,16 @@ namespace Game.Common
         public string Layer                                 { get; set; }
     }
 
-    public struct HurtBox           : IComponent
+    public struct Hurtbox           : IComponent
     {
         public Collider2D Collider                          { get; set; }
     }
     
+    public struct Bodybox           : IComponent
+    {
+        public Collider2D Collider                          { get; set; }
+    }
+
     public struct CameraTarget      : IComponent {}
 
     public struct SpeedModifier     : IComponent
