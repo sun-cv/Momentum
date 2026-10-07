@@ -25,7 +25,7 @@ namespace Game.Common
         public Effect? Effect                                   { get; init; }
         public Hitbox? Hitbox                                   { get; init; }
         public Ability? Ability                                 { get; init; }
-        public Payload? Payload                                 { get; init; }
+        public Payloads? Payloads                               { get; init; }
         public Cooldown? Cooldown                               { get; init; }
         public Cooldowns? Cooldowns                             { get; init; }
         public CooldownTarget? CooldownTarget                   { get; init; }
@@ -34,6 +34,7 @@ namespace Game.Common
         public Projectile? Projectile                           { get; init; }
 
         public Anchor? Anchor                                   { get; init; }
+        public Bound? Bound                                     { get; init; }
 
         public Duration? Duration                               { get; init; }
 
@@ -46,18 +47,29 @@ namespace Game.Common
         public Container? Container                             { get; init; }
         public Interactable? Interactable                       { get; init; }
 
+        public CC? CC                                           { get; init; }
+        public DOT? DOT                                         { get; init; }
+        public Buff? Buff                                       { get; init; }
+        public Debuff? Debuff                                   { get; init; }
+
         public Slowed? Slowed                                   { get; init; }
 
         public Stunned? Stunned                                 { get; init; }
         public Cold? Cold                                       { get; init; }
+        public Frost? Frost                                     { get; init; }
         public Freezing? Freezing                               { get; init; }
         public Hot? Hot                                         { get; init; }
+        public Burn? Burn                                       { get; init; }
         public Burning? Burning                                 { get; init; }
+        public Shock? Shock                                     { get; init; }
         public Shocked? Shocked                                 { get; init; }
         public Electrified? Electrified                         { get; init; }
 
         public Explosive? Explosive                             { get; init; }
         public Destructible? Destructible                       { get; init; }
+
+        public Unstoppable? Unstoppable                         { get; init; }
+        public Anchored? Anchored                               { get; init; }
 
         public AiController? AiController                       { get; init; }
         public PlayerController? PlayerController               { get; init; }
@@ -66,6 +78,7 @@ namespace Game.Common
         public Blocks? Blocks                                   { get; init; }
 
         public Commands? Commands                               { get; init; }
+        public Effects? Effects                                 { get; init; }
 
         public Hitboxes? Hitboxes                               { get; init; }
         public Loadout? Loadout                                 { get; init; }
@@ -95,12 +108,19 @@ namespace Game.Common
 
         public SpeedModifier? SpeedModifier                     { get; init; }
         public AttackModifier? AttackModifier                   { get; init; }
+        public TimeModifier? TimeModifier                       { get; init; }
 
         public Aim? Aim                                         { get; init; }
+        public Track? Track                                     { get; init; }
 
         public Health? Health                                   { get; init; }
         public Armor? Armor                                     { get; init; }
         public Energy? Energy                                   { get; init; }
+
+        public Parry? Parry                                     { get; init; }
+        public Damage? Damage                                   { get; init; }
+        public Interval? Interval                               { get; init; }
+        public Applies? Applies                                 { get; init; }
 
         public TimeScale? TimeScale                             { get; init; }
         

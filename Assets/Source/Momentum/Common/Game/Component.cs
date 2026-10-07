@@ -34,6 +34,11 @@ namespace Game.Common
         public Vector2 Offset                               { get; set; }
     }
 
+    public struct Bound             : IComponent 
+    {
+        public Entity Entity                                { get; set; }
+    }
+
     public struct Source            : IComponent
     {
         public Entity Entity                                { get; set; }
@@ -55,7 +60,6 @@ namespace Game.Common
     public struct Hitbox            : IComponent {}
     public struct Ability           : IComponent {}
     public struct Cooldown          : IComponent {}
-    public struct Payload           : IComponent {}
 
     public struct Faction           : IComponent {}
     public struct Allegiance        : IComponent {}
@@ -65,6 +69,11 @@ namespace Game.Common
     public struct Openable          : IComponent {}
     public struct Container         : IComponent {}
     public struct Interactable      : IComponent {}
+
+    public struct CC                : IComponent {}
+    public struct DOT               : IComponent {}
+    public struct Buff              : IComponent {}
+    public struct Debuff            : IComponent {}
 
     public struct Slowed            : IComponent {}
     public struct Stunned           : IComponent {}
@@ -104,6 +113,18 @@ namespace Game.Common
         public Dictionary<Capability, Command> Buffer       { get; set; }
     }
 
+    public struct Effects           : IComponent 
+    {
+        public List<EffectEntry> Entry                      { get; set; }
+    }
+
+    public struct EffectEntry
+    {
+        public int Tick;
+        public string State;
+        public string Until;
+        public List<Definition> Applies;
+    }
     public struct Hitboxes          : IComponent
     {
         public List<HitboxEntry> Entry                      { get; set; }
@@ -112,9 +133,9 @@ namespace Game.Common
     public struct HitboxEntry
     {
         public int Tick;
-        public int Phase;
         public int Duration;
-        public string Definition;
+        public string State;
+        public string Prefab;
         public List<string> Payloads;
     }
 
@@ -165,7 +186,7 @@ namespace Game.Common
     public struct ControlEntry
     {
         public int After;
-        public int Phase;
+        public string State;
         public AbilityTag Kind;
         public Controls.Result Result;
     }
@@ -178,7 +199,7 @@ namespace Game.Common
     public struct SustainEntry
     {
         public Capability Capability                        { get; set; }
-        public int UntilPhase                               { get; set; }
+        public string Until                                    { get; set; }
     }
 
     public struct Chains            : IComponent
@@ -288,7 +309,7 @@ namespace Game.Common
 
     public struct Track             : IComponent            
     {
-        public int UntilPhase                               { get; set; }
+        public string Until                                 { get; set; }
     }
 
     public struct Health            : IComponent
@@ -309,10 +330,7 @@ namespace Game.Common
         public int Maximum                                  { get; set; }
     }
 
-    public struct Parry             : IComponent
-    {
-        public int Start                                    { get; set; }
-    }
+    public struct Parry             : IComponent {}
 
     public struct Payloads          : IComponent
     {
@@ -330,7 +348,7 @@ namespace Game.Common
         public int Elapsed                                  { get; set; }
     }
 
-    public struct Affliction        : IComponent 
+    public struct Applies           : IComponent 
     {
         public List<Definition> Entry                     { get; set; }
     }

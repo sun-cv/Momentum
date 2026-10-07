@@ -20,7 +20,7 @@ namespace Game.Service
 
         private readonly List<Entity>     cancel    = new();
         private readonly List<Entity>     release   = new();
-        private readonly List<Entity>     windows   = new();
+        private readonly List<Entity>     chains    = new();
         private readonly List<Capability> keys      = new();
         private readonly List<Capability> reserved  = new();
 
@@ -78,48 +78,12 @@ namespace Game.Service
         private void Update(Entity ability)
         {
             ProcessAim(ability);
+            ProcessEffects(ability);
             ProcessHitboxes(ability);
             ProcessCooldowns(ability);
-            ProcessPoseState(ability);
+            ProcessAnimationState(ability);
         }
 
-        private void ProcessAim(Entity ability)
-        {
-            if (!World.Entity.Has<Aim>(ability))
-                return;
-
-            if (!World.Entity.Has<Track>(ability))
-                return;
-
-            if (World.Entity.Phase(ability).Index >= World.Entity.Track(ability).UntilPhase)
-                return;
-
-            World.Entity.Modify.Aim(ability) = World.Entity.Aim(World.Entity.Parent(ability).Entity);
-        }
-
-        private void ProcessHitboxes(Entity ability)
-        {
-            if (!World.Entity.Has<Hitboxes>(ability))
-                return;
-
-            foreach (var entry in World.Entity.Hitboxes(ability).Entry)
-            {
-                if (World.Entity.Phase(ability).Index != entry.Phase)
-                    continue;
-
-                if (World.Entity.Phase(ability).Elapsed != entry.Tick)
-                    continue;
-
-                CreateHitbox message = new()
-                {
-                    Parent      = ability,
-                    Duration    = entry.Duration,
-                    Definition  = entry.Definition,
-                };
-
-                Event.Send<CreateHitbox>(message);   
-            }
-        }
 
         private void AdvancePhase(Entity ability)
         {
@@ -134,19 +98,148 @@ namespace Game.Service
 
         private void Deactivate(Entity ability)
         {
-            if (World.Entity.Has<Chains>(ability) && World.Entity.Chains(ability).Window > 0)
-            {
-                windows.Add(ability);
-                return;
-            }
-            
+            ProcessChainWindow(ability);
+
             release.Add(ability);
         }
+
+        private void ProcessChainWindow(Entity ability)
+        {
+            if (World.Entity.Has<Chains>(ability) && World.Entity.Chains(ability).Window > 0)
+            {
+                chains.Add(ability);
+                return;
+            }
+        }
+
+        private void ProcessAim(Entity ability)
+        {
+            if (!World.Entity.Has<Aim>(ability))
+                return;
+
+            if (!World.Entity.Has<Track>(ability))
+                return;
+
+            if (World.Entity.Phase(ability).Index >= StateIndex(ability, World.Entity.Track(ability).Until))
+                return;
+
+            World.Entity.Modify.Aim(ability) = World.Entity.Aim(World.Entity.Parent(ability).Entity);
+        }
+
+        private void ProcessHitboxes(Entity ability)
+        {
+            if (!World.Entity.Has<Hitboxes>(ability))
+                return;
+
+            foreach (var entry in World.Entity.Hitboxes(ability).Entry)
+            {
+                if (!InState(ability, entry.State))
+                    continue;
+
+                if (!AtTick(ability, entry.Tick))
+                    continue;
+
+                List<Definition> payloads = new();
+
+                if (World.Entity.Has<Payloads>(ability))
+                {
+                    foreach(var payload in entry.Payloads)  
+                    {
+                        payloads.Add(World.Entity.Payloads(ability).Entry[payload]);
+                    };
+                }
+
+                CreateHitbox message = new()
+                {
+                    Parent      = ability,
+                    Duration    = entry.Duration,
+                    Prefab      = entry.Prefab,
+                    Payloads    = payloads
+                };
+
+                Event.Send<CreateHitbox>(message);   
+            }
+        }
+
+        private void ProcessEffects(Entity ability)
+        {
+            if (!World.Entity.Has<Effects>(ability))
+                return;
+
+            foreach (var entry in World.Entity.Effects(ability).Entry)
+            {
+                if (InState(ability, entry.Until) && AtTick(ability, 0))
+                {
+                    ResolveBoundEffects(ability, entry);
+                }
+
+                if (!InState(ability, entry.State))
+                    continue;
+
+                if (!AtTick(ability, entry.Tick))
+                    continue;
+
+                foreach(var effect in entry.Applies)
+                {
+                    var instance= World.Entity.Create(effect, World.Entity.Parent(ability).Entity);
+                   
+                    if (effect.Bound is Bound)
+                    {
+                        World.Entity.Component.Add<Bound>(instance, new() { Entity = ability });
+                    }
+                }
+            }
+        }
+
+        private void ResolveBoundEffects(Entity ability, EffectEntry entry)
+        {
+            foreach (var bound in World.Query(Mask<Components, Bound>.Key))
+            {
+                if (World.Entity.Bound(bound).Entity != ability)
+                    continue;
+
+                var id = World.Entity.Identity(bound).Id;
+
+                if (entry.Applies.Any(effect => effect.Id == id))
+                {
+                    release.Add(bound);
+                }
+            }
+        }
+
+        private void ProcessCooldowns(Entity ability)
+        {
+            if (!World.Entity.Has<Cooldowns>(ability))
+                return;
+
+            if (!AtTick(ability, 0))
+                return;
+
+            foreach(var entry in World.Entity.Cooldowns(ability).Entry)
+            {
+                if (World.Entity.Phase(ability).Index != entry.Phase)
+                    continue;
+
+                CreateCooldown(World.Entity.Parent(ability).Entity, entry);
+            }
+        }
+
+        private void ProcessAnimationState(Entity ability)
+        {
+            if (!World.Entity.Has<Pose>(ability))
+                return;
+
+            if (!AtTick(ability, 0))
+                return;
+
+            World.Entity.Modify.Pose(ability).State = World.Entity.Phases(ability).Entry[World.Entity.Phase(ability).Index].State;;
+        }
+
 
         // Process
         private void ProcessAbilities()
         {
-            OpenWindows();
+            OpenChainWindows();
 
             foreach (var entity in World.Query(Mask<Components, Commands, Loadout>.Key))
             {
@@ -156,9 +249,9 @@ namespace Game.Service
             }
         }
     
-        private void OpenWindows()
+        private void OpenChainWindows()
         {
-            foreach (var ability in windows)
+            foreach (var ability in chains)
             {
                 World.Entity.Component.Remove<Phase>(ability);
 
@@ -171,7 +264,7 @@ namespace Game.Service
                 World.Entity.Component.Add(ability, new ControlWindow());
             }
 
-            windows.Clear();
+            chains.Clear();
         }        
 
         private void ClearReserved()
@@ -198,7 +291,9 @@ namespace Game.Service
                     continue;
 
                 if (World.Entity.Has<ControlWindow>(chained))
+                {
                     release.Add(chained);
+                }
             }
         }
 
@@ -218,7 +313,6 @@ namespace Game.Service
                     return true;
                 }
             }
-
 
             id      = null;
             chained = default;
@@ -281,34 +375,6 @@ namespace Game.Service
             Advance(ability);
         }
 
-        private void ProcessCooldowns(Entity ability)
-        {
-            if (!World.Entity.Has<Cooldowns>(ability))
-                return;
-
-            if (World.Entity.Phase(ability).Elapsed != 0)
-                return;
-
-            foreach(var entry in World.Entity.Cooldowns(ability).Entry)
-            {
-                if (World.Entity.Phase(ability).Index != entry.Phase)
-                    continue;
-
-                CreateCooldown(World.Entity.Parent(ability).Entity, entry);
-            }
-        }
-
-        private void ProcessPoseState(Entity entity)
-        {
-            if (!World.Entity.Has<Pose>(entity))
-                return;
-
-            if (World.Entity.Phase(entity).Elapsed != 0)
-                return;
-
-            World.Entity.Modify.Pose(entity).State = World.Entity.Phases(entity).Entry[World.Entity.Phase(entity).Index].State;;
-        }
-
         private void CreateCooldown(Entity parent, CooldownEntry entry)
         {
             var cooldown = new Definition()
@@ -335,9 +401,9 @@ namespace Game.Service
         // Release
         private void ReleaseAbilities()
         {
-            foreach (var ability in release)
+            foreach (var entity in release)
             {
-                World.Entity.Release(ability);
+                World.Entity.Release(entity);
             }
 
             release.Clear();
@@ -354,7 +420,7 @@ namespace Game.Service
 
             foreach (var entry in World.Entity.Sustain(ability).Entry)
             {
-                if (index < entry.UntilPhase && !active.ContainsKey(entry.Capability))
+                if (index < StateIndex(ability, entry.Until) && !active.ContainsKey(entry.Capability))
                     return true;
             }
 
@@ -464,19 +530,39 @@ namespace Game.Service
             return true;
         }
 
+        private bool InState(Entity ability, string state)
+        {
+            return StateIndex(ability, state) == World.Entity.Phase(ability).Index;
+        }
+
+        private bool AtTick(Entity ability, int tick)
+        {
+            return World.Entity.Phase(ability).Elapsed == tick;
+        }
+
         private Controls.Result ControlResult(Entity ability, AbilityTag kind)
         {
             var phase = World.Entity.Phase(ability);
 
             foreach (var entry in World.Entity.Controls(ability).Entry)
             {
-                if (entry.Kind != kind || entry.Phase != phase.Index || phase.Elapsed < entry.After)
+                if (entry.Kind != kind || StateIndex(ability, entry.State) != phase.Index || phase.Elapsed < entry.After)
                     continue;
 
                 return entry.Result;
             }
 
             return kind == AbilityTag.Instant ? Controls.Result.Coexist : Controls.Result.Deny;
+        }
+
+        private int StateIndex(Entity ability, string state)
+        {
+            var index = World.Entity.Phases(ability).Entry.FindIndex(entry => entry.State == state);
+
+            if (index < 0)
+                throw new Exception($"[AbilitySystem] {World.Entity.Identity(ability).Id} has no state '{state}'");
+
+            return index;
         }
 
         static AbilitySystem() => Log<AbilitySystem>.Level(Diagnostic.Log.Level.Debug);

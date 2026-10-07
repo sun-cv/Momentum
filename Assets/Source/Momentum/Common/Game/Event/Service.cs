@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 
 
 
@@ -19,7 +20,8 @@ namespace Game.Common.Events
     {
         public Entity Parent                    { get; init; }
         public int Duration                     { get; init; }
-        public string Definition                { get; init; }
+        public string Prefab                    { get; init; }
+        public List<Definition> Payloads        { get; init; }
     }
 
     public readonly struct HitboxStruck     : IEvent

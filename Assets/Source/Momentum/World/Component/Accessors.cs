@@ -24,6 +24,7 @@ namespace Game.Realm
             public ref Parent Parent(Entity entity)                         => ref Component.Reference<Parent>(entity);
             public ref Child Child(Entity entity)                           => ref Component.Reference<Child>(entity);
             public ref Anchor Anchor(Entity entity)                         => ref Component.Reference<Anchor>(entity);
+            public ref Bound Bound(Entity entity)                           => ref Component.Reference<Bound>(entity);
             public ref Source Source(Entity entity)                         => ref Component.Reference<Source>(entity);
 
             public ref Duration Duration(Entity entity)                     => ref Component.Reference<Duration>(entity);
@@ -37,7 +38,7 @@ namespace Game.Realm
             public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
             public ref Hitbox Hitbox(Entity entity)                         => ref Component.Reference<Hitbox>(entity);
             public ref Ability Ability(Entity entity)                       => ref Component.Reference<Ability>(entity);
-            public ref Payload Payload(Entity entity)                       => ref Component.Reference<Payload>(entity);
+            public ref Payloads Payloads(Entity entity)                     => ref Component.Reference<Payloads>(entity);
             public ref Cooldown Cooldown(Entity entity)                     => ref Component.Reference<Cooldown>(entity);
             public ref Cooldowns Cooldowns(Entity entity)                   => ref Component.Reference<Cooldowns>(entity);
             public ref CooldownTarget CooldownTarget(Entity entity)         => ref Component.Reference<CooldownTarget>(entity);
@@ -51,12 +52,20 @@ namespace Game.Realm
             public ref Container Container(Entity entity)                   => ref Component.Reference<Container>(entity);
             public ref Interactable Interactable(Entity entity)             => ref Component.Reference<Interactable>(entity);
 
+            public ref CC CC(Entity entity)                                 => ref Component.Reference<CC>(entity);
+            public ref DOT DOT(Entity entity)                               => ref Component.Reference<DOT>(entity);
+            public ref Buff Buff(Entity entity)                             => ref Component.Reference<Buff>(entity);
+            public ref Debuff Debuff(Entity entity)                         => ref Component.Reference<Debuff>(entity);
+
             public ref Slowed Slowed(Entity entity)                         => ref Component.Reference<Slowed>(entity);
             public ref Stunned Stunned(Entity entity)                       => ref Component.Reference<Stunned>(entity);
             public ref Cold Cold(Entity entity)                             => ref Component.Reference<Cold>(entity);
+            public ref Frost Frost(Entity entity)                           => ref Component.Reference<Frost>(entity);
             public ref Freezing Freezing(Entity entity)                     => ref Component.Reference<Freezing>(entity);
             public ref Hot Hot(Entity entity)                               => ref Component.Reference<Hot>(entity);
+            public ref Burn Burn(Entity entity)                             => ref Component.Reference<Burn>(entity);
             public ref Burning Burning(Entity entity)                       => ref Component.Reference<Burning>(entity);
+            public ref Shock Shock(Entity entity)                           => ref Component.Reference<Shock>(entity);
             public ref Shocked Shocked(Entity entity)                       => ref Component.Reference<Shocked>(entity);
             public ref Electrified Electrified(Entity entity)               => ref Component.Reference<Electrified>(entity);
 
@@ -73,6 +82,7 @@ namespace Game.Realm
             public ref Blocks Blocks(Entity entity)                         => ref Component.Reference<Blocks>(entity);
 
             public ref Commands Command(Entity entity)                      => ref Component.Reference<Commands>(entity);
+            public ref Effects Effects(Entity entity)                       => ref Component.Reference<Effects>(entity);
 
             public ref Hitboxes Hitboxes(Entity entity)                     => ref Component.Reference<Hitboxes>(entity);
             public ref Struck Struck(Entity entity)                         => ref Component.Reference<Struck>(entity);
@@ -83,6 +93,8 @@ namespace Game.Realm
             public ref Controls Controls(Entity entity)                     => ref Component.Reference<Controls>(entity);
             public ref Sustain Sustain(Entity entity)                       => ref Component.Reference<Sustain>(entity);
             public ref Chains Chains(Entity entity)                         => ref Component.Reference<Chains>(entity);
+            public ref ControlWindow ControlWindow(Entity entity)           => ref Component.Reference<ControlWindow>(entity);
+            public ref Lingering Lingering(Entity entity)                   => ref Component.Reference<Lingering>(entity);
             public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
             public ref Inventory Inventory(Entity entity)                   => ref Component.Reference<Inventory>(entity);
 
@@ -116,6 +128,8 @@ namespace Game.Realm
 
             public ref Parry Parry(Entity entity)                           => ref Component.Reference<Parry>(entity);
             public ref Damage Damage(Entity entity)                         => ref Component.Reference<Damage>(entity);
+            public ref Interval Interval(Entity entity)                     => ref Component.Reference<Interval>(entity);
+            public ref Applies Applies(Entity entity)                       => ref Component.Reference<Applies>(entity);
 
             public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
 
@@ -143,6 +157,7 @@ namespace Game.Realm
         public Parent Parent(Entity entity)                                 => Component.View<Parent>(entity);
         public Child Child(Entity entity)                                   => Component.View<Child>(entity);
         public Anchor Anchor(Entity entity)                                 => Component.View<Anchor>(entity);
+        public Bound Bound(Entity entity)                                   => Component.View<Bound>(entity);
         public Source Source(Entity entity)                                 => Component.View<Source>(entity);
 
         public Duration Duration(Entity entity)                             => Component.View<Duration>(entity);
@@ -156,7 +171,7 @@ namespace Game.Realm
         public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
         public Hitbox Hitbox(Entity entity)                                 => Component.View<Hitbox>(entity);
         public Ability Ability(Entity entity)                               => Component.View<Ability>(entity);
-        public Payload Payload(Entity entity)                               => Component.View<Payload>(entity);
+        public Payloads Payloads(Entity entity)                             => Component.View<Payloads>(entity);
         public Cooldown Cooldown(Entity entity)                             => Component.View<Cooldown>(entity);
         public Cooldowns Cooldowns(Entity entity)                           => Component.View<Cooldowns>(entity);
         public CooldownTarget CooldownTarget(Entity entity)                 => Component.View<CooldownTarget>(entity);
@@ -170,12 +185,21 @@ namespace Game.Realm
         public Container Container(Entity entity)                           => Component.View<Container>(entity);
         public Interactable Interactable(Entity entity)                     => Component.View<Interactable>(entity);
 
+        public CC CC(Entity entity)                                         => Component.View<CC>(entity);
+        public DOT DOT(Entity entity)                                       => Component.View<DOT>(entity);
+        public Buff Buff(Entity entity)                                     => Component.View<Buff>(entity);
+        public Debuff Debuff(Entity entity)                                 => Component.View<Debuff>(entity);
+
         public Slowed Slowed(Entity entity)                                 => Component.View<Slowed>(entity);
         public Stunned Stunned(Entity entity)                               => Component.View<Stunned>(entity);
         public Cold Cold(Entity entity)                                     => Component.View<Cold>(entity);
+        public Frost Frost(Entity entity)                                   => Component.View<Frost>(entity);
         public Freezing Freezing(Entity entity)                             => Component.View<Freezing>(entity);
+
         public Hot Hot(Entity entity)                                       => Component.View<Hot>(entity);
+        public Burn Burn(Entity entity)                                     => Component.View<Burn>(entity);
         public Burning Burning(Entity entity)                               => Component.View<Burning>(entity);
+        public Shock Shock(Entity entity)                                   => Component.View<Shock>(entity);
         public Shocked Shocked(Entity entity)                               => Component.View<Shocked>(entity);
         public Electrified Electrified(Entity entity)                       => Component.View<Electrified>(entity);
 
@@ -192,6 +216,7 @@ namespace Game.Realm
         public Blocks Blocks(Entity entity)                                 => Component.View<Blocks>(entity);
 
         public Commands Command(Entity entity)                              => Component.View<Commands>(entity);
+        public Effects Effects(Entity entity)                               => Component.View<Effects>(entity);
 
         public Hitboxes Hitboxes(Entity entity)                             => Component.View<Hitboxes>(entity);
         public Struck Struck(Entity entity)                                 => Component.View<Struck>(entity);
@@ -202,6 +227,8 @@ namespace Game.Realm
         public Controls Controls(Entity entity)                             => Component.View<Controls>(entity);
         public Sustain Sustain(Entity entity)                               => Component.View<Sustain>(entity);
         public Chains Chains(Entity entity)                                 => Component.View<Chains>(entity);
+        public ControlWindow ControlWindow(Entity entity)                   => Component.View<ControlWindow>(entity);
+        public Lingering Lingering(Entity entity)                           => Component.View<Lingering>(entity);
         public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);
         public Inventory Inventory(Entity entity)                           => Component.View<Inventory>(entity);
 
@@ -235,6 +262,8 @@ namespace Game.Realm
 
         public Parry Parry(Entity entity)                                   => Component.View<Parry>(entity);
         public Damage Damage(Entity entity)                                 => Component.View<Damage>(entity);
+        public Interval Interval(Entity entity)                             => Component.View<Interval>(entity);
+        public Applies Applies(Entity entity)                               => Component.View<Applies>(entity);
 
         public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);
 

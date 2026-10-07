@@ -49,7 +49,7 @@ namespace Game.Service
 
         private void CreateHitbox(CreateHitbox request)
         {
-            var blueprint   = Asset.Get(request.Definition);
+            var blueprint   = Asset.Get(request.Prefab);
             var source      = World.Entity.Root(request.Parent);
             var rotation    = Rotation(request.Parent);
             var offset      = blueprint.Definition.Anchor is Anchor anchor ? rotation * anchor.Offset : Vector3.zero;

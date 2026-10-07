@@ -10,6 +10,7 @@ using Physics   = Game.Common.Physics;
 using Collision = Game.Common.Collision;
 using Animation = Game.Common.Animation;
 using Pose      = Game.Common.Pose;
+using UnityEditor;
 
 
 namespace Game.Realm
@@ -32,7 +33,6 @@ namespace Game.Realm
                 (definition) => definition.Hitbox       is Hitbox,
                 (definition) => definition.Ability      is Ability,
                 (definition) => definition.Cooldown     is Cooldown,
-                (definition) => definition.Payload      is Payload,
                 (definition) => definition.Spawner      is Spawner, 
                 (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
@@ -162,11 +162,21 @@ namespace Game.Realm
                 if (definition.Faction is Faction faction)              Component.Add<Faction>(entity, faction);
                 if (definition.Allegiance is Allegiance allegiance)     Component.Add<Allegiance>(entity, allegiance);
                 if (definition.Temperament is Temperament temperament)  Component.Add<Temperament>(entity, temperament);
+                if (definition.CC is CC)                                Component.Add<CC>(entity, new());
+                if (definition.DOT is DOT)                              Component.Add<DOT>(entity, new());
+                if (definition.Buff is Buff)                            Component.Add<Buff>(entity, new());
+                if (definition.Debuff is Debuff)                        Component.Add<Debuff>(entity, new());
+                if (definition.Frost is Frost)                          Component.Add<Frost>(entity, new());
+                if (definition.Burn is Burn)                            Component.Add<Burn>(entity, new());
+                if (definition.Shock is Shock)                          Component.Add<Shock>(entity, new());
+                if (definition.Unstoppable is Unstoppable)              Component.Add<Unstoppable>(entity, new());
+                if (definition.Anchored is Anchored)                    Component.Add<Anchored>(entity, new());
                 if (definition.Movement is Movement movement)           Component.Add<Movement>(entity, movement);
                 if (definition.Physics is Physics physics)              Component.Add<Physics>(entity, physics);
                 if (definition.Force is Force)                          Component.Add<Force>(entity, new());
                 if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
                 if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
+                if (definition.Effects is Effects effects)              Component.Add<Effects>(entity, effects);
                 if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, hitboxes);
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
                 if (definition.Activation is Activation activation)     Component.Add<Activation>(entity, activation);
@@ -177,12 +187,19 @@ namespace Game.Realm
                 if (definition.Inventory is Inventory inventory)        Component.Add<Inventory>(entity, inventory);
                 if (definition.Target is Target)                        Component.Add<Target>(entity, new());
                 if (definition.Aim is Aim)                              Component.Add<Aim>(entity, new());
+                if (definition.Track is Track track)                    Component.Add<Track>(entity, track);
                 if (definition.Health is Health health)                 Component.Add<Health>(entity, health);
                 if (definition.Armor is Armor armor)                    Component.Add<Armor>(entity, armor);
                 if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
+                if (definition.Parry is Parry)                          Component.Add<Parry>(entity, new());
+                if (definition.Payloads is Payloads payloads)           Component.Add<Payloads>(entity, payloads);
+                if (definition.Damage is Damage damage)                 Component.Add<Damage>(entity, damage);
+                if (definition.Interval is Interval interval)           Component.Add<Interval>(entity, interval);
+                if (definition.Applies is Applies applies)              Component.Add<Applies>(entity, applies);
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
                 if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
+                if (definition.TimeModifier is TimeModifier modifier)   Component.Add<TimeModifier>(entity, modifier);
 
                 if (definition.Ability is Ability) 
                 {
@@ -372,7 +389,7 @@ namespace Game.Realm
                 }
 
                 if (kinds > 0)
-                    throw new Exception($"[Assembler.Validation] Composite Entity {string.Join(", ", definitions.Select(definition => definition.Id))} has {kinds} archetypes, expected 1");
+                    throw new Exception($"[Assembler.Validation] Composite Entity {string.Join(", ", definitions.Select(definition => definition.Id))} has {kinds} archetypes, expected 0");
             }
 
 
@@ -422,7 +439,6 @@ namespace Game.Realm
                     definition => definition.Effect is Effect, new()
                     {
                         ((Component, entity, definition) => Component.Has<Parent>(entity),      "Effect requires Parent"),
-                        ((Component, entity, definition) => Component.Has<Blocks>(entity),      "Effect requires Blocks"),
                         ((Component, entity, definition) => definition.Prefab is null,          "Effect must not name a prefab"),
                     }
                 },
@@ -469,6 +485,22 @@ namespace Game.Realm
                     (Component, entity) => Component.Has<Track>(entity), new()
                     {
                         ((Component, entity) => Component.Has<Aim>(entity),                     "Tracking requires Aim"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Hitboxes>(entity), new()
+                    {
+                        ((Component, entity) => 
+                         {
+                            return Component.View<Hitboxes>(entity).Entry.All(entry => 
+                            {
+                                return entry.Payloads is null || entry.Payloads.All(key =>
+                                {
+                                    return Component.Has<Payloads>(entity) && Component.View<Payloads>(entity).Entry.ContainsKey(key);
+                                });
+                            });
+                        },
+                                                                                                "Hitbox entry names a payload missing from Payloads"),
                     }
                 },
             };

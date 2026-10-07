@@ -158,6 +158,12 @@ namespace Game.Common
                 public const int       Priority = 10;
             }
 
+            public static class BoundSystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 20;
+            }
+
             public static class AnimationSystem
             {
                 public const TickPhase Phase    = TickPhase.Render;
