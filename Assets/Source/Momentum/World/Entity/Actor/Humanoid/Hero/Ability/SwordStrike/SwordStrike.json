@@ -26,7 +26,7 @@
     },
     "Controls":
     {
-        "Entries":
+        "Entry":
         [
             { 
                 "State":            "Fire", 
@@ -46,9 +46,9 @@
         "Entry":
         [
             { 
-                "Phase":            0, 
+                "State":            "Fire", 
                 "Tick":             0,
-                "Applies":          
+                "Applies":
                 [
                     {
                         "Id":       "Parry",
@@ -57,7 +57,7 @@
                         "Bound":    {},
                         "Duration": { "Length": 30 } 
                     }
-                ] 
+                ]   
             }
         ]
     },
@@ -69,32 +69,35 @@
             {    
                 "Damage":           { "Amount": 10 },
                 "Applies":      
-                [
-                    {
-                        "Id":       "Burn", 
-                        "DOT":      {},
-                        "Burn":     {}, 
-                        "Effect":   {}, 
-                        "Damage":   { "Amount":   5 }, 
-                        "Interval": { "Length":  30 }, 
-                        "Duration": { "Length": 600 } 
-                    },
-                    { 
-                        "Id":       "Stun",
-                        "CC":       {},
-                        "Stun":     {},
-                        "Effect":   {},
-                        "Duration": { "Length": 90 },
-                        "Includes": ["StunBlocks"] 
-                    },
-                    {
-                        "Id":       "Knockback",
-                        "CC":       {},
-                        "Effect":   {},
-                        "Force":    {},
-                        "Duration": { "Length": 60 }
-                    }
-                ] 
+                {
+                    "Entry": 
+                    [
+                        {
+                            "Id":       "Burn", 
+                            "DOT":      {},
+                            "Burn":     {}, 
+                            "Effect":   {}, 
+                            "Damage":   { "Amount":   5 }, 
+                            "Interval": { "Length":  30 }, 
+                            "Duration": { "Length": 600 } 
+                        },
+                        { 
+                            "Id":       "Stun",
+                            "CC":       {},
+                            "Stun":     {},
+                            "Effect":   {},
+                            "Duration": { "Length": 90 },
+                            "Includes": [ "StunBlocks" ] 
+                        },
+                        {
+                            "Id":       "Knockback",
+                            "CC":       {},
+                            "Effect":   {},
+                            "Force":    {},
+                            "Duration": { "Length": 60 }
+                        }
+                    ]
+                } 
             }
         }
     },
@@ -106,7 +109,7 @@
                 "State":            "Fire", 
                 "Tick":             0, 
                 "Duration":         30, 
-                "Prefab":           "SwordStrikeHitbox", 
+                "Definition":       "SwordStrikeHitbox", 
                 "Payloads":         ["SwordStrike"] 
             }
         ]

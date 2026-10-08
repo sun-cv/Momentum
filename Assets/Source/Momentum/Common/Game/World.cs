@@ -15,7 +15,7 @@ namespace Game.Common
         Primary,
         Secondary,
         Modifier,
-        Dodge,
+        Dash,
         Parry,
         Move,
         Yield,

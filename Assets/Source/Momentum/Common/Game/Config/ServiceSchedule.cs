@@ -74,6 +74,12 @@ namespace Game.Common
                 public const int       Priority = 10;
             }
 
+            public static class HeadingSystem
+            {
+                public const TickPhase Phase    = TickPhase.Logic;
+                public const int       Priority = 15;
+            }
+
             public static class ControlSystem
             {
                 public const TickPhase Phase    = TickPhase.Physics;

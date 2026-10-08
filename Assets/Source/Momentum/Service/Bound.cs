@@ -7,11 +7,11 @@ using System.Collections.Generic;
 namespace Game.Service
 {
 
-    public class BoundService : RegisteredService, IWorld, IGameBase
+    public class BoundSystem : RegisteredService, IWorld, IGameBase
     {
         private readonly World World;
 
-        public BoundService(World world)
+        public BoundSystem(World world)
         {
             World = world;
         }

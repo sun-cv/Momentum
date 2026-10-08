@@ -1,3 +1,5 @@
+using UnityEngine;
+
 using Game.Realm;
 using Game.Common;
 
@@ -28,9 +30,10 @@ namespace Game.Service
                 var impulse     = World.Entity.Impulse(entity).Velocity;
                 var kinematic   = World.Entity.Kinematic(entity).Velocity;
 
-                World.Entity.Modify.Velocity(entity).Value = (control + kinematic + impulse) * scale;
+                var steered     = kinematic != Vector2.zero ? kinematic : control;
+
+                World.Entity.Modify.Velocity(entity).Value = (steered + impulse) * scale;
             }
         }
     }
 }
-

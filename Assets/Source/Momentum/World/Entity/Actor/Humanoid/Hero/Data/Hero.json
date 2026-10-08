@@ -13,7 +13,7 @@
             "Primary",
             "Secondary",
             "Modifier",
-            "Dodge",
+            "Dash",
             "Move",
             "Rotate",
             "Equip",
@@ -51,10 +51,10 @@
     {
         "Abilities":
         {
-            "Interact": "TestCharge",
+            "Modifier": "TestCharge",
             "Secondary":"TestParry",
-            "Modifier": "TestDash",
-            "Primary":  "TestCombo1"
+            "Dash":     "TestDash",
+            "Primary":  "SwordStrike"
         }
     },
     "Equipment":        {},

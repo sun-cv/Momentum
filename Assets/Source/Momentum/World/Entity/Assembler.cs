@@ -150,7 +150,9 @@ namespace Game.Realm
                 if (definition.Corpse is Corpse)                        Component.Add<Corpse>(entity, new());
                 if (definition.Spawner is Spawner)                      Component.Add<Spawner>(entity, new());
                 if (definition.Projectile is Projectile)                Component.Add<Projectile>(entity, new());
+                if (definition.Heading is Heading heading)              Component.Add<Heading>(entity, heading);
                 if (definition.Directive is Directive)                  Component.Add<Directive>(entity, new());
+                if (definition.Directives is Directives directives)     Component.Add<Directives>(entity, directives);
                 if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
                 if (definition.Hitbox is Hitbox)                        Component.Add<Hitbox>(entity, new());
                 if (definition.Cooldown is Cooldown)                    Component.Add<Cooldown>(entity, new());
@@ -465,6 +467,16 @@ namespace Game.Realm
                         ((Component, entity, definition) => Component.Has<Phase>(entity),       "Ability requires Phase"),
                     }
                 },
+                {
+                    definition => definition.Directive is Directive, new()
+                    {
+                        ((Component, entity, definition) => Component.Has<Parent>(entity),      "Directive requires Parent"),
+                        ((Component, entity, definition) => Component.Has<Blocks>(entity),      "Directive requires Blocks"),
+                        ((Component, entity, definition) => Component.Has<Displacement>(entity),"Directive requires Displacement"),
+                        ((Component, entity, definition) => Component.Has<Heading>(entity),     "Directive requires Heading"),
+                        ((Component, entity, definition) => definition.Prefab is null,          "Directive must not name a prefab"),
+                    }
+                },
             };
 
             private static readonly Dictionary<Func<Components, Entity, bool>, List<(Func<Components, Entity, bool> Check, string Message)>> ComponentRequirement = new()
@@ -499,8 +511,15 @@ namespace Game.Realm
                                     return Component.Has<Payloads>(entity) && Component.View<Payloads>(entity).Entry.ContainsKey(key);
                                 });
                             });
-                        },
-                                                                                                "Hitbox entry names a payload missing from Payloads"),
+                            },
+                            "Hitbox entry names a payload missing from Payloads"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Heading>(entity), new()
+                    {
+                        ((Component, entity) => Component.View<Heading>(entity).Toward != Game.Common.Heading.Source.Aim || Component.Has<Aim>(entity),
+                         "Heading toward Aim requires Aim"),
                     }
                 },
             };

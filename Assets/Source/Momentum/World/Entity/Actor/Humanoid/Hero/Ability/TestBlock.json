@@ -10,12 +10,12 @@
             { "State": "Lower",    "Length": 10,  "UntilRelease": [] }
         ]
     },
-    "Sustain":          { "Entries": [ { "Capability": "Secondary", "UntilPhase": 1 } ] },
+    "Sustain":          { "Entry": [ { "Capability": "Secondary", "Until": "Lower" } ] },
     "Controls":
     {
-        "Entries":
+        "Entry":
         [
-            { "Phase": 0, "After": 0, "Kind": "Movement", "Result": "Coexist" }
+            { "State": "Block", "After": 0, "Kind": "Movement", "Result": "Coexist" }
         ]
     },
     "Chains":           { "Abilities": {} }

@@ -30,7 +30,9 @@ namespace Game.Common
         public Cooldowns? Cooldowns                             { get; init; }
         public CooldownTarget? CooldownTarget                   { get; init; }
         public Spawner? Spawner                                 { get; init; }
+        public Heading? Heading                                 { get; init; }
         public Directive? Directive                             { get; init; }
+        public Directives? Directives                           { get; init; }
         public Projectile? Projectile                           { get; init; }
 
         public Anchor? Anchor                                   { get; init; }

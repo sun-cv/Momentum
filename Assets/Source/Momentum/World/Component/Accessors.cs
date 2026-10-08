@@ -34,7 +34,9 @@ namespace Game.Realm
             public ref Corpse Corpse(Entity entity)                         => ref Component.Reference<Corpse>(entity);
             public ref Spawner Spawner(Entity entity)                       => ref Component.Reference<Spawner>(entity);
             public ref Projectile Projectile(Entity entity)                 => ref Component.Reference<Projectile>(entity);
+            public ref Heading Heading(Entity entity)                       => ref Component.Reference<Heading>(entity);
             public ref Directive Directive(Entity entity)                   => ref Component.Reference<Directive>(entity);
+            public ref Directives Directives(Entity entity)                 => ref Component.Reference<Directives>(entity);
             public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
             public ref Hitbox Hitbox(Entity entity)                         => ref Component.Reference<Hitbox>(entity);
             public ref Ability Ability(Entity entity)                       => ref Component.Reference<Ability>(entity);
@@ -167,7 +169,9 @@ namespace Game.Realm
         public Corpse Corpse(Entity entity)                                 => Component.View<Corpse>(entity);
         public Spawner Spawner(Entity entity)                               => Component.View<Spawner>(entity);
         public Projectile Projectile(Entity entity)                         => Component.View<Projectile>(entity);
+        public Heading Heading(Entity entity)                               => Component.View<Heading>(entity);
         public Directive Directive(Entity entity)                           => Component.View<Directive>(entity);
+        public Directives Directives(Entity entity)                         => Component.View<Directives>(entity);
         public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
         public Hitbox Hitbox(Entity entity)                                 => Component.View<Hitbox>(entity);
         public Ability Ability(Entity entity)                               => Component.View<Ability>(entity);
@@ -290,7 +294,7 @@ namespace Game.Realm
         public bool CanSecondary(Entity entity)                             => capabilities.Can(entity, Common.Capability.Secondary);
         public bool CanModifier(Entity entity)                              => capabilities.Can(entity, Common.Capability.Modifier);
 
-        public bool CanDodge(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Dodge);
+        public bool CanDodge(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Dash);
         public bool CanMove(Entity entity)                                  => capabilities.Can(entity, Common.Capability.Move);
         public bool CanYield(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Yield);
         public bool CanCarry(Entity entity)                                 => capabilities.Can(entity, Common.Capability.Carry);

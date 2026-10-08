@@ -1,9 +1,9 @@
 {
-    "Id":               "SwordStrike",
+    "Id":               "TestCombo1",
     "Ability":          {},
     "Aim":              {},
     "Activation":       { "Capability": "Primary", "From": "Buffer", "Kind": "Action" },
-    "Sustain":          { "Entries": [] },
+    "Sustain":          { "Entry": [] },
     "Pose":             { "Sheet": "SwordStrike", "State": "Fire" },
     "Phases":
     {
@@ -14,9 +14,9 @@
     },
     "Controls":
     {
-        "Entries":
+        "Entry":
         [
-            { "Phase": 0, "After": 30, "Kind": "Action", "Result": "Cancel" }
+            { "State": "Fire", "After": 30, "Kind": "Action", "Result": "Cancel" }
         ]
     },
     "Chains": 
@@ -29,9 +29,9 @@
     },
     "Hitboxes":
     {
-        "Entries":
+        "Entry":
         [
-            { "Phase": 0, "Tick": 0, "Duration": 30, "Definition": "SwordStrikeHitbox" }
+            { "State": "Fire", "Tick": 0, "Duration": 30, "Prefab": "TestHitbox" }
         ]
     }
 }

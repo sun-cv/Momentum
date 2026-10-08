@@ -26,7 +26,7 @@ namespace Game.Interface
             map[input.Player.Primary]   = Capability.Primary;
             map[input.Player.Secondary] = Capability.Secondary;
             map[input.Player.Modifier]  = Capability.Modifier;
-            map[input.Player.Dodge]     = Capability.Dodge;
+            map[input.Player.Dodge]     = Capability.Dash;
 
             input.Player.Get().actionTriggered += OnAction;
 

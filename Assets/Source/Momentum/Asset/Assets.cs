@@ -42,6 +42,9 @@ namespace Game.Content
 
         public Blueprint Get(string id)
         {
+            if (string.IsNullOrEmpty(id))
+                throw new Exception("[Assets] Blueprint: requested with no definition Id");
+
             var definition = registry.Get<Definition>(id);
 
             return new Blueprint

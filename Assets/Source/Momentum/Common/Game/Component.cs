@@ -75,8 +75,11 @@ namespace Game.Common
     public struct Buff              : IComponent {}
     public struct Debuff            : IComponent {}
 
+    public struct Stun              : IComponent {}
+    public struct Slow              : IComponent {}
     public struct Slowed            : IComponent {}
     public struct Stunned           : IComponent {}
+    public struct Knockback         : IComponent {}
 
     public struct Cold              : IComponent {}
     public struct Frost             : IComponent {}
@@ -135,7 +138,7 @@ namespace Game.Common
         public int Tick;
         public int Duration;
         public string State;
-        public string Prefab;
+        public string Definition;
         public List<string> Payloads;
     }
 
@@ -199,7 +202,7 @@ namespace Game.Common
     public struct SustainEntry
     {
         public Capability Capability                        { get; set; }
-        public string Until                                    { get; set; }
+        public string Until                                 { get; set; }
     }
 
     public struct Chains            : IComponent
@@ -295,10 +298,28 @@ namespace Game.Common
     {
         public Vector2 Direction                            { get; set; }
         public float Distance                               { get; set; }
-        public float Speed                                  { get; set; }
-        public float SteerRate                              { get; set; }
         public int Duration                                 { get; set; }
         public int Progress                                 { get; set; }
+    }
+
+    public struct Heading           : IComponent
+    {
+        public enum Source { Intent, Aim }
+
+        public Source Toward                                { get; set; }
+        public float SteerRate                              { get; set; }
+    }
+
+    public struct Directives        : IComponent
+    {
+        public List<DirectiveEntry> Entry                   { get; set; }
+    }
+
+    public struct DirectiveEntry
+    {
+        public int Tick;
+        public string State;
+        public List<Definition> Applies;
     }
 
     public struct Aim               : IComponent

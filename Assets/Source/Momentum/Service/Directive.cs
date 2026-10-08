@@ -13,6 +13,8 @@ namespace Game.Service
     {
         private readonly World World;
 
+        private readonly List<Entity> finished = new();
+
         public DirectiveSystem(World world)
         {
             World = world;
@@ -34,15 +36,9 @@ namespace Game.Service
 
         private void ProcessDisplacement()
         {
-            var finished = new List<Entity>();
-
             foreach (var entity in World.Query(Mask<Components, Displacement, Parent>.Key))
             {
-                var parent = World.Entity.Parent(entity).Entity;
-
-                Steer(entity, parent);
-
-                if (Advance(entity, parent))
+                if (Advance(entity, World.Entity.Parent(entity).Entity))
                 {
                     finished.Add(entity);
                 }
@@ -52,23 +48,8 @@ namespace Game.Service
             {
                 World.Entity.Release(entity);
             }
-        }
 
-        private void Steer(Entity entity, Entity parent)
-        {
-            var displacement = World.Entity.Displacement(entity);
-
-            if (displacement.SteerRate <= 0f)
-                return;
-
-            var intent = World.Entity.Intent(parent).Direction;
-
-            if (intent == Vector2.zero)
-                return;
-
-            var radians = displacement.SteerRate * Mathf.Deg2Rad;
-
-            World.Entity.Modify.Displacement(entity).Direction = Vector3.RotateTowards(displacement.Direction, intent, radians, 0f);
+            finished.Clear();
         }
 
         private bool Advance(Entity entity, Entity parent)
@@ -83,7 +64,7 @@ namespace Game.Service
             displacement.Progress++;
             var after  = Shape((float)displacement.Progress / displacement.Duration);
 
-            World.Entity.Modify.Kinematic(parent).Velocity = displacement.Direction * (after - before) * displacement.Distance / (Watch.Tick.Delta * scale);
+            World.Entity.Modify.Kinematic(parent).Velocity += displacement.Direction * (after - before) * displacement.Distance / (Watch.Tick.Delta * scale);
 
             return displacement.Progress >= displacement.Duration;
         }
@@ -93,4 +74,3 @@ namespace Game.Service
         static DirectiveSystem() => Log<DirectiveSystem>.Level(Diagnostic.Log.Level.Debug);
     }
 }
-

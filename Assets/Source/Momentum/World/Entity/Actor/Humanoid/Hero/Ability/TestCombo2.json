@@ -9,15 +9,15 @@
             { "State": "Fire",    "Length": 60,  "UntilRelease": [] }
         ]
     },
-    "Sustain":          { "Entries": [] },
-    "Controls":         { "Entries": [] },
+    "Sustain":          { "Entry": [] },
+    "Controls":         { "Entry": [] },
     "Chains":           { "Abilities": {} },
     "Aim":              {},
     "Hitboxes":
     {
-        "Entries":
+        "Entry":
         [
-            { "Phase": 0, "Tick": 10, "Duration": 20, "Definition": "TestHitbox" }
+            { "State": "Fire", "Tick": 10, "Duration": 20, "Definition": "SwordStrikeHitboxt" }
         ]
     },
     "Pose":             { "Sheet": "SwordStrike", "State": "Fire" }

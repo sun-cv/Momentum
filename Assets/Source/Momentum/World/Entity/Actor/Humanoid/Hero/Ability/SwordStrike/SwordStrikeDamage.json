@@ -1,9 +1,0 @@
-{
-    "Id":               "SwordStrikeDamage",
-    "Damage":           10,
-    "Afflictions":      
-    [
-        { "Id": "Burn", "Effect": {}, "Burn": {}, "Damage": 5, "Interval": 1, "Duration": 8 },
-        { "Id": "Stun", "Effect": {}, "Stun": {}, "Duration": 1.5f, "Includes": ["StunBlocks"] }
-    ]
-}

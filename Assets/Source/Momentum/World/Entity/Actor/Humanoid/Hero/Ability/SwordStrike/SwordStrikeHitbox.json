@@ -1,6 +1,6 @@
 {
-    "Id":               "TestHitbox",
-    "Prefab":           "TestHitbox",
+    "Id":               "SwordStrikeHitbox",
+    "Prefab":           "SwordStrikeHitbox",
     "Hitbox":           {},
     "Form":             {},
     "Anchor":           { "Offset": { "x": 0, "y": 0 } }

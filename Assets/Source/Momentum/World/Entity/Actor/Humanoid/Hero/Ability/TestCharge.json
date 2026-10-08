@@ -1,24 +1,24 @@
 {
     "Id":               "TestCharge",
     "Ability":          {},
-    "Activation":       { "Capability": "Interact", "From": "Buffer", "Kind": "Action" },
-    "Sustain":          { "Entries": [ { "Capability": "Interact", "UntilPhase": 1 } ] },
+    "Activation":       { "Capability": "Modifier", "From": "Buffer", "Kind": "Action" },
+    "Sustain":          { "Entry": [ { "Capability": "Interact", "Until": "Charged" } ] },
     "Phases":
     {
         "Entry":
         [
             { "State": "Charge",   "Length": 30,  "UntilRelease": [] },
-            { "State": "Charge",   "Length": 90,  "UntilRelease": [ "Interact" ] },
+            { "State": "Charged",  "Length": 90,  "UntilRelease": [ "Interact" ] },
             { "State": "Fire",     "Length": 20,  "UntilRelease": [] },
             { "State": "FireEnd",  "Length": 30,  "UntilRelease": [] }
         ]
     },
     "Controls":
     {
-        "Entries":
+        "Entry":
         [
-            { "Phase": 0, "After": 0, "Kind": "Movement", "Result": "Cancel" },
-            { "Phase": 1, "After": 0, "Kind": "Movement", "Result": "Cancel" }
+            { "State": "Charge",  "After": 0, "Kind": "Movement", "Result": "Cancel" },
+            { "State": "Charged", "After": 0, "Kind": "Movement", "Result": "Cancel" }
         ]
     },
     "Chains":           { "Abilities": {} }

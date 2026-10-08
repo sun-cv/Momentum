@@ -79,6 +79,7 @@ namespace Game.Service
         {
             ProcessAim(ability);
             ProcessEffects(ability);
+            ProcessDirectives(ability);
             ProcessHitboxes(ability);
             ProcessCooldowns(ability);
             ProcessAnimationState(ability);
@@ -126,6 +127,69 @@ namespace Game.Service
             World.Entity.Modify.Aim(ability) = World.Entity.Aim(World.Entity.Parent(ability).Entity);
         }
 
+        private void ProcessEffects(Entity ability)
+        {
+            if (!World.Entity.Has<Effects>(ability))
+                return;
+
+            foreach (var entry in World.Entity.Effects(ability).Entry)
+            {
+                if (!string.IsNullOrEmpty(entry.Until) && InState(ability, entry.Until) && AtTick(ability, 0))
+                {
+                    ResolveBoundEffects(ability, entry);
+                }
+
+                if (!InState(ability, entry.State))
+                    continue;
+
+                if (!AtTick(ability, entry.Tick))
+                    continue;
+
+                foreach(var effect in entry.Applies)
+                {
+                    var instance= World.Entity.Create(effect, World.Entity.Parent(ability).Entity);
+                   
+                    if (effect.Bound is Bound)
+                    {
+                        World.Entity.Component.Add<Bound>(instance, new() { Entity = ability });
+                    }
+                }
+            }
+        }
+
+        private void ProcessDirectives(Entity ability)
+        {
+            if (!World.Entity.Has<Directives>(ability))
+                return;
+
+            foreach (var entry in World.Entity.Directives(ability).Entry)
+            {
+                if (!InState(ability, entry.State))
+                    continue;
+
+                if (!AtTick(ability, entry.Tick))
+                    continue;
+
+                foreach (var directive in entry.Applies)
+                {
+                    var instance = World.Entity.Create(directive, World.Entity.Parent(ability).Entity);
+
+                    if (World.Entity.Has<Aim>(instance))
+                    {
+                        if (!World.Entity.Has<Aim>(ability))
+                            throw new Exception($"[AbilitySystem] {directive.Id} declares Aim but {World.Entity.Identity(ability).Id} has none");
+
+                        World.Entity.Modify.Aim(instance) = World.Entity.Aim(ability);
+                    }
+
+                    if (directive.Bound is Bound)
+                    {
+                        World.Entity.Component.Add<Bound>(instance, new() { Entity = ability });
+                    }
+                }
+            }
+        }
+
         private void ProcessHitboxes(Entity ability)
         {
             if (!World.Entity.Has<Hitboxes>(ability))
@@ -153,41 +217,11 @@ namespace Game.Service
                 {
                     Parent      = ability,
                     Duration    = entry.Duration,
-                    Prefab      = entry.Prefab,
+                    Definition  = entry.Definition,
                     Payloads    = payloads
                 };
 
                 Event.Send<CreateHitbox>(message);   
-            }
-        }
-
-        private void ProcessEffects(Entity ability)
-        {
-            if (!World.Entity.Has<Effects>(ability))
-                return;
-
-            foreach (var entry in World.Entity.Effects(ability).Entry)
-            {
-                if (InState(ability, entry.Until) && AtTick(ability, 0))
-                {
-                    ResolveBoundEffects(ability, entry);
-                }
-
-                if (!InState(ability, entry.State))
-                    continue;
-
-                if (!AtTick(ability, entry.Tick))
-                    continue;
-
-                foreach(var effect in entry.Applies)
-                {
-                    var instance= World.Entity.Create(effect, World.Entity.Parent(ability).Entity);
-                   
-                    if (effect.Bound is Bound)
-                    {
-                        World.Entity.Component.Add<Bound>(instance, new() { Entity = ability });
-                    }
-                }
             }
         }
 
