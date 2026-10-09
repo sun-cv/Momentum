@@ -182,6 +182,14 @@ namespace Game.Service
                         World.Entity.Modify.Aim(instance) = World.Entity.Aim(ability);
                     }
 
+                    if (World.Entity.Has<Intent>(instance))
+                    {
+                        if (!World.Entity.Has<Intent>(ability))
+                            throw new Exception($"[AbilitySystem] {directive.Id} declares Intent but {World.Entity.Identity(ability).Id} has none");
+
+                        World.Entity.Modify.Intent(instance) = World.Entity.Intent(ability);
+                    }
+
                     if (directive.Bound is Bound)
                     {
                         World.Entity.Component.Add<Bound>(instance, new() { Entity = ability });
@@ -398,6 +406,11 @@ namespace Game.Service
             if (World.Entity.Has<Aim>(ability))
             {
                 World.Entity.Modify.Aim(ability) = World.Entity.Command(World.Entity.Parent(ability).Entity).Active[capability].Aim;
+            }
+
+            if (World.Entity.Has<Intent>(ability))
+            {
+                World.Entity.Modify.Intent(ability) = World.Entity.Command(World.Entity.Parent(ability).Entity).Active[capability].Intent;
             }
 
             if (World.Entity.Has<Pose>(ability))

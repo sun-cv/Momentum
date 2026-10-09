@@ -174,6 +174,7 @@ namespace Game.Realm
                 if (definition.Unstoppable is Unstoppable)              Component.Add<Unstoppable>(entity, new());
                 if (definition.Anchored is Anchored)                    Component.Add<Anchored>(entity, new());
                 if (definition.Movement is Movement movement)           Component.Add<Movement>(entity, movement);
+                if (definition.Intent is Intent)                        Component.Add<Intent>(entity, new());
                 if (definition.Physics is Physics physics)              Component.Add<Physics>(entity, physics);
                 if (definition.Force is Force)                          Component.Add<Force>(entity, new());
                 if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
@@ -445,15 +446,6 @@ namespace Game.Realm
                     }
                 },
                 {
-                    definition => definition.Directive is Directive, new()
-                    {
-                        ((Component, entity, definition) => Component.Has<Parent>(entity),      "Directive requires Parent"),
-                        ((Component, entity, definition) => Component.Has<Blocks>(entity),      "Directive requires Blocks"),
-                        ((Component, entity, definition) => Component.Has<Displacement>(entity),"Directive requires Displacement"),
-                        ((Component, entity, definition) => definition.Prefab is null,          "Directive must not name a prefab"),
-                    }
-                },
-                {
                     definition => definition.Actor is Actor, new()
                     {
                         ((Component, entity, definition) => Component.Has<Instance>(entity),    "Actor requires Instance"),
@@ -471,7 +463,6 @@ namespace Game.Realm
                     definition => definition.Directive is Directive, new()
                     {
                         ((Component, entity, definition) => Component.Has<Parent>(entity),      "Directive requires Parent"),
-                        ((Component, entity, definition) => Component.Has<Blocks>(entity),      "Directive requires Blocks"),
                         ((Component, entity, definition) => Component.Has<Displacement>(entity),"Directive requires Displacement"),
                         ((Component, entity, definition) => Component.Has<Heading>(entity),     "Directive requires Heading"),
                         ((Component, entity, definition) => definition.Prefab is null,          "Directive must not name a prefab"),
@@ -518,8 +509,21 @@ namespace Game.Realm
                 {
                     (Component, entity) => Component.Has<Heading>(entity), new()
                     {
-                        ((Component, entity) => Component.View<Heading>(entity).Toward != Game.Common.Heading.Source.Aim || Component.Has<Aim>(entity),
+                        ((Component, entity) => Component.View<Heading>(entity).Toward != Common.Heading.Source.Aim || Component.Has<Aim>(entity),
                          "Heading toward Aim requires Aim"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Displacement>(entity), new()
+                    {
+                        ((Component, entity) => Component.View<Displacement>(entity).Ease > 0f,  "Displacement requires Ease above 0"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Heading>(entity), new()
+                    {
+                        ((Component, entity) => Component.View<Heading>(entity).Toward != Game.Common.Heading.Source.Intent || Component.Has<Intent>(entity),
+                         "Heading toward Intent requires Intent"),
                     }
                 },
             };

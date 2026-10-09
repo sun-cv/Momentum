@@ -60,16 +60,19 @@ namespace Game.Service
             if (scale <= 0f)
                 return false;
 
-            var before = Shape((float)displacement.Progress / displacement.Duration);
+            var before = Shape((float)displacement.Progress / displacement.Duration, displacement.Ease);
             displacement.Progress++;
-            var after  = Shape((float)displacement.Progress / displacement.Duration);
+            var after  = Shape((float)displacement.Progress / displacement.Duration, displacement.Ease);
 
             World.Entity.Modify.Kinematic(parent).Velocity += displacement.Direction * (after - before) * displacement.Distance / (Watch.Tick.Delta * scale);
 
             return displacement.Progress >= displacement.Duration;
         }
 
-        private float Shape(float t) => t;
+        private float Shape(float t, float ease)
+        {
+            return 1f - Mathf.Pow(1f - t, ease);
+        }
 
         static DirectiveSystem() => Log<DirectiveSystem>.Level(Diagnostic.Log.Level.Debug);
     }

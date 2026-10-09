@@ -34,7 +34,6 @@
     "Contact":          {},
     "Collision":        {},
     "PlayerController": {},
-    "Intent":           {},
     "Movement":         
     {
         "Speed":        5,

@@ -1,5 +1,5 @@
 {
-    "Id":                           "SwordStrike",
+    "Id":                           "SwordSlash",
     "Ability":                      {},
     "Aim":                          {},
     "Activation":       
@@ -52,7 +52,7 @@
     "Chains": 
     { 
         "Window": 20, 
-        "Abilities":                { "Primary": "SwordSlash" } 
+        "Abilities":                { "Primary": "SwordCleave" } 
     },
     "Effects":
     {

@@ -42,7 +42,7 @@ namespace Game.Service
         {
             var direction = World.Entity.Heading(entity).Toward == Heading.Source.Aim
                 ? World.Entity.Aim(entity).Direction
-                : World.Entity.Intent(parent).Direction;
+                : World.Entity.Intent(entity).Direction;
 
             if (direction == Vector2.zero)
             {

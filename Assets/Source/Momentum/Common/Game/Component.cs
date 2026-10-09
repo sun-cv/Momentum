@@ -297,6 +297,7 @@ namespace Game.Common
     public struct Displacement      : IComponent 
     {
         public Vector2 Direction                            { get; set; }
+        public float Ease                                   { get; set; }
         public float Distance                               { get; set; }
         public int Duration                                 { get; set; }
         public int Progress                                 { get; set; }

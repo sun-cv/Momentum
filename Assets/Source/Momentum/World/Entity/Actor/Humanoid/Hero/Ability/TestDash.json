@@ -1,12 +1,20 @@
 {
     "Id":               "TestDash",
     "Ability":          {},
+    "Intent":           {},
     "Activation":       { "Capability": "Dash", "From": "Buffer", "Kind": "Movement" },
-    "Phases":           { "Entry": [ { "State": "Dash", "Length": 15, "UntilRelease": [] } ] },
+    "Blocks": 
+    { 
+        "Capabilities": 
+        [ 
+            "Move" 
+        ] 
+    },
+    "Phases":           { "Entry": [ { "State": "Dash", "Length": 20, "UntilRelease": [] } ] },
     "Sustain":          { "Entry": [] },
     "Controls":         { "Entry": [] },
     "Chains":           { "Abilities": {} },
-    "Cooldowns":        { "Entry": [ { "Phase": 0, "Length": 300, "Ability": "TestDash" } ] },
+    "Cooldowns":        { "Entry": [ { "Phase": 0, "Length": 60, "Ability": "TestDash" } ] },
     "Directives":
     {
         "Entry":
@@ -15,11 +23,12 @@
             [
                 {
                     "Id":           "TestDashMove",
+                    "Intent":       {},
                     "Directive":    {},
                     "Bound":        {},
                     "Blocks":       { "Capabilities": [] },
                     "Heading":      { "Toward": "Intent", "SteerRate": 0 },
-                    "Displacement": { "Distance": 4, "Duration": 12 }
+                    "Displacement": { "Ease": 3, "Distance": 4, "Duration": 30 }
                 }
             ] }
         ]

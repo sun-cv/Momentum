@@ -14,6 +14,7 @@ namespace Game.Common
         public bool Released            { get; set; }
 
         public Aim Aim                  { get; set; }
+        public Intent Intent            { get; set; }
     }
 
 }

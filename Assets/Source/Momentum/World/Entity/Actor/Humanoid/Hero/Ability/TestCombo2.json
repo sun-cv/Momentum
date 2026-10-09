@@ -17,7 +17,7 @@
     {
         "Entry":
         [
-            { "State": "Fire", "Tick": 10, "Duration": 20, "Definition": "SwordStrikeHitboxt" }
+            { "State": "Fire", "Tick": 10, "Duration": 20, "Definition": "SwordStrikeHitbox" }
         ]
     },
     "Pose":             { "Sheet": "SwordStrike", "State": "Fire" }

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-
+using System.Linq;
 using Game.Common;
 using Game.Diagnostic;
 
@@ -72,6 +72,11 @@ namespace Game.Realm
         {
             return component.Has<TComponent>(entity);
         }       
+
+        public IEnumerable<Entity> Children<TComponent>(Entity parent) where TComponent : IComponent
+        {
+            return Has<Child>(parent) ? Child(parent).Entities.Where(Has<TComponent>) : Enumerable.Empty<Entity>();
+        }
 
         internal IReadOnlyCollection<Entity> Query<TDomain>(Mask<TDomain> mask)
         {

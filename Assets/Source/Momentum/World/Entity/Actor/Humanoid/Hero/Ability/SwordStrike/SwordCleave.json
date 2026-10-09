@@ -1,5 +1,5 @@
 {
-    "Id":                           "SwordStrike",
+    "Id":                           "SwordCleave",
     "Ability":                      {},
     "Aim":                          {},
     "Activation":       
@@ -26,7 +26,7 @@
         [
             { 
                 "State":            "Fire",    
-                "Length":           30,  
+                "Length":           20,  
                 "UntilRelease":     [] 
             }
         ]
@@ -48,11 +48,6 @@
                 "Result":           "Cancel" 
             }
         ]
-    },
-    "Chains": 
-    { 
-        "Window": 20, 
-        "Abilities":                { "Primary": "SwordSlash" } 
     },
     "Effects":
     {
@@ -121,7 +116,7 @@
             { 
                 "State":            "Fire", 
                 "Tick":             0, 
-                "Duration":         20, 
+                "Duration":         30, 
                 "Definition":       "SwordStrikeHitbox", 
                 "Payloads":         ["SwordStrike"] 
             }

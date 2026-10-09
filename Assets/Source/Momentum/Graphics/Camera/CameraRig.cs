@@ -226,10 +226,10 @@ namespace Game.Graphics
 
             blend   = Mathf.MoveTowards(blend, still >= Idle ? 1f : 0f, Watch.Tick.UnscaledDelta / Handover);
 
-            Find<LeadBehavior>() .Target = blend;
+            // Find<LeadBehavior>().Target = blend;
         }
 
-        protected override Vector3 Damping => Vector3.Lerp(Mouse, Lead, blend);
+        protected override Vector3 Damping => Vector3.Lerp(Mouse, Lead, blend) * 3;
     }
 
     public abstract class CameraBehavior
@@ -291,9 +291,9 @@ namespace Game.Graphics
 
     public class LeadBehavior : CameraBehavior
     {
-        private const float Horizontal  = 1f;
-        private const float Vertical    = 2f;
-        private const float SpeedX      = 8f;
+        private const float Horizontal  = 2f;
+        private const float Vertical    = 3f;
+        private const float SpeedX      = 6f;
         private const float SpeedY      = 4f;
         private const float Moving      = 0.1f;
 
@@ -302,17 +302,17 @@ namespace Game.Graphics
 
         protected override void Tick(World world, Entity focus)
         {
-            var velocity = world.Entity.Velocity(focus).Value;
+            var velocity = world.Entity.Control(focus).Velocity;
 
             if (velocity.sqrMagnitude > Moving * Moving)
             {
                 direction   = velocity.normalized;
             }
             
-            if (velocity.sqrMagnitude < Moving * Moving)
-            {
-                direction   = Vector2.zero;
-            }
+            // if (velocity.sqrMagnitude < Moving * Moving)
+            // {
+            //     direction   = Vector2.zero;
+            // }
 
             lead = new Vector2(
                     Mathf.Lerp(lead.x, direction.x, 1f - Mathf.Exp(-(SpeedX / Horizontal) * Watch.Tick.UnscaledDelta)),
