@@ -259,7 +259,7 @@ namespace Game.Service
 
             foreach(var entry in World.Entity.Cooldowns(ability).Entry)
             {
-                if (World.Entity.Phase(ability).Index != entry.Phase)
+                if (!InState(ability, entry.Phase))
                     continue;
 
                 CreateCooldown(World.Entity.Parent(ability).Entity, entry);

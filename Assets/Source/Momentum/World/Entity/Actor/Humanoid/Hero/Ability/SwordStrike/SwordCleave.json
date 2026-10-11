@@ -20,6 +20,17 @@
             "Move" 
         ] 
     },
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "Phase": "Fire",
+                "Length": 80,
+                "Ability": "SwordStrike"
+            }
+        ]
+    },
     "Phases":
     {
         "Entry":

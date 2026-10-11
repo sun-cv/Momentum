@@ -218,8 +218,8 @@ namespace Game.Common
 
     public struct CooldownEntry
     {
-        public int Phase; 
         public int Length;
+        public string Phase; 
         public string Ability;
     }
 
