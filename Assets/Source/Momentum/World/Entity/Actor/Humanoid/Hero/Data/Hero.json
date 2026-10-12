@@ -27,6 +27,14 @@
             "Teleport"
         ]
     },
+    "Stats":
+    {
+        "Health":       { "Base": 100 },
+        "Armor":        { "Base":   0 },
+        "Attack":       { "Base":  10 },
+        "CritChance":   { "Base":   0 },
+        "CritDamage":   { "Base":   0 }
+    },
     "Faction":          {},
     "Allegiance":       {},
     "Temperament":      {},
@@ -62,17 +70,14 @@
     "Aim":              {},
     "Health": 
     {
-        "Maximum":      10,
         "Current":      10 
     },
     "Armor": 
     {
-        "Maximum":      10,
         "Current":      10 
     },
     "Energy":
     {
-        "Maximum":      10,
         "Current":      10 
     },
     "Form":             {},

@@ -140,34 +140,40 @@ namespace Game.Common
                 public const int       Priority = 20;
             }
 
-            public static class HealthSystem
+            public static class StatSystem
             {
                 public const TickPhase Phase    = TickPhase.Resolve;
                 public const int       Priority = 01;
             }
 
-            public static class ArmorSystem
-            {
-                public const TickPhase Phase    = TickPhase.Resolve;
-                public const int       Priority = 02;
-            }
-
-            public static class EnergySystem
-            {
-                public const TickPhase Phase    = TickPhase.Resolve;
-                public const int       Priority = 03;
-            }
-
-            public static class DurationSystem
+            public static class HealthSystem
             {
                 public const TickPhase Phase    = TickPhase.Resolve;
                 public const int       Priority = 10;
             }
 
-            public static class BoundSystem
+            public static class ArmorSystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 11;
+            }
+
+            public static class EnergySystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 12;
+            }
+
+            public static class DurationSystem
             {
                 public const TickPhase Phase    = TickPhase.Resolve;
                 public const int       Priority = 20;
+            }
+
+            public static class BoundSystem
+            {
+                public const TickPhase Phase    = TickPhase.Resolve;
+                public const int       Priority = 30;
             }
 
             public static class AnimationSystem

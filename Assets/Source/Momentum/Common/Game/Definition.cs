@@ -109,12 +109,12 @@ namespace Game.Common
         public Displacement? Displacement                       { get; init; }
 
         public SpeedModifier? SpeedModifier                     { get; init; }
-        public AttackModifier? AttackModifier                   { get; init; }
         public TimeModifier? TimeModifier                       { get; init; }
 
         public Aim? Aim                                         { get; init; }
         public Track? Track                                     { get; init; }
 
+        public Stats? Stats                                     { get; init; } 
         public Health? Health                                   { get; init; }
         public Armor? Armor                                     { get; init; }
         public Energy? Energy                                   { get; init; }

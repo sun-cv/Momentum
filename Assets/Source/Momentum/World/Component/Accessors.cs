@@ -117,13 +117,13 @@ namespace Game.Realm
             public ref Displacement Displacement(Entity entity)             => ref Component.Reference<Displacement>(entity);
 
             public ref SpeedModifier SpeedModifier(Entity entity)           => ref Component.Reference<SpeedModifier>(entity);
-            public ref AttackModifier AttackModifier(Entity entity)         => ref Component.Reference<AttackModifier>(entity);
             public ref TimeModifier TimeModifier(Entity entity)             => ref Component.Reference<TimeModifier>(entity);
 
             public ref Aim Aim(Entity entity)                               => ref Component.Reference<Aim>(entity);
             public ref Track Track(Entity entity)                           => ref Component.Reference<Track>(entity);
             public ref Facing Facing(Entity entity)                         => ref Component.Reference<Facing>(entity);
 
+            public ref Stats Stats(Entity entity)                           => ref Component.Reference<Stats>(entity);
             public ref Health Health(Entity entity)                         => ref Component.Reference<Health>(entity);
             public ref Armor Armor(Entity entity)                           => ref Component.Reference<Armor>(entity);
             public ref Energy Energy(Entity entity)                         => ref Component.Reference<Energy>(entity);
@@ -253,13 +253,13 @@ namespace Game.Realm
         public Displacement Displacement(Entity entity)                     => Component.View<Displacement>(entity);
 
         public SpeedModifier SpeedModifier(Entity entity)                   => Component.View<SpeedModifier>(entity);
-        public AttackModifier AttackModifier(Entity entity)                 => Component.View<AttackModifier>(entity);
         public TimeModifier TimeModifier(Entity entity)                     => Component.View<TimeModifier>(entity);
 
         public Aim Aim(Entity entity)                                       => Component.View<Aim>(entity);
         public Track Track(Entity entity)                                   => Component.View<Track>(entity);
         public Facing Facing(Entity entity)                                 => Component.View<Facing>(entity);
 
+        public Stats Stats(Entity entity)                                   => Component.View<Stats>(entity);
         public Health Health(Entity entity)                                 => Component.View<Health>(entity);
         public Armor Armor(Entity entity)                                   => Component.View<Armor>(entity);
         public Energy Energy(Entity entity)                                 => Component.View<Energy>(entity);

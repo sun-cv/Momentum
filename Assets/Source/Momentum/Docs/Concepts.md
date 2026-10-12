@@ -73,3 +73,11 @@ A small drone floats with the player in place of an onscreen mouse
 cursor. It hovers toward the mouse but never sits exactly on it.
 When aiming, the drone projects a laser from its own position that
 points exactly at the mouse.
+
+## Lifecycle component
+A Lifecycle component holds what happens to an entity when it dies:
+whether it leaves a corpse (and which one), whether it respawns, and
+similar. Corpse stays a plain marker on the corpse entity itself.
+
+Would be the home for the corpse id field shared.md leaves as Data's
+call, replacing the empty Corpse key in Hero.json.

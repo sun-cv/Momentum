@@ -17,7 +17,7 @@ namespace Game.Service
         private readonly Assets Asset;
         private readonly World World;
 
-        private Entity entity;
+        private Entity hero;
         private List<Entity> children = new();
 
         public Dev(World world, Data data, Assets asset)
@@ -29,35 +29,19 @@ namespace Game.Service
 
         public void Initialize()
         {
-            entity = World.Entity.Create(Asset.Get("Hero"), new());
+            hero = World.Entity.Create(Asset.Get("Hero"), new());
 
             World.Entity.Create(Asset.Get("Dummy"), new() { Position = new() { x = 4, y = 4, z = 0 }});
         }
     
         void IRealBase.Tick() 
         {
-            var commands  = World.Entity.Command(entity);
-           
-            if (World.Entity.Has<Child>(entity))
-            {
-                children.Clear();
-                children.AddRange(World.Entity.Child(entity).Entities.Where(entity => World.Entity.Has<Ability>(entity)));
-            }
 
-            Log<Dev>.Debug($"Command.Active", () => commands.Active.Count > 0 ? string.Join(", ", commands.Active.Values.Select(comp => comp.Capability)) : "");
-            Log<Dev>.Debug($"Command.Buffer", () => commands.Buffer.Count > 0 ? string.Join(", ", commands.Buffer.Values.Select(comp => comp.Capability)) : "");
-
-            Log<Dev>.Debug($"Ability.Active", () => children.Count > 0 ? string.Join(", ", children.Select(entity => World.Entity.Identity(entity).Id)) : "");
-
-            foreach(var ability in children)
-            {
-                Log<Dev>.Debug($"Ability.Phase", () => children.Count > 0 ? string.Join(", ", World.Entity.Phases(ability).Entry[World.Entity.Phase(ability).Index].State) : "");
-            }
         }
 
         void IGameBase.Tick() 
         {
-
+            Debug();
         }
 
         void IRealHalf.Tick() 
@@ -67,11 +51,34 @@ namespace Game.Service
 
         void IRealStep.Tick() 
         {
-            var direction = World.Entity.Intent(entity).Direction;
-            var commands  = World.Entity.Command(entity);
 
-            Log<Dev>.Debug("Direction.X", () => $"{direction.x}");
-            Log<Dev>.Debug("Direction.Y", () => $"{direction.y}");
+        }
+
+        private void Debug()
+        {
+            Log<Dev>.Debug("Direction.X", () => $"{World.Entity.Intent(hero).Direction.x}");
+            Log<Dev>.Debug("Direction.Y", () => $"{World.Entity.Intent(hero).Direction.y}");
+
+            Log<Dev>.Debug($"Command.Active", () => World.Entity.Command(hero).Active.Count > 0 ? string.Join(", ", World.Entity.Command(hero).Active.Values.Select(comp => comp.Capability)) : "");
+            Log<Dev>.Debug($"Command.Buffer", () => World.Entity.Command(hero).Buffer.Count > 0 ? string.Join(", ", World.Entity.Command(hero).Buffer.Values.Select(comp => comp.Capability)) : "");
+
+            if (World.Entity.Has<Child>(hero))
+            {
+                children.Clear();
+                children.AddRange(World.Entity.Child(hero).Entities.Where(entity => World.Entity.Has<Ability>(entity)));
+            }
+
+            foreach(var ability in children)
+            {
+                Log<Dev>.Debug($"Ability.Phase.{World.Entity.Identity(ability).Id}", () => children.Count > 0 ? string.Join(", ", World.Entity.Phases(ability).Entry[World.Entity.Phase(ability).Index].State) : "");
+            }
+
+
+            StatResolver.Each(ref World.Entity.Modify.Stats(hero), (string name, ref Stat stat) =>
+            {
+                var row = stat;
+                Log<StatSystem>.Debug($"Stat.{name}", () => StatResolver.Describe(row));
+            });
         }
 
         static Dev() => Log<Dev>.Level(Diagnostic.Log.Level.Debug);                

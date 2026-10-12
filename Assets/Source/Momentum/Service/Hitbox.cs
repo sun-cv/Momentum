@@ -55,12 +55,14 @@ namespace Game.Service
             var offset      = blueprint.Definition.Anchor is Anchor anchor ? rotation * anchor.Offset : Vector3.zero;
             var position    = (Vector3)World.Entity.Form(source).Body.position + offset;
 
-            var hitbox      = World.Entity.Create(blueprint, new ConstructionParameter { Parent = request.Parent, Position = position, Rotation = rotation.eulerAngles });
+            var hitbox      = World.Entity.Create(blueprint, new ConstructionParameter { Parent = request.Parent, Position = position, Rotation = rotation.eulerAngles }, request.Payloads);
 
             World.Entity.Component.Add(hitbox, new Source   { Entity    = source });
             World.Entity.Component.Add(hitbox, new Struck   { Entities  = new() });
             World.Entity.Component.Add(hitbox, new Duration { Length    = request.Duration });
         }
+
+
 
         private Quaternion Rotation(Entity source)
         {

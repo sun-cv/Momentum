@@ -70,6 +70,8 @@ namespace Game.Common
     public struct Container         : IComponent {}
     public struct Interactable      : IComponent {}
 
+    public struct Talent            : IComponent {}
+
     public struct CC                : IComponent {}
     public struct DOT               : IComponent {}
     public struct Buff              : IComponent {}
@@ -237,6 +239,7 @@ namespace Game.Common
 
     }
 
+    public struct Equipped          : IComponent {}
     public struct Inventory         : IComponent
     {
 
@@ -332,6 +335,15 @@ namespace Game.Common
     public struct Track             : IComponent            
     {
         public string Until                                 { get; set; }
+    }
+
+    public struct Stats : IComponent
+    {
+        public Stat Health;
+        public Stat Armor;
+        public Stat Attack;
+        public Stat CritChance;
+        public Stat CritDamage;
     }
 
     public struct Health            : IComponent
@@ -438,11 +450,6 @@ namespace Game.Common
     public struct CameraTarget      : IComponent {}
 
     public struct SpeedModifier     : IComponent
-    {
-        public float Value                                  { get; set; }
-    }
-
-    public struct AttackModifier    : IComponent
     {
         public float Value                                  { get; set; }
     }

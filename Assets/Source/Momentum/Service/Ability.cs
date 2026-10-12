@@ -99,18 +99,22 @@ namespace Game.Service
 
         private void Deactivate(Entity ability)
         {
-            ProcessChainWindow(ability);
+            if (ProcessChainWindow(ability))
+                return;
 
             release.Add(ability);
         }
 
-        private void ProcessChainWindow(Entity ability)
+        private bool ProcessChainWindow(Entity ability)
         {
-            if (World.Entity.Has<Chains>(ability) && World.Entity.Chains(ability).Window > 0)
-            {
-                chains.Add(ability);
-                return;
-            }
+            if (!World.Entity.Has<Chains>(ability))
+                return false;
+
+            if (World.Entity.Chains(ability).Window == 0)
+                return false;
+
+            chains.Add(ability);
+            return true;
         }
 
         private void ProcessAim(Entity ability)

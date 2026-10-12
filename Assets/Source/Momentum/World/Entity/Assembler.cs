@@ -142,7 +142,6 @@ namespace Game.Realm
 
             private void GenerateComponents(Entity entity, Definition definition)
             {
-
                 if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
                 if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);
                 if (definition.Actor is Actor)                          Component.Add<Actor>(entity, new());
@@ -152,7 +151,7 @@ namespace Game.Realm
                 if (definition.Projectile is Projectile)                Component.Add<Projectile>(entity, new());
                 if (definition.Heading is Heading heading)              Component.Add<Heading>(entity, heading);
                 if (definition.Directive is Directive)                  Component.Add<Directive>(entity, new());
-                if (definition.Directives is Directives directives)     Component.Add<Directives>(entity, directives);
+                if (definition.Directives is Directives directives)     Component.Add<Directives>(entity, new() { Entry = directives.Entry.ToList() });
                 if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
                 if (definition.Hitbox is Hitbox)                        Component.Add<Hitbox>(entity, new());
                 if (definition.Cooldown is Cooldown)                    Component.Add<Cooldown>(entity, new());
@@ -179,8 +178,8 @@ namespace Game.Realm
                 if (definition.Force is Force)                          Component.Add<Force>(entity, new());
                 if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
                 if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
-                if (definition.Effects is Effects effects)              Component.Add<Effects>(entity, effects);
-                if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, hitboxes);
+                if (definition.Effects is Effects effects)              Component.Add<Effects>(entity, new() { Entry = effects.Entry.ToList() });
+                if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, new() { Entry = hitboxes.Entry.ToList() });
                 if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
                 if (definition.Activation is Activation activation)     Component.Add<Activation>(entity, activation);
                 if (definition.Controls is Controls Controls)           Component.Add<Controls>(entity, Controls);
@@ -195,14 +194,20 @@ namespace Game.Realm
                 if (definition.Armor is Armor armor)                    Component.Add<Armor>(entity, armor);
                 if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
                 if (definition.Parry is Parry)                          Component.Add<Parry>(entity, new());
-                if (definition.Payloads is Payloads payloads)           Component.Add<Payloads>(entity, payloads);
+                if (definition.Payloads is Payloads payloads)           Component.Add<Payloads>(entity, new() { Entry = new(payloads.Entry) });
                 if (definition.Damage is Damage damage)                 Component.Add<Damage>(entity, damage);
                 if (definition.Interval is Interval interval)           Component.Add<Interval>(entity, interval);
-                if (definition.Applies is Applies applies)              Component.Add<Applies>(entity, applies);
+                if (definition.Applies is Applies applies)              Component.Add<Applies>(entity, new() { Entry = applies.Entry.ToList() });
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
                 if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
                 if (definition.TimeModifier is TimeModifier modifier)   Component.Add<TimeModifier>(entity, modifier);
+
+                if (definition.Stats is Stats stats)
+                {
+                    Component.Add<Stats>(entity, stats);
+                    StatResolver.Each(ref Component.Modify.Stats(entity), StatResolver.Default);
+                }
 
                 if (definition.Ability is Ability) 
                 {
@@ -210,7 +215,7 @@ namespace Game.Realm
 
                     if (definition.Phases is Phases phases)
                     {
-                        Component.Add<Phases>(entity, phases);
+                        Component.Add<Phases>(entity, new() { Entry = phases.Entry.ToList() });
                         Component.Add<Phase>(entity, new() { Index = 0, Elapsed = 0 });
                     }
                 }

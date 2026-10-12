@@ -10,16 +10,16 @@
             "Move" 
         ] 
     },
-    "Phases":           { "Entry": [ { "State": "Dash", "Length": 20, "UntilRelease": [] } ] },
+    "Phases":           { "Entry": [ { "State": "Fire", "Length": 20, "UntilRelease": [] } ] },
     "Sustain":          { "Entry": [] },
     "Controls":         { "Entry": [] },
     "Chains":           { "Abilities": {} },
-    "Cooldowns":        { "Entry": [ { "Phase": 0, "Length": 60, "Ability": "TestDash" } ] },
+    "Cooldowns":        { "Entry": [ { "Phase": "Fire", "Length": 60, "Ability": "TestDash" } ] },
     "Directives":
     {
         "Entry":
         [
-            { "State": "Dash", "Tick": 0, "Applies":
+            { "State": "Fire", "Tick": 0, "Applies":
             [
                 {
                     "Id":           "TestDashMove",
