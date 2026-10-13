@@ -158,7 +158,7 @@ namespace Game.Realm
                 if (definition.Cooldowns is Cooldowns cooldowns)        Component.Add<Cooldowns>(entity, cooldowns);
                 if (definition.CooldownTarget is CooldownTarget target) Component.Add<CooldownTarget>(entity, target);
                 if (definition.Anchor is Anchor anchor)                 Component.Add<Anchor>(entity, anchor);
-                if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, duration);
+                if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, new() { Length = duration.Length, Elapsed = duration.Elapsed, Remaining = duration.Length });
                 if (definition.Ledger is Ledger)                        Component.Add<Ledger>(entity, new());
                 if (definition.Faction is Faction faction)              Component.Add<Faction>(entity, faction);
                 if (definition.Allegiance is Allegiance allegiance)     Component.Add<Allegiance>(entity, allegiance);

@@ -48,6 +48,7 @@ namespace Game.Common
     {
         public int Length                                   { get; set; }
         public int Elapsed                                  { get; set; }
+        public int Remaining                                { get; set; }
     }
 
     public struct Prop              : IComponent {}

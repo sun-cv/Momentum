@@ -10,6 +10,11 @@ using System.Collections.Generic;
 namespace Game.Service
 {
 
+    public class EffectSystem
+    {
+        static EffectSystem() => Log<EffectSystem>.Level(Diagnostic.Log.Level.Debug);
+    }
+    
     public class Dev : RegisteredService, IWorld, IData, IAsset, IInitialize, IRealBase, IRealHalf, IRealStep, IGameBase
     {
 
@@ -17,8 +22,9 @@ namespace Game.Service
         private readonly Assets Asset;
         private readonly World World;
 
+        private readonly EffectSystem effect = new();
+
         private Entity hero;
-        private List<Entity> children = new();
 
         public Dev(World world, Data data, Assets asset)
         {
@@ -56,21 +62,23 @@ namespace Game.Service
 
         private void Debug()
         {
-            Log<Dev>.Debug("Direction.X", () => $"{World.Entity.Intent(hero).Direction.x}");
-            Log<Dev>.Debug("Direction.Y", () => $"{World.Entity.Intent(hero).Direction.y}");
+            Log<ResolveSystem>.Debug("Direction.X", () => $"{World.Entity.Intent(hero).Direction.x}");
+            Log<ResolveSystem>.Debug("Direction.Y", () => $"{World.Entity.Intent(hero).Direction.y}");
 
-            Log<Dev>.Debug($"Command.Active", () => World.Entity.Command(hero).Active.Count > 0 ? string.Join(", ", World.Entity.Command(hero).Active.Values.Select(comp => comp.Capability)) : "");
-            Log<Dev>.Debug($"Command.Buffer", () => World.Entity.Command(hero).Buffer.Count > 0 ? string.Join(", ", World.Entity.Command(hero).Buffer.Values.Select(comp => comp.Capability)) : "");
+            Log<CommandSystem>.Debug($"Command.Active", () => World.Entity.Command(hero).Active.Count > 0 ? string.Join(", ", World.Entity.Command(hero).Active.Values.Select(comp => comp.Capability)) : "");
+            Log<CommandSystem>.Debug($"Command.Buffer", () => World.Entity.Command(hero).Buffer.Count > 0 ? string.Join(", ", World.Entity.Command(hero).Buffer.Values.Select(comp => comp.Capability)) : "");
 
-            if (World.Entity.Has<Child>(hero))
+            foreach (var ability in World.Entity.Children<Ability>(hero))
             {
-                children.Clear();
-                children.AddRange(World.Entity.Child(hero).Entities.Where(entity => World.Entity.Has<Ability>(entity)));
+                if (World.Entity.Parent(ability).Entity != hero)
+                    continue;
+
+                Log<AbilitySystem>.Debug($"Ability.Phase.{World.Entity.Identity(ability).Id}", () => string.Join(", ", World.Entity.Phases(ability).Entry[World.Entity.Phase(ability).Index].State));
             }
 
-            foreach(var ability in children)
+            foreach (var effect in World.Entity.Children<Effect>(hero))
             {
-                Log<Dev>.Debug($"Ability.Phase.{World.Entity.Identity(ability).Id}", () => children.Count > 0 ? string.Join(", ", World.Entity.Phases(ability).Entry[World.Entity.Phase(ability).Index].State) : "");
+                Log<EffectSystem>.Debug($"Effect.Elapsed.{World.Entity.Identity(effect).Id}", () => World.Entity.Duration(effect).Remaining);
             }
 
 

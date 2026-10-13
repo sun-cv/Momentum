@@ -40,6 +40,7 @@ namespace Game.Service
         private void TickDuration(Entity entity)
         {
             World.Entity.Modify.Duration(entity).Elapsed++;
+            World.Entity.Modify.Duration(entity).Remaining--;
         }
 
         private void CheckExpiration(Entity entity)

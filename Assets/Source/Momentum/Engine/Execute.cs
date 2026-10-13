@@ -132,7 +132,7 @@ namespace Game.Core
             int    ticks = lane.tick;
             double rate  = ticks / elapsed;
 
-            Log<Execute>.Debug($"{lane.entry.Mode} : {lane.entry.Rate}", () => rate);
+            Log<Execute>.Debug($"{lane.entry.Mode} : {lane.entry.Rate}", () => rate, false);
 
             lane.tick = 0;
             lane.mark = now;

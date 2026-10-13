@@ -2,6 +2,7 @@ using UnityEngine;
 
 using Game.Realm;
 using Game.Common;
+using Game.Diagnostic;
 
 
 
@@ -35,5 +36,7 @@ namespace Game.Service
                 World.Entity.Modify.Velocity(entity).Value = (steered + impulse) * scale;
             }
         }
+
+        static ResolveSystem() => Log<ResolveSystem>.Level(Diagnostic.Log.Level.Debug);
     }
 }

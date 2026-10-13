@@ -71,6 +71,27 @@
                         "Duration": { "Length": 30 } 
                     }
                 ]   
+            },
+            {
+                "State":            "Fire",
+                "Tick":             0,
+                "Applies":
+                [
+                    {
+                        "Id":       "HealthBuff",
+                        "Buff":     {},
+                        "Effect":   {},
+                        "Duration": { "Length": 120 },
+                        "Stats": 
+                        {
+                            "Health": 
+                            {
+                                "Flat": 100
+                            }
+                        }
+
+                    }
+                ]
             }
         ]
     },

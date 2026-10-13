@@ -58,7 +58,9 @@ MonoBehaviour:
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordStrike/SwordStrikeHitbox.json
     m_ReadOnly: 0
     m_SerializedLabels:
+    - Ability
     - Definition
+    - Hitbox
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2f3cec86da7aef24cba93d44bdf6904d
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/TestCharge.json
@@ -96,7 +98,9 @@ MonoBehaviour:
   - m_GUID: 6606d4047a2f390479512bcc52ed68ba
     m_Address: StaticIdle.Sprites
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Actor
+    - Definition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f736c4163e5b0845892127094e0e899
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/TestCombo1.json
@@ -104,6 +108,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Ability
     - Definition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84057f4b9b8cf8741a3beb7ec0b93006
+    m_Address: BlockTileSet.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86ff72e8e02abf04fa8d81c0a0d9ad53
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Asset/Prefab/Hero.prefab
@@ -117,6 +126,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Ability
     - Definition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2f8a2e7d9efd354c927397892516f64
+    m_Address: BlockTileSet
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b8e66c21b6505ce41b625dddbe9fdac6
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordStrike/SwordSlash.json

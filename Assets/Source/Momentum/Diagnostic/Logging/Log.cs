@@ -19,7 +19,7 @@ namespace Game.Diagnostic
         }
     }
 
-    public class LoggingController : RegisteredService, IRealUtil
+    public class LoggingController : RegisteredService, IGameBase
     {
         public void Tick()
         {
@@ -228,17 +228,17 @@ namespace Game.Diagnostic
             instance.Print($"{value}", Log.Level.Error);
         }
 
-        public static  void Trace(string tag, Func<object> value, bool clean = false)
+        public static  void Trace(string tag, Func<object> value, bool clean = true)
         {
             instance.Print(tag, Log.Level.Trace, value, clean);
         }
 
-        public static  void Debug(string tag, Func<object> value, bool clean = false)
+        public static  void Debug(string tag, Func<object> value, bool clean = true)
         {
             instance.Print(tag, Log.Level.Debug, value, clean);
         }
 
-        public static  void Event(string tag, Func<object> value, bool clean = false)
+        public static  void Event(string tag, Func<object> value, bool clean = true)
         {
             instance.Print(tag, Log.Level.Event, value, clean);
         }
