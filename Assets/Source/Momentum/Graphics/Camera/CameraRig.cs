@@ -72,7 +72,7 @@ namespace Game.Graphics
 
         public void Tick()
         {
-            foreach (var entity in World.Query(Mask<Components, Common.CameraTarget, Visual, Velocity>.Key))
+            foreach (var entity in World.Query(Mask<Components, Common.CameraTarget>.Key))
             {
                 Advance(entity);
                 Follow(entity);
@@ -132,6 +132,7 @@ namespace Game.Graphics
         public Vector3 Lean     { get; set; }
         public Vector2 Deadzone { get; set; }
         public Vector3 Damping  { get; set; }
+        public Vector3 Lens     { get; set; }
 
         public static CameraResult Blend(CameraResult from, CameraResult to, float blend)
         {
@@ -141,6 +142,7 @@ namespace Game.Graphics
                 Lean        = Vector3.Lerp(from.Lean,     to.Lean,     blend),
                 Deadzone    = Vector2.Lerp(from.Deadzone, to.Deadzone, blend),
                 Damping     = Vector3.Lerp(from.Damping,  to.Damping,  blend),
+                Lens        = Vector3.Lerp(from.Lens,     to.Lens,     blend),
             };
         }
     }
@@ -244,12 +246,19 @@ namespace Game.Graphics
 
         public void Advance(World world, Entity focus)
         {
+            if (!Guard(world, focus))
+            {
+                Weight = Mathf.MoveTowards(Weight, 0, Fade * Watch.Tick.UnscaledDelta);
+                return;
+            }
+
             Weight = Mathf.MoveTowards(Weight, Target, Fade * Watch.Tick.UnscaledDelta);
 
             Tick(world, focus);
         }
 
         protected abstract void Tick(World world, Entity focus);
+        protected virtual bool Guard(World world, Entity focus) { return true; }
     }
 
     public class MouseBehavior : CameraBehavior
@@ -273,10 +282,7 @@ namespace Game.Graphics
 
         protected override void Tick(World world, Entity focus)
         {
-            if (Mouse.current is not Mouse pointer)
-                return;
-
-            var screen  = pointer.position.ReadValue();
+            var screen  = Mouse.current.position.ReadValue();
             var cursor  = (Vector2)view.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 0f)) - (Vector2)lean.Offset;
             var origin  = (Vector2)view.transform.position - (Vector2)lean.Offset;
             var unit    = Vector2.ClampMagnitude((cursor - origin) / Range, 1f);
@@ -286,6 +292,11 @@ namespace Game.Graphics
                     Mathf.Lerp(offset.y, unit.y, 1f - Mathf.Exp(-(SpeedY / Vertical)   * Watch.Tick.UnscaledDelta)));
 
             Lean = new Vector3(offset.x * Horizontal, offset.y * Vertical, 0f);
+        }
+
+        protected override bool Guard(World world, Entity focus) 
+        {
+            return Mouse.current is not null;
         }
     }
 
@@ -319,6 +330,11 @@ namespace Game.Graphics
                     Mathf.Lerp(lead.y, direction.y, 1f - Mathf.Exp(-(SpeedY / Vertical)   * Watch.Tick.UnscaledDelta)));
 
             Offset = new Vector3(lead.x * Horizontal, lead.y * Vertical, 0f);
+        }
+
+        protected override bool Guard(World World, Entity focus)
+        {
+            return World.Entity.Has<Control>(focus);
         }
     }
 
@@ -377,6 +393,11 @@ namespace Game.Graphics
             var offset  = position - ((Vector2)view.transform.position - (Vector2)lean.Offset);
 
             return Mathf.Abs(offset.x) > half.x || Mathf.Abs(offset.y) > half.y;
+        }
+
+        protected override bool Guard(World World, Entity focus)
+        {
+            return World.Entity.Has<Velocity>(focus) && World.Entity.Has<Visual>(focus);
         }
     }
 }
