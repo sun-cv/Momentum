@@ -493,7 +493,7 @@ namespace Game.Service
             var phase   = World.Entity.Phase(ability);   
             var phases  = World.Entity.Phases(ability);
 
-            return Watch.Tick.Game - World.Entity.Meta(ability).Created == phases.Entry[phase.Index].Length;
+            return phase.Elapsed >= phases.Entry[phase.Index].Length;
         }
 
         private bool Finished(Entity ability)

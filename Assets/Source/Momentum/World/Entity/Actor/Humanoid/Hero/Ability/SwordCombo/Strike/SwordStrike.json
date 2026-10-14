@@ -1,5 +1,5 @@
 {
-    "Id":                           "SwordCleave",
+    "Id":                           "SwordStrike",
     "Ability":                      {},
     "Aim":                          {},
     "Activation":       
@@ -20,24 +20,13 @@
             "Move" 
         ] 
     },
-    "Cooldowns": 
-    {
-        "Entry": 
-        [
-            {
-                "Phase": "Fire",
-                "Length": 80,
-                "Ability": "SwordStrike"
-            }
-        ]
-    },
     "Phases":
     {
         "Entry":
         [
             { 
                 "State":            "Fire",    
-                "Length":           20,  
+                "Length":           30,  
                 "UntilRelease":     [] 
             }
         ]
@@ -60,6 +49,11 @@
             }
         ]
     },
+    "Chains": 
+    { 
+        "Window": 20, 
+        "Abilities":                { "Primary": "SwordSlash" } 
+    },
     "Effects":
     {
         "Entry":
@@ -77,6 +71,27 @@
                         "Duration": { "Length": 30 } 
                     }
                 ]   
+            },
+            {
+                "State":            "Fire",
+                "Tick":             0,
+                "Applies":
+                [
+                    {
+                        "Id":       "HealthBuff",
+                        "Buff":     {},
+                        "Effect":   {},
+                        "Duration": { "Length": 120 },
+                        "Stats": 
+                        {
+                            "Health": 
+                            {
+                                "Flat": 100
+                            }
+                        }
+
+                    }
+                ]
             }
         ]
     },
@@ -127,8 +142,8 @@
             { 
                 "State":            "Fire", 
                 "Tick":             0, 
-                "Duration":         30, 
-                "Definition":       "SwordStrikeHitbox", 
+                "Duration":         20, 
+                "Definition":       "SwordComboHitbox", 
                 "Payloads":         ["SwordStrike"] 
             }
         ]

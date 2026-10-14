@@ -1,5 +1,5 @@
 {
-    "Id":                           "SwordSlash",
+    "Id":                           "SwordCleave",
     "Ability":                      {},
     "Aim":                          {},
     "Activation":       
@@ -11,7 +11,7 @@
     "Pose":             
     { 
         "State":                    "Fire",
-        "Sheet":                    "SwordStrike"
+        "Sheet":                    "SwordCleave"
     },
     "Blocks": 
     { 
@@ -20,39 +20,48 @@
             "Move" 
         ] 
     },
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "Phase":            "Fire",
+                "Length":           80,
+                "Ability":          "SwordStrike"
+            }
+        ]
+    },
     "Phases":
     {
         "Entry":
-        [
+        [            
+            { 
+                "State":            "Windup",    
+                "Length":           30,  
+                "UntilRelease":     ["Primary"] 
+            },
             { 
                 "State":            "Fire",    
-                "Length":           30,  
+                "Length":           20,  
                 "UntilRelease":     [] 
             }
         ]
     },
-    "Controls":
-    {
-        "Entry":
-        [
+    "Controls": 
+    { 
+        "Entry": 
+        [ 
             { 
-                "State":            "Fire", 
+                "State":            "Windup", 
                 "After":            30, 
                 "Kind":             "Action", 
                 "Result":           "Cancel" 
-            },
-            { 
-                "State":            "Fire", 
-                "After":            30, 
-                "Kind":             "Movement", 
-                "Result":           "Cancel" 
-            }
-        ]
+            } 
+        ] 
     },
-    "Chains": 
-    { 
-        "Window": 20, 
-        "Abilities":                { "Primary": "SwordCleave" } 
+    "Chains":   
+    {
+        "Abilities":                { "Primary": "SwordWhirlwind" } 
     },
     "Effects":
     {
@@ -78,7 +87,7 @@
     {
         "Entry":
         {
-            "SwordStrike": 
+            "SwordCleave": 
             {    
                 "Damage":           { "Amount": 10 },
                 "Applies":      
@@ -121,9 +130,9 @@
             { 
                 "State":            "Fire", 
                 "Tick":             0, 
-                "Duration":         20, 
-                "Definition":       "SwordStrikeHitbox", 
-                "Payloads":         ["SwordStrike"] 
+                "Duration":         30, 
+                "Definition":       "SwordComboHitbox", 
+                "Payloads":         ["SwordCleave"] 
             }
         ]
     },
@@ -137,7 +146,7 @@
                 "Applies":
                 [
                     {
-                        "Id":           "SwordStrikeDash",
+                        "Id":           "SwordCleaveDash",
                         "Directive":    {},
                         "Bound":        {},
                         "Aim":          {},

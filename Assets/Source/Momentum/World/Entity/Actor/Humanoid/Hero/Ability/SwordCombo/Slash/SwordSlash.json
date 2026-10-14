@@ -1,5 +1,5 @@
 {
-    "Id":                           "SwordStrike",
+    "Id":                           "SwordSlash",
     "Ability":                      {},
     "Aim":                          {},
     "Activation":       
@@ -11,7 +11,7 @@
     "Pose":             
     { 
         "State":                    "Fire",
-        "Sheet":                    "SwordStrike"
+        "Sheet":                    "SwordSlash"
     },
     "Blocks": 
     { 
@@ -52,7 +52,7 @@
     "Chains": 
     { 
         "Window": 20, 
-        "Abilities":                { "Primary": "SwordSlash" } 
+        "Abilities":                { "Primary": "SwordCleave" } 
     },
     "Effects":
     {
@@ -71,27 +71,6 @@
                         "Duration": { "Length": 30 } 
                     }
                 ]   
-            },
-            {
-                "State":            "Fire",
-                "Tick":             0,
-                "Applies":
-                [
-                    {
-                        "Id":       "HealthBuff",
-                        "Buff":     {},
-                        "Effect":   {},
-                        "Duration": { "Length": 120 },
-                        "Stats": 
-                        {
-                            "Health": 
-                            {
-                                "Flat": 100
-                            }
-                        }
-
-                    }
-                ]
             }
         ]
     },
@@ -99,7 +78,7 @@
     {
         "Entry":
         {
-            "SwordStrike": 
+            "SwordSlash": 
             {    
                 "Damage":           { "Amount": 10 },
                 "Applies":      
@@ -143,8 +122,8 @@
                 "State":            "Fire", 
                 "Tick":             0, 
                 "Duration":         20, 
-                "Definition":       "SwordStrikeHitbox", 
-                "Payloads":         ["SwordStrike"] 
+                "Definition":       "SwordComboHitbox", 
+                "Payloads":         ["SwordSlash"] 
             }
         ]
     },
@@ -158,7 +137,7 @@
                 "Applies":
                 [
                     {
-                        "Id":           "SwordStrikeDash",
+                        "Id":           "SwordSlashDash",
                         "Directive":    {},
                         "Bound":        {},
                         "Aim":          {},

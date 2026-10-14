@@ -1,0 +1,80 @@
+{
+    "Id":                           "SwordWhirlwind",
+    "Ability":                      {},
+    "Aim":                          {},
+    "Activation":       
+    { 
+        "Capability":               "Primary", 
+        "From":                     "Active", 
+        "Kind":                     "Action" 
+    },
+    "Pose":             
+    { 
+        "State":                    "Fire",
+        "Sheet":                    "SwordWhirlwind"
+    },
+    "Blocks": 
+    { 
+        "Capabilities": 
+        [ 
+            "Move" 
+        ] 
+    },
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "Phase":            "Fire",
+                "Length":           60,
+                "Ability":          "SwordStrike"
+            }
+        ]
+    },
+    "Phases":
+    {
+        "Entry":
+        [
+            { 
+                "State":            "Fire",    
+                "Length":           40,  
+                "UntilRelease":     [] 
+            }
+        ]
+    },
+    "Controls":
+    {
+        "Entry":
+        [
+            { 
+                "State":            "Fire", 
+                "After":            30, 
+                "Kind":             "Movement", 
+                "Result":           "Cancel" 
+            }
+        ]
+    },
+    "Payloads": 
+    {
+        "Entry":
+        {
+            "SwordWhirlwind": 
+            {    
+                "Damage":           { "Amount": 25 }
+            }
+        }
+    },
+    "Hitboxes":
+    {
+        "Entry":
+        [
+            { 
+                "State":            "Fire", 
+                "Tick":             0, 
+                "Duration":         40, 
+                "Definition":       "SwordWhirlwindHitbox", 
+                "Payloads":         ["SwordWhirlwind"] 
+            }
+        ]
+    }
+}

@@ -1,67 +1,67 @@
 fileFormatVersion: 2
-guid: 58d39ec54bdb0294096e1cc4395e5108
+guid: b50284941e82e9f48856d6cbd04be368
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1936528497734879130
-    second: SwordStrike_0
+      213: -7310501140982945409
+    second: SwordSlash_0
   - first:
-      213: -2936628570529442040
-    second: SwordStrike_1
+      213: 3783221312971738316
+    second: SwordSlash_1
   - first:
-      213: -8749577971428214674
-    second: SwordStrike_2
+      213: -5611522186530120944
+    second: SwordSlash_2
   - first:
-      213: 4432937218237304717
-    second: SwordStrike_3
+      213: -4575220476500469995
+    second: SwordSlash_3
   - first:
-      213: 414825458040207240
-    second: SwordStrike_4
+      213: 5989240597675729390
+    second: SwordSlash_4
   - first:
-      213: -1573493782840625631
-    second: SwordStrike_5
+      213: 7629489154925117786
+    second: SwordSlash_5
   - first:
-      213: 3170514871289604973
-    second: SwordStrike_6
+      213: 2261631300408621031
+    second: SwordSlash_6
   - first:
-      213: 5283233358702230424
-    second: SwordStrike_7
+      213: 9054858698515247369
+    second: SwordSlash_7
   - first:
-      213: -7149630874250375994
-    second: SwordStrike_8
+      213: -8309185193185169195
+    second: SwordSlash_8
   - first:
-      213: 9148665019798144078
-    second: SwordStrike_9
+      213: -7447085658024534927
+    second: SwordSlash_9
   - first:
-      213: 3391075279212923148
-    second: SwordStrike_10
+      213: -8225984636757226751
+    second: SwordSlash_10
   - first:
-      213: -401330877557194184
-    second: SwordStrike_11
+      213: -5821615094640381390
+    second: SwordSlash_11
   - first:
-      213: 5503215302011371731
-    second: SwordStrike_12
+      213: 5872328307316888863
+    second: SwordSlash_12
   - first:
-      213: 6202055138744522526
-    second: SwordStrike_13
+      213: 1695230281651191700
+    second: SwordSlash_13
   - first:
-      213: -9212449200740915114
-    second: SwordStrike_14
+      213: 8878113193058306027
+    second: SwordSlash_14
   - first:
-      213: 2004890682005285925
-    second: SwordStrike_15
+      213: -6790254011427352668
+    second: SwordSlash_15
   - first:
-      213: -6608485031979746712
-    second: SwordStrike_16
+      213: -6943994189073072472
+    second: SwordSlash_16
   - first:
-      213: -7264416402023330701
-    second: SwordStrike_17
+      213: -2129317571621042925
+    second: SwordSlash_17
   - first:
-      213: 7043898375664988076
-    second: SwordStrike_18
+      213: 4502589002215867975
+    second: SwordSlash_18
   - first:
-      213: -3242066175194723436
-    second: SwordStrike_19
+      213: 5065003727061580744
+    second: SwordSlash_19
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -170,7 +170,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: SwordStrike_0
+      name: SwordSlash_0
       rect:
         serializedVersion: 2
         x: 0
@@ -185,14 +185,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f023132fd33dc1c41812db6d4d3449d3
-      internalID: -1936528497734879130
+      spriteID: e2ad0eb9c526cac41a243de8ffb0d25f
+      internalID: -7310501140982945409
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_1
+      name: SwordSlash_1
       rect:
         serializedVersion: 2
         x: 48
@@ -207,14 +207,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f04ac6c9506e51346b4ba9ecd3283e55
-      internalID: -2936628570529442040
+      spriteID: e91890707add007499b30f4fbb7414b2
+      internalID: 3783221312971738316
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_2
+      name: SwordSlash_2
       rect:
         serializedVersion: 2
         x: 96
@@ -229,14 +229,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 20e35000449b3ad40833eb2b61367775
-      internalID: -8749577971428214674
+      spriteID: 5bb5dcb531fe6f54cbaa6d38cb730d15
+      internalID: -5611522186530120944
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_3
+      name: SwordSlash_3
       rect:
         serializedVersion: 2
         x: 144
@@ -251,14 +251,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4c7c2f5129756c6489ebeef534b30eba
-      internalID: 4432937218237304717
+      spriteID: 8240a216c2ccb5b40be6e421a81c9a1b
+      internalID: -4575220476500469995
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_4
+      name: SwordSlash_4
       rect:
         serializedVersion: 2
         x: 192
@@ -273,14 +273,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fd968c4881f5b4e488331db0bc292b94
-      internalID: 414825458040207240
+      spriteID: ff59784251f7f4644b39cbf0c66a6616
+      internalID: 5989240597675729390
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_5
+      name: SwordSlash_5
       rect:
         serializedVersion: 2
         x: 240
@@ -295,14 +295,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 03f6741f613cedb43b80474b26b6eed4
-      internalID: -1573493782840625631
+      spriteID: 10f07ee44b54d6a42b0d04f78a59e139
+      internalID: 7629489154925117786
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_6
+      name: SwordSlash_6
       rect:
         serializedVersion: 2
         x: 288
@@ -317,14 +317,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5c6f9ee851f847f4b923970702cddeae
-      internalID: 3170514871289604973
+      spriteID: 290b5c57bbfd9a743b794dc66816371a
+      internalID: 2261631300408621031
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_7
+      name: SwordSlash_7
       rect:
         serializedVersion: 2
         x: 336
@@ -339,14 +339,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f8f694ef519a35643a3380dc1f10ba65
-      internalID: 5283233358702230424
+      spriteID: acfede40df75fb044bd7a128e3fbf7eb
+      internalID: 9054858698515247369
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_8
+      name: SwordSlash_8
       rect:
         serializedVersion: 2
         x: 384
@@ -361,14 +361,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 68bba6926e5dcdc45b21a20db4540768
-      internalID: -7149630874250375994
+      spriteID: 9f2428b36c1e47a449b240fbe80ca847
+      internalID: -8309185193185169195
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_9
+      name: SwordSlash_9
       rect:
         serializedVersion: 2
         x: 432
@@ -383,14 +383,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d1cc0f9d59df3514a8e816affc50ea13
-      internalID: 9148665019798144078
+      spriteID: 44f9aac492512db409bbb6600d3a7df4
+      internalID: -7447085658024534927
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_10
+      name: SwordSlash_10
       rect:
         serializedVersion: 2
         x: 480
@@ -405,14 +405,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2db2799666c60fc46b8d76f549ce5135
-      internalID: 3391075279212923148
+      spriteID: c18c2f9ea004ac8458e2a516038597b6
+      internalID: -8225984636757226751
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_11
+      name: SwordSlash_11
       rect:
         serializedVersion: 2
         x: 528
@@ -427,14 +427,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b1367c6b545ca3b459103c3de14317c6
-      internalID: -401330877557194184
+      spriteID: 6f8923d8e1895064e809a7a4f0dab319
+      internalID: -5821615094640381390
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_12
+      name: SwordSlash_12
       rect:
         serializedVersion: 2
         x: 576
@@ -449,14 +449,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c12a380d9731bbb4985b72d81382588b
-      internalID: 5503215302011371731
+      spriteID: 1a2eb7a6230bb294fa0450cc2ae2dd6b
+      internalID: 5872328307316888863
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_13
+      name: SwordSlash_13
       rect:
         serializedVersion: 2
         x: 624
@@ -471,14 +471,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ee8c9b8ee6e79354793cb13761609a91
-      internalID: 6202055138744522526
+      spriteID: cc035ae1af82edb4baa41578f1000908
+      internalID: 1695230281651191700
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_14
+      name: SwordSlash_14
       rect:
         serializedVersion: 2
         x: 672
@@ -493,14 +493,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a22c09a5f2f02a041915528f16458d77
-      internalID: -9212449200740915114
+      spriteID: 3f9dbbf60f57a5d4aa191a1cb39d8928
+      internalID: 8878113193058306027
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_15
+      name: SwordSlash_15
       rect:
         serializedVersion: 2
         x: 720
@@ -515,14 +515,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a73a94e8314c5434e819e183388d22b5
-      internalID: 2004890682005285925
+      spriteID: ff740e2f22b5f0d48a98208168372f49
+      internalID: -6790254011427352668
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_16
+      name: SwordSlash_16
       rect:
         serializedVersion: 2
         x: 768
@@ -537,14 +537,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a3a8645db55d5d445bdf5df2c2c13d89
-      internalID: -6608485031979746712
+      spriteID: 768e6ec771a657048a633bbfaae27784
+      internalID: -6943994189073072472
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_17
+      name: SwordSlash_17
       rect:
         serializedVersion: 2
         x: 816
@@ -559,14 +559,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 923da52da1a7f8d4faadbfeb178a96a1
-      internalID: -7264416402023330701
+      spriteID: 838350dd99f22114f810cccbc9f7dbc2
+      internalID: -2129317571621042925
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_18
+      name: SwordSlash_18
       rect:
         serializedVersion: 2
         x: 864
@@ -581,14 +581,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e18f2423fe0e221489d1b4560922c8bb
-      internalID: 7043898375664988076
+      spriteID: 01e083f88042fe946a1e390fe5828181
+      internalID: 4502589002215867975
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordStrike_19
+      name: SwordSlash_19
       rect:
         serializedVersion: 2
         x: 912
@@ -603,8 +603,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 68e3c9d38cf10da43b9583d147868af7
-      internalID: -3242066175194723436
+      spriteID: f9556e7c489f60943a9d340bd5105efa
+      internalID: 5065003727061580744
       vertices: []
       indices: 
       edges: []
@@ -613,7 +613,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 48efc94319f45dd429cd2e36b7f57450
+    spriteID: a1c8f2e6baf77704db598c1fdb951860
     internalID: 0
     vertices: []
     indices: 
@@ -623,26 +623,26 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      SwordStrike_0: -1936528497734879130
-      SwordStrike_1: -2936628570529442040
-      SwordStrike_10: 3391075279212923148
-      SwordStrike_11: -401330877557194184
-      SwordStrike_12: 5503215302011371731
-      SwordStrike_13: 6202055138744522526
-      SwordStrike_14: -9212449200740915114
-      SwordStrike_15: 2004890682005285925
-      SwordStrike_16: -6608485031979746712
-      SwordStrike_17: -7264416402023330701
-      SwordStrike_18: 7043898375664988076
-      SwordStrike_19: -3242066175194723436
-      SwordStrike_2: -8749577971428214674
-      SwordStrike_3: 4432937218237304717
-      SwordStrike_4: 414825458040207240
-      SwordStrike_5: -1573493782840625631
-      SwordStrike_6: 3170514871289604973
-      SwordStrike_7: 5283233358702230424
-      SwordStrike_8: -7149630874250375994
-      SwordStrike_9: 9148665019798144078
+      SwordSlash_0: -7310501140982945409
+      SwordSlash_1: 3783221312971738316
+      SwordSlash_10: -8225984636757226751
+      SwordSlash_11: -5821615094640381390
+      SwordSlash_12: 5872328307316888863
+      SwordSlash_13: 1695230281651191700
+      SwordSlash_14: 8878113193058306027
+      SwordSlash_15: -6790254011427352668
+      SwordSlash_16: -6943994189073072472
+      SwordSlash_17: -2129317571621042925
+      SwordSlash_18: 4502589002215867975
+      SwordSlash_19: 5065003727061580744
+      SwordSlash_2: -5611522186530120944
+      SwordSlash_3: -4575220476500469995
+      SwordSlash_4: 5989240597675729390
+      SwordSlash_5: 7629489154925117786
+      SwordSlash_6: 2261631300408621031
+      SwordSlash_7: 9054858698515247369
+      SwordSlash_8: -8309185193185169195
+      SwordSlash_9: -7447085658024534927
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

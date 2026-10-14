@@ -22,6 +22,12 @@ MonoBehaviour:
     - Ability
     - Definition
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01539ce5baba4444786d81864d20d3da
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Hitbox/SwordWhirlwindHitbox.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0289a90835a7d4d4f8971a469660e387
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordStrike/SwordCleave.json
     m_ReadOnly: 0
@@ -102,6 +108,12 @@ MonoBehaviour:
     - Actor
     - Definition
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6969e1ac16753d04f9ebfa252465f62a
+    m_Address: SwordWhirlwind
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f736c4163e5b0845892127094e0e899
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/TestCombo1.json
     m_ReadOnly: 0
@@ -114,11 +126,37 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84e67ac5ac13e9244a1c55b5ba414ae1
+    m_Address: SwordSlash
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8595afab6e9a03b478c44aab06ceb118
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Hitbox/SwordWhirlwindHitbox.json
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Ability
+    - Definition
+    - Hitbox
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86ff72e8e02abf04fa8d81c0a0d9ad53
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Asset/Prefab/Hero.prefab
     m_ReadOnly: 0
     m_SerializedLabels:
     - Prefab
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97e3dc73438b53b41a79f7549953b5a3
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/SwordWhirlwind.json
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Ability
+    - Definition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9bcd4144e9a9f1c419e4ba942ea17068
+    m_Address: SwordCleave.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a21accce9f79e9040a858dadf1fa0b9c
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/TestBlock.json
@@ -129,6 +167,17 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2f8a2e7d9efd354c927397892516f64
     m_Address: BlockTileSet
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5d8f7a00b323a44181daec522f19ae3
+    m_Address: SwordCleave
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b50284941e82e9f48856d6cbd04be368
+    m_Address: SwordSlash.Sprites
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -164,6 +213,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Prefab
     - Prop
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed977b14cb3b8ba4790189447b2eaf8f
+    m_Address: SwordWhirlwind.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c6a355874c2bfc14c9aa62c30b82bdd1, type: 2}
