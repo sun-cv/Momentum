@@ -92,7 +92,8 @@ namespace Game.Common
     public struct Cooldown          : IComponent {}
     /// <summary>Camera focus on its Parent</summary>
     public struct Focus             : IComponent {} 
-
+    /// <summary>Authored replacing entity to maintain window</summary>
+    public struct Window            : IComponent {} 
 
     //
     //  Control
@@ -109,7 +110,7 @@ namespace Game.Common
         public IReadOnlyList<Capability> Capabilities       { get; set; }
     }
 
-    /// <summary>Disables listed capabilities</summary>
+    /// <summary>Disables listed capabilities; Listed on root or as effect</summary> 
     public struct Blocks            : IComponent 
     {
         public IReadOnlyList<Capability> Capabilities       { get; set; }
@@ -152,7 +153,7 @@ namespace Game.Common
     public struct PhaseEntry
     {
         public string State                                 { get; set; }
-        public int Length                                   { get; set; }
+        public int Duration                                 { get; set; }
         public IReadOnlyList<Capability> UntilRelease       { get; set; }
     }
 
@@ -198,9 +199,6 @@ namespace Game.Common
         public Dictionary<Capability, string> Abilities     { get; set; }
     }
 
-    /// <summary>Finished ability kept alive for its Chains</summary>
-    public struct ControlWindow     : IComponent {}
-
     /// <summary>Copies live Aim from Parent until a phase</summary>
     public struct Track             : IComponent            
     {
@@ -215,8 +213,9 @@ namespace Game.Common
 
     public struct CooldownEntry
     {
-        public int Length;
-        public string Phase; 
+        public int Tick;
+        public int Duration;
+        public string State;
         public string Ability;
     }
 
@@ -328,6 +327,9 @@ namespace Game.Common
     public struct Buff              : IComponent {}
     /// <summary>Effect kind; stat decrease</summary>
     public struct Debuff            : IComponent {}
+    /// <summary>Effect kind; stat decrease</summary>
+    public struct StatusEffect      : IComponent {}
+
 
     /// <summary>Effect that stuns its Parent</summary>
     public struct Stun              : IComponent {}

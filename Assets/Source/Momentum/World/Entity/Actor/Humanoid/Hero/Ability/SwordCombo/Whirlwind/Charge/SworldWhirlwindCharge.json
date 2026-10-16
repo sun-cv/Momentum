@@ -22,7 +22,7 @@
         [ 
             { 
                 "State":            "Charge", 
-                "Length":           35, 
+                "Duration":         35, 
                 "UntilRelease":     ["Primary"] 
             } 
         ] 
@@ -113,5 +113,17 @@
                 }
             }
         ] 
+    },
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "State":            "Charge",
+                "Tick":             0,
+                "Duration":         60,
+                "Ability":          "SwordStrike"
+            }
+        ]
     }
 }

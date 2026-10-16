@@ -26,7 +26,7 @@
         [
             { 
                 "State":            "Fire",    
-                "Length":           30,  
+                "Duration":         30,  
                 "UntilRelease":     [] 
             }
         ]
@@ -157,5 +157,16 @@
             }
         ]
     },
-
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "State":            "Fire",
+                "Tick":             0,
+                "Duration":         60,
+                "Ability":          "SwordStrike"
+            }
+        ]
+    }
 }

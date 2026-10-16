@@ -109,7 +109,7 @@ namespace Game.Service
 
             foreach (var effect in World.Entity.Children<Effect>(hero))
             {
-                Log<EffectSystem>.Debug($"Effect.Elapsed.{World.Entity.Identity(effect).Id}", () => World.Entity.Duration(effect).Remaining);
+                Log<EffectSystem>.Debug($"Effect.Elapsed.{World.Entity.Identity(effect).Id}.{World.Entity.Meta(effect).Created}", () => World.Entity.Duration(effect).Remaining);
             }
 
 

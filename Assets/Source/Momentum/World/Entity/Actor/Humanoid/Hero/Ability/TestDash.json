@@ -1,8 +1,13 @@
 {
-    "Id":               "TestDash",
-    "Ability":          {},
-    "Intent":           {},
-    "Activation":       { "Capability": "Dash", "From": "Buffer", "Kind": "Movement" },
+    "Id":                           "TestDash",
+    "Ability":                      {},
+    "Intent":                       {},
+    "Activation":       
+    { 
+        "Capability":               "Dash", 
+        "From":                     "Buffer", 
+        "Kind":                     "Movement" 
+    },
     "Blocks": 
     { 
         "Capabilities": 
@@ -10,27 +15,56 @@
             "Move" 
         ] 
     },
-    "Phases":           { "Entry": [ { "State": "Fire", "Length": 20, "UntilRelease": [] } ] },
-    "Sustain":          { "Entry": [] },
-    "Controls":         { "Entry": [] },
-    "Chains":           { "Abilities": {} },
-    "Cooldowns":        { "Entry": [ { "Phase": "Fire", "Length": 60, "Ability": "TestDash" } ] },
+    "Phases":           
+    {  
+        "Entry":
+        [ 
+            { 
+                "State":            "Fire", 
+                "Duration":         20, 
+                "UntilRelease":     [] 
+            } 
+        ] 
+    },
+    "Cooldowns":        
+    { 
+        "Entry": 
+        [
+            { 
+                "State":            "Fire", 
+                "Duration":         60, 
+                "Ability":          "TestDash" 
+            } 
+        ] 
+    },
     "Directives":
     {
         "Entry":
         [
-            { "State": "Fire", "Tick": 0, "Applies":
-            [
-                {
-                    "Id":           "TestDashMove",
-                    "Intent":       {},
-                    "Directive":    {},
-                    "Bound":        {},
-                    "Blocks":       { "Capabilities": [] },
-                    "Heading":      { "Toward": "Intent", "SteerRate": 0 },
-                    "Displacement": { "Ease": 3, "Distance": 4, "Duration": 30 }
-                }
-            ] }
+            { 
+                "State": "Fire", 
+                "Tick": 0, 
+                "Applies":
+                [
+                    {
+                        "Id":               "TestDashMove",
+                        "Intent":           {},
+                        "Directive":        {},
+                        "Bound":            {},
+                        "Heading":      
+                        { 
+                            "Toward":       "Intent", 
+                            "SteerRate":    0 
+                        },
+                        "Displacement": 
+                        { 
+                            "Ease":         3, 
+                            "Distance":     4,
+                            "Duration":     30 
+                        }
+                    }
+                ] 
+            }
         ]
     }
 }

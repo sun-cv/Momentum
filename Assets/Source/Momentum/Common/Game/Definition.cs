@@ -25,6 +25,7 @@ namespace Game.Common
         public Hitbox? Hitbox                                   { get; init; }
         public Ability? Ability                                 { get; init; }
         public Focus? Focus                                     { get; init; }
+        public Window? Window                                   { get; init; }
 
         public Payloads? Payloads                               { get; init; }
         public Cooldown? Cooldown                               { get; init; }

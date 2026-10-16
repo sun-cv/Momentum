@@ -181,17 +181,11 @@ namespace Game.Service
 
                     if (World.Entity.Has<Aim>(instance))
                     {
-                        if (!World.Entity.Has<Aim>(ability))
-                            throw new Exception($"[AbilitySystem] {directive.Id} declares Aim but {World.Entity.Identity(ability).Id} has none");
-
                         World.Entity.Modify.Aim(instance) = World.Entity.Aim(ability);
                     }
 
                     if (World.Entity.Has<Intent>(instance))
                     {
-                        if (!World.Entity.Has<Intent>(ability))
-                            throw new Exception($"[AbilitySystem] {directive.Id} declares Intent but {World.Entity.Identity(ability).Id} has none");
-
                         World.Entity.Modify.Intent(instance) = World.Entity.Intent(ability);
                     }
 
@@ -263,7 +257,7 @@ namespace Game.Service
                     Cue     = entry.Cue,
                     Origin  = World.Entity.Form(source).Body.position,
                     Source  = source,
-                    Owner   = entry.Cue.Sustained ? ability : (Entity?)null,
+                    Owner   = entry.Cue.Sustained ? ability : null,
                 };
 
                 Event.Send(message);
@@ -296,10 +290,21 @@ namespace Game.Service
 
             foreach(var entry in World.Entity.Cooldowns(ability).Entry)
             {
-                if (!InState(ability, entry.Phase))
+                if (!InState(ability, entry.State))
                     continue;
 
-                CreateCooldown(World.Entity.Parent(ability).Entity, entry);
+                if (!AtTick(ability, entry.Tick))
+                    continue;
+
+                var cooldown = new Definition()
+                {
+                    Id              = $"{entry.Ability} Cooldown",
+                    Cooldown        = new Cooldown(),
+                    Duration        = new Duration()        { Length  = entry.Duration },
+                    CooldownTarget  = new CooldownTarget()  { Ability = entry.Ability },
+                };
+
+                World.Entity.Create(cooldown, World.Entity.Parent(ability).Entity);
             }
         }
 
@@ -332,20 +337,18 @@ namespace Game.Service
         {
             foreach (var ability in chains)
             {
-                World.Entity.Component.Remove<Phase>(ability);
-
-                if (World.Entity.Has<Pose>(ability))
+                var source      = World.Entity.Chains(ability);
+                var definition  = new Definition()
                 {
-                    World.Entity.Component.Remove<Pose>(ability);
-                }
+                    Id       = World.Entity.Identity(ability).Id,
+                    Window   = new(),
+                    Chains   = source,
+                    Duration = new() { Length = source.Window },
+                };
 
-                if (World.Entity.Has<Blocks>(ability))
-                {
-                    World.Entity.Component.Remove<Blocks>(ability);
-                }
+                World.Entity.Create(definition, World.Entity.Parent(ability).Entity);
 
-                World.Entity.Component.Add(ability, new Duration { Length = World.Entity.Chains(ability).Window });
-                World.Entity.Component.Add(ability, new ControlWindow());
+                release.Add(ability);
             }
 
             chains.Clear();
@@ -374,7 +377,7 @@ namespace Game.Service
                 if (!ProcessAbility(entity, capability, Data.Definition(id)))
                     continue;
 
-                if (World.Entity.Has<ControlWindow>(chained))
+                if (World.Entity.Has<Window>(chained))
                 {
                     release.Add(chained);
                 }
@@ -464,18 +467,6 @@ namespace Game.Service
             Advance(ability);
         }
 
-        private void CreateCooldown(Entity parent, CooldownEntry entry)
-        {
-            var cooldown = new Definition()
-            {
-                Id              = $"{entry.Ability} Cooldown",
-                Cooldown        = new Cooldown(),
-                Duration        = new Duration()        { Length  = entry.Length },
-                CooldownTarget  = new CooldownTarget()  { Ability = entry.Ability },
-            };
-
-            World.Entity.Create(cooldown, parent);
-        }
 
         private void Promote(Entity entity, Capability capability)
         {
@@ -531,7 +522,7 @@ namespace Game.Service
             var phase   = World.Entity.Phase(ability);   
             var phases  = World.Entity.Phases(ability);
 
-            return phase.Elapsed >= phases.Entry[phase.Index].Length;
+            return phase.Elapsed >= phases.Entry[phase.Index].Duration;
         }
 
         private bool Finished(Entity ability)

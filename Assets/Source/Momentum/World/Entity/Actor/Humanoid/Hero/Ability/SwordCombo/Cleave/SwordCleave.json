@@ -26,12 +26,12 @@
         [            
             { 
                 "State":            "Windup",    
-                "Length":           5,  
+                "Duration":         5,  
                 "UntilRelease":     ["Primary"] 
             },
             { 
                 "State":            "Fire",    
-                "Length":           30,  
+                "Duration":         30,  
                 "UntilRelease":     [] 
             }
         ]
@@ -143,8 +143,9 @@
         "Entry": 
         [
             {
-                "Phase":            "Fire",
-                "Length":           60,
+                "State":            "Fire",
+                "Tick":             0,
+                "Duration":         60,
                 "Ability":          "SwordStrike"
             }
         ]

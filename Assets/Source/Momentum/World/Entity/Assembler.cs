@@ -37,6 +37,8 @@ namespace Game.Realm
                 (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
                 (definition) => definition.Focus        is Focus,
+                (definition) => definition.Window       is Window,
+
             };
 
             internal Assembler(Masks mask, Pool pool, Components component, Bodies bodies)

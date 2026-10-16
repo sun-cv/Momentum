@@ -92,7 +92,7 @@ namespace Game.Realm
             public ref Controls Controls(Entity entity)                     => ref Component.Reference<Controls>(entity);
             public ref Sustain Sustain(Entity entity)                       => ref Component.Reference<Sustain>(entity);
             public ref Chains Chains(Entity entity)                         => ref Component.Reference<Chains>(entity);
-            public ref ControlWindow ControlWindow(Entity entity)           => ref Component.Reference<ControlWindow>(entity);
+            public ref Window Window(Entity entity)                         => ref Component.Reference<Window>(entity);
             public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
             public ref Inventory Inventory(Entity entity)                   => ref Component.Reference<Inventory>(entity);
 
@@ -228,7 +228,7 @@ namespace Game.Realm
         public Controls Controls(Entity entity)                             => Component.View<Controls>(entity);
         public Sustain Sustain(Entity entity)                               => Component.View<Sustain>(entity);
         public Chains Chains(Entity entity)                                 => Component.View<Chains>(entity);
-        public ControlWindow ControlWindow(Entity entity)                   => Component.View<ControlWindow>(entity);
+        public Window Window(Entity entity)                                 => Component.View<Window>(entity);
         public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);
         public Inventory Inventory(Entity entity)                           => Component.View<Inventory>(entity);
 

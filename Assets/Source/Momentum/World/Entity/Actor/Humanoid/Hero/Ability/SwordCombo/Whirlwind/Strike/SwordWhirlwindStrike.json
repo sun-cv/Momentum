@@ -26,7 +26,7 @@
         [
             { 
                 "State":            "Fire",    
-                "Length":           40,  
+                "Duration":         40,  
                 "UntilRelease":     [] 
             }
         ]
@@ -90,8 +90,9 @@
         "Entry": 
         [
             {
-                "Phase":            "Fire",
-                "Length":           100,
+                "State":            "Fire",
+                "Tick":             0,
+                "Duration":         60,
                 "Ability":          "SwordStrike"
             }
         ]
