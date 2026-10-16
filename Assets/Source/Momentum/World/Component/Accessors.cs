@@ -61,15 +61,12 @@ namespace Game.Realm
 
             public ref Slowed Slowed(Entity entity)                         => ref Component.Reference<Slowed>(entity);
             public ref Stunned Stunned(Entity entity)                       => ref Component.Reference<Stunned>(entity);
-            public ref Cold Cold(Entity entity)                             => ref Component.Reference<Cold>(entity);
             public ref Frost Frost(Entity entity)                           => ref Component.Reference<Frost>(entity);
             public ref Freezing Freezing(Entity entity)                     => ref Component.Reference<Freezing>(entity);
-            public ref Hot Hot(Entity entity)                               => ref Component.Reference<Hot>(entity);
             public ref Burn Burn(Entity entity)                             => ref Component.Reference<Burn>(entity);
             public ref Burning Burning(Entity entity)                       => ref Component.Reference<Burning>(entity);
             public ref Shock Shock(Entity entity)                           => ref Component.Reference<Shock>(entity);
             public ref Shocked Shocked(Entity entity)                       => ref Component.Reference<Shocked>(entity);
-            public ref Electrified Electrified(Entity entity)               => ref Component.Reference<Electrified>(entity);
 
             public ref Explosive Explosive(Entity entity)                   => ref Component.Reference<Explosive>(entity);
             public ref Destructible Destructible(Entity entity)             => ref Component.Reference<Destructible>(entity);
@@ -144,6 +141,10 @@ namespace Game.Realm
             public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
 
             public ref CameraTarget CameraTarget(Entity entity)             => ref Component.Reference<CameraTarget>(entity);
+            public ref Focus Focus(Entity entity)                           => ref Component.Reference<Focus>(entity);
+            public ref CameraFocus CameraFocus(Entity entity)               => ref Component.Reference<CameraFocus>(entity);
+            public ref CameraCues CameraCues(Entity entity)                 => ref Component.Reference<CameraCues>(entity);
+            public ref Highlight Highlight(Entity entity)                   => ref Component.Reference<Highlight>(entity);
         }
     }
 
@@ -195,16 +196,13 @@ namespace Game.Realm
 
         public Slowed Slowed(Entity entity)                                 => Component.View<Slowed>(entity);
         public Stunned Stunned(Entity entity)                               => Component.View<Stunned>(entity);
-        public Cold Cold(Entity entity)                                     => Component.View<Cold>(entity);
         public Frost Frost(Entity entity)                                   => Component.View<Frost>(entity);
         public Freezing Freezing(Entity entity)                             => Component.View<Freezing>(entity);
 
-        public Hot Hot(Entity entity)                                       => Component.View<Hot>(entity);
         public Burn Burn(Entity entity)                                     => Component.View<Burn>(entity);
         public Burning Burning(Entity entity)                               => Component.View<Burning>(entity);
         public Shock Shock(Entity entity)                                   => Component.View<Shock>(entity);
         public Shocked Shocked(Entity entity)                               => Component.View<Shocked>(entity);
-        public Electrified Electrified(Entity entity)                       => Component.View<Electrified>(entity);
 
         public Explosive Explosive(Entity entity)                           => Component.View<Explosive>(entity);
         public Destructible Destructible(Entity entity)                     => Component.View<Destructible>(entity);
@@ -279,6 +277,10 @@ namespace Game.Realm
         public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
 
         public CameraTarget CameraTarget(Entity entity)                     => Component.View<CameraTarget>(entity);
+        public Focus Focus(Entity entity)                                   => Component.View<Focus>(entity);
+        public CameraFocus CameraFocus(Entity entity)                       => Component.View<CameraFocus>(entity);
+        public CameraCues CameraCues(Entity entity)                         => Component.View<CameraCues>(entity);
+        public Highlight Highlight(Entity entity)                           => Component.View<Highlight>(entity);
     }
 
     public partial class Entities

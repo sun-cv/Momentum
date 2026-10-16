@@ -90,6 +90,8 @@ namespace Game.Common
     public struct Ability           : IComponent {}
     /// <summary>Ability on cooldown for its Parent while alive</summary>
     public struct Cooldown          : IComponent {}
+    /// <summary>Camera focus on its Parent</summary>
+    public struct Focus             : IComponent {} 
 
 
     //
@@ -277,6 +279,19 @@ namespace Game.Common
         public List<Definition> Applies;
     }
 
+    /// <summary>Camera cues sent at phase and tick</summary>
+    public struct CameraCues        : IComponent
+    {
+        public List<CameraCueEntry> Entry                   { get; set; }
+    }
+
+    public struct CameraCueEntry
+    {
+        public int Tick;
+        public string State;
+        public string Until;
+        public Cue Cue;
+    }
 
     //
     //  Hit
@@ -580,6 +595,44 @@ namespace Game.Common
     /// <summary>Camera follows this Entity</summary>
     public struct CameraTarget      : IComponent {}
 
+    /// <summary>Entity a Focus highlights; added after Create</summary>
+    public struct CameraFocus       : IComponent
+    {
+        public Entity Entity                                { get; set; }
+    }
+
+    /// <summary>Camera direction toward this Entity, or toward its CameraFocus</summary>
+    public struct Highlight         : IComponent
+    {
+        public float Takeover                               { get; set; }
+        public float Center                                 { get; set; }
+        public Vector2 Offset                               { get; set; }
+        public float Range                                  { get; set; }
+        public int Stickiness                               { get; set; }
+        public int In                                       { get; set; }
+        public int Out                                      { get; set; }
+        public float Zoom                                   { get; set; }
+        public float Limit                                  { get; set; }
+    }
+
+    public struct Cue
+    {
+        public string Id                                    { get; init; }
+        public string From                                  { get; init; }
+        public int In                                       { get; init; }
+        public int Hold                                     { get; init; }
+        public int Out                                      { get; init; }
+        public bool Sustained                               { get; init; }
+        public float Radius                                 { get; init; }
+        public Shake Shake                                  { get; init; }
+        public float Zoom                                   { get; init; }
+    }
+
+    public struct Shake
+    {
+        public float Amplitude                              { get; init; }
+        public float Frequency                              { get; init; }
+    }
 
     //
     //  Interaction

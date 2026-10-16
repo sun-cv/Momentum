@@ -1,67 +1,67 @@
 fileFormatVersion: 2
-guid: ed977b14cb3b8ba4790189447b2eaf8f
+guid: 0e1d80d7747937147a078f6acf3255a7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1126206356371367386
-    second: SwordWhirlwind_0
+      213: -8900411747805085154
+    second: SwordWhirlwindStrike_0
   - first:
-      213: -7585895945003986723
-    second: SwordWhirlwind_1
+      213: 4386865565214336256
+    second: SwordWhirlwindStrike_1
   - first:
-      213: 33814845320916428
-    second: SwordWhirlwind_2
+      213: 6191392275972906802
+    second: SwordWhirlwindStrike_2
   - first:
-      213: 5123760558558824027
-    second: SwordWhirlwind_3
+      213: 5025870758382711284
+    second: SwordWhirlwindStrike_3
   - first:
-      213: -8373178566604990583
-    second: SwordWhirlwind_4
+      213: -1976610094581675007
+    second: SwordWhirlwindStrike_4
   - first:
-      213: -4301573025151957546
-    second: SwordWhirlwind_5
+      213: 4124109371352398901
+    second: SwordWhirlwindStrike_5
   - first:
-      213: -1258340893764783976
-    second: SwordWhirlwind_6
+      213: -6700063362629882896
+    second: SwordWhirlwindStrike_6
   - first:
-      213: 9133819748367942522
-    second: SwordWhirlwind_7
+      213: -5630202760558844256
+    second: SwordWhirlwindStrike_7
   - first:
-      213: -3598498278583326100
-    second: SwordWhirlwind_8
+      213: 1273504191823529446
+    second: SwordWhirlwindStrike_8
   - first:
-      213: 6025548132161526099
-    second: SwordWhirlwind_9
+      213: -3995152746816444702
+    second: SwordWhirlwindStrike_9
   - first:
-      213: 8164176498082608514
-    second: SwordWhirlwind_10
+      213: -75527498945508183
+    second: SwordWhirlwindStrike_10
   - first:
-      213: -7827793943010641706
-    second: SwordWhirlwind_11
+      213: -1054806840594658824
+    second: SwordWhirlwindStrike_11
   - first:
-      213: -300129445966896898
-    second: SwordWhirlwind_12
+      213: 7160498160222186326
+    second: SwordWhirlwindStrike_12
   - first:
-      213: -7259031541355951607
-    second: SwordWhirlwind_13
+      213: 6375095129002616785
+    second: SwordWhirlwindStrike_13
   - first:
-      213: -4368153584245746049
-    second: SwordWhirlwind_14
+      213: 708819578058250342
+    second: SwordWhirlwindStrike_14
   - first:
-      213: 3413717240834863859
-    second: SwordWhirlwind_15
+      213: 6180780409472555960
+    second: SwordWhirlwindStrike_15
   - first:
-      213: -6933448085142401675
-    second: SwordWhirlwind_16
+      213: 7665759433102536365
+    second: SwordWhirlwindStrike_16
   - first:
-      213: 4795982356693455927
-    second: SwordWhirlwind_17
+      213: 2630638592369577135
+    second: SwordWhirlwindStrike_17
   - first:
-      213: -6731070838617944301
-    second: SwordWhirlwind_18
+      213: 2592822269634952232
+    second: SwordWhirlwindStrike_18
   - first:
-      213: 2501118136826670773
-    second: SwordWhirlwind_19
+      213: 2123531569456816957
+    second: SwordWhirlwindStrike_19
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -170,7 +170,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: SwordWhirlwind_0
+      name: SwordWhirlwindStrike_0
       rect:
         serializedVersion: 2
         x: 0
@@ -185,14 +185,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fa29e9d65d9168449a69285e8886198d
-      internalID: -1126206356371367386
+      spriteID: ef3ff7fd5c7aa424d8c3adc5ed443766
+      internalID: -8900411747805085154
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_1
+      name: SwordWhirlwindStrike_1
       rect:
         serializedVersion: 2
         x: 48
@@ -207,14 +207,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a37778598f6ad2c42927b0202da87ace
-      internalID: -7585895945003986723
+      spriteID: 7453a1762cee76b45b0e1f1b430e81f0
+      internalID: 4386865565214336256
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_2
+      name: SwordWhirlwindStrike_2
       rect:
         serializedVersion: 2
         x: 96
@@ -229,14 +229,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f979a128f377d174890ce44bbac3903b
-      internalID: 33814845320916428
+      spriteID: f1f886ca8fe16de45917705bd8d343b5
+      internalID: 6191392275972906802
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_3
+      name: SwordWhirlwindStrike_3
       rect:
         serializedVersion: 2
         x: 144
@@ -251,14 +251,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e488b98866b070a419ef68fd3435c7a0
-      internalID: 5123760558558824027
+      spriteID: af63905d5c07e3142809f86560a29191
+      internalID: 5025870758382711284
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_4
+      name: SwordWhirlwindStrike_4
       rect:
         serializedVersion: 2
         x: 192
@@ -273,14 +273,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8b9465b79f6895449bbf0e1c438de4a6
-      internalID: -8373178566604990583
+      spriteID: 98201159b32f41345b939ac75baee406
+      internalID: -1976610094581675007
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_5
+      name: SwordWhirlwindStrike_5
       rect:
         serializedVersion: 2
         x: 240
@@ -295,14 +295,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2369e410d7ba35144ab77f1c96349d8e
-      internalID: -4301573025151957546
+      spriteID: d84163e7f41b0f743a6c0538dcae8906
+      internalID: 4124109371352398901
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_6
+      name: SwordWhirlwindStrike_6
       rect:
         serializedVersion: 2
         x: 288
@@ -317,14 +317,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ce0b2a99e2f79ac4b8aa3cbf63fe7f01
-      internalID: -1258340893764783976
+      spriteID: 13656f6bfea2fee4dab0631c41706055
+      internalID: -6700063362629882896
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_7
+      name: SwordWhirlwindStrike_7
       rect:
         serializedVersion: 2
         x: 336
@@ -339,14 +339,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ae5cd2f670b25e44a83ebe268871caa4
-      internalID: 9133819748367942522
+      spriteID: 64becacf42ab00c429e8dff2ad7a52e6
+      internalID: -5630202760558844256
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_8
+      name: SwordWhirlwindStrike_8
       rect:
         serializedVersion: 2
         x: 384
@@ -361,14 +361,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fc698b5365721dc40952638549ca210f
-      internalID: -3598498278583326100
+      spriteID: ca2fa37d5a116024f84a12bc9d526f5d
+      internalID: 1273504191823529446
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_9
+      name: SwordWhirlwindStrike_9
       rect:
         serializedVersion: 2
         x: 432
@@ -383,14 +383,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 043a914a413420b4aa45e551abe83f37
-      internalID: 6025548132161526099
+      spriteID: 689d581e6ff398b4ca254b035f3e8210
+      internalID: -3995152746816444702
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_10
+      name: SwordWhirlwindStrike_10
       rect:
         serializedVersion: 2
         x: 480
@@ -405,14 +405,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 068cd2d75e7ca8048936d78ce6b25d01
-      internalID: 8164176498082608514
+      spriteID: 318192cb449a93f449cb64e21a420663
+      internalID: -75527498945508183
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_11
+      name: SwordWhirlwindStrike_11
       rect:
         serializedVersion: 2
         x: 528
@@ -427,14 +427,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ce7a59281cad8c1498d56debed6a6191
-      internalID: -7827793943010641706
+      spriteID: b42c12f68f32717469dd77b3cdf7f465
+      internalID: -1054806840594658824
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_12
+      name: SwordWhirlwindStrike_12
       rect:
         serializedVersion: 2
         x: 576
@@ -449,14 +449,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 79a832b609aee96468df09c0a59d2c8b
-      internalID: -300129445966896898
+      spriteID: 2f799329b664a744cab84c29bec6b130
+      internalID: 7160498160222186326
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_13
+      name: SwordWhirlwindStrike_13
       rect:
         serializedVersion: 2
         x: 624
@@ -471,14 +471,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 72e907842f63b444da7162ea8f7d7cfb
-      internalID: -7259031541355951607
+      spriteID: c721d4ad216b64449b05d9309da4ac22
+      internalID: 6375095129002616785
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_14
+      name: SwordWhirlwindStrike_14
       rect:
         serializedVersion: 2
         x: 672
@@ -493,14 +493,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1df55829b4601f343bb854a0519b381e
-      internalID: -4368153584245746049
+      spriteID: 31bfdce0cb1c0ba429d8994a36376055
+      internalID: 708819578058250342
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_15
+      name: SwordWhirlwindStrike_15
       rect:
         serializedVersion: 2
         x: 720
@@ -515,14 +515,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: df0f46b98ed04a2449a1818bd3c194ac
-      internalID: 3413717240834863859
+      spriteID: 8a0ae48795f33514f84fecd72389f656
+      internalID: 6180780409472555960
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_16
+      name: SwordWhirlwindStrike_16
       rect:
         serializedVersion: 2
         x: 768
@@ -537,14 +537,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 68220672a16cf324f94810d2fa2facf8
-      internalID: -6933448085142401675
+      spriteID: 05efe6f8426c2df488911eecc166eb01
+      internalID: 7665759433102536365
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_17
+      name: SwordWhirlwindStrike_17
       rect:
         serializedVersion: 2
         x: 816
@@ -559,14 +559,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 52e592ffb410c404ca8508fa819b46ff
-      internalID: 4795982356693455927
+      spriteID: e6c2577f7b6a5224394d943cb866f9ca
+      internalID: 2630638592369577135
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_18
+      name: SwordWhirlwindStrike_18
       rect:
         serializedVersion: 2
         x: 864
@@ -581,14 +581,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 43ace28f925c3e5469993d9fc80e4d59
-      internalID: -6731070838617944301
+      spriteID: 3d06c5fc75d5dda4796bea50e72a269b
+      internalID: 2592822269634952232
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SwordWhirlwind_19
+      name: SwordWhirlwindStrike_19
       rect:
         serializedVersion: 2
         x: 912
@@ -603,8 +603,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 59d2afdb6ca327c4cbe5cf34bf2dee46
-      internalID: 2501118136826670773
+      spriteID: cf1623bbf08d37840a130358043b1590
+      internalID: 2123531569456816957
       vertices: []
       indices: 
       edges: []
@@ -613,7 +613,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: ddbdb152f94c89344909d2024273fd0e
+    spriteID: 9048f11cb6ac11348b8102cb8e6e1401
     internalID: 0
     vertices: []
     indices: 
@@ -623,26 +623,26 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      SwordWhirlwind_0: -1126206356371367386
-      SwordWhirlwind_1: -7585895945003986723
-      SwordWhirlwind_10: 8164176498082608514
-      SwordWhirlwind_11: -7827793943010641706
-      SwordWhirlwind_12: -300129445966896898
-      SwordWhirlwind_13: -7259031541355951607
-      SwordWhirlwind_14: -4368153584245746049
-      SwordWhirlwind_15: 3413717240834863859
-      SwordWhirlwind_16: -6933448085142401675
-      SwordWhirlwind_17: 4795982356693455927
-      SwordWhirlwind_18: -6731070838617944301
-      SwordWhirlwind_19: 2501118136826670773
-      SwordWhirlwind_2: 33814845320916428
-      SwordWhirlwind_3: 5123760558558824027
-      SwordWhirlwind_4: -8373178566604990583
-      SwordWhirlwind_5: -4301573025151957546
-      SwordWhirlwind_6: -1258340893764783976
-      SwordWhirlwind_7: 9133819748367942522
-      SwordWhirlwind_8: -3598498278583326100
-      SwordWhirlwind_9: 6025548132161526099
+      SwordWhirlwindStrike_0: -8900411747805085154
+      SwordWhirlwindStrike_1: 4386865565214336256
+      SwordWhirlwindStrike_10: -75527498945508183
+      SwordWhirlwindStrike_11: -1054806840594658824
+      SwordWhirlwindStrike_12: 7160498160222186326
+      SwordWhirlwindStrike_13: 6375095129002616785
+      SwordWhirlwindStrike_14: 708819578058250342
+      SwordWhirlwindStrike_15: 6180780409472555960
+      SwordWhirlwindStrike_16: 7665759433102536365
+      SwordWhirlwindStrike_17: 2630638592369577135
+      SwordWhirlwindStrike_18: 2592822269634952232
+      SwordWhirlwindStrike_19: 2123531569456816957
+      SwordWhirlwindStrike_2: 6191392275972906802
+      SwordWhirlwindStrike_3: 5025870758382711284
+      SwordWhirlwindStrike_4: -1976610094581675007
+      SwordWhirlwindStrike_5: 4124109371352398901
+      SwordWhirlwindStrike_6: -6700063362629882896
+      SwordWhirlwindStrike_7: -5630202760558844256
+      SwordWhirlwindStrike_8: 1273504191823529446
+      SwordWhirlwindStrike_9: -3995152746816444702
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

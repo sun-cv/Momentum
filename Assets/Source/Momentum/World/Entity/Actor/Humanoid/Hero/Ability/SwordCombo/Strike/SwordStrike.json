@@ -177,5 +177,16 @@
                 ] 
             }
         ]
+    },
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "Phase":            "Fire",
+                "Length":           60,
+                "Ability":          "SwordStrike"
+            }
+        ]
     }
 }

@@ -20,29 +20,18 @@
             "Move" 
         ] 
     },
-    "Cooldowns": 
-    {
-        "Entry": 
-        [
-            {
-                "Phase":            "Fire",
-                "Length":           80,
-                "Ability":          "SwordStrike"
-            }
-        ]
-    },
     "Phases":
     {
         "Entry":
         [            
             { 
                 "State":            "Windup",    
-                "Length":           30,  
+                "Length":           5,  
                 "UntilRelease":     ["Primary"] 
             },
             { 
                 "State":            "Fire",    
-                "Length":           20,  
+                "Length":           30,  
                 "UntilRelease":     [] 
             }
         ]
@@ -53,7 +42,7 @@
         [ 
             { 
                 "State":            "Windup", 
-                "After":            30, 
+                "After":            5, 
                 "Kind":             "Action", 
                 "Result":           "Cancel" 
             } 
@@ -61,7 +50,7 @@
     },
     "Chains":   
     {
-        "Abilities":                { "Primary": "SwordWhirlwind" } 
+        "Abilities":                { "Primary": "SwordWhirlwindCharge" } 
     },
     "Effects":
     {
@@ -94,23 +83,6 @@
                 {
                     "Entry": 
                     [
-                        {
-                            "Id":       "Burn", 
-                            "DOT":      {},
-                            "Burn":     {}, 
-                            "Effect":   {}, 
-                            "Damage":   { "Amount":   5 }, 
-                            "Interval": { "Length":  30 }, 
-                            "Duration": { "Length": 600 } 
-                        },
-                        { 
-                            "Id":       "Stun",
-                            "CC":       {},
-                            "Stun":     {},
-                            "Effect":   {},
-                            "Duration": { "Length": 90 },
-                            "Includes": [ "StunBlocks" ] 
-                        },
                         {
                             "Id":       "Knockback",
                             "CC":       {},
@@ -163,6 +135,17 @@
                         }
                     }
                 ] 
+            }
+        ]
+    },
+    "Cooldowns": 
+    {
+        "Entry": 
+        [
+            {
+                "Phase":            "Fire",
+                "Length":           60,
+                "Ability":          "SwordStrike"
             }
         ]
     }

@@ -40,6 +40,10 @@ namespace Game.Common
         Movement
     }
 
+    public enum Framing
+    {
+        Explore,
+    }
 
     public interface IWorld {}
 

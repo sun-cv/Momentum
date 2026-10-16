@@ -4,6 +4,7 @@ using Game.Content;
 using Game.Diagnostic;
 using System.Linq;
 using System.Collections.Generic;
+using Game.Common.Events;
 
 
 
@@ -25,6 +26,11 @@ namespace Game.Service
         private readonly EffectSystem effect = new();
 
         private Entity hero;
+        private Entity dummy;
+
+        private Entity target;
+        private Entity focus;
+        private bool   armed;
 
         public Dev(World world, Data data, Assets asset)
         {
@@ -35,9 +41,8 @@ namespace Game.Service
 
         public void Initialize()
         {
-            hero = World.Entity.Create(Asset.Get("Hero"), new());
-
-            World.Entity.Create(Asset.Get("Dummy"), new() { Position = new() { x = 4, y = 4, z = 0 }});
+            hero    = World.Entity.Create(Asset.Get("Hero"), new());
+            dummy   = World.Entity.Create(Asset.Get("Dummy"), new() { Position = new() { x = 4, y = 4, z = 0 }});
         }
     
         void IRealBase.Tick() 
@@ -58,6 +63,32 @@ namespace Game.Service
         void IRealStep.Tick() 
         {
 
+        }
+
+        private void LockOnTest()
+        {
+            if (Watch.Tick.Game % 600 != 300)
+                return;
+
+            var target  = World.Entity.Create(Asset.Get("Dummy"), new() { Position = new() { x = -4, y = -2, z = 0 }});
+            var focus   = World.Entity.Create(new Definition { Id = "TestLockOn", Focus = new Focus(), Duration = new Duration { Length = 180 }, Highlight = new Highlight { Takeover = 0.8f, Center = 1f, In = 60, Out = 90, Stickiness = 45, Limit = 7f }}, hero);
+
+            World.Entity.Component.Add(focus,  new CameraFocus { Entity = target });
+            World.Entity.Component.Add(target, new Bound { Entity = focus });
+        }
+
+        private void ShakeTest()
+        {
+            var tick = Watch.Tick.Game % 600;
+
+            if (tick == 30)
+                Event.Send(new CueCamera { Cue = new Cue { Id = "TestShake", In = 30, Out = 30, Sustained = true, Shake = new Shake { Amplitude = 0.03f, Frequency = 6f } } });
+
+            if (tick == 90)
+                Event.Send(new CueCamera { Cue = new Cue { Id = "TestShake", In = 90, Out = 30, Sustained = true, Shake = new Shake { Amplitude = 0.2f, Frequency = 30f } } });
+
+            if (tick == 240)
+                Event.Send(new StopCameraCue { Id = "TestShake" });
         }
 
         private void Debug()

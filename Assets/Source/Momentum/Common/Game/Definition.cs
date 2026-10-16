@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 
-using UnityEngine;
 
 
 
@@ -25,6 +24,8 @@ namespace Game.Common
         public Effect? Effect                                   { get; init; }
         public Hitbox? Hitbox                                   { get; init; }
         public Ability? Ability                                 { get; init; }
+        public Focus? Focus                                     { get; init; }
+
         public Payloads? Payloads                               { get; init; }
         public Cooldown? Cooldown                               { get; init; }
         public Cooldowns? Cooldowns                             { get; init; }
@@ -57,15 +58,12 @@ namespace Game.Common
         public Slowed? Slowed                                   { get; init; }
 
         public Stunned? Stunned                                 { get; init; }
-        public Cold? Cold                                       { get; init; }
         public Frost? Frost                                     { get; init; }
         public Freezing? Freezing                               { get; init; }
-        public Hot? Hot                                         { get; init; }
         public Burn? Burn                                       { get; init; }
         public Burning? Burning                                 { get; init; }
         public Shock? Shock                                     { get; init; }
         public Shocked? Shocked                                 { get; init; }
-        public Electrified? Electrified                         { get; init; }
 
         public Explosive? Explosive                             { get; init; }
         public Destructible? Destructible                       { get; init; }
@@ -132,5 +130,7 @@ namespace Game.Common
         public Hurtbox? Hurtbox                                 { get; init; }
 
         public CameraTarget? CameraTarget                       { get; init; }
+        public CameraCues? CameraCues                           { get; init; }
+        public Highlight? Highlight                             { get; init; }
     }
 }

@@ -36,6 +36,7 @@ namespace Game.Realm
                 (definition) => definition.Spawner      is Spawner, 
                 (definition) => definition.Directive    is Directive,
                 (definition) => definition.Projectile   is Projectile,
+                (definition) => definition.Focus        is Focus,
             };
 
             internal Assembler(Masks mask, Pool pool, Components component, Bodies bodies)
@@ -200,6 +201,9 @@ namespace Game.Realm
                 if (definition.Applies is Applies applies)              Component.Add<Applies>(entity, new() { Entry = applies.Entry.ToList() });
                 if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
                 if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
+                if (definition.Focus is Focus)                          Component.Add<Focus>(entity, new());
+                if (definition.CameraCues is CameraCues cameraCues)     Component.Add<CameraCues>(entity, cameraCues);
+                if (definition.Highlight is Highlight highlight)        Component.Add<Highlight>(entity, highlight);
                 if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
                 if (definition.TimeModifier is TimeModifier modifier)   Component.Add<TimeModifier>(entity, modifier);
 
@@ -473,6 +477,13 @@ namespace Game.Realm
                         ((Component, entity, definition) => definition.Prefab is null,          "Directive must not name a prefab"),
                     }
                 },
+                {
+                    definition => definition.Focus is Focus, new()
+                    {
+                        ((Component, entity, definition) => Component.Has<Parent>(entity),      "Focus requires Parent"),
+                        ((Component, entity, definition) => definition.Prefab is null,          "Focus must not name a prefab"),
+                    }
+                },
             };
 
             private static readonly Dictionary<Func<Components, Entity, bool>, List<(Func<Components, Entity, bool> Check, string Message)>> ComponentRequirement = new()
@@ -529,6 +540,20 @@ namespace Game.Realm
                     {
                         ((Component, entity) => Component.View<Heading>(entity).Toward != Game.Common.Heading.Source.Intent || Component.Has<Intent>(entity),
                          "Heading toward Intent requires Intent"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<CameraCues>(entity), new()
+                    {
+                        ((Component, entity) => Component.View<CameraCues>(entity).Entry.All(entry => string.IsNullOrEmpty(entry.Until) || (entry.Cue.Sustained && !string.IsNullOrEmpty(entry.Cue.Id))),
+                         "Camera cue with Until must be Sustained and have an Id"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Highlight>(entity), new()
+                    {
+                        ((Component, entity) => Component.View<Highlight>(entity).Takeover is >= 0f and <= 1f, "Highlight Takeover must be 0 to 1"),
+                        ((Component, entity) => Component.View<Highlight>(entity).Center   is >= 0f and <= 1f, "Highlight Center must be 0 to 1"),
                     }
                 },
             };

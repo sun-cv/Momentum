@@ -13,8 +13,8 @@ namespace Game.Common
 
         static public class Command
         {
-            public const int PressWindow            = 40;
-            public const int ReleaseWindow          = 20;
+            public const int PressWindow            = 30;
+            public const int ReleaseWindow          = 15;
         }
 
         static public class Physics 

@@ -1,0 +1,117 @@
+{
+    "Id":                           "SwordWhirlwindCharge",
+    "Ability":                      {},
+    "Activation":   
+    { 
+        "Capability":               "Primary",
+        "From":                     "Active",
+        "Kind":                     "Action"
+    },
+    "Pose":         
+    { 
+        "State":                    "Charge", 
+        "Sheet":                    "SwordWhirlwindCharge" 
+    },
+    "Blocks":       
+    { 
+        "Capabilities":             [ "Move" ] 
+    },
+    "Phases":       
+    { 
+        "Entry": 
+        [ 
+            { 
+                "State":            "Charge", 
+                "Length":           35, 
+                "UntilRelease":     ["Primary"] 
+            } 
+        ] 
+    },
+    "Controls":     
+    { 
+        "Entry": 
+        [ 
+            { 
+                "State":            "Charge", 
+                "Kind":             "Movement", 
+                "Result":           "Cancel" 
+            },
+            { 
+                "State":            "Charge", 
+                "After":            35, 
+                "Kind":             "Action", 
+                "Result":           "Cancel" 
+            } 
+        ] 
+    },
+    "Chains":       
+    { 
+        "Abilities": 
+        { 
+            "Primary":              "SwordWhirlwindStrike" 
+        } 
+    },
+    "CameraCues":
+    { 
+        "Entry": 
+        [ 
+            { 
+                "State":            "Charge", 
+                "Tick":             0, 
+                "Cue": 
+                { 
+                    "Id":           "WhirlwindChargeZoom", 
+                    "In":           35, 
+                    "Out":          10, 
+                    "Zoom":         0.05, 
+                    "Sustained":    true 
+                } 
+            },
+            { 
+                "State":            "Charge", 
+                "Tick":             0, 
+                "Cue": 
+                { 
+                    "Id":           "WhirlwindChargeShake", 
+                    "In":           5, 
+                    "Shake": 
+                    { 
+                        "Amplitude": 0.05, 
+                        "Frequency": 5 
+                    },
+                    "Sustained":    true
+                }
+            },
+            { 
+                "State":            "Charge", 
+                "Tick":             15, 
+                "Cue": 
+                { 
+                    "Id":           "WhirlwindChargeShake", 
+                    "In":           5, 
+                    "Shake": 
+                    { 
+                        "Amplitude": 0.10, 
+                        "Frequency": 20
+                    },
+                    "Sustained":    true
+                }
+            },
+            { 
+                "State":            "Charge", 
+                "Tick":             30, 
+                "Cue": 
+                { 
+                    "Id":           "WhirlwindChargeShake", 
+                    "In":           5, 
+                    "Shake": 
+                    { 
+                        "Amplitude": 0.15, 
+                        "Frequency": 30 
+                    },
+                    "Sustained":    true
+                }
+            }
+        ] 
+    }
+}

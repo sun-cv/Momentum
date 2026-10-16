@@ -22,12 +22,6 @@ MonoBehaviour:
     - Ability
     - Definition
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 01539ce5baba4444786d81864d20d3da
-    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Hitbox/SwordWhirlwindHitbox.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Prefab
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0289a90835a7d4d4f8971a469660e387
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordStrike/SwordCleave.json
     m_ReadOnly: 0
@@ -37,6 +31,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0b8d4ce0ff3782e40a1a5b77911299e6
     m_Address: StaticIdleDummy.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0e1d80d7747937147a078f6acf3255a7
+    m_Address: SwordWhirlwindStrike.Sprites
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -108,18 +107,18 @@ MonoBehaviour:
     - Actor
     - Definition
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6969e1ac16753d04f9ebfa252465f62a
-    m_Address: SwordWhirlwind
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Sheet
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f736c4163e5b0845892127094e0e899
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/TestCombo1.json
     m_ReadOnly: 0
     m_SerializedLabels:
     - Ability
     - Definition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 718143fd025ed1447a4cb91529013bf9
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Strike/Hitbox/SwordWhirlwindStrikeHitbox.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 84057f4b9b8cf8741a3beb7ec0b93006
     m_Address: BlockTileSet.Sprites
@@ -131,14 +130,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Sheet
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8595afab6e9a03b478c44aab06ceb118
-    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Hitbox/SwordWhirlwindHitbox.json
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Ability
-    - Definition
-    - Hitbox
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86ff72e8e02abf04fa8d81c0a0d9ad53
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Asset/Prefab/Hero.prefab
@@ -170,6 +161,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a54d160901d0b564888fd7b5410d0d8c
+    m_Address: SwordWhirlwindCharge.Sprites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a5d8f7a00b323a44181daec522f19ae3
     m_Address: SwordCleave
     m_ReadOnly: 0
@@ -188,12 +184,32 @@ MonoBehaviour:
     - Ability
     - Definition
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7903d5423c71f1458c9f0e0e7351e32
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Strike/Hitbox/SwordWhirlwindStrikeHitbox.json
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Ability
+    - Definition
+    - Hitbox
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9fe4e05c02f3344782e96572bc994b6
+    m_Address: SwordWhirlwindStrike
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d26b2b37fd62a224b848b9f9bd6dfb18
     m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Data/Hero.json
     m_ReadOnly: 0
     m_SerializedLabels:
     - Actor
     - Definition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d98428859118463439b2813f1ea757c5
+    m_Address: SwordWhirlwindCharge
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sheet
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dd9767b0d2209f442bf39b70c7ffdfd3
     m_Address: StaticIdle
@@ -214,10 +230,12 @@ MonoBehaviour:
     - Prefab
     - Prop
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ed977b14cb3b8ba4790189447b2eaf8f
-    m_Address: SwordWhirlwind.Sprites
+  - m_GUID: fe4a624978ea36a448580f6b124e10f9
+    m_Address: Assets/Source/Momentum/World/Entity/Actor/Humanoid/Hero/Ability/SwordCombo/Whirlwind/Charge/SworldWhirlwindCharge.json
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Ability
+    - Definition
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c6a355874c2bfc14c9aa62c30b82bdd1, type: 2}

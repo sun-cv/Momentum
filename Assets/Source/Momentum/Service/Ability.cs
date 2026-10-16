@@ -81,6 +81,7 @@ namespace Game.Service
             ProcessEffects(ability);
             ProcessDirectives(ability);
             ProcessHitboxes(ability);
+            ProcessCameraCues(ability);
             ProcessCooldowns(ability);
             ProcessAnimationState(ability);
         }
@@ -237,6 +238,38 @@ namespace Game.Service
             }
         }
 
+        private void ProcessCameraCues(Entity ability)
+        {
+            if (!World.Entity.Has<CameraCues>(ability))
+                return;
+
+            var source = World.Entity.Root(ability);
+
+            foreach (var entry in World.Entity.CameraCues(ability).Entry)
+            {
+                if (!string.IsNullOrEmpty(entry.Until) && InState(ability, entry.Until) && AtTick(ability, 0))
+                {
+                    Event.Send(new StopCameraCue { Id = entry.Cue.Id, Source = source, Owner = ability });
+                }
+
+                if (!InState(ability, entry.State))
+                    continue;
+
+                if (!AtTick(ability, entry.Tick))
+                    continue;
+
+                CueCamera message = new()
+                {
+                    Cue     = entry.Cue,
+                    Origin  = World.Entity.Form(source).Body.position,
+                    Source  = source,
+                    Owner   = entry.Cue.Sustained ? ability : (Entity?)null,
+                };
+
+                Event.Send(message);
+            }
+        }
+
         private void ResolveBoundEffects(Entity ability, EffectEntry entry)
         {
             foreach (var bound in World.Query(Mask<Components, Bound>.Key))
@@ -304,6 +337,11 @@ namespace Game.Service
                 if (World.Entity.Has<Pose>(ability))
                 {
                     World.Entity.Component.Remove<Pose>(ability);
+                }
+
+                if (World.Entity.Has<Blocks>(ability))
+                {
+                    World.Entity.Component.Remove<Blocks>(ability);
                 }
 
                 World.Entity.Component.Add(ability, new Duration { Length = World.Entity.Chains(ability).Window });
