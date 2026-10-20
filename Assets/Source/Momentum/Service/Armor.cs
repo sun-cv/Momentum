@@ -48,7 +48,7 @@ namespace Game.Service
         private void Repair(Entity entity, int amount)
         {
             var before  = World.Entity.Armor(entity);
-            World.Entity.Modify.Armor(entity).Current = Math.Min(before.Current + amount, before.Maximum); 
+            World.Entity.Modify.Armor(entity).Current = Math.Min(before.Current + amount, (int)World.Entity.Stats(entity).Armor.Final); 
             var after   = World.Entity.Armor(entity);
 
             Notify(entity, before.Current, after.Current);

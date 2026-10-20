@@ -1,15 +1,16 @@
-
-
+using System;
 
 using Game.Common;
-using Game.Diagnostic;
 using Game.Realm;
+
+
 
 namespace Game.Service
 {
 
     public class StatSystem : RegisteredService, IWorld, IGameBase
     {
+
 
         private readonly World World;
 
@@ -20,49 +21,76 @@ namespace Game.Service
 
         public void Tick()
         {
-            Process();
-        }
-
-        private void Process()
-        {
             Reset();
-
-            Collect(Mask<Components, Item, Equipped, Stats, Parent>.Key);
-            Collect(Mask<Components, Talent, Stats, Parent>.Key);
-            Collect(Mask<Components, Buff, Stats, Parent>.Key);
-            Collect(Mask<Components, Debuff, Stats, Parent>.Key);
-
-            Apply();
+            Collect();
+            Resolve();
         }
 
         private void Reset()
         {
-            foreach (var actor in World.Query(Mask<Components, Actor, Stats>.Key))
+            foreach (var owner in World.Query(Mask<Components, Stats, Modifiers>.Key))
             {
-                StatResolver.Each(ref World.Entity.Modify.Stats(actor), StatResolver.Reset);
+                World.Entity.Modify.Modifiers(owner) = default;
             }
         }
 
-        private void Collect(Mask<Components> key)
+        private void Collect()
         {
-            foreach (var source in World.Query(key))
+            foreach (var source in World.Query(Mask<Components, Modifiers, Parent>.Key))
             {
-                var sourceStats     = World.Entity.Stats(source);
-                ref var ownerStats  = ref World.Entity.Modify.Stats(World.Entity.Parent(source).Entity);
+                if (World.Entity.Has<Stats>(source))
+                    continue;
 
-                StatResolver.Each(ref ownerStats, in sourceStats, StatResolver.Combine);
+                var parent = World.Entity.Parent(source).Entity;
+
+                if (!World.Entity.Has<Modifiers>(parent))
+                    continue;
+
+                var from    = World.Entity.Modifiers(source);
+                ref var to  = ref World.Entity.Modify.Modifiers(parent);
+
+                Combine(ref to.Health,     from.Health);
+                Combine(ref to.Armor,      from.Armor);
+                Combine(ref to.Energy,     from.Energy);
+                Combine(ref to.Damage,     from.Damage);
+                Combine(ref to.CritChance, from.CritChance);
+                Combine(ref to.CritDamage, from.CritDamage);
+                Combine(ref to.Speed,      from.Speed);
             }
         }
 
-        private void Apply()
+        private void Resolve()
         {
-            foreach (var actor in World.Query(Mask<Components, Actor, Stats>.Key))
+            foreach (var owner in World.Query(Mask<Components, Stats, Modifiers>.Key))
             {
-                ref var stats = ref World.Entity.Modify.Stats(actor);
-                StatResolver.Each(ref stats, StatResolver.Apply);
+                var total       = World.Entity.Modifiers(owner);
+                ref var stats   = ref World.Entity.Modify.Stats(owner);
+
+                ApplyWhole  (ref stats.Health,     total.Health);
+                ApplyWhole  (ref stats.Armor,      total.Armor);
+                ApplyWhole  (ref stats.Energy,     total.Energy);
+                ApplyWhole  (ref stats.Damage,     total.Damage);
+                Apply       (ref stats.CritChance, total.CritChance);
+                Apply       (ref stats.CritDamage, total.CritDamage);
+                Apply       (ref stats.Speed,      total.Speed);
             }
         }
 
-        static StatSystem() => Log<StatSystem>.Level(Diagnostic.Log.Level.Debug);
+        private static void Combine(ref Modifier target, in Modifier source)
+        {
+            target.Flat    += source.Flat;
+            target.Positive = Math.Max(target.Positive, source.Positive);
+            target.Negative = Math.Min(target.Negative, source.Negative);
+        }
+
+        private static void Apply(ref Stat stat, in Modifier total)
+        {
+            stat.Final = (stat.Base + total.Flat) * (1f + total.Negative) * (1f + total.Positive);
+        }
+
+        private static void ApplyWhole(ref Stat stat, in Modifier total)
+        {
+            stat.Final = MathF.Ceiling((stat.Base + total.Flat) * (1f + total.Negative) * (1f + total.Positive));
+        }
     }
 }

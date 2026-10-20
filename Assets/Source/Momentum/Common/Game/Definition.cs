@@ -100,7 +100,6 @@ namespace Game.Common
         public Velocity? Velocity                               { get; init; }
         public Mass? Mass                                       { get; init; }
 
-        public Movement? Movement                               { get; init; }
         public Intent? Intent                                   { get; init; }
         public Control? Control                                 { get; init; }
         public Impulse? Impulse                                 { get; init; }
@@ -114,9 +113,12 @@ namespace Game.Common
         public Track? Track                                     { get; init; }
 
         public Stats? Stats                                     { get; init; } 
+        public Modifiers? Modifiers                             { get; init; }
         public Health? Health                                   { get; init; }
         public Armor? Armor                                     { get; init; }
         public Energy? Energy                                   { get; init; }
+        public Speed? Speed                                     { get; init; }
+        public Acceleration? Acceleration                       { get; init; }
 
         public Parry? Parry                                     { get; init; }
         public Damage? Damage                                   { get; init; }

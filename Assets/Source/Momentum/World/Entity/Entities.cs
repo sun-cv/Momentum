@@ -71,7 +71,17 @@ namespace Game.Realm
         public bool Has<TComponent>(Entity entity) where TComponent : IComponent
         {
             return component.Has<TComponent>(entity);
-        }       
+        }
+
+        public bool ChildHas<TComponent>(Entity parent) where TComponent : IComponent
+        {
+            return Has<Child>(parent) && Child(parent).Entities.Any(Has<TComponent>);
+        }
+
+        public bool AnyHas<TComponent>(Entity entity) where TComponent : IComponent
+        {
+            return Has<TComponent>(entity) || ChildHas<TComponent>(entity);
+        }
 
         public IEnumerable<Entity> Children<TComponent>(Entity parent) where TComponent : IComponent
         {

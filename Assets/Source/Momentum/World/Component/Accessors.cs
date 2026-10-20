@@ -18,73 +18,33 @@ namespace Game.Realm
 
             public ref Meta Meta(Entity entity)                             => ref Component.Reference<Meta>(entity);
             public ref Identity Identity(Entity entity)                     => ref Component.Reference<Identity>(entity);
-
-            public ref Ledger Ledger(Entity entity)                         => ref Component.Reference<Ledger>(entity);
-
             public ref Parent Parent(Entity entity)                         => ref Component.Reference<Parent>(entity);
             public ref Child Child(Entity entity)                           => ref Component.Reference<Child>(entity);
-            public ref Anchor Anchor(Entity entity)                         => ref Component.Reference<Anchor>(entity);
             public ref Bound Bound(Entity entity)                           => ref Component.Reference<Bound>(entity);
             public ref Source Source(Entity entity)                         => ref Component.Reference<Source>(entity);
-
             public ref Duration Duration(Entity entity)                     => ref Component.Reference<Duration>(entity);
+            public ref Interval Interval(Entity entity)                     => ref Component.Reference<Interval>(entity);
+            public ref Ledger Ledger(Entity entity)                         => ref Component.Reference<Ledger>(entity);
 
             public ref Prop Prop(Entity entity)                             => ref Component.Reference<Prop>(entity);
             public ref Actor Actor(Entity entity)                           => ref Component.Reference<Actor>(entity);
             public ref Corpse Corpse(Entity entity)                         => ref Component.Reference<Corpse>(entity);
             public ref Spawner Spawner(Entity entity)                       => ref Component.Reference<Spawner>(entity);
             public ref Projectile Projectile(Entity entity)                 => ref Component.Reference<Projectile>(entity);
-            public ref Heading Heading(Entity entity)                       => ref Component.Reference<Heading>(entity);
-            public ref Directive Directive(Entity entity)                   => ref Component.Reference<Directive>(entity);
-            public ref Directives Directives(Entity entity)                 => ref Component.Reference<Directives>(entity);
-            public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
             public ref Hitbox Hitbox(Entity entity)                         => ref Component.Reference<Hitbox>(entity);
+            public ref Effect Effect(Entity entity)                         => ref Component.Reference<Effect>(entity);
+            public ref Directive Directive(Entity entity)                   => ref Component.Reference<Directive>(entity);
             public ref Ability Ability(Entity entity)                       => ref Component.Reference<Ability>(entity);
-            public ref Payloads Payloads(Entity entity)                     => ref Component.Reference<Payloads>(entity);
             public ref Cooldown Cooldown(Entity entity)                     => ref Component.Reference<Cooldown>(entity);
-            public ref Cooldowns Cooldowns(Entity entity)                   => ref Component.Reference<Cooldowns>(entity);
-            public ref CooldownTarget CooldownTarget(Entity entity)         => ref Component.Reference<CooldownTarget>(entity);
-
-            public ref Faction Faction(Entity entity)                       => ref Component.Reference<Faction>(entity);
-            public ref Allegiance Allegiance(Entity entity)                 => ref Component.Reference<Allegiance>(entity);
-            public ref Temperament Temperament(Entity entity)               => ref Component.Reference<Temperament>(entity);
-
-            public ref Item Item(Entity entity)                             => ref Component.Reference<Item>(entity);
-            public ref Openable Openable(Entity entity)                     => ref Component.Reference<Openable>(entity);
-            public ref Container Container(Entity entity)                   => ref Component.Reference<Container>(entity);
-            public ref Interactable Interactable(Entity entity)             => ref Component.Reference<Interactable>(entity);
-
-            public ref CC CC(Entity entity)                                 => ref Component.Reference<CC>(entity);
-            public ref DOT DOT(Entity entity)                               => ref Component.Reference<DOT>(entity);
-            public ref Buff Buff(Entity entity)                             => ref Component.Reference<Buff>(entity);
-            public ref Debuff Debuff(Entity entity)                         => ref Component.Reference<Debuff>(entity);
-
-            public ref Slowed Slowed(Entity entity)                         => ref Component.Reference<Slowed>(entity);
-            public ref Stunned Stunned(Entity entity)                       => ref Component.Reference<Stunned>(entity);
-            public ref Frost Frost(Entity entity)                           => ref Component.Reference<Frost>(entity);
-            public ref Freezing Freezing(Entity entity)                     => ref Component.Reference<Freezing>(entity);
-            public ref Burn Burn(Entity entity)                             => ref Component.Reference<Burn>(entity);
-            public ref Burning Burning(Entity entity)                       => ref Component.Reference<Burning>(entity);
-            public ref Shock Shock(Entity entity)                           => ref Component.Reference<Shock>(entity);
-            public ref Shocked Shocked(Entity entity)                       => ref Component.Reference<Shocked>(entity);
-
-            public ref Explosive Explosive(Entity entity)                   => ref Component.Reference<Explosive>(entity);
-            public ref Destructible Destructible(Entity entity)             => ref Component.Reference<Destructible>(entity);
-
-            public ref Unstoppable Unstoppable(Entity entity)               => ref Component.Reference<Unstoppable>(entity);
-            public ref Anchored Anchored(Entity entity)                     => ref Component.Reference<Anchored>(entity);
+            public ref Focus Focus(Entity entity)                           => ref Component.Reference<Focus>(entity);
+            public ref Window Window(Entity entity)                         => ref Component.Reference<Window>(entity);
 
             public ref AiController AiController(Entity entity)             => ref Component.Reference<AiController>(entity);
             public ref PlayerController PlayerController(Entity entity)     => ref Component.Reference<PlayerController>(entity);
-
             public ref Innate Innate(Entity entity)                         => ref Component.Reference<Innate>(entity);
             public ref Blocks Blocks(Entity entity)                         => ref Component.Reference<Blocks>(entity);
-
             public ref Commands Command(Entity entity)                      => ref Component.Reference<Commands>(entity);
-            public ref Effects Effects(Entity entity)                       => ref Component.Reference<Effects>(entity);
 
-            public ref Hitboxes Hitboxes(Entity entity)                     => ref Component.Reference<Hitboxes>(entity);
-            public ref Struck Struck(Entity entity)                         => ref Component.Reference<Struck>(entity);
             public ref Loadout Loadout(Entity entity)                       => ref Component.Reference<Loadout>(entity);
             public ref Activation Activation(Entity entity)                 => ref Component.Reference<Activation>(entity);
             public ref Phases Phases(Entity entity)                         => ref Component.Reference<Phases>(entity);
@@ -92,59 +52,91 @@ namespace Game.Realm
             public ref Controls Controls(Entity entity)                     => ref Component.Reference<Controls>(entity);
             public ref Sustain Sustain(Entity entity)                       => ref Component.Reference<Sustain>(entity);
             public ref Chains Chains(Entity entity)                         => ref Component.Reference<Chains>(entity);
-            public ref Window Window(Entity entity)                         => ref Component.Reference<Window>(entity);
-            public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
-            public ref Inventory Inventory(Entity entity)                   => ref Component.Reference<Inventory>(entity);
+            public ref Track Track(Entity entity)                           => ref Component.Reference<Track>(entity);
+            public ref Cooldowns Cooldowns(Entity entity)                   => ref Component.Reference<Cooldowns>(entity);
+            public ref CooldownTarget CooldownTarget(Entity entity)         => ref Component.Reference<CooldownTarget>(entity);
+            public ref Payloads Payloads(Entity entity)                     => ref Component.Reference<Payloads>(entity);
 
-            public ref Target Target(Entity entity)                         => ref Component.Reference<Target>(entity);
+            public ref Hitboxes Hitboxes(Entity entity)                     => ref Component.Reference<Hitboxes>(entity);
+            public ref Effects Effects(Entity entity)                       => ref Component.Reference<Effects>(entity);
+            public ref Directives Directives(Entity entity)                 => ref Component.Reference<Directives>(entity);
+            public ref CameraCues CameraCues(Entity entity)                 => ref Component.Reference<CameraCues>(entity);
 
-            public ref Physics Physics(Entity entity)                       => ref Component.Reference<Physics>(entity);
-            public ref Force Force(Entity entity)                           => ref Component.Reference<Force>(entity);
-            public ref Contact Contact(Entity entity)                       => ref Component.Reference<Contact>(entity);
-            public ref Collision Collision(Entity entity)                   => ref Component.Reference<Collision>(entity);
-            public ref Velocity Velocity(Entity entity)                     => ref Component.Reference<Velocity>(entity);
+            public ref Struck Struck(Entity entity)                         => ref Component.Reference<Struck>(entity);
+            public ref Damage Damage(Entity entity)                         => ref Component.Reference<Damage>(entity);
+            public ref Applies Applies(Entity entity)                       => ref Component.Reference<Applies>(entity);
+
+            public ref CC CC(Entity entity)                                 => ref Component.Reference<CC>(entity);
+            public ref DOT DOT(Entity entity)                               => ref Component.Reference<DOT>(entity);
+            public ref Buff Buff(Entity entity)                             => ref Component.Reference<Buff>(entity);
+            public ref Debuff Debuff(Entity entity)                         => ref Component.Reference<Debuff>(entity);
+            public ref Stunned Stunned(Entity entity)                       => ref Component.Reference<Stunned>(entity);
+            public ref Slowed Slowed(Entity entity)                         => ref Component.Reference<Slowed>(entity);
+            public ref Parry Parry(Entity entity)                           => ref Component.Reference<Parry>(entity);
+            public ref Unstoppable Unstoppable(Entity entity)               => ref Component.Reference<Unstoppable>(entity);
+            public ref Anchored Anchored(Entity entity)                     => ref Component.Reference<Anchored>(entity);
+            public ref SpeedModifier SpeedModifier(Entity entity)           => ref Component.Reference<SpeedModifier>(entity);
+            public ref TimeModifier TimeModifier(Entity entity)             => ref Component.Reference<TimeModifier>(entity);
+
+            public ref Frost Frost(Entity entity)                           => ref Component.Reference<Frost>(entity);
+            public ref Freezing Freezing(Entity entity)                     => ref Component.Reference<Freezing>(entity);
+            public ref Burn Burn(Entity entity)                             => ref Component.Reference<Burn>(entity);
+            public ref Burning Burning(Entity entity)                       => ref Component.Reference<Burning>(entity);
+            public ref Shock Shock(Entity entity)                           => ref Component.Reference<Shock>(entity);
+            public ref Shocked Shocked(Entity entity)                       => ref Component.Reference<Shocked>(entity);
+
+            public ref Stats Stats(Entity entity)                           => ref Component.Reference<Stats>(entity);
+            public ref Modifiers Modifiers(Entity entity)                   => ref Component.Reference<Modifiers>(entity);
+            public ref Health Health(Entity entity)                         => ref Component.Reference<Health>(entity);
+            public ref Armor Armor(Entity entity)                           => ref Component.Reference<Armor>(entity);
+            public ref Energy Energy(Entity entity)                         => ref Component.Reference<Energy>(entity);
+            public ref Speed Speed(Entity entity)                           => ref Component.Reference<Speed>(entity);
+            public ref Acceleration Acceleration(Entity entity)             => ref Component.Reference<Acceleration>(entity);
+
             public ref Mass Mass(Entity entity)                             => ref Component.Reference<Mass>(entity);
-
-            public ref Movement Movement(Entity entity)                     => ref Component.Reference<Movement>(entity);
             public ref Intent Intent(Entity entity)                         => ref Component.Reference<Intent>(entity);
             public ref Control Control(Entity entity)                       => ref Component.Reference<Control>(entity);
             public ref Impulse Impulse(Entity entity)                       => ref Component.Reference<Impulse>(entity);
             public ref Kinematic Kinematic(Entity entity)                   => ref Component.Reference<Kinematic>(entity);
+            public ref Velocity Velocity(Entity entity)                     => ref Component.Reference<Velocity>(entity);
             public ref Displacement Displacement(Entity entity)             => ref Component.Reference<Displacement>(entity);
-
-            public ref SpeedModifier SpeedModifier(Entity entity)           => ref Component.Reference<SpeedModifier>(entity);
-            public ref TimeModifier TimeModifier(Entity entity)             => ref Component.Reference<TimeModifier>(entity);
+            public ref Heading Heading(Entity entity)                       => ref Component.Reference<Heading>(entity);
+            public ref Anchor Anchor(Entity entity)                         => ref Component.Reference<Anchor>(entity);
+            public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
+            public ref Physics Physics(Entity entity)                       => ref Component.Reference<Physics>(entity);
+            public ref Force Force(Entity entity)                           => ref Component.Reference<Force>(entity);
+            public ref Contact Contact(Entity entity)                       => ref Component.Reference<Contact>(entity);
+            public ref Collision Collision(Entity entity)                   => ref Component.Reference<Collision>(entity);
 
             public ref Aim Aim(Entity entity)                               => ref Component.Reference<Aim>(entity);
-            public ref Track Track(Entity entity)                           => ref Component.Reference<Track>(entity);
+            public ref Target Target(Entity entity)                         => ref Component.Reference<Target>(entity);
             public ref Facing Facing(Entity entity)                         => ref Component.Reference<Facing>(entity);
 
-            public ref Stats Stats(Entity entity)                           => ref Component.Reference<Stats>(entity);
-            public ref Health Health(Entity entity)                         => ref Component.Reference<Health>(entity);
-            public ref Armor Armor(Entity entity)                           => ref Component.Reference<Armor>(entity);
-            public ref Energy Energy(Entity entity)                         => ref Component.Reference<Energy>(entity);
-
-            public ref Parry Parry(Entity entity)                           => ref Component.Reference<Parry>(entity);
-            public ref Damage Damage(Entity entity)                         => ref Component.Reference<Damage>(entity);
-            public ref Interval Interval(Entity entity)                     => ref Component.Reference<Interval>(entity);
-            public ref Applies Applies(Entity entity)                       => ref Component.Reference<Applies>(entity);
-
-            public ref TimeScale TimeScale(Entity entity)                   => ref Component.Reference<TimeScale>(entity);
-
-            public ref Pose Pose(Entity entity)                             => ref Component.Reference<Pose>(entity);
+            public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
             public ref Form Form(Entity entity)                             => ref Component.Reference<Form>(entity);
-            public ref Visual Visual(Entity entity)                         => ref Component.Reference<Visual>(entity);
             public ref Hurtbox Hurtbox(Entity entity)                       => ref Component.Reference<Hurtbox>(entity);
             public ref Bodybox Bodybox(Entity entity)                       => ref Component.Reference<Bodybox>(entity);
-            public ref Instance Instance(Entity entity)                     => ref Component.Reference<Instance>(entity);
-            public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
-            public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
 
+            public ref Visual Visual(Entity entity)                         => ref Component.Reference<Visual>(entity);
+            public ref Pose Pose(Entity entity)                             => ref Component.Reference<Pose>(entity);
+            public ref Animation Animation(Entity entity)                   => ref Component.Reference<Animation>(entity);
+            public ref Rendering Rendering(Entity entity)                   => ref Component.Reference<Rendering>(entity);
             public ref CameraTarget CameraTarget(Entity entity)             => ref Component.Reference<CameraTarget>(entity);
-            public ref Focus Focus(Entity entity)                           => ref Component.Reference<Focus>(entity);
             public ref CameraFocus CameraFocus(Entity entity)               => ref Component.Reference<CameraFocus>(entity);
-            public ref CameraCues CameraCues(Entity entity)                 => ref Component.Reference<CameraCues>(entity);
             public ref Highlight Highlight(Entity entity)                   => ref Component.Reference<Highlight>(entity);
+
+            public ref Faction Faction(Entity entity)                       => ref Component.Reference<Faction>(entity);
+            public ref Allegiance Allegiance(Entity entity)                 => ref Component.Reference<Allegiance>(entity);
+            public ref Temperament Temperament(Entity entity)               => ref Component.Reference<Temperament>(entity);
+            public ref Item Item(Entity entity)                             => ref Component.Reference<Item>(entity);
+            public ref Openable Openable(Entity entity)                     => ref Component.Reference<Openable>(entity);
+            public ref Container Container(Entity entity)                   => ref Component.Reference<Container>(entity);
+            public ref Interactable Interactable(Entity entity)             => ref Component.Reference<Interactable>(entity);
+            public ref Explosive Explosive(Entity entity)                   => ref Component.Reference<Explosive>(entity);
+            public ref Destructible Destructible(Entity entity)             => ref Component.Reference<Destructible>(entity);
+
+            public ref Equipment Equipment(Entity entity)                   => ref Component.Reference<Equipment>(entity);
+            public ref Inventory Inventory(Entity entity)                   => ref Component.Reference<Inventory>(entity);
         }
     }
 
@@ -153,74 +145,33 @@ namespace Game.Realm
     {
         public Meta Meta(Entity entity)                                     => Component.View<Meta>(entity);
         public Identity Identity(Entity entity)                             => Component.View<Identity>(entity);
-
-        public Ledger Ledger(Entity entity)                                 => Component.View<Ledger>(entity);
-
         public Parent Parent(Entity entity)                                 => Component.View<Parent>(entity);
         public Child Child(Entity entity)                                   => Component.View<Child>(entity);
-        public Anchor Anchor(Entity entity)                                 => Component.View<Anchor>(entity);
         public Bound Bound(Entity entity)                                   => Component.View<Bound>(entity);
         public Source Source(Entity entity)                                 => Component.View<Source>(entity);
-
         public Duration Duration(Entity entity)                             => Component.View<Duration>(entity);
-        
+        public Interval Interval(Entity entity)                             => Component.View<Interval>(entity);
+        public Ledger Ledger(Entity entity)                                 => Component.View<Ledger>(entity);
+
         public Prop Prop(Entity entity)                                     => Component.View<Prop>(entity);
         public Actor Actor(Entity entity)                                   => Component.View<Actor>(entity);
         public Corpse Corpse(Entity entity)                                 => Component.View<Corpse>(entity);
         public Spawner Spawner(Entity entity)                               => Component.View<Spawner>(entity);
         public Projectile Projectile(Entity entity)                         => Component.View<Projectile>(entity);
-        public Heading Heading(Entity entity)                               => Component.View<Heading>(entity);
-        public Directive Directive(Entity entity)                           => Component.View<Directive>(entity);
-        public Directives Directives(Entity entity)                         => Component.View<Directives>(entity);
-        public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
         public Hitbox Hitbox(Entity entity)                                 => Component.View<Hitbox>(entity);
+        public Effect Effect(Entity entity)                                 => Component.View<Effect>(entity);
+        public Directive Directive(Entity entity)                           => Component.View<Directive>(entity);
         public Ability Ability(Entity entity)                               => Component.View<Ability>(entity);
-        public Payloads Payloads(Entity entity)                             => Component.View<Payloads>(entity);
         public Cooldown Cooldown(Entity entity)                             => Component.View<Cooldown>(entity);
-        public Cooldowns Cooldowns(Entity entity)                           => Component.View<Cooldowns>(entity);
-        public CooldownTarget CooldownTarget(Entity entity)                 => Component.View<CooldownTarget>(entity);
-
-        public Faction Faction(Entity entity)                               => Component.View<Faction>(entity);
-        public Allegiance Allegiance(Entity entity)                         => Component.View<Allegiance>(entity);
-        public Temperament Temperament(Entity entity)                       => Component.View<Temperament>(entity);
-
-        public Item Item(Entity entity)                                     => Component.View<Item>(entity);
-        public Openable Openable(Entity entity)                             => Component.View<Openable>(entity);
-        public Container Container(Entity entity)                           => Component.View<Container>(entity);
-        public Interactable Interactable(Entity entity)                     => Component.View<Interactable>(entity);
-
-        public CC CC(Entity entity)                                         => Component.View<CC>(entity);
-        public DOT DOT(Entity entity)                                       => Component.View<DOT>(entity);
-        public Buff Buff(Entity entity)                                     => Component.View<Buff>(entity);
-        public Debuff Debuff(Entity entity)                                 => Component.View<Debuff>(entity);
-
-        public Slowed Slowed(Entity entity)                                 => Component.View<Slowed>(entity);
-        public Stunned Stunned(Entity entity)                               => Component.View<Stunned>(entity);
-        public Frost Frost(Entity entity)                                   => Component.View<Frost>(entity);
-        public Freezing Freezing(Entity entity)                             => Component.View<Freezing>(entity);
-
-        public Burn Burn(Entity entity)                                     => Component.View<Burn>(entity);
-        public Burning Burning(Entity entity)                               => Component.View<Burning>(entity);
-        public Shock Shock(Entity entity)                                   => Component.View<Shock>(entity);
-        public Shocked Shocked(Entity entity)                               => Component.View<Shocked>(entity);
-
-        public Explosive Explosive(Entity entity)                           => Component.View<Explosive>(entity);
-        public Destructible Destructible(Entity entity)                     => Component.View<Destructible>(entity);
-
-        public Unstoppable Unstoppable(Entity entity)                       => Component.View<Unstoppable>(entity);
-        public Anchored Anchored(Entity entity)                             => Component.View<Anchored>(entity);
+        public Focus Focus(Entity entity)                                   => Component.View<Focus>(entity);
+        public Window Window(Entity entity)                                 => Component.View<Window>(entity);
 
         public AiController AiController(Entity entity)                     => Component.View<AiController>(entity);
         public PlayerController PlayerController(Entity entity)             => Component.View<PlayerController>(entity);
-
         public Innate Innate(Entity entity)                                 => Component.View<Innate>(entity);
         public Blocks Blocks(Entity entity)                                 => Component.View<Blocks>(entity);
-
         public Commands Command(Entity entity)                              => Component.View<Commands>(entity);
-        public Effects Effects(Entity entity)                               => Component.View<Effects>(entity);
 
-        public Hitboxes Hitboxes(Entity entity)                             => Component.View<Hitboxes>(entity);
-        public Struck Struck(Entity entity)                                 => Component.View<Struck>(entity);
         public Loadout Loadout(Entity entity)                               => Component.View<Loadout>(entity);
         public Activation Activation(Entity entity)                         => Component.View<Activation>(entity);
         public Phases Phases(Entity entity)                                 => Component.View<Phases>(entity);
@@ -228,59 +179,91 @@ namespace Game.Realm
         public Controls Controls(Entity entity)                             => Component.View<Controls>(entity);
         public Sustain Sustain(Entity entity)                               => Component.View<Sustain>(entity);
         public Chains Chains(Entity entity)                                 => Component.View<Chains>(entity);
-        public Window Window(Entity entity)                                 => Component.View<Window>(entity);
-        public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);
-        public Inventory Inventory(Entity entity)                           => Component.View<Inventory>(entity);
+        public Track Track(Entity entity)                                   => Component.View<Track>(entity);
+        public Cooldowns Cooldowns(Entity entity)                           => Component.View<Cooldowns>(entity);
+        public CooldownTarget CooldownTarget(Entity entity)                 => Component.View<CooldownTarget>(entity);
+        public Payloads Payloads(Entity entity)                             => Component.View<Payloads>(entity);
 
-        public Target Target(Entity entity)                                 => Component.View<Target>(entity);
+        public Hitboxes Hitboxes(Entity entity)                             => Component.View<Hitboxes>(entity);
+        public Effects Effects(Entity entity)                               => Component.View<Effects>(entity);
+        public Directives Directives(Entity entity)                         => Component.View<Directives>(entity);
+        public CameraCues CameraCues(Entity entity)                         => Component.View<CameraCues>(entity);
 
-        public Physics Physics(Entity entity)                               => Component.View<Physics>(entity);
-        public Force Force(Entity entity)                                   => Component.View<Force>(entity);
-        public Contact Contact(Entity entity)                               => Component.View<Contact>(entity);
-        public Collision Collision(Entity entity)                           => Component.View<Collision>(entity);
-        public Velocity Velocity(Entity entity)                             => Component.View<Velocity>(entity);
+        public Struck Struck(Entity entity)                                 => Component.View<Struck>(entity);
+        public Damage Damage(Entity entity)                                 => Component.View<Damage>(entity);
+        public Applies Applies(Entity entity)                               => Component.View<Applies>(entity);
+
+        public CC CC(Entity entity)                                         => Component.View<CC>(entity);
+        public DOT DOT(Entity entity)                                       => Component.View<DOT>(entity);
+        public Buff Buff(Entity entity)                                     => Component.View<Buff>(entity);
+        public Debuff Debuff(Entity entity)                                 => Component.View<Debuff>(entity);
+        public Stunned Stunned(Entity entity)                               => Component.View<Stunned>(entity);
+        public Slowed Slowed(Entity entity)                                 => Component.View<Slowed>(entity);
+        public Parry Parry(Entity entity)                                   => Component.View<Parry>(entity);
+        public Unstoppable Unstoppable(Entity entity)                       => Component.View<Unstoppable>(entity);
+        public Anchored Anchored(Entity entity)                             => Component.View<Anchored>(entity);
+        public SpeedModifier SpeedModifier(Entity entity)                   => Component.View<SpeedModifier>(entity);
+        public TimeModifier TimeModifier(Entity entity)                     => Component.View<TimeModifier>(entity);
+
+        public Frost Frost(Entity entity)                                   => Component.View<Frost>(entity);
+        public Freezing Freezing(Entity entity)                             => Component.View<Freezing>(entity);
+        public Burn Burn(Entity entity)                                     => Component.View<Burn>(entity);
+        public Burning Burning(Entity entity)                               => Component.View<Burning>(entity);
+        public Shock Shock(Entity entity)                                   => Component.View<Shock>(entity);
+        public Shocked Shocked(Entity entity)                               => Component.View<Shocked>(entity);
+
+        public Stats Stats(Entity entity)                                   => Component.View<Stats>(entity);
+        public Modifiers Modifiers(Entity entity)                           => Component.View<Modifiers>(entity);
+        public Health Health(Entity entity)                                 => Component.View<Health>(entity);
+        public Armor Armor(Entity entity)                                   => Component.View<Armor>(entity);
+        public Energy Energy(Entity entity)                                 => Component.View<Energy>(entity);
+        public Speed Speed(Entity entity)                                   => Component.View<Speed>(entity);
+        public Acceleration Acceleration(Entity entity)                     => Component.View<Acceleration>(entity);
+
         public Mass Mass(Entity entity)                                     => Component.View<Mass>(entity);
-
-        public Movement Movement(Entity entity)                             => Component.View<Movement>(entity);
         public Intent Intent(Entity entity)                                 => Component.View<Intent>(entity);
         public Control Control(Entity entity)                               => Component.View<Control>(entity);
         public Impulse Impulse(Entity entity)                               => Component.View<Impulse>(entity);
         public Kinematic Kinematic(Entity entity)                           => Component.View<Kinematic>(entity);
+        public Velocity Velocity(Entity entity)                             => Component.View<Velocity>(entity);
         public Displacement Displacement(Entity entity)                     => Component.View<Displacement>(entity);
-
-        public SpeedModifier SpeedModifier(Entity entity)                   => Component.View<SpeedModifier>(entity);
-        public TimeModifier TimeModifier(Entity entity)                     => Component.View<TimeModifier>(entity);
+        public Heading Heading(Entity entity)                               => Component.View<Heading>(entity);
+        public Anchor Anchor(Entity entity)                                 => Component.View<Anchor>(entity);
+        public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);
+        public Physics Physics(Entity entity)                               => Component.View<Physics>(entity);
+        public Force Force(Entity entity)                                   => Component.View<Force>(entity);
+        public Contact Contact(Entity entity)                               => Component.View<Contact>(entity);
+        public Collision Collision(Entity entity)                           => Component.View<Collision>(entity);
 
         public Aim Aim(Entity entity)                                       => Component.View<Aim>(entity);
-        public Track Track(Entity entity)                                   => Component.View<Track>(entity);
+        public Target Target(Entity entity)                                 => Component.View<Target>(entity);
         public Facing Facing(Entity entity)                                 => Component.View<Facing>(entity);
 
-        public Stats Stats(Entity entity)                                   => Component.View<Stats>(entity);
-        public Health Health(Entity entity)                                 => Component.View<Health>(entity);
-        public Armor Armor(Entity entity)                                   => Component.View<Armor>(entity);
-        public Energy Energy(Entity entity)                                 => Component.View<Energy>(entity);
-
-        public Parry Parry(Entity entity)                                   => Component.View<Parry>(entity);
-        public Damage Damage(Entity entity)                                 => Component.View<Damage>(entity);
-        public Interval Interval(Entity entity)                             => Component.View<Interval>(entity);
-        public Applies Applies(Entity entity)                               => Component.View<Applies>(entity);
-
-        public TimeScale TimeScale(Entity entity)                           => Component.View<TimeScale>(entity);
-
-        public Pose Pose(Entity entity)                                     => Component.View<Pose>(entity);
+        public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
         public Form Form(Entity entity)                                     => Component.View<Form>(entity);
-        public Visual Visual(Entity entity)                                 => Component.View<Visual>(entity);
         public Hurtbox Hurtbox(Entity entity)                               => Component.View<Hurtbox>(entity);
         public Bodybox Bodybox(Entity entity)                               => Component.View<Bodybox>(entity);
-        public Instance Instance(Entity entity)                             => Component.View<Instance>(entity);
-        public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
-        public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
 
+        public Visual Visual(Entity entity)                                 => Component.View<Visual>(entity);
+        public Pose Pose(Entity entity)                                     => Component.View<Pose>(entity);
+        public Animation Animation(Entity entity)                           => Component.View<Animation>(entity);
+        public Rendering Rendering(Entity entity)                           => Component.View<Rendering>(entity);
         public CameraTarget CameraTarget(Entity entity)                     => Component.View<CameraTarget>(entity);
-        public Focus Focus(Entity entity)                                   => Component.View<Focus>(entity);
         public CameraFocus CameraFocus(Entity entity)                       => Component.View<CameraFocus>(entity);
-        public CameraCues CameraCues(Entity entity)                         => Component.View<CameraCues>(entity);
         public Highlight Highlight(Entity entity)                           => Component.View<Highlight>(entity);
+
+        public Faction Faction(Entity entity)                               => Component.View<Faction>(entity);
+        public Allegiance Allegiance(Entity entity)                         => Component.View<Allegiance>(entity);
+        public Temperament Temperament(Entity entity)                       => Component.View<Temperament>(entity);
+        public Item Item(Entity entity)                                     => Component.View<Item>(entity);
+        public Openable Openable(Entity entity)                             => Component.View<Openable>(entity);
+        public Container Container(Entity entity)                           => Component.View<Container>(entity);
+        public Interactable Interactable(Entity entity)                     => Component.View<Interactable>(entity);
+        public Explosive Explosive(Entity entity)                           => Component.View<Explosive>(entity);
+        public Destructible Destructible(Entity entity)                     => Component.View<Destructible>(entity);
+
+        public Equipment Equipment(Entity entity)                           => Component.View<Equipment>(entity);
+        public Inventory Inventory(Entity entity)                           => Component.View<Inventory>(entity);
     }
 
     public partial class Entities

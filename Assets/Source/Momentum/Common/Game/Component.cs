@@ -346,6 +346,7 @@ namespace Game.Common
     public struct Unstoppable       : IComponent {}
     public struct Anchored          : IComponent {}
 
+
     /// <summary>Signed speed percent folded into Parent</summary>
     public struct SpeedModifier     : IComponent
     {
@@ -383,36 +384,71 @@ namespace Game.Common
     //  Resource
     //
 
+    public struct Stat
+    {
+        public float Base;
+        public float Final;
+    }
+
     public struct Stats             : IComponent
     {
         public Stat Health;
         public Stat Armor;
-        public Stat Attack;
+        public Stat Energy;
+        public Stat Damage;
         public Stat CritChance;
         public Stat CritDamage;
+        public Stat Speed;
+    }
+
+    public struct Modifier
+    {
+        public float Flat       { get; set; }
+        public float Positive   { get; set; }
+        public float Negative   { get; set; }
+    }
+
+    public struct Modifiers         : IComponent
+    {
+        public Modifier Health;
+        public Modifier Armor;
+        public Modifier Energy;
+        public Modifier Damage;
+        public Modifier CritChance;
+        public Modifier CritDamage;
+        public Modifier Speed;
     }
 
     /// <summary>Health pool; zero is death</summary>
     public struct Health            : IComponent
     {
         public int Current                                  { get; set; }
-        public int Maximum                                  { get; set; }
+        public int Pending                                  { get; set; }
     }
 
     /// <summary>Armor pool in front of Health</summary>
     public struct Armor             : IComponent
     {
         public int Current                                  { get; set; }
-        public int Maximum                                  { get; set; }
+        public int Pending                                  { get; set; }
     }
 
     /// <summary>Spent on skills and chaining</summary>
     public struct Energy            : IComponent
     {
         public int Current                                  { get; set; }
-        public int Maximum                                  { get; set; }
+        public int Pending                                  { get; set; }
     }
 
+    public struct Speed             : IComponent
+    {
+        public int Current                                  { get; set; }
+    }
+
+    public struct Acceleration      : IComponent
+    {
+        public int Current                                  { get; set; }
+    }
 
     //
     //  Movement
@@ -425,13 +461,6 @@ namespace Game.Common
         public float Friction                               { get; set; }
     }
 
-    /// <summary>Top speed and acceleration</summary>
-    public struct Movement          : IComponent
-    {
-        public float Speed                                  { get; set; }
-        public float Acceleration                           { get; set; }
-    }
-
     /// <summary>Desired move direction</summary>
     public struct Intent            : IComponent
     {
@@ -442,13 +471,6 @@ namespace Game.Common
     public struct Control           : IComponent
     {
         public Vector2 Velocity                             { get; set; }
-        public Modifier Modifier                            { get; set; }
-    }
-
-    /// <summary>Summed velocity for the tick</summary>
-    public struct Velocity          : IComponent 
-    {
-        public Vector2 Value                                { get; set; }
     }
 
     /// <summary>External push, decays by Mass</summary>
@@ -460,6 +482,12 @@ namespace Game.Common
     public struct Kinematic         : IComponent 
     {
         public Vector2 Velocity                             { get; set; }
+    }
+
+    /// <summary>Summed velocity for the tick</summary>
+    public struct Velocity          : IComponent 
+    {
+        public Vector2 Value                                { get; set; }
     }
 
     /// <summary>Eased move over a set distance and ticks</summary>
@@ -617,7 +645,7 @@ namespace Game.Common
         public float Limit                                  { get; set; }
     }
 
-    public struct Cue
+    public readonly struct Cue
     {
         public string Id                                    { get; init; }
         public string From                                  { get; init; }
@@ -630,7 +658,7 @@ namespace Game.Common
         public float Zoom                                   { get; init; }
     }
 
-    public struct Shake
+    public readonly struct Shake
     {
         public float Amplitude                              { get; init; }
         public float Frequency                              { get; init; }
@@ -656,18 +684,14 @@ namespace Game.Common
     //  Progression
     //
 
+    public struct Price             : IComponent {}
+
     public struct Talent            : IComponent {}
 
     public struct Equipped          : IComponent {}
 
-    public struct Equipment         : IComponent
-    {
+    public struct Equipment         : IComponent {}
 
-    }
-
-    public struct Inventory         : IComponent
-    {
-
-    }
+    public struct Inventory         : IComponent {}
 }
 

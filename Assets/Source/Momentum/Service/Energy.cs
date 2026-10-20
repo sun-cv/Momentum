@@ -1,4 +1,5 @@
 using System;
+
 using Game.Common;
 using Game.Common.Events;
 using Game.Realm;
@@ -48,7 +49,7 @@ namespace Game.Service
         private void Recharge(Entity entity, int amount)
         {
             var before  = World.Entity.Energy(entity);
-            World.Entity.Modify.Energy(entity).Current = Math.Min(before.Current + amount, before.Maximum); 
+            World.Entity.Modify.Energy(entity).Current = Math.Min(before.Current + amount, (int)World.Entity.Stats(entity).Energy.Final); 
             var after   = World.Entity.Energy(entity);
 
             Notify(entity, before.Current, after.Current);

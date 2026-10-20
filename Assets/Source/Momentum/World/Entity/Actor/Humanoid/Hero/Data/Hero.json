@@ -27,14 +27,27 @@
             "Teleport"
         ]
     },
+
     "Stats":
     {
         "Health":       { "Base": 100 },
         "Armor":        { "Base":   0 },
-        "Attack":       { "Base":  10 },
+        "Energy":       { "Base": 100 },
+        "Damage":       { "Base":  10 },
         "CritChance":   { "Base":   0 },
-        "CritDamage":   { "Base":   0 }
+        "CritDamage":   { "Base":   0 },
+        "Speed":        { "Base":   5 }
     },
+    "Modifiers":        {},
+    "Health":           {},
+    "Armor":            {},
+    "Energy":           {},
+    "Speed":            {},
+    "Acceleration":
+    {
+        "Current":      25
+    },
+
     "Faction":          {},
     "Allegiance":       {},
     "Temperament":      {},
@@ -42,11 +55,6 @@
     "Contact":          {},
     "Collision":        {},
     "PlayerController": {},
-    "Movement":         
-    {
-        "Speed":        5,
-        "Acceleration": 25
-    },
     "Mass":             
     {
         "Weight":       200,
@@ -68,18 +76,6 @@
     "Inventory":        {},
     "Target":           {},
     "Aim":              {},
-    "Health": 
-    {
-        "Current":      10 
-    },
-    "Armor": 
-    {
-        "Current":      10 
-    },
-    "Energy":
-    {
-        "Current":      10 
-    },
     "Form":             {},
     "Pose":
     {

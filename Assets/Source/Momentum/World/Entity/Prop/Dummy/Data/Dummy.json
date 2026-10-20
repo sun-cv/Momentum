@@ -13,21 +13,16 @@
     "Force":            {},
     "Contact":          {},
     "Collision":        {},
-    "Movement":         
-    {
-        "Speed":        0,
-        "Acceleration": 0
-    },
     "Mass":             
     {
         "Weight":       200,
         "Friction":     10
     },
-    "Health": 
+    "Stats":
     {
-        "Maximum":      10,
-        "Current":      10 
+        "Health":       { "Base":  10 }
     },
+    "Health":           {},
     "Form":             {},
     "Pose":
     {

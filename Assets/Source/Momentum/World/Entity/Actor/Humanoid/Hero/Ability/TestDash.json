@@ -2,6 +2,10 @@
     "Id":                           "TestDash",
     "Ability":                      {},
     "Intent":                       {},
+    "Cost":                         
+    {
+        "Energy":                   20  
+    },
     "Activation":       
     { 
         "Capability":               "Dash", 

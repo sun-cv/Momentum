@@ -145,77 +145,20 @@ namespace Game.Realm
 
             private void GenerateComponents(Entity entity, Definition definition)
             {
-                if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
-                if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);
-                if (definition.Actor is Actor)                          Component.Add<Actor>(entity, new());
+                if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, new() { Length = duration.Length, Elapsed = duration.Elapsed, Remaining = duration.Length });
+                if (definition.Interval is Interval interval)           Component.Add<Interval>(entity, interval);
+                if (definition.Ledger is Ledger)                        Component.Add<Ledger>(entity, new());
+
                 if (definition.Prop is Prop)                            Component.Add<Prop>(entity, new());
+                if (definition.Actor is Actor)                          Component.Add<Actor>(entity, new());
                 if (definition.Corpse is Corpse)                        Component.Add<Corpse>(entity, new());
                 if (definition.Spawner is Spawner)                      Component.Add<Spawner>(entity, new());
                 if (definition.Projectile is Projectile)                Component.Add<Projectile>(entity, new());
-                if (definition.Heading is Heading heading)              Component.Add<Heading>(entity, heading);
-                if (definition.Directive is Directive)                  Component.Add<Directive>(entity, new());
-                if (definition.Directives is Directives directives)     Component.Add<Directives>(entity, new() { Entry = directives.Entry.ToList() });
-                if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
                 if (definition.Hitbox is Hitbox)                        Component.Add<Hitbox>(entity, new());
-                if (definition.Cooldown is Cooldown)                    Component.Add<Cooldown>(entity, new());
-                if (definition.Cooldowns is Cooldowns cooldowns)        Component.Add<Cooldowns>(entity, cooldowns);
-                if (definition.CooldownTarget is CooldownTarget target) Component.Add<CooldownTarget>(entity, target);
-                if (definition.Anchor is Anchor anchor)                 Component.Add<Anchor>(entity, anchor);
-                if (definition.Duration is Duration duration)           Component.Add<Duration>(entity, new() { Length = duration.Length, Elapsed = duration.Elapsed, Remaining = duration.Length });
-                if (definition.Ledger is Ledger)                        Component.Add<Ledger>(entity, new());
-                if (definition.Faction is Faction faction)              Component.Add<Faction>(entity, faction);
-                if (definition.Allegiance is Allegiance allegiance)     Component.Add<Allegiance>(entity, allegiance);
-                if (definition.Temperament is Temperament temperament)  Component.Add<Temperament>(entity, temperament);
-                if (definition.CC is CC)                                Component.Add<CC>(entity, new());
-                if (definition.DOT is DOT)                              Component.Add<DOT>(entity, new());
-                if (definition.Buff is Buff)                            Component.Add<Buff>(entity, new());
-                if (definition.Debuff is Debuff)                        Component.Add<Debuff>(entity, new());
-                if (definition.Frost is Frost)                          Component.Add<Frost>(entity, new());
-                if (definition.Burn is Burn)                            Component.Add<Burn>(entity, new());
-                if (definition.Shock is Shock)                          Component.Add<Shock>(entity, new());
-                if (definition.Unstoppable is Unstoppable)              Component.Add<Unstoppable>(entity, new());
-                if (definition.Anchored is Anchored)                    Component.Add<Anchored>(entity, new());
-                if (definition.Movement is Movement movement)           Component.Add<Movement>(entity, movement);
-                if (definition.Intent is Intent)                        Component.Add<Intent>(entity, new());
-                if (definition.Physics is Physics physics)              Component.Add<Physics>(entity, physics);
-                if (definition.Force is Force)                          Component.Add<Force>(entity, new());
-                if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
-                if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
-                if (definition.Effects is Effects effects)              Component.Add<Effects>(entity, new() { Entry = effects.Entry.ToList() });
-                if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, new() { Entry = hitboxes.Entry.ToList() });
-                if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
-                if (definition.Activation is Activation activation)     Component.Add<Activation>(entity, activation);
-                if (definition.Controls is Controls Controls)           Component.Add<Controls>(entity, Controls);
-                if (definition.Sustain is Sustain sustain)              Component.Add<Sustain>(entity, sustain);
-                if (definition.Chains is Chains chains)                 Component.Add<Chains>(entity, chains);
-                if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
-                if (definition.Inventory is Inventory inventory)        Component.Add<Inventory>(entity, inventory);
-                if (definition.Target is Target)                        Component.Add<Target>(entity, new());
-                if (definition.Aim is Aim)                              Component.Add<Aim>(entity, new());
-                if (definition.Track is Track track)                    Component.Add<Track>(entity, track);
-                if (definition.Health is Health health)                 Component.Add<Health>(entity, health);
-                if (definition.Armor is Armor armor)                    Component.Add<Armor>(entity, armor);
-                if (definition.Energy is Energy energy)                 Component.Add<Energy>(entity, energy);
-                if (definition.Parry is Parry)                          Component.Add<Parry>(entity, new());
-                if (definition.Payloads is Payloads payloads)           Component.Add<Payloads>(entity, new() { Entry = new(payloads.Entry) });
-                if (definition.Damage is Damage damage)                 Component.Add<Damage>(entity, damage);
-                if (definition.Interval is Interval interval)           Component.Add<Interval>(entity, interval);
-                if (definition.Applies is Applies applies)              Component.Add<Applies>(entity, new() { Entry = applies.Entry.ToList() });
-                if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
-                if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
-                if (definition.Focus is Focus)                          Component.Add<Focus>(entity, new());
-                if (definition.CameraCues is CameraCues cameraCues)     Component.Add<CameraCues>(entity, cameraCues);
-                if (definition.Highlight is Highlight highlight)        Component.Add<Highlight>(entity, highlight);
-                if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
-                if (definition.TimeModifier is TimeModifier modifier)   Component.Add<TimeModifier>(entity, modifier);
+                if (definition.Effect is Effect)                        Component.Add<Effect>(entity, new());
+                if (definition.Directive is Directive)                  Component.Add<Directive>(entity, new());
 
-                if (definition.Stats is Stats stats)
-                {
-                    Component.Add<Stats>(entity, stats);
-                    StatResolver.Each(ref Component.Modify.Stats(entity), StatResolver.Default);
-                }
-
-                if (definition.Ability is Ability) 
+                if (definition.Ability is Ability)
                 {
                     Component.Add<Ability>(entity, new());
 
@@ -226,23 +169,9 @@ namespace Game.Realm
                     }
                 }
 
-                if (definition.Mass is Mass mass)
-                {
-                    Component.Add<Mass>(entity, mass);
-                    Component.Add<Facing>(entity, new() { Direction = Vector2.right });
-                    Component.Add<Kinematic>(entity, new());
-                    Component.Add<Control>(entity, new() { Modifier = new() });
-                    Component.Add<Impulse>(entity, new());
-                    Component.Add<Velocity>(entity, new());
-                    Component.Add<TimeScale>(entity, new() { Scale = 1});
-                }
-
-                if (definition.PlayerController is PlayerController)
-                {
-                    Component.Add<PlayerController>(entity, new());
-                    Component.Add<Intent>(entity, new());
-                    Component.Add<Commands>(entity, new() { Active = new(), Buffer = new() });
-                } 
+                if (definition.Cooldown is Cooldown)                    Component.Add<Cooldown>(entity, new());
+                if (definition.Focus is Focus)                          Component.Add<Focus>(entity, new());
+                if (definition.Window is Window)                        Component.Add<Window>(entity, new());
 
                 if (definition.AiController is AiController)
                 {
@@ -250,6 +179,101 @@ namespace Game.Realm
                     Component.Add<Intent>(entity, new());
                     Component.Add<Commands>(entity, new() { Active = new(), Buffer = new() });
                 }
+
+                if (definition.PlayerController is PlayerController)
+                {
+                    Component.Add<PlayerController>(entity, new());
+                    Component.Add<Intent>(entity, new());
+                    Component.Add<Commands>(entity, new() { Active = new(), Buffer = new() });
+                }
+
+                if (definition.Innate is Innate innate)                 Component.Add<Innate>(entity, innate);
+                if (definition.Blocks is Blocks blocks)                 Component.Add<Blocks>(entity, blocks);
+
+                if (definition.Loadout is Loadout loadout)              Component.Add<Loadout>(entity, loadout);
+                if (definition.Activation is Activation activation)     Component.Add<Activation>(entity, activation);
+                if (definition.Controls is Controls Controls)           Component.Add<Controls>(entity, Controls);
+                if (definition.Sustain is Sustain sustain)              Component.Add<Sustain>(entity, sustain);
+                if (definition.Chains is Chains chains)                 Component.Add<Chains>(entity, chains);
+                if (definition.Track is Track track)                    Component.Add<Track>(entity, track);
+                if (definition.Cooldowns is Cooldowns cooldowns)        Component.Add<Cooldowns>(entity, cooldowns);
+                if (definition.CooldownTarget is CooldownTarget target) Component.Add<CooldownTarget>(entity, target);
+                if (definition.Payloads is Payloads payloads)           Component.Add<Payloads>(entity, new() { Entry = new(payloads.Entry) });
+
+                if (definition.Hitboxes is Hitboxes hitboxes)           Component.Add<Hitboxes>(entity, new() { Entry = hitboxes.Entry.ToList() });
+                if (definition.Effects is Effects effects)              Component.Add<Effects>(entity, new() { Entry = effects.Entry.ToList() });
+                if (definition.Directives is Directives directives)     Component.Add<Directives>(entity, new() { Entry = directives.Entry.ToList() });
+                if (definition.CameraCues is CameraCues cameraCues)     Component.Add<CameraCues>(entity, cameraCues);
+
+                if (definition.Damage is Damage damage)                 Component.Add<Damage>(entity, damage);
+                if (definition.Applies is Applies applies)              Component.Add<Applies>(entity, new() { Entry = applies.Entry.ToList() });
+
+                if (definition.CC is CC)                                Component.Add<CC>(entity, new());
+                if (definition.DOT is DOT)                              Component.Add<DOT>(entity, new());
+                if (definition.Buff is Buff)                            Component.Add<Buff>(entity, new());
+                if (definition.Debuff is Debuff)                        Component.Add<Debuff>(entity, new());
+                if (definition.Parry is Parry)                          Component.Add<Parry>(entity, new());
+                if (definition.Unstoppable is Unstoppable)              Component.Add<Unstoppable>(entity, new());
+                if (definition.Anchored is Anchored)                    Component.Add<Anchored>(entity, new());
+                if (definition.TimeModifier is TimeModifier modifier)   Component.Add<TimeModifier>(entity, modifier);
+
+                if (definition.Frost is Frost)                          Component.Add<Frost>(entity, new());
+                if (definition.Burn is Burn)                            Component.Add<Burn>(entity, new());
+                if (definition.Shock is Shock)                          Component.Add<Shock>(entity, new());
+
+                if (definition.Stats is Stats stats)
+                {
+                    stats.Health.Final      = stats.Health.Base;
+                    stats.Armor.Final       = stats.Armor.Base;
+                    stats.Energy.Final      = stats.Energy.Base;
+                    stats.Damage.Final      = stats.Damage.Base;
+                    stats.CritChance.Final  = stats.CritChance.Base;
+                    stats.CritDamage.Final  = stats.CritDamage.Base;
+                    stats.Speed.Final       = stats.Speed.Base;
+
+                    Component.Add<Stats>(entity, stats);
+                }
+
+                if (definition.Modifiers is Modifiers modifiers)        Component.Add<Modifiers>(entity, modifiers);
+                if (definition.Health is Health)                        Component.Add<Health>(entity, new() { Current = (int)Component.View<Stats>(entity).Health.Final });
+                if (definition.Armor is Armor)                          Component.Add<Armor>(entity, new() { Current = (int)Component.View<Stats>(entity).Armor.Final });
+                if (definition.Energy is Energy)                        Component.Add<Energy>(entity, new() { Current = (int)Component.View<Stats>(entity).Energy.Final });
+                if (definition.Speed is Speed)                          Component.Add<Speed>(entity, new() { Current = (int)Component.View<Stats>(entity).Speed.Final });
+                if (definition.Acceleration is Acceleration acceleration) Component.Add<Acceleration>(entity, acceleration);
+
+                if (definition.Mass is Mass mass)
+                {
+                    Component.Add<Mass>(entity, mass);
+                    Component.Add<Facing>(entity, new() { Direction = Vector2.right });
+                    Component.Add<Kinematic>(entity, new());
+                    Component.Add<Control>(entity, new());
+                    Component.Add<Impulse>(entity, new());
+                    Component.Add<Velocity>(entity, new());
+                    Component.Add<TimeScale>(entity, new() { Scale = 1});
+                }
+
+                if (definition.Intent is Intent)                        Component.Add<Intent>(entity, new());
+                if (definition.Displacement is Displacement displace)   Component.Add<Displacement>(entity, displace);
+                if (definition.Heading is Heading heading)              Component.Add<Heading>(entity, heading);
+                if (definition.Anchor is Anchor anchor)                 Component.Add<Anchor>(entity, anchor);
+                if (definition.Physics is Physics physics)              Component.Add<Physics>(entity, physics);
+                if (definition.Force is Force)                          Component.Add<Force>(entity, new());
+                if (definition.Contact is Contact)                      Component.Add<Contact>(entity, new());
+                if (definition.Collision is Collision)                  Component.Add<Collision>(entity, new());
+
+                if (definition.Aim is Aim)                              Component.Add<Aim>(entity, new());
+                if (definition.Target is Target)                        Component.Add<Target>(entity, new());
+
+                if (definition.Pose is Pose pose)                       Component.Add<Pose>(entity, pose);
+                if (definition.CameraTarget is CameraTarget)            Component.Add<CameraTarget>(entity, new());
+                if (definition.Highlight is Highlight highlight)        Component.Add<Highlight>(entity, highlight);
+
+                if (definition.Faction is Faction faction)              Component.Add<Faction>(entity, faction);
+                if (definition.Allegiance is Allegiance allegiance)     Component.Add<Allegiance>(entity, allegiance);
+                if (definition.Temperament is Temperament temperament)  Component.Add<Temperament>(entity, temperament);
+
+                if (definition.Equipment is Equipment equipment)        Component.Add<Equipment>(entity, equipment);
+                if (definition.Inventory is Inventory inventory)        Component.Add<Inventory>(entity, inventory);
             }
 
             private void ProcessPrefab(Entity entity, Definition definition, GameObject instance)
@@ -491,9 +515,44 @@ namespace Game.Realm
             private static readonly Dictionary<Func<Components, Entity, bool>, List<(Func<Components, Entity, bool> Check, string Message)>> ComponentRequirement = new()
             {
                 {
-                    (Component, entity) => Component.Has<Movement>(entity), new()
+                    (Component, entity) => Component.Has<Acceleration>(entity), new()
                     {
                         ((Component, entity) => Component.Has<Mass>(entity),                    "Movable entity requires Mass component"),
+                        ((Component, entity) => Component.Has<Speed>(entity),                   "Acceleration requires Speed"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Speed>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Stats>(entity),                   "Speed requires Stats"),
+                        ((Component, entity) => Component.Has<Acceleration>(entity),            "Speed requires Acceleration"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Health>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Stats>(entity),                   "Health requires Stats"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Armor>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Stats>(entity),                   "Armor requires Stats"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Energy>(entity), new()
+                    {
+                        ((Component, entity) => Component.Has<Stats>(entity),                   "Energy requires Stats"),
+                    }
+                },
+                {
+                    (Component, entity) => Component.Has<Stats>(entity), new()
+                    {
+                        ((Component, entity) => Component.View<Stats>(entity).Health.Base <= 0f || Component.Has<Health>(entity), "Stats.Health above 0 requires Health"),
+                        ((Component, entity) => Component.View<Stats>(entity).Armor.Base  <= 0f || Component.Has<Armor>(entity),  "Stats.Armor above 0 requires Armor"),
+                        ((Component, entity) => Component.View<Stats>(entity).Energy.Base <= 0f || Component.Has<Energy>(entity), "Stats.Energy above 0 requires Energy"),
+                        ((Component, entity) => Component.View<Stats>(entity).Speed.Base  <= 0f || Component.Has<Speed>(entity),  "Stats.Speed above 0 requires Speed"),
                     }
                 },
                 {

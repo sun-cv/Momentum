@@ -48,7 +48,7 @@ namespace Game.Service
         private void Heal(Entity entity, int amount)
         {
             var before  = World.Entity.Health(entity);
-            World.Entity.Modify.Health(entity).Current = Math.Min(before.Current + amount, before.Maximum); 
+            World.Entity.Modify.Health(entity).Current = Math.Min(before.Current + amount, (int)World.Entity.Stats(entity).Health.Final); 
             var after   = World.Entity.Health(entity);
 
             Notify(entity, before.Current, after.Current);
