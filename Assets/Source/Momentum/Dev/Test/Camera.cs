@@ -7,23 +7,11 @@ using System.Collections.Generic;
 
 
 
-namespace Game.Diagnostic
+namespace Game.Development
 {
 
     public static partial class Test
     {
-        public static class Timeline
-        {
-            public static void Loop(int modulus, List<(int, Action)> ticks)
-            {
-                foreach(var (tick, callback) in ticks)
-                {
-                    if (Watch.Tick.Game % modulus == tick)
-                        callback();
-                }
-            }
-        }
-
         public static class Camera 
         {
             public static void LockOn(World World, Assets Asset, Entity entity)
@@ -47,7 +35,7 @@ namespace Game.Diagnostic
                     ( 240, () => Event.Send(new StopCameraCue { Id = "TestShake" }))
                 };
 
-                Timeline.Loop(600, entries);
+                Functions.Loop(600, entries);
             }
         }
     }
